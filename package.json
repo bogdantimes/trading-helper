@@ -1,0 +1,20 @@
+{
+  "name": "trader-bot",
+  "version": "1.0.0",
+  "description": "/* * Deployment of code * https://developers.google.com/apps-script/guides/clasp * * */",
+  "main": "Main.ts",
+  "dependencies": {
+    "@types/google-apps-script": "^1.0.44"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bogdan-kovalev/trader-bot.git"
+  },
+  "author": "Bogdan Kovalev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bogdan-kovalev/trader-bot/issues"
+  },
+  "homepage": "https://github.com/bogdan-kovalev/trader-bot#readme"
+}
