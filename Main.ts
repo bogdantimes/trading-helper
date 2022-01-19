@@ -1,10 +1,18 @@
 function doGet(e) {
-  return ContentService.createTextOutput(`handled doGet: ${getFreeAsset("ETHUSDT")}`);
+  return ContentService.createTextOutput(`handled doGet: ${getFreeAsset("USDT")}`);
 }
 
 function doPost(e) {
   console.log(JSON.stringify(e))
-  return ContentService.createTextOutput(`handled doPost: ${JSON.stringify(e)}`);
+  const eventData = e.postData.contents
+  if (eventData.symbol && eventData.side) {
+    if (eventData.side == "BUY") {
+      marketBuy(eventData.symbol)
+    } else if (eventData.side == "SELL") {
+      marketSell(eventData.symbol)
+    }
+  }
+  return ContentService.createTextOutput(`200`);
 }
 
 const API = "https://api.binance.com/api/v3";
@@ -44,15 +52,11 @@ function getFreeAsset(asset: string) {
   return ""
 }
 
-function marketBuy(symbol: string, side: string) {
-  const freeAsset = getFreeAsset(side == "BUY" ? "USDT" : symbol)
+function marketBuy(symbol: string) {
+  const freeAsset = getFreeAsset("USDT")
 
-  if (side == "BUY" && (!freeAsset || (+freeAsset < 60))) {
+  if (!freeAsset || (+freeAsset < 60)) {
     console.log(`NOT ENOUGH TO BUY, EXITING: USDT=${freeAsset}`)
-    return
-  }
-  if (!freeAsset || (+freeAsset < 1)) {
-    console.log(`NOT ENOUGH TO SELL, EXITING: ${symbol}=${freeAsset}`)
     return
   }
 
@@ -70,7 +74,8 @@ function marketBuy(symbol: string, side: string) {
 
 function marketSell(symbol: string) {
   const freeAsset = getFreeAsset(symbol)
-  if (!freeAsset) {
+  if (!freeAsset || (+freeAsset < 1)) {
+    console.log(`NOT ENOUGH TO SELL, EXITING: ${symbol}=${freeAsset}`)
     return
   }
 
