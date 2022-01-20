@@ -37,25 +37,12 @@ const API = "https://api.binance.com/api/v3";
 const KEY = PropertiesService.getScriptProperties().getProperty('KEY')
 const SECRET = PropertiesService.getScriptProperties().getProperty('SECRET')
 
-function getOrders(symbol: string) {
-  const resource = "allOrders";
-  const query = `symbol=${symbol}`;
-  const data = execute({
-    context: null,
-    interval: 500,
-    attempts: 60,
-    runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
-  });
-  logger.info(data.getContentText())
-  return data.getContentText()
-}
-
 function getFreeAsset(asset: string) {
   const resource = "account"
   const query = "";
   const data = execute({
     context: null,
-    interval: 500,
+    interval: 1000,
     attempts: 60,
     runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
   });
@@ -79,10 +66,10 @@ function marketBuy(symbol: string) {
   }
 
   const resource = "order"
-  const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=50`;
+  const query = `symbol=${symbol}USDT&type=MARKET&side=BUY&quoteOrderQty=50`;
   const data = execute({
     context: null,
-    interval: 500,
+    interval: 1000,
     attempts: 60,
     runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
   });
@@ -98,25 +85,12 @@ function marketSell(symbol: string) {
   }
 
   const resource = "order"
-  const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${freeAsset}`;
+  const query = `symbol=${symbol}USDT&type=MARKET&side=SELL&quantity=${freeAsset}`;
   const data = execute({
     context: null,
-    interval: 500,
+    interval: 1000,
     attempts: 60,
     runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
-  });
-  logger.info(data.getContentText())
-  return data.getContentText()
-}
-
-function getPrice(symbol: string) {
-  const resource = "ticker/price"
-  const query = `symbol=${symbol}`;
-  const data = execute({
-    context: null,
-    interval: 500,
-    attempts: 20,
-    runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${query}`, {headers: {'X-MBX-APIKEY': KEY}})
   });
   logger.info(data.getContentText())
   return data.getContentText()

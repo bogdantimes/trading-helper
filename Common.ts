@@ -8,13 +8,13 @@ interface ExecParams {
 const INTERRUPT = 'INTERRUPT';
 
 function execute({context, runnable, interval=2000, attempts=5}: ExecParams) {
-  let errorMessage = '';
+  let err = '';
   do {
     try {
       return runnable(context);
     } catch (e) {
-      errorMessage = e.message;
-      if (errorMessage.includes(INTERRUPT)) {
+      err = e.message;
+      if (e.message.includes(INTERRUPT)) {
         break;
       }
     }
@@ -23,6 +23,6 @@ function execute({context, runnable, interval=2000, attempts=5}: ExecParams) {
     }
   } while (--attempts > 0);
 
-  console.error('All attempts failed. Error message: ' + errorMessage);
-  throw Error(errorMessage);
+  logger.info('All attempts failed. Error message: ' + err.message);
+  throw err;
 }
