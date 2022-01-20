@@ -1,12 +1,19 @@
-const logger = [];
-console.log = logger.push
+const logger = {
+  log: [],
+  info(arg) {
+    this.log.push(arg)
+  },
+  dump() {
+    return JSON.stringify(this.log)
+  }
+}
 
 function doGet(e) {
   return ContentService.createTextOutput(`handled doGet: ${getFreeAsset("USDT")}`);
 }
 
 function doPost(e) {
-  console.log(e)
+  logger.info(e)
   try {
     const eventData = JSON.parse(e.postData.contents)
     if (eventData.symbol && eventData.side) {
@@ -17,9 +24,9 @@ function doPost(e) {
       }
     }
   } catch (e) {
-    console.log(e)
+    logger.info(e)
   }
-  GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Bot debug", JSON.stringify(logger));
+  GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Bot debug", logger.dump());
   return ContentService.createTextOutput("handled doPost");
 }
 
@@ -36,7 +43,7 @@ function getOrders(symbol: string) {
     attempts: 60,
     runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
   });
-  console.log(data.getContentText())
+  logger.info(data.getContentText())
   return data.getContentText()
 }
 
@@ -52,10 +59,10 @@ function getFreeAsset(asset: string) {
   try {
     const account = JSON.parse(data.getContentText());
     const assetVal = account.balances.find((balance) => balance.asset == asset);
-    console.log(assetVal)
+    logger.info(assetVal)
     return assetVal ? assetVal.free : ""
   } catch (e) {
-    console.log(e)
+    logger.info(e)
   }
   return ""
 }
@@ -64,7 +71,7 @@ function marketBuy(symbol: string) {
   const freeAsset = getFreeAsset("USDT")
 
   if (!freeAsset || (+freeAsset < 60)) {
-    console.log(`NOT ENOUGH TO BUY, EXITING: USDT=${freeAsset}`)
+    logger.info(`NOT ENOUGH TO BUY, EXITING: USDT=${freeAsset}`)
     return
   }
 
@@ -76,14 +83,14 @@ function marketBuy(symbol: string) {
     attempts: 60,
     runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
   });
-  console.log(data.getContentText())
+  logger.info(data.getContentText())
   return data.getContentText()
 }
 
 function marketSell(symbol: string) {
   const freeAsset = getFreeAsset(symbol)
   if (!freeAsset || (+freeAsset < 1)) {
-    console.log(`NOT ENOUGH TO SELL, EXITING: ${symbol}=${freeAsset}`)
+    logger.info(`NOT ENOUGH TO SELL, EXITING: ${symbol}=${freeAsset}`)
     return
   }
 
@@ -95,7 +102,7 @@ function marketSell(symbol: string) {
     attempts: 60,
     runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
   });
-  console.log(data.getContentText())
+  logger.info(data.getContentText())
   return data.getContentText()
 }
 
@@ -108,7 +115,7 @@ function getPrice(symbol: string) {
     attempts: 20,
     runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${query}`, {headers: {'X-MBX-APIKEY': KEY}})
   });
-  console.log(data.getContentText())
+  logger.info(data.getContentText())
   return data.getContentText()
 }
 
