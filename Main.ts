@@ -1,18 +1,26 @@
+const logger = [];
+console.log = logger.push
+
 function doGet(e) {
   return ContentService.createTextOutput(`handled doGet: ${getFreeAsset("USDT")}`);
 }
 
 function doPost(e) {
-  console.log(JSON.stringify(e))
-  const eventData = e.postData.contents
-  if (eventData.symbol && eventData.side) {
-    if (eventData.side == "BUY") {
-      marketBuy(eventData.symbol)
-    } else if (eventData.side == "SELL") {
-      marketSell(eventData.symbol)
+  console.log(e)
+  try {
+    const eventData = JSON.parse(e.postData.contents)
+    if (eventData.symbol && eventData.side) {
+      if (eventData.side == "BUY") {
+        marketBuy(eventData.symbol);
+      } else if (eventData.side == "SELL") {
+        marketSell(eventData.symbol);
+      }
     }
+  } catch (e) {
+    console.log(e)
   }
-  return ContentService.createTextOutput(`200`);
+  GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Bot debug", JSON.stringify(logger));
+  return ContentService.createTextOutput("handled doPost");
 }
 
 const API = "https://api.binance.com/api/v3";
