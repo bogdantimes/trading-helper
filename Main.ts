@@ -4,7 +4,9 @@ const logger = {
     this.log.push(arg)
   },
   dump() {
-    return JSON.stringify(this.log)
+    const logDump = JSON.stringify(this.log);
+    GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Bot debug", logDump);
+    return logDump
   }
 }
 
@@ -26,7 +28,8 @@ function doPost(e) {
   } catch (e) {
     logger.info(e)
   }
-  GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Bot debug", logger.dump());
+
+  logger.dump()
   return ContentService.createTextOutput("handled doPost");
 }
 
