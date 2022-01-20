@@ -1,3 +1,11 @@
+import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
+
+const FIAT = "USDT";
+const API = "https://api.binance.com/api/v3";
+const KEY = PropertiesService.getScriptProperties().getProperty('KEY')
+const SECRET = PropertiesService.getScriptProperties().getProperty('SECRET')
+const TRADE_PARAMS: URLFetchRequestOptions = {method: 'post', headers: {'X-MBX-APIKEY': KEY}};
+
 const logger = {
   log: [],
   info(arg) {
@@ -11,7 +19,7 @@ const logger = {
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput(`handled doGet: ${getFreeAsset("USDT")}`);
+  return ContentService.createTextOutput(`handled doGet: ${getFreeAsset(FIAT)}`);
 }
 
 function doPost(e) {
@@ -33,17 +41,13 @@ function doPost(e) {
   return ContentService.createTextOutput("handled doPost");
 }
 
-const API = "https://api.binance.com/api/v3";
-const KEY = PropertiesService.getScriptProperties().getProperty('KEY')
-const SECRET = PropertiesService.getScriptProperties().getProperty('SECRET')
-
 function getFreeAsset(asset: string) {
   const resource = "account"
   const query = "";
   const data = execute({
     context: null,
-    interval: 1000,
-    attempts: 60,
+    interval: 200,
+    attempts: 50,
     runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
   });
   try {
@@ -57,21 +61,22 @@ function getFreeAsset(asset: string) {
   return ""
 }
 
+
 function marketBuy(symbol: string) {
-  const freeAsset = getFreeAsset("USDT")
+  const freeAsset = getFreeAsset(FIAT)
 
   if (!freeAsset || (+freeAsset < 60)) {
-    logger.info(`NOT ENOUGH TO BUY, EXITING: USDT=${freeAsset}`)
+    logger.info(`NOT ENOUGH TO BUY, EXITING: ${FIAT}=${freeAsset}`)
     return
   }
 
   const resource = "order"
-  const query = `symbol=${symbol}USDT&type=MARKET&side=BUY&quoteOrderQty=50`;
+  const query = `symbol=${symbol}${FIAT}&type=MARKET&side=BUY&quoteOrderQty=50`;
   const data = execute({
     context: null,
-    interval: 1000,
-    attempts: 60,
-    runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
+    interval: 200,
+    attempts: 50,
+    runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, TRADE_PARAMS)
   });
   logger.info(data.getContentText())
   return data.getContentText()
@@ -85,12 +90,12 @@ function marketSell(symbol: string) {
   }
 
   const resource = "order"
-  const query = `symbol=${symbol}USDT&type=MARKET&side=SELL&quantity=${freeAsset}`;
+  const query = `symbol=${symbol}${FIAT}&type=MARKET&side=SELL&quantity=${freeAsset}`;
   const data = execute({
     context: null,
-    interval: 1000,
-    attempts: 60,
-    runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, {headers: {'X-MBX-APIKEY': KEY}})
+    interval: 200,
+    attempts: 50,
+    runnable: ctx => UrlFetchApp.fetch(`${API}/${resource}?${addSignature(query)}`, TRADE_PARAMS)
   });
   logger.info(data.getContentText())
   return data.getContentText()
