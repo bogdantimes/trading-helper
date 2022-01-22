@@ -1,7 +1,8 @@
 const USDT = "USDT";
 
 function doGet(e) {
-  const binance = new Binance(new DefaultStore(PropertiesService.getUserProperties()));
+  const store = new DefaultStore(PropertiesService.getScriptProperties());
+  const binance = new Binance(store);
   return ContentService.createTextOutput(`handled doGet: ${binance.getFreeAsset(USDT)}`);
 }
 
@@ -16,12 +17,14 @@ enum Version {
 }
 
 function doPost(e) {
-  const store = new DefaultStore(PropertiesService.getScriptProperties());
+  let store
+
   try {
     Log.debug(e.postData.contents)
 
     const eventData: { ver: Version, sym: string, act: Action } = JSON.parse(e.postData.contents)
 
+    store = new DefaultStore(PropertiesService.getScriptProperties())
     const binance = new Binance(store);
 
     const actions = new Map()
@@ -39,7 +42,8 @@ function doPost(e) {
     Log.error(e)
   }
 
-  store.dump()
+  store && store.dump()
+
   GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Trader bot log", Log.dump());
   return ContentService.createTextOutput("handled doPost");
 }
