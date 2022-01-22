@@ -1,18 +1,38 @@
 interface Trader {
-  buy(assetName: string): TradeResult
+  buy(symbol: ExchangeSymbol, quantity: number): TradeResult
 
-  sell(assetName: string): TradeResult
+  sell(symbol: ExchangeSymbol): TradeResult
+}
+
+class ExchangeSymbol {
+  readonly quantityAsset: string
+  readonly priceAsset: string
+
+  constructor(quantityAsset: string, priceAsset: string) {
+    if (!quantityAsset) {
+      throw Error(`Invalid quantityAsset: "${quantityAsset}"`)
+    }
+    if (!priceAsset) {
+      throw Error(`Invalid priceAsset: "${priceAsset}"`)
+    }
+    this.quantityAsset = quantityAsset;
+    this.priceAsset = priceAsset;
+  }
+
+  toString() {
+    return this.quantityAsset + this.priceAsset
+  }
 }
 
 class TradeResult {
-  symbol: string
+  symbol: ExchangeSymbol
   cost: number
   price: number;
   profit: number
   msg: string
   succeeded: boolean;
 
-  static fromMsg(symbol: string, msg: string) {
+  static fromMsg(symbol: ExchangeSymbol, msg: string) {
     const result = new TradeResult();
     result.symbol = symbol
     result.msg = msg

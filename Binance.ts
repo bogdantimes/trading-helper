@@ -1,11 +1,11 @@
 interface IExchange {
-  getFreeAsset(asset: string): number
+  getFreeAsset(assetName: string): number
 
-  marketBuy(assetName: string, moneyCoin: string, qty: string): TradeResult
+  marketBuy(symbol: ExchangeSymbol, qty: number): TradeResult
 
-  marketSell(assetName: string, moneyCoin: string): TradeResult
+  marketSell(symbol: ExchangeSymbol): TradeResult
 
-  getPrice(assetName: string, moneyCoin: string): number
+  getPrice(symbol: ExchangeSymbol): number
 }
 
 class Binance implements IExchange {
@@ -22,9 +22,9 @@ class Binance implements IExchange {
     this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
   }
 
-  getPrice(assetName: string, moneyCoin: string): number {
+  getPrice(symbol: ExchangeSymbol): number {
     const resource = "ticker/price"
-    const query = `symbol=${assetName}${moneyCoin}`;
+    const query = `symbol=${symbol}`;
     const data = execute({
       context: null,
       interval: 500,
@@ -35,7 +35,7 @@ class Binance implements IExchange {
     return +JSON.parse(data.getContentText()).price
   }
 
-  getFreeAsset(asset: string): number {
+  getFreeAsset(assetName: string): number {
     const resource = "account"
     const query = "";
     const data = execute({
@@ -44,7 +44,7 @@ class Binance implements IExchange {
     });
     try {
       const account = JSON.parse(data.getContentText());
-      const assetVal = account.balances.find((balance) => balance.asset == asset);
+      const assetVal = account.balances.find((balance) => balance.asset == assetName);
       Log.debug(assetVal)
       return assetVal ? +assetVal.free : 0
     } catch (e) {
@@ -53,23 +53,23 @@ class Binance implements IExchange {
     return 0
   }
 
-  marketBuy(assetName: string, moneyCoin: string, qty: string): TradeResult {
-    const freeAsset = this.getFreeAsset(moneyCoin)
-    if (!freeAsset || (+freeAsset < +qty)) {
-      return TradeResult.fromMsg(`${assetName}${moneyCoin}`, `NOT ENOUGH TO BUY: ${moneyCoin}=${freeAsset}`)
+  marketBuy(symbol: ExchangeSymbol, quantity: number): TradeResult {
+    const freeAsset = this.getFreeAsset(symbol.priceAsset)
+    if (freeAsset < +quantity) {
+      return TradeResult.fromMsg(symbol, `NOT ENOUGH TO BUY: ${symbol.priceAsset}=${freeAsset}`)
     }
-    const query = `symbol=${assetName}${moneyCoin}&type=MARKET&side=BUY&quoteOrderQty=${qty}`;
+    const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${quantity}`;
     const tradeResult = this.marketTrade(query);
     tradeResult.cost *= -1
     return tradeResult;
   }
 
-  marketSell(assetName: string, moneyCoin: string): TradeResult {
-    const freeAsset = this.getFreeAsset(assetName)
-    if (!freeAsset || (+freeAsset < 1)) {
-      return TradeResult.fromMsg(`${assetName}${moneyCoin}`, `NOT ENOUGH TO SELL: ${assetName}=${freeAsset}`)
+  marketSell(symbol: ExchangeSymbol): TradeResult {
+    const quantity = this.getFreeAsset(symbol.quantityAsset)
+    if (quantity < 1) {
+      return TradeResult.fromMsg(symbol, `NOT ENOUGH TO SELL: ${symbol.quantityAsset}=${quantity}`)
     }
-    const query = `symbol=${assetName}${moneyCoin}&type=MARKET&side=SELL&quantity=${freeAsset}`;
+    const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
     return this.marketTrade(query);
   }
 
