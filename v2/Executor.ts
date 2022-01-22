@@ -17,7 +17,7 @@ const Executor = AppScriptExecutor.New({
         getScheduledTimestamp: Date.now,
         execute(args) {
           const store = new DefaultStore(PropertiesService.getScriptProperties())
-          let sendLog = false
+          let sendLog = true
           try {
             const tradeResults = new V2Trader(store, new Binance(store)).stopLoss().filter(r => r.fromExchange);
             sendLog = tradeResults.length > 0
