@@ -16,13 +16,13 @@ enum Version {
 }
 
 function doPost(e) {
+  const store = new DefaultStore(PropertiesService.getScriptProperties());
   try {
     Log.debug(e.postData.contents)
 
     const eventData: { ver: Version, sym: string, act: Action } = JSON.parse(e.postData.contents)
 
-    const store = new DefaultStore(PropertiesService.getScriptProperties());
-    const binance = new Binance(new DefaultStore(PropertiesService.getUserProperties()));
+    const binance = new Binance(store);
 
     const actions = new Map()
     actions.set(`${Version.V1}/${Action.BUY}`, () => new V1Trader(store, binance).buy(eventData.sym))
@@ -39,6 +39,7 @@ function doPost(e) {
     Log.error(e)
   }
 
+  store.dump()
   GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Trader bot log", Log.dump());
   return ContentService.createTextOutput("handled doPost");
 }
