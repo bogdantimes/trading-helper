@@ -17,15 +17,19 @@ const Executor = AppScriptExecutor.New({
         getScheduledTimestamp: Date.now,
         execute(args) {
           const store = new DefaultStore(PropertiesService.getScriptProperties())
-
+          let sendLog = false
           try {
-            new V2Trader(store, new Binance(store)).stopLoss().forEach(Log.info)
+            const tradeResults = new V2Trader(store, new Binance(store)).stopLoss().filter(r => r.fromExchange);
+            sendLog = tradeResults.length > 0
+            tradeResults.forEach(Log.info)
           } catch (e) {
             Log.error(e)
           }
 
           store && store.dump()
-          GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Trader ticker log", Log.dump());
+          if (sendLog) {
+            GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Trader ticker log", Log.dump());
+          }
         }
       }];
     }
