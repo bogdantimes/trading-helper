@@ -7,13 +7,13 @@ interface ExecParams {
 
 const INTERRUPT = 'INTERRUPT';
 
-function execute({context, runnable, interval=2000, attempts=5}: ExecParams) {
-  let err = '';
+function execute({context, runnable, interval = 2000, attempts = 5}: ExecParams) {
+  let err: Error;
   do {
     try {
       return runnable(context);
     } catch (e) {
-      err = e.message;
+      err = e;
       if (e.message.includes(INTERRUPT)) {
         break;
       }
@@ -23,6 +23,38 @@ function execute({context, runnable, interval=2000, attempts=5}: ExecParams) {
     }
   } while (--attempts > 0);
 
-  logger.info('All attempts failed. Error message: ' + err.message);
+  Log.info('All attempts failed. Error message: ' + err.message);
   throw err;
+}
+
+class Log {
+  private static readonly infoLog = []
+  private static readonly debugLog = []
+  private static readonly errLog = []
+
+  static info(arg) {
+    this.infoLog.push(arg)
+  }
+
+  static debug(arg) {
+    this.debugLog.push(arg)
+  }
+
+  static error(arg) {
+    this.errLog.push(arg)
+  }
+
+  static dump(): string {
+    return `
+Error:
+${this.errLog.join("<b>")}
+Info:
+<b/>
+${this.infoLog.join("<b>")}
+<b/>
+<b/>
+Debug:${this.debugLog.join("<b>")}
+<b/>
+`
+  }
 }
