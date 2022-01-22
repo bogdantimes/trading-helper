@@ -5,6 +5,8 @@ interface IStore {
 
   get(key: string): string
 
+  getKeys(): string[]
+
   set(key: string, value: string): string
 
   getOrSet(key: string, value: string): string
@@ -41,6 +43,10 @@ class DefaultStore implements IStore {
   set(key: string, value: string): string {
     this.properties[key] = value
     return this.get(key)
+  }
+
+  getKeys(): string[] {
+    return Object.keys(this.properties)
   }
 
 }

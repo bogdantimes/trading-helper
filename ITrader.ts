@@ -4,6 +4,10 @@ interface Trader {
   sell(symbol: ExchangeSymbol): TradeResult
 }
 
+interface StopLossSeller {
+  stopLoss(): TradeResult[]
+}
+
 class ExchangeSymbol {
   readonly quantityAsset: string
   readonly priceAsset: string
@@ -19,6 +23,10 @@ class ExchangeSymbol {
     this.priceAsset = priceAsset;
   }
 
+  static fromObject(object: { quantityAsset: string, priceAsset: string }): ExchangeSymbol {
+    return new ExchangeSymbol(object.quantityAsset, object.priceAsset)
+  }
+
   toString() {
     return this.quantityAsset + this.priceAsset
   }
@@ -30,7 +38,7 @@ class TradeResult {
   price: number;
   profit: number
   msg: string
-  succeeded: boolean;
+  fromExchange: boolean;
 
   static fromMsg(symbol: ExchangeSymbol, msg: string) {
     const result = new TradeResult();

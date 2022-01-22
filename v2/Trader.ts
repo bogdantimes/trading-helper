@@ -1,4 +1,9 @@
-class V2Trader implements Trader {
+type TradeMemo = {
+  tradeResult: TradeResult
+  stopLossPrice: number
+}
+
+class V2Trader implements Trader, StopLossSeller {
   private readonly store: IStore;
   private readonly exchange: IExchange;
   private readonly lossLimit: number;
@@ -9,13 +14,25 @@ class V2Trader implements Trader {
     this.exchange = exchange
   }
 
+  stopLoss(): TradeResult[] {
+    const results: TradeResult[] = []
+    this.store.getKeys().forEach(k => {
+      const tradeMemo: TradeMemo = this.readTradeMemo(k);
+      if (tradeMemo) {
+        results.push(this.sell(tradeMemo.tradeResult.symbol))
+      }
+    })
+    return results
+  }
+
   buy(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const tradeResult = this.exchange.marketBuy(symbol, quantity);
 
-    if (tradeResult.succeeded) {
-      this.store.set(`${tradeResult.symbol}/bought`, tradeResult.cost.toString())
-      this.store.set(`${tradeResult.symbol}/boughtAtPrice`, tradeResult.price.toString())
-      this.store.set(`${tradeResult.symbol}/stopLossPrice`, (tradeResult.price * (1 - this.lossLimit)).toString())
+    if (tradeResult.fromExchange) {
+      this.saveTradeMemo(symbol, {
+        tradeResult: tradeResult,
+        stopLossPrice: tradeResult.price * (1 - this.lossLimit)
+      })
     }
 
     return tradeResult
@@ -23,42 +40,47 @@ class V2Trader implements Trader {
 
   sell(symbol: ExchangeSymbol): TradeResult {
 
-    if (!this.store.get(`${symbol}/bought`)) {
+    const tradeMemo: TradeMemo = this.readTradeMemo(`trade/${symbol.quantityAsset}`);
+    if (!tradeMemo) {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
 
     const currentPrice = this.exchange.getPrice(symbol);
-    const stopLossPrice = this.getStopLossPrice(symbol);
 
-    if (currentPrice <= stopLossPrice) {
-      Log.info(`Selling as current price '${currentPrice}' <= stop loss price '${stopLossPrice}'`)
+    if (currentPrice <= tradeMemo.stopLossPrice) {
+      Log.info(`Selling as current price '${currentPrice}' <= stop loss price '${tradeMemo.stopLossPrice}'`)
       const tradeResult = this.exchange.marketSell(symbol);
 
-      if (tradeResult.succeeded) {
-        const bought = +this.store.get(`${tradeResult.symbol}/bought`);
-        tradeResult.profit = tradeResult.cost - bought
+      if (tradeResult.fromExchange) {
+        tradeResult.profit = tradeResult.cost - tradeMemo.tradeResult.cost
         tradeResult.msg = `Asset sold.`
+        this.store.delete(`trade/${symbol.quantityAsset}`)
       }
-
-      this.store.delete(`${tradeResult.symbol}/bought`)
-      this.store.delete(`${tradeResult.symbol}/boughtAtPrice`)
-      this.store.delete(`${tradeResult.symbol}/stopLossPrice`)
 
       return tradeResult
     }
 
+    tradeMemo.stopLossPrice = currentPrice * (1 - this.lossLimit)
+
+    this.saveTradeMemo(symbol, tradeMemo)
+
     return TradeResult.fromMsg(symbol,
-      `Asset kept. Updated stop loss price: '${this.setStopLossPrice(symbol, currentPrice)}'`)
+      `Asset kept. Updated stop loss price: '${tradeMemo.stopLossPrice}'`)
   }
 
-  private setStopLossPrice(symbol: ExchangeSymbol, curPrice: number): number {
-    const stopLossPrice = curPrice * (1 - this.lossLimit);
-    this.store.set(`${symbol}/stopLossPrice`, stopLossPrice.toString())
-    return stopLossPrice
+  private readTradeMemo(key: string): TradeMemo {
+    const tradeMemoRaw = key.startsWith("trade/") ? this.store.get(key) : null;
+    if (tradeMemoRaw) {
+      const tradeMemo: TradeMemo = JSON.parse(tradeMemoRaw);
+      tradeMemo.tradeResult = Object.assign(new TradeResult(), tradeMemo.tradeResult)
+      tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
+      return tradeMemo
+    }
+    return null
   }
 
-  private getStopLossPrice(symbol: ExchangeSymbol) {
-    const stopLossPrice = this.store.get(`${symbol}/stopLossPrice`);
-    return stopLossPrice ? +stopLossPrice : 0
+  private saveTradeMemo(symbol: ExchangeSymbol, tradeMemo: TradeMemo) {
+    this.store.set('trade/' + symbol.quantityAsset, JSON.stringify(tradeMemo))
   }
+
 }

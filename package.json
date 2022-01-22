@@ -4,6 +4,7 @@
   "description": "/* * Deployment of code * https://developers.google.com/apps-script/guides/clasp * * */",
   "main": "Main.ts",
   "dependencies": {
+    "@types/appscriptexecutor": "git@github.com:bogdan-kovalev/google-apps-script-executor.git",
     "@types/google-apps-script": "^1.0.44"
   },
   "devDependencies": {},

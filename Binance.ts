@@ -61,6 +61,7 @@ class Binance implements IExchange {
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${quantity}`;
     const tradeResult = this.marketTrade(query);
     tradeResult.cost *= -1
+    tradeResult.symbol = symbol
     return tradeResult;
   }
 
@@ -70,7 +71,9 @@ class Binance implements IExchange {
       return TradeResult.fromMsg(symbol, `NOT ENOUGH TO SELL: ${symbol.quantityAsset}=${quantity}`)
     }
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
-    return this.marketTrade(query);
+    const tradeResult = this.marketTrade(query);
+    tradeResult.symbol = symbol
+    return tradeResult;
   }
 
   marketTrade(query: string): TradeResult {
@@ -85,8 +88,7 @@ class Binance implements IExchange {
       const price = order.fills && order.fills[0] && order.fills[0].price
       tradeResult.cost = +order.cummulativeQuoteQty
       tradeResult.price = +price
-      tradeResult.symbol = order.symbol
-      tradeResult.succeeded = true
+      tradeResult.fromExchange = true
       return tradeResult;
     } catch (e) {
       Log.error(e)

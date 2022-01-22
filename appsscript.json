@@ -1,6 +1,13 @@
 {
   "timeZone": "Europe/Kiev",
   "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "AppScriptExecutor",
+        "libraryId": "10BrdB7JWoAmYi4V9b9TuFHz6HimvFGAXNrHEBglEomfej_QZjHr9xi6H",
+        "version": "1"
+      }
+    ]
   },
   "webapp": {
     "access": "ANYONE_ANONYMOUS",
@@ -10,6 +17,7 @@
   "runtimeVersion": "V8",
   "oauthScopes": [
     "https://www.googleapis.com/auth/script.external_request",
-    "https://www.googleapis.com/auth/gmail.send"
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/script.scriptapp"
   ]
 }
