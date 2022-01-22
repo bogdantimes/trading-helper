@@ -1,9 +1,11 @@
 interface IExchange {
-  getFreeAsset(asset: string): string
+  getFreeAsset(asset: string): number
 
   marketBuy(assetName: string, moneyCoin: string, qty: string): TradeResult
 
   marketSell(assetName: string, moneyCoin: string): TradeResult
+
+  getPrice(assetName: string, moneyCoin: string): number
 }
 
 class Binance implements IExchange {
@@ -20,7 +22,20 @@ class Binance implements IExchange {
     this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
   }
 
-  getFreeAsset(asset: string): string {
+  getPrice(assetName: string, moneyCoin: string): number {
+    const resource = "ticker/price"
+    const query = `symbol=${assetName}${moneyCoin}`;
+    const data = execute({
+      context: null,
+      interval: 500,
+      attempts: 20,
+      runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/${resource}?${query}`, this.reqParams)
+    });
+    Log.debug(data.getContentText())
+    return +JSON.parse(data.getContentText()).price
+  }
+
+  getFreeAsset(asset: string): number {
     const resource = "account"
     const query = "";
     const data = execute({
@@ -31,39 +46,48 @@ class Binance implements IExchange {
       const account = JSON.parse(data.getContentText());
       const assetVal = account.balances.find((balance) => balance.asset == asset);
       Log.debug(assetVal)
-      return assetVal ? assetVal.free : ""
+      return assetVal ? +assetVal.free : 0
     } catch (e) {
       Log.error(e)
     }
-    return ""
+    return 0
   }
 
   marketBuy(assetName: string, moneyCoin: string, qty: string): TradeResult {
     const freeAsset = this.getFreeAsset(moneyCoin)
     if (!freeAsset || (+freeAsset < +qty)) {
-      return TradeResult.fromMsg(assetName, moneyCoin, `NOT ENOUGH TO BUY: ${moneyCoin}=${freeAsset}`)
+      return TradeResult.fromMsg(`${assetName}${moneyCoin}`, `NOT ENOUGH TO BUY: ${moneyCoin}=${freeAsset}`)
     }
     const query = `symbol=${assetName}${moneyCoin}&type=MARKET&side=BUY&quoteOrderQty=${qty}`;
-    return this.marketTrade(query)
+    const tradeResult = this.marketTrade(query);
+    tradeResult.cost *= -1
+    return tradeResult;
   }
 
   marketSell(assetName: string, moneyCoin: string): TradeResult {
     const freeAsset = this.getFreeAsset(assetName)
     if (!freeAsset || (+freeAsset < 1)) {
-      return TradeResult.fromMsg(assetName, moneyCoin, `NOT ENOUGH TO SELL: ${assetName}=${freeAsset}`)
+      return TradeResult.fromMsg(`${assetName}${moneyCoin}`, `NOT ENOUGH TO SELL: ${assetName}=${freeAsset}`)
     }
     const query = `symbol=${assetName}${moneyCoin}&type=MARKET&side=SELL&quantity=${freeAsset}`;
-    return this.marketTrade(query)
+    return this.marketTrade(query);
   }
 
-  marketTrade(query: string) {
+  marketTrade(query: string): TradeResult {
     const response = execute({
       context: null, interval: 200, attempts: 50,
       runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/order?${this.addSignature(query)}`, this.tradeReqParams)
     });
     Log.debug(response.getContentText())
     try {
-      return JSON.parse(response.getContentText())
+      const order = JSON.parse(response.getContentText());
+      const tradeResult = new TradeResult();
+      const price = order.fills && order.fills[0] && order.fills[0].price
+      tradeResult.cost = +order.cummulativeQuoteQty
+      tradeResult.price = +price
+      tradeResult.symbol = order.symbol
+      tradeResult.succeeded = true
+      return tradeResult;
     } catch (e) {
       Log.error(e)
       throw e

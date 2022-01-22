@@ -5,24 +5,21 @@ interface Trader {
 }
 
 class TradeResult {
-  assetName: string
-  moneyCoin: string
+  symbol: string
   cost: number
+  price: number;
   profit: number
   msg: string
-  err: Error
+  succeeded: boolean;
 
-  static fromMsg(assetName: string, moneyCoin: string, msg: string) {
+  static fromMsg(symbol: string, msg: string) {
     const result = new TradeResult();
-    result.assetName = assetName
-    result.moneyCoin = moneyCoin
+    result.symbol = symbol
     result.msg = msg
     return result
   }
 
   toString(): string {
-    return this.err ?
-      `${this.assetName}${this.moneyCoin} trade failed: ${this.err.message}` :
-      `${this.assetName}${this.moneyCoin} trade result: price=${this.cost}, profit=${this.profit}, msg=${this.msg}`
+    return `${this.symbol} trade result: price=${this.price}, cost=${this.cost}, profit=${this.profit}, msg=${this.msg}`
   }
 }
