@@ -64,8 +64,9 @@ class V2Trader implements Trader, StopLossSeller {
 
     this.saveTradeMemo(symbol, tradeMemo)
 
-    return TradeResult.fromMsg(symbol,
-      `Asset kept. Updated stop loss price: '${tradeMemo.stopLossPrice}'`)
+    Log.info(`Asset kept. Updated stop loss price: '${tradeMemo.stopLossPrice}'`)
+
+    return TradeResult.fromMsg(symbol, "Asset kept.")
   }
 
   private readTradeMemo(key: string): TradeMemo {
