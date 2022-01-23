@@ -21,7 +21,7 @@ const StopLossWatcher = AppScriptExecutor.New({
           try {
             const tradeResults = new V2Trader(store, new Binance(store)).stopLoss().filter(r => r.fromExchange);
             sendLog = tradeResults.length > 0
-            tradeResults.forEach(Log.info)
+            tradeResults.forEach(r => Log.info(r))
           } catch (e) {
             Log.error(e)
           }

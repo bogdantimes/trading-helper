@@ -14,12 +14,14 @@ class Binance implements IExchange {
   private readonly secret: string;
   private readonly tradeReqParams: object;
   private readonly reqParams: object;
+  private readonly priceCache: Map<string, number>;
 
   constructor(store: IStore) {
     this.key = store.get('KEY')
     this.secret = store.get('SECRET')
     this.tradeReqParams = {method: 'post', headers: {'X-MBX-APIKEY': this.key}}
     this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
+    this.priceCache = new Map()
   }
 
   getPrice(symbol: ExchangeSymbol): number {
@@ -32,7 +34,9 @@ class Binance implements IExchange {
       runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/${resource}?${query}`, this.reqParams)
     });
     Log.debug(data.getContentText())
-    return +JSON.parse(data.getContentText()).price
+    const price = +JSON.parse(data.getContentText()).price;
+    this.priceCache.set(symbol.toString(), price)
+    return price
   }
 
   getFreeAsset(assetName: string): number {
@@ -55,7 +59,7 @@ class Binance implements IExchange {
 
   marketBuy(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const freeAsset = this.getFreeAsset(symbol.priceAsset)
-    if (freeAsset < +quantity) {
+    if (freeAsset < quantity) {
       return TradeResult.fromMsg(symbol, `NOT ENOUGH TO BUY: ${symbol.priceAsset}=${freeAsset}`)
     }
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${quantity}`;
@@ -66,11 +70,13 @@ class Binance implements IExchange {
   }
 
   marketSell(symbol: ExchangeSymbol): TradeResult {
-    const quantity = this.getFreeAsset(symbol.quantityAsset)
-    if (quantity < 1) {
-      return TradeResult.fromMsg(symbol, `NOT ENOUGH TO SELL: ${symbol.quantityAsset}=${quantity}`)
+    const freeAsset = this.getFreeAsset(symbol.quantityAsset)
+    const price = this.priceCache.get(symbol.toString()) || this.getPrice(symbol);
+    const quoteQty = Math.ceil(price * freeAsset)
+    if (quoteQty < 10) { // Binance order limit in USDT
+      return TradeResult.fromMsg(symbol, `NOT ENOUGH TO SELL: ${symbol.quantityAsset}=${freeAsset}, ${symbol.priceAsset}=${quoteQty}`)
     }
-    const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
+    const query = `symbol=${symbol}&type=MARKET&side=SELL&quoteOrderQty=${quoteQty}`;
     const tradeResult = this.marketTrade(query);
     tradeResult.symbol = symbol
     return tradeResult;
