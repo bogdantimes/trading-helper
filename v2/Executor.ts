@@ -4,6 +4,7 @@ const _runtimeCtx = this;
 // @ts-ignore
 AppScriptExecutor.SetContext({
   runtimeCtx: _runtimeCtx,
+  debugMsg: (arg) => Log.debug(arg)
 })
 
 // @ts-ignore
@@ -14,7 +15,7 @@ const Executor = AppScriptExecutor.New({
       return [{
         isValid: () => true,
         getTaskName: () => "TradeTicker",
-        getScheduledTimestamp: Date.now,
+        getScheduledTimestamp: () => Date.now() - 1000,
         execute(args) {
           const store = new DefaultStore(PropertiesService.getScriptProperties())
           let sendLog = true
@@ -38,5 +39,6 @@ const Executor = AppScriptExecutor.New({
 
 function Start() {
   Executor.restart();
-  console.log(Executor.getTasks().map(t => t.getTaskName()));
+  Log.info(Executor.getTasks().map(t => t.getTaskName()));
+  GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Trader ticker restart", Log.dump());
 }
