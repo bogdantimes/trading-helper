@@ -23,7 +23,7 @@ function execute({context, runnable, interval = 2000, attempts = 5}: ExecParams)
     }
   } while (--attempts > 0);
 
-  Log.info('All attempts failed. Error message: ' + err.message);
+  Log.error('All attempts failed. Error message: ' + err.message);
   throw err;
 }
 
@@ -51,7 +51,8 @@ ${this.errLog.map(val => JSON.stringify(val)).join("\n")}
 Info:
 ${this.infoLog.map(val => JSON.stringify(val)).join("\n")}
 
-Debug:${this.debugLog.map(val => JSON.stringify(val)).join("\n")}
+Debug:
+${this.debugLog.map(val => JSON.stringify(val)).join("\n")}
 `
   }
 }

@@ -29,7 +29,7 @@ const Executor = AppScriptExecutor.New({
 
           store && store.dump()
           if (sendLog) {
-            GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Trader ticker log", Log.dump());
+            GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Trader ticker log", Log.dump());
           }
         }
       }];
@@ -40,5 +40,5 @@ const Executor = AppScriptExecutor.New({
 function Start() {
   Executor.restart();
   Log.info(Executor.getTasks().map(t => t.getTaskName()));
-  GmailApp.sendEmail("bogdan.kovalev.job@gmail.com", "Trader ticker restart", Log.dump());
+  GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Trader ticker restart", Log.dump());
 }
