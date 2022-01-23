@@ -22,6 +22,10 @@ class V2Trader implements Trader, StopLossSeller {
         results.push(this.sell(tradeMemo.tradeResult.symbol))
       }
     })
+    if (!results.length) {
+      StopLossWatcher.stop()
+      Log.info("StopLossWatcher stopped as there are no assets to watch.")
+    }
     return results
   }
 
@@ -40,6 +44,8 @@ class V2Trader implements Trader, StopLossSeller {
         tradeResult: tradeResult,
         stopLossPrice: tradeResult.price * (1 - this.lossLimit)
       })
+      StopLossWatcher.restart()
+      Log.info("StopLossWatcher restarted to watch new assets.")
     }
 
     return tradeResult
