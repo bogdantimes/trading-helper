@@ -28,9 +28,7 @@ class Binance implements IExchange {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
     const data = execute({
-      context: null,
-      interval: 500,
-      attempts: 60,
+      context: null, interval: 100, attempts: 100,
       runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/${resource}?${query}`, this.reqParams)
     });
     Log.debug(data.getContentText())
@@ -43,7 +41,7 @@ class Binance implements IExchange {
     const resource = "account"
     const query = "";
     const data = execute({
-      context: null, interval: 200, attempts: 50,
+      context: null, interval: 100, attempts: 100,
       runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/${resource}?${this.addSignature(query)}`, this.reqParams)
     });
     try {
@@ -84,7 +82,7 @@ class Binance implements IExchange {
 
   marketTrade(query: string): TradeResult {
     const response = execute({
-      context: null, interval: 500, attempts: 60,
+      context: null, interval: 100, attempts: 100,
       runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/order?${this.addSignature(query)}`, this.tradeReqParams)
     });
     Log.debug(response.getContentText())

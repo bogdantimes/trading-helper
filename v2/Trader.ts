@@ -71,7 +71,7 @@ class V2Trader implements Trader, StopLossSeller {
       const tradeResult = this.exchange.marketSell(symbol);
 
       if (tradeResult.fromExchange) {
-        tradeResult.profit = tradeResult.cost - tradeMemo.tradeResult.cost
+        tradeResult.profit = tradeMemo.tradeResult.cost + tradeResult.cost // Example: -10 + 15 = 5
         tradeResult.msg = `Asset sold.`
         this.store.delete(`trade/${symbol.quantityAsset}`)
       }
