@@ -73,11 +73,12 @@ class V2Trader implements Trader, StopLossSeller {
       return tradeResult
     }
 
-    tradeMemo.stopLossPrice = currentPrice * (1 - this.lossLimit)
+    const newStopLossPrice = currentPrice * (1 - this.lossLimit);
+    tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLossPrice ? newStopLossPrice : tradeMemo.stopLossPrice
 
     this.saveTradeMemo(symbol, tradeMemo)
 
-    Log.info(`Asset kept. Updated stop loss price: '${tradeMemo.stopLossPrice}'`)
+    Log.info(`Asset kept. Stop loss price: '${tradeMemo.stopLossPrice}'`)
 
     return TradeResult.fromMsg(symbol, "Asset kept.")
   }
