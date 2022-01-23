@@ -26,6 +26,13 @@ class V2Trader implements Trader, StopLossSeller {
   }
 
   buy(symbol: ExchangeSymbol, quantity: number): TradeResult {
+    const tradeMemo: TradeMemo = this.readTradeMemo(`trade/${symbol.quantityAsset}`);
+    if (tradeMemo) {
+      tradeMemo.tradeResult.msg = "Not buying. Asset is already tracked."
+      tradeMemo.tradeResult.fromExchange = false
+      return tradeMemo.tradeResult
+    }
+
     const tradeResult = this.exchange.marketBuy(symbol, quantity);
 
     if (tradeResult.fromExchange) {
