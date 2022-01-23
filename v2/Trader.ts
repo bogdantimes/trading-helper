@@ -44,6 +44,12 @@ class V2Trader implements Trader, StopLossSeller {
         tradeResult: tradeResult,
         stopLossPrice: tradeResult.price * (1 - this.lossLimit)
       })
+
+      // @ts-ignore
+      // workaround: no-op function to not run the tasks on restart
+      _runtimeCtx[AppScriptExecutor.INSTANCE_NAME] = () => {
+      }
+
       StopLossWatcher.restart()
       Log.info("StopLossWatcher restarted to watch new assets.")
     }
