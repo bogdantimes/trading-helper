@@ -62,7 +62,7 @@ class Binance implements IExchange {
     }
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${quantity}`;
     const tradeResult = this.marketTrade(query);
-    tradeResult.cost *= -1
+    tradeResult.paid *= -1
     tradeResult.symbol = symbol
     return tradeResult;
   }
@@ -90,7 +90,7 @@ class Binance implements IExchange {
       const order = JSON.parse(response.getContentText());
       const tradeResult = new TradeResult();
       const price = order.fills && order.fills[0] && order.fills[0].price
-      tradeResult.cost = +order.cummulativeQuoteQty
+      tradeResult.paid = +order.cummulativeQuoteQty
       tradeResult.price = +price
       tradeResult.fromExchange = true
       return tradeResult;

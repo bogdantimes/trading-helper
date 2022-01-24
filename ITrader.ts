@@ -34,8 +34,8 @@ class ExchangeSymbol {
 
 class TradeResult {
   symbol: ExchangeSymbol
-  cost: number
-  price: number;
+  paid: number
+  price: number
   profit: number
   msg: string
   fromExchange: boolean;
@@ -48,6 +48,6 @@ class TradeResult {
   }
 
   toString(): string {
-    return `${this.symbol} trade result: price=${this.price}, cost=${this.cost}, profit=${this.profit}, msg=${this.msg}`
+    return `${this.symbol} trade result: price=${this.price}, cost=${this.paid}, profit=${this.profit}, msg=${this.msg}`
   }
 }

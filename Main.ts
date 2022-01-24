@@ -33,6 +33,7 @@ function doPost(e) {
     actions.set(`${Version.V1}/${Action.BUY}`, () => new V1Trader(store, new Binance(store)).buy(symbol, buyQuantity))
     actions.set(`${Version.V1}/${Action.SELL}`, () => new V1Trader(store, new Binance(store)).sell(symbol))
     actions.set(`${Version.V2}/${Action.BUY}`, () => new V2Trader(store, new Binance(store)).buy(symbol, buyQuantity))
+    actions.set(`${Version.V2}/${Action.SELL}`, () => new V2Trader(store, new Binance(store)).sell(symbol))
 
     const action = `${eventData.ver}/${eventData.act}`;
     if (actions.has(action)) {
