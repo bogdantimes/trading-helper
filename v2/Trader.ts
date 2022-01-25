@@ -64,8 +64,9 @@ class V2Trader implements Trader, StopLossSeller {
 
     const currentPrice = this.exchange.getPrice(symbol);
 
-    if (currentPrice > (tradeMemo.tradeResult.price * 1.005)) {
-      return TradeResult.fromMsg(symbol, `Not selling the asset as the current price '${currentPrice}' > paid price '${tradeMemo.tradeResult.price}*0.5%'`)
+    const noLossPrice = tradeMemo.tradeResult.price * 1.01;
+    if (currentPrice > noLossPrice) {
+      return TradeResult.fromMsg(symbol, `Not selling the asset as the current price '${currentPrice}' > '${noLossPrice}' (paid price+1%)`)
     }
 
     Log.info(`Selling ${symbol} as current price '${currentPrice}' <= paid price '${tradeMemo.tradeResult.price}*0.5%'`)
