@@ -47,6 +47,6 @@ function doPost(e) {
 
   store && store.dump()
 
-  GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Trader handler log", Log.dump());
+  Log.ifUsefulDumpAsEmail()
   return ContentService.createTextOutput("handled doPost");
 }

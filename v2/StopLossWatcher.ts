@@ -28,7 +28,7 @@ const StopLossWatcher = AppScriptExecutor.New({
 
           store && store.dump()
           if (sendLog) {
-            GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Trader ticker log", Log.dump());
+            Log.ifUsefulDumpAsEmail()
           }
         }
       }];
@@ -48,6 +48,6 @@ function Start() {
     StopLossWatcher.restart();
     Log.info(StopLossWatcher.getTasks().map(t => t.getTaskName()));
   } finally {
-    GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), "StopLossWatcher restart", Log.dump());
+    Log.ifUsefulDumpAsEmail()
   }
 }
