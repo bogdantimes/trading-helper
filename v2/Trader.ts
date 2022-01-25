@@ -62,7 +62,14 @@ class V2Trader implements Trader, StopLossSeller {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
 
-    Log.info(`Force selling ${symbol}`)
+    const currentPrice = this.exchange.getPrice(symbol);
+
+    if (currentPrice > (tradeMemo.tradeResult.price * 1.005)) {
+      return TradeResult.fromMsg(symbol, `Not selling the asset as the current price '${currentPrice}' > paid price '${tradeMemo.tradeResult.price}*0.5%'`)
+    }
+
+    Log.info(`Selling ${symbol} as current price '${currentPrice}' <= paid price '${tradeMemo.tradeResult.price}*0.5%'`)
+
     tradeMemo.stopLossPrice = Number.MAX_SAFE_INTEGER;
     this.saveTradeMemo(symbol, tradeMemo)
     this.store.dump()
@@ -88,7 +95,7 @@ class V2Trader implements Trader, StopLossSeller {
     const currentPrice = this.exchange.getPrice(symbol);
 
     if (currentPrice <= tradeMemo.stopLossPrice) {
-      Log.info(`Selling ${symbol}  as current price '${currentPrice}' <= stop loss price '${tradeMemo.stopLossPrice}'`)
+      Log.info(`Selling ${symbol} as current price '${currentPrice}' <= stop loss price '${tradeMemo.stopLossPrice}'`)
       const tradeResult = this.exchange.marketSell(symbol);
 
       if (tradeResult.fromExchange) {
