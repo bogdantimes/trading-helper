@@ -46,7 +46,7 @@ class Log {
 
   static dump(): string {
     return `Error:
-${this.errLog.map(val => JSON.stringify(val)).join("\n")}
+${this.errLog.join("\n")}
 
 Info:
 ${this.infoLog.map(val => JSON.stringify(val)).join("\n")}
