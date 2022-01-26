@@ -69,7 +69,7 @@ class V2Trader implements Trader, StopLossSeller {
       return TradeResult.fromMsg(symbol, `Not selling the asset as the current price '${currentPrice}' > '${noLossPrice}' (paid price+1%)`)
     }
 
-    Log.info(`Selling ${symbol} as current price '${currentPrice}' <= paid price '${tradeMemo.tradeResult.price}*0.5%'`)
+    Log.info(`Selling ${symbol} as current price '${currentPrice}' <= '${noLossPrice}' (paid price+1%)`)
 
     tradeMemo.stopLossPrice = Number.MAX_SAFE_INTEGER;
     this.saveTradeMemo(symbol, tradeMemo)
