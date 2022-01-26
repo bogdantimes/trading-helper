@@ -6,14 +6,20 @@ function doGet(e) {
   return ContentService.createTextOutput(`handled doGet: ${binance.getFreeAsset(USDT)}`);
 }
 
-enum Action {
+enum TradeAction {
   BUY = "BUY",
   SELL = "SELL"
 }
 
-enum Version {
+enum TraderVersion {
   V1 = "v1",
   V2 = "v2"
+}
+
+type EventData = {
+  ver: TraderVersion
+  act: TradeAction
+  sym: string
 }
 
 function doPost(e) {
@@ -22,7 +28,7 @@ function doPost(e) {
   try {
     Log.debug(e.postData.contents)
 
-    const eventData: { ver: Version, sym: string, act: Action } = JSON.parse(e.postData.contents)
+    const eventData: EventData = JSON.parse(e.postData.contents)
 
     store = new DefaultStore(PropertiesService.getScriptProperties())
     const priceAsset = store.getOrSet("PriceAsset", USDT);
@@ -30,14 +36,14 @@ function doPost(e) {
     const symbol = new ExchangeSymbol(eventData.sym, priceAsset)
 
     const actions = new Map()
-    actions.set(`${Version.V1}/${Action.BUY}`, () => new V1Trader(store, new Binance(store)).buy(symbol, buyQuantity))
-    actions.set(`${Version.V1}/${Action.SELL}`, () => new V1Trader(store, new Binance(store)).sell(symbol))
-    actions.set(`${Version.V2}/${Action.BUY}`, () => new V2Trader(store, new Binance(store)).buy(symbol, buyQuantity))
-    actions.set(`${Version.V2}/${Action.SELL}`, () => new V2Trader(store, new Binance(store)).sell(symbol))
+    actions.set(`${TraderVersion.V1}/${TradeAction.BUY}`, () => new V1Trader(store, new Binance(store)).buy(symbol, buyQuantity))
+    actions.set(`${TraderVersion.V1}/${TradeAction.SELL}`, () => new V1Trader(store, new Binance(store)).sell(symbol))
+    actions.set(`${TraderVersion.V2}/${TradeAction.BUY}`, () => new V2Trader(store, new Binance(store)).buy(symbol, buyQuantity))
+    actions.set(`${TraderVersion.V2}/${TradeAction.SELL}`, () => new V2Trader(store, new Binance(store)).sell(symbol))
 
     const action = `${eventData.ver}/${eventData.act}`;
     if (actions.has(action)) {
-      Log.info(actions.get(action)(eventData.sym).toString())
+      Log.info(actions.get(action)().toString())
     } else {
       Log.info(`Unsupported action: ${action}`)
     }

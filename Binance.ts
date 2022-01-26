@@ -28,8 +28,8 @@ class Binance implements IExchange {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
     const data = execute({
-      context: null, interval: 1000, attempts: 2,
-      runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/${resource}?${query}`, this.reqParams)
+      context: `${Binance.API}/${resource}?${query}`,
+      runnable: ctx => UrlFetchApp.fetch(ctx, this.reqParams)
     });
     Log.debug(data.getContentText())
     const price = +JSON.parse(data.getContentText()).price;
@@ -41,8 +41,8 @@ class Binance implements IExchange {
     const resource = "account"
     const query = "";
     const data = execute({
-      context: null, interval: 1000, attempts: 2,
-      runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/${resource}?${this.addSignature(query)}`, this.reqParams)
+      context: `${Binance.API}/${resource}`,
+      runnable: ctx => UrlFetchApp.fetch(`${ctx}?${this.addSignature(query)}`, this.reqParams)
     });
     try {
       const account = JSON.parse(data.getContentText());
@@ -62,36 +62,36 @@ class Binance implements IExchange {
     }
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${quantity}`;
     const tradeResult = this.marketTrade(query);
-    tradeResult.paid *= -1
     tradeResult.symbol = symbol
+    tradeResult.paid = tradeResult.cost
     return tradeResult;
   }
 
   marketSell(symbol: ExchangeSymbol): TradeResult {
     const freeAsset = this.getFreeAsset(symbol.quantityAsset)
     const price = this.priceCache.get(symbol.toString()) || this.getPrice(symbol);
-    const cost = price * freeAsset;
-    const quoteQty = cost % 1 > 0.5 ? Math.ceil(cost) : Math.floor(cost)
+    const quoteQty = Math.floor(price * freeAsset)
     if (quoteQty < 10) { // Binance order limit in USDT
       return TradeResult.fromMsg(symbol, `NOT ENOUGH TO SELL: ${symbol.quantityAsset}=${freeAsset}, ${symbol.priceAsset}=${quoteQty}`)
     }
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quoteOrderQty=${quoteQty}`;
     const tradeResult = this.marketTrade(query);
     tradeResult.symbol = symbol
+    tradeResult.gained = tradeResult.cost
     return tradeResult;
   }
 
   marketTrade(query: string): TradeResult {
     const response = execute({
-      context: null, interval: 1000, attempts: 2,
-      runnable: ctx => UrlFetchApp.fetch(`${Binance.API}/order?${this.addSignature(query)}`, this.tradeReqParams)
+      context: `${Binance.API}/order`, interval: 1000, attempts: 60,
+      runnable: ctx => UrlFetchApp.fetch(`${ctx}?${this.addSignature(query)}`, this.tradeReqParams)
     });
     Log.debug(response.getContentText())
     try {
       const order = JSON.parse(response.getContentText());
       const tradeResult = new TradeResult();
       const price = order.fills && order.fills[0] && order.fills[0].price
-      tradeResult.paid = +order.cummulativeQuoteQty
+      tradeResult.cost = +order.cummulativeQuoteQty
       tradeResult.price = +price
       tradeResult.fromExchange = true
       return tradeResult;

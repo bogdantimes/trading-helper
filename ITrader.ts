@@ -34,7 +34,9 @@ class ExchangeSymbol {
 
 class TradeResult {
   symbol: ExchangeSymbol
-  paid: number
+  cost: number
+  paid: number;
+  gained: number;
   price: number
   profit: number
   msg: string
@@ -48,6 +50,6 @@ class TradeResult {
   }
 
   toString(): string {
-    return `${this.symbol} trade result: price=${this.price}, cost=${this.paid}, profit=${this.profit}, msg=${this.msg}`
+    return `${this.symbol} trade result: ${this.price ? 'price=' + this.price : ''} ${this.paid ? 'paid=' + this.paid : ''} ${this.gained ? 'gained=' + this.gained : ''} ${this.profit ? 'profit=' + this.profit : ''} ${this.msg ? 'msg=' + this.msg : ''}`
   }
 }

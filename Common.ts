@@ -23,7 +23,7 @@ function execute({context, runnable, interval = 2000, attempts = 5}: ExecParams)
     }
   } while (--attempts > 0);
 
-  Log.error(new Error('All attempts failed. Error message: ' + err.message));
+  Log.error(new Error(`All attempts failed. Context: ${JSON.stringify(context)}. Error message: ${err.message}`));
   throw err;
 }
 
