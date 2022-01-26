@@ -70,7 +70,8 @@ class Binance implements IExchange {
   marketSell(symbol: ExchangeSymbol): TradeResult {
     const freeAsset = this.getFreeAsset(symbol.quantityAsset)
     const price = this.priceCache.get(symbol.toString()) || this.getPrice(symbol);
-    const quoteQty = Math.ceil(price * freeAsset)
+    const cost = price * freeAsset;
+    const quoteQty = cost % 1 > 0.5 ? Math.ceil(cost) : Math.floor(cost)
     if (quoteQty < 10) { // Binance order limit in USDT
       return TradeResult.fromMsg(symbol, `NOT ENOUGH TO SELL: ${symbol.quantityAsset}=${freeAsset}, ${symbol.priceAsset}=${quoteQty}`)
     }
