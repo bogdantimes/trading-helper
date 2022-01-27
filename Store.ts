@@ -29,6 +29,7 @@ class DefaultStore implements IStore {
 
   delete(key: string) {
     delete this.properties[key]
+    this.source.deleteProperty(key)
   }
 
   get(key: string): string {
