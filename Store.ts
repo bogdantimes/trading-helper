@@ -24,7 +24,7 @@ class DefaultStore implements IStore {
   }
 
   dump() {
-    this.source.setProperties(this.properties, true)
+    this.source.setProperties(Object.assign(this.source.getProperties(), this.properties), true)
   }
 
   delete(key: string) {
