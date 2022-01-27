@@ -7,8 +7,8 @@ class V1Trader implements Trader {
     this.exchange = exchange
   }
 
-  buy(symbol: ExchangeSymbol, quantity: number): TradeResult {
-    return this.exchange.marketBuy(symbol, quantity)
+  buy(symbol: ExchangeSymbol, cost: number): TradeResult {
+    return this.exchange.marketBuy(symbol, cost)
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {

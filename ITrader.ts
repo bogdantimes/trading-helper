@@ -1,5 +1,5 @@
 interface Trader {
-  buy(symbol: ExchangeSymbol, quantity: number): TradeResult
+  buy(symbol: ExchangeSymbol, cost: number): TradeResult
 
   sell(symbol: ExchangeSymbol): TradeResult
 }
@@ -34,6 +34,7 @@ class ExchangeSymbol {
 
 class TradeResult {
   symbol: ExchangeSymbol
+  quantity: number;
   cost: number
   paid: number;
   gained: number;

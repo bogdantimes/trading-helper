@@ -29,7 +29,7 @@ class V2Trader implements Trader, StopLossSeller {
     return results
   }
 
-  buy(symbol: ExchangeSymbol, quantity: number): TradeResult {
+  buy(symbol: ExchangeSymbol, cost: number): TradeResult {
     const tradeMemo: TradeMemo = this.readTradeMemo(`trade/${symbol.quantityAsset}`);
     if (tradeMemo) {
       tradeMemo.tradeResult.msg = "Not buying. Asset is already tracked."
@@ -37,7 +37,7 @@ class V2Trader implements Trader, StopLossSeller {
       return tradeMemo.tradeResult
     }
 
-    const tradeResult = this.exchange.marketBuy(symbol, quantity);
+    const tradeResult = this.exchange.marketBuy(symbol, cost);
 
     if (tradeResult.fromExchange) {
       const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
@@ -62,28 +62,11 @@ class V2Trader implements Trader, StopLossSeller {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
 
-    const currentPrice = this.exchange.getPrice(symbol);
-
-    const noLossPrice = tradeMemo.tradeResult.price * 1.01;
-    if (currentPrice > noLossPrice) {
-      return TradeResult.fromMsg(symbol, `Not selling the asset as the current price '${currentPrice}' > '${noLossPrice}' (paid price+1%)`)
-    }
-
-    Log.info(`Selling ${symbol} as current price '${currentPrice}' <= '${noLossPrice}' (paid price+1%)`)
-
     tradeMemo.stopLossPrice = Number.MAX_SAFE_INTEGER;
     this.saveTradeMemo(symbol, tradeMemo)
     this.store.dump()
 
-    const tradeResult = this.exchange.marketSell(symbol);
-
-    if (tradeResult.fromExchange) {
-      tradeResult.profit = tradeResult.gained - tradeMemo.tradeResult.paid
-      tradeResult.msg = `Asset sold.`
-      this.store.delete(`trade/${symbol.quantityAsset}`)
-    }
-
-    return tradeResult
+    return this.sellAndClose(symbol, tradeMemo)
   }
 
   stopLossSell(symbol: ExchangeSymbol): TradeResult {
@@ -97,15 +80,7 @@ class V2Trader implements Trader, StopLossSeller {
 
     if (currentPrice <= tradeMemo.stopLossPrice) {
       Log.info(`Selling ${symbol} as current price '${currentPrice}' <= stop loss price '${tradeMemo.stopLossPrice}'`)
-      const tradeResult = this.exchange.marketSell(symbol);
-
-      if (tradeResult.fromExchange) {
-        tradeResult.profit = tradeResult.gained - tradeMemo.tradeResult.paid
-        tradeResult.msg = `Asset sold.`
-        this.store.delete(`trade/${symbol.quantityAsset}`)
-      }
-
-      return tradeResult
+      return this.sellAndClose(symbol, tradeMemo)
     }
 
     const newStopLossPrice = currentPrice * (1 - this.lossLimit);
@@ -115,7 +90,19 @@ class V2Trader implements Trader, StopLossSeller {
 
     Log.info(`${symbol} asset kept. Stop loss price: '${tradeMemo.stopLossPrice}'`)
 
-    return TradeResult.fromMsg(symbol, "Asset kept.")
+    return TradeResult.fromMsg(symbol, "Keeping the asset.")
+  }
+
+  private sellAndClose(symbol: ExchangeSymbol, memo: TradeMemo) {
+    const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
+
+    if (tradeResult.fromExchange) {
+      tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
+      tradeResult.msg = `Asset sold.`
+      this.store.delete(`trade/${symbol.quantityAsset}`)
+    }
+
+    return tradeResult
   }
 
   private readTradeMemo(key: string): TradeMemo {

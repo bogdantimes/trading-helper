@@ -1,9 +1,9 @@
 interface IExchange {
   getFreeAsset(assetName: string): number
 
-  marketBuy(symbol: ExchangeSymbol, qty: number): TradeResult
+  marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult
 
-  marketSell(symbol: ExchangeSymbol): TradeResult
+  marketSell(symbol: ExchangeSymbol, quantity?: number): TradeResult
 
   getPrice(symbol: ExchangeSymbol): number
 }
@@ -55,26 +55,36 @@ class Binance implements IExchange {
     return 0
   }
 
-  marketBuy(symbol: ExchangeSymbol, quantity: number): TradeResult {
-    const freeAsset = this.getFreeAsset(symbol.priceAsset)
-    if (freeAsset < quantity) {
-      return TradeResult.fromMsg(symbol, `NOT ENOUGH TO BUY: ${symbol.priceAsset}=${freeAsset}`)
+  marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
+    const moneyAvailable = this.getFreeAsset(symbol.priceAsset)
+    if (moneyAvailable < cost) {
+      return TradeResult.fromMsg(symbol, `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`)
     }
-    const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${quantity}`;
+    const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     const tradeResult = this.marketTrade(query);
     tradeResult.symbol = symbol
     tradeResult.paid = tradeResult.cost
     return tradeResult;
   }
 
-  marketSell(symbol: ExchangeSymbol): TradeResult {
-    const freeAsset = this.getFreeAsset(symbol.quantityAsset)
-    const price = this.priceCache.get(symbol.toString()) || this.getPrice(symbol);
-    const quoteQty = Math.floor(price * freeAsset)
-    if (quoteQty < 10) { // Binance order limit in USDT
-      return TradeResult.fromMsg(symbol, `NOT ENOUGH TO SELL: ${symbol.quantityAsset}=${freeAsset}, ${symbol.priceAsset}=${quoteQty}`)
+  /**
+   * Sells specified quantity or all available asset.
+   * @param symbol
+   * @param quantity
+   */
+  marketSell(symbol: ExchangeSymbol, quantity?: number): TradeResult {
+    let query;
+    if (quantity) {
+      query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
+    } else {
+      const freeAsset = this.getFreeAsset(symbol.quantityAsset)
+      const price = this.priceCache.get(symbol.toString()) || this.getPrice(symbol);
+      const quoteQty = Math.floor(price * freeAsset)
+      if (quoteQty <= 10) { // Binance order limit in USD
+        return TradeResult.fromMsg(symbol, `Not enough to sell: ${symbol.quantityAsset}=${freeAsset}, ${symbol.priceAsset}=${quoteQty}`)
+      }
+      query = `symbol=${symbol}&type=MARKET&side=SELL&quoteOrderQty=${quoteQty}`;
     }
-    const query = `symbol=${symbol}&type=MARKET&side=SELL&quoteOrderQty=${quoteQty}`;
     const tradeResult = this.marketTrade(query);
     tradeResult.symbol = symbol
     tradeResult.gained = tradeResult.cost
@@ -91,6 +101,7 @@ class Binance implements IExchange {
       const order = JSON.parse(response.getContentText());
       const tradeResult = new TradeResult();
       const price = order.fills && order.fills[0] && order.fills[0].price
+      tradeResult.quantity = +order.origQty
       tradeResult.cost = +order.cummulativeQuoteQty
       tradeResult.price = +price
       tradeResult.fromExchange = true
