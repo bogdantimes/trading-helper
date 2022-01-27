@@ -56,3 +56,13 @@ function doPost(e) {
   Log.ifUsefulDumpAsEmail()
   return ContentService.createTextOutput("handled doPost");
 }
+
+function quickBuy() {
+  const coin = ""
+  const eventData: EventData = {
+    act: TradeAction.BUY,
+    sym: coin,
+    ver: TraderVersion.V2
+  }
+  doPost({postData: {contents: JSON.stringify(eventData)}})
+}
