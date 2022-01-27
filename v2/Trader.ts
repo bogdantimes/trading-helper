@@ -1,7 +1,10 @@
 type TradeMemo = {
   tradeResult: TradeResult
   stopLossPrice: number
+  prices: PriceMemo;
 }
+
+type PriceMemo = [number, number, number]
 
 class V2Trader implements Trader, StopLossSeller {
   private readonly store: IStore;
@@ -41,7 +44,8 @@ class V2Trader implements Trader, StopLossSeller {
 
     if (tradeResult.fromExchange) {
       const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
-      this.saveTradeMemo(symbol, {tradeResult, stopLossPrice})
+      const prices: PriceMemo = [tradeResult.price, 0, 0]
+      this.saveTradeMemo(symbol, {tradeResult, stopLossPrice, prices})
       Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
 
       // @ts-ignore
@@ -83,8 +87,17 @@ class V2Trader implements Trader, StopLossSeller {
       return this.sellAndClose(symbol, tradeMemo)
     }
 
-    const newStopLossPrice = currentPrice * (1 - this.lossLimit);
-    tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLossPrice ? newStopLossPrice : tradeMemo.stopLossPrice
+    tradeMemo.prices.shift()
+    tradeMemo.prices.push(currentPrice)
+
+    if (this.priceGoesUp(tradeMemo.prices)) {
+      Log.info("Price goes up")
+      // Using previous price to calculate new stop limit
+      const newStopLimit = tradeMemo.prices[1] * (1 - this.lossLimit);
+      tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
+    } else {
+      Log.info("Price fluctuates")
+    }
 
     this.saveTradeMemo(symbol, tradeMemo)
 
@@ -111,6 +124,7 @@ class V2Trader implements Trader, StopLossSeller {
       const tradeMemo: TradeMemo = JSON.parse(tradeMemoRaw);
       tradeMemo.tradeResult = Object.assign(new TradeResult(), tradeMemo.tradeResult)
       tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
+      tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
       return tradeMemo
     }
     return null
@@ -118,6 +132,10 @@ class V2Trader implements Trader, StopLossSeller {
 
   private saveTradeMemo(symbol: ExchangeSymbol, tradeMemo: TradeMemo) {
     this.store.set('trade/' + symbol.quantityAsset, JSON.stringify(tradeMemo))
+  }
+
+  private priceGoesUp(lastPrices: PriceMemo): boolean {
+    return lastPrices.every((value, index) => index == 0 ? true : value > lastPrices[index - 1])
   }
 
 }
