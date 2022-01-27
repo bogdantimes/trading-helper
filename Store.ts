@@ -1,8 +1,6 @@
 import Properties = GoogleAppsScript.Properties.Properties;
 
 interface IStore {
-  dump()
-
   get(key: string): string
 
   getKeys(): string[]
@@ -16,37 +14,32 @@ interface IStore {
 
 class DefaultStore implements IStore {
   private readonly source: GoogleAppsScript.Properties.Properties;
-  private readonly properties: { [p: string]: string };
 
   constructor(source: Properties) {
     this.source = source
-    this.properties = source.getProperties()
-  }
-
-  dump() {
-    this.source.setProperties(this.properties, true)
   }
 
   delete(key: string) {
-    delete this.properties[key]
+    this.source.deleteProperty(key)
   }
 
   get(key: string): string {
-    return this.properties[key];
+    return this.source.getProperty(key);
   }
 
   getOrSet(key: string, value: string): string {
-    this.properties[key] = this.properties[key] || value
-    return this.get(key)
+    const val = this.get(key) || value;
+    this.source.setProperty(key, val)
+    return val
   }
 
   set(key: string, value: string): string {
-    this.properties[key] = value
-    return this.get(key)
+    this.source.setProperty(key, value)
+    return value
   }
 
   getKeys(): string[] {
-    return Object.keys(this.properties)
+    return this.source.getKeys()
   }
 
 }
