@@ -45,14 +45,13 @@ class Log {
   }
 
   static dump(): string {
-    return `Error:
-${this.errLog.join("\n")}
-
+    return `
 Info:
 ${this.infoLog.map(val => JSON.stringify(val)).join("\n")}
 
-Debug:
-${this.debugLog.map(val => JSON.stringify(val)).join("\n")}
+${this.errLog.length ? "Errors:\n" + this.errLog.join("\n") : ""}
+
+${this.debugLog.length ? "Debug:\n" + this.debugLog.map(val => JSON.stringify(val)).join("\n") : ""}
 `
   }
 

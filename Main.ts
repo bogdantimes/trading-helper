@@ -51,8 +51,6 @@ function doPost(e) {
     Log.error(e)
   }
 
-  store && store.dump()
-
   Log.ifUsefulDumpAsEmail()
   return ContentService.createTextOutput("handled doPost");
 }

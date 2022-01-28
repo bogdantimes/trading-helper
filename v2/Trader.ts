@@ -19,13 +19,19 @@ class V2Trader implements Trader, StopLossSeller {
 
   stopLoss(): TradeResult[] {
     const results: TradeResult[] = []
+    let failed = false
     this.store.getKeys().forEach(k => {
-      const tradeMemo: TradeMemo = this.readTradeMemo(k);
-      if (tradeMemo) {
-        results.push(this.stopLossSell(tradeMemo.tradeResult.symbol))
+      try {
+        const tradeMemo: TradeMemo = this.readTradeMemo(k);
+        if (tradeMemo) {
+          results.push(this.stopLossSell(tradeMemo.tradeResult.symbol))
+        }
+      } catch (e) {
+        Log.error(e)
+        failed = true
       }
     })
-    if (!results.length) {
+    if (!failed && !results.length) {
       StopLossWatcher.stop()
       Log.info("StopLossWatcher stopped as there are no assets to watch.")
     }
@@ -68,7 +74,6 @@ class V2Trader implements Trader, StopLossSeller {
 
     tradeMemo.stopLossPrice = Number.MAX_SAFE_INTEGER;
     this.saveTradeMemo(symbol, tradeMemo)
-    this.store.dump()
 
     return this.sellAndClose(symbol, tradeMemo)
   }

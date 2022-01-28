@@ -26,7 +26,6 @@ const StopLossWatcher = AppScriptExecutor.New({
             Log.error(e)
           }
 
-          store && store.dump()
           if (sendLog) {
             Log.ifUsefulDumpAsEmail()
           }
