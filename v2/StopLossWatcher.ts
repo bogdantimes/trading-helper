@@ -17,18 +17,12 @@ const StopLossWatcher = AppScriptExecutor.New({
         getScheduledTimestamp: () => Date.now() - 1000,
         execute(args) {
           const store = new DefaultStore(PropertiesService.getScriptProperties())
-          let sendLog = true
           try {
-            const tradeResults = new V2Trader(store, new Binance(store)).stopLoss().filter(r => r.fromExchange);
-            sendLog = tradeResults.length > 0
-            tradeResults.forEach(r => Log.info(r))
+            new V2Trader(store, new Binance(store)).stopLoss().forEach(r => Log.info(r));
           } catch (e) {
             Log.error(e)
           }
-
-          if (sendLog) {
-            Log.ifUsefulDumpAsEmail()
-          }
+          Log.ifUsefulDumpAsEmail()
         }
       }];
     }

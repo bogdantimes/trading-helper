@@ -60,6 +60,7 @@ class Binance implements IExchange {
     if (moneyAvailable < cost) {
       return TradeResult.fromMsg(symbol, `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`)
     }
+    Log.info(`Buying ${symbol}`);
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     const tradeResult = this.marketTrade(query);
     tradeResult.symbol = symbol
@@ -85,6 +86,7 @@ class Binance implements IExchange {
       }
       query = `symbol=${symbol}&type=MARKET&side=SELL&quoteOrderQty=${quoteQty}`;
     }
+    Log.info(`Selling ${symbol}`);
     const tradeResult = this.marketTrade(query);
     tradeResult.symbol = symbol
     tradeResult.gained = tradeResult.cost
