@@ -1,6 +1,7 @@
 class TradeMemo {
   tradeResult: TradeResult
   stopLossPrice: number
+  profitEstimate: number = 0;
   prices: PriceMemo;
 
   constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
@@ -65,7 +66,7 @@ class V2Trader implements Trader, StopLossSeller {
     if (tradeResult.fromExchange) {
       const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
       const prices: PriceMemo = [tradeResult.price, 0, 0]
-      this.saveTradeMemo(symbol, {tradeResult, stopLossPrice, prices})
+      this.saveTradeMemo(symbol, new TradeMemo(tradeResult, stopLossPrice, prices))
       Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
 
       // @ts-ignore
@@ -122,10 +123,9 @@ class V2Trader implements Trader, StopLossSeller {
       // Using previous price to calculate new stop limit
       const newStopLimit = tradeMemo.prices[1] * (1 - this.lossLimit);
       tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
-    } else {
-      Log.info("Price fluctuates")
     }
 
+    tradeMemo.profitEstimate = tradeMemo.tradeResult.paid * (tradeMemo.stopLossPrice / tradeMemo.tradeResult.price)
     this.saveTradeMemo(symbol, tradeMemo)
 
     Log.info(`${symbol} asset kept. Stop loss price: '${tradeMemo.stopLossPrice}'`)

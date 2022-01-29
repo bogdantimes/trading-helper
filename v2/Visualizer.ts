@@ -28,6 +28,7 @@ class V2TradeVisualizer implements TradeVisualizer {
         const chart = Charts.newLineChart()
           .setDataTable(data)
           .setYAxisTitle('Price')
+          .setXAxisTitle(`Profit estimate: ${tradeMemo.profitEstimate.toFixed(2)}`)
           .setBackgroundColor('#081f21')
           .setTitleTextStyle(textStyle)
           .setLegendTextStyle(textStyle)
