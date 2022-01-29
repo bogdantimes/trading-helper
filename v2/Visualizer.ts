@@ -12,30 +12,32 @@ class V2TradeVisualizer implements TradeVisualizer {
       if (tradeMemoRaw) {
         const tradeMemo = TradeMemo.fromJSON(tradeMemoRaw);
 
-
         const orderPrice = tradeMemo.tradeResult.price;
         const data = Charts.newDataTable()
           .addColumn(Charts.ColumnType.NUMBER, 'X')
           .addColumn(Charts.ColumnType.NUMBER, 'Order')
           .addColumn(Charts.ColumnType.NUMBER, 'Price')
           .addColumn(Charts.ColumnType.NUMBER, 'Stop limit')
-          .addRow([0, orderPrice, tradeMemo.prices[0], tradeMemo.stopLossPrice])
-          .addRow([1, orderPrice, tradeMemo.prices[1], tradeMemo.stopLossPrice])
-          .addRow([2, orderPrice, tradeMemo.prices[2], tradeMemo.stopLossPrice])
+
+        tradeMemo.prices.forEach((p, i) => {
+          data.addRow([i, orderPrice, tradeMemo.prices[i], tradeMemo.stopLossPrice])
+        })
 
         const textStyle = Charts.newTextStyle().setColor('#e7e7e7').build();
 
         const chart = Charts.newLineChart()
           .setDataTable(data)
           .setYAxisTitle('Price')
-          .setBackgroundColor('#0a1429')
+          .setBackgroundColor('#081f21')
           .setTitleTextStyle(textStyle)
           .setLegendTextStyle(textStyle)
           .setXAxisTextStyle(textStyle)
           .setYAxisTextStyle(textStyle)
           .setYAxisTitleTextStyle(textStyle)
+          .setOption("hAxis.gridlines.color", '#1f3564')
+          .setOption("vAxis.gridlines.color", '#1f3564')
           .setColors(["gold", "lightblue", "red"])
-          .setTitle('trade/PEOPLE')
+          .setTitle(`trade/${tradeMemo.tradeResult.symbol.quantityAsset}`)
           .build();
 
         const imageData = Utilities.base64Encode(chart.getAs('image/png').getBytes());
