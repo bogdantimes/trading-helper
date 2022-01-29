@@ -1,7 +1,21 @@
-type TradeMemo = {
+class TradeMemo {
   tradeResult: TradeResult
   stopLossPrice: number
   prices: PriceMemo;
+
+  constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
+    this.tradeResult = tradeResult;
+    this.stopLossPrice = stopLossPrice;
+    this.prices = prices;
+  }
+
+  static fromJSON(json: string): TradeMemo {
+    const tradeMemo: TradeMemo = JSON.parse(json);
+    tradeMemo.tradeResult = Object.assign(new TradeResult(), tradeMemo.tradeResult)
+    tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
+    tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
+    return tradeMemo
+  }
 }
 
 type PriceMemo = [number, number, number]
@@ -126,11 +140,7 @@ class V2Trader implements Trader, StopLossSeller {
   private readTradeMemo(key: string): TradeMemo {
     const tradeMemoRaw = key.startsWith("trade/") ? this.store.get(key) : null;
     if (tradeMemoRaw) {
-      const tradeMemo: TradeMemo = JSON.parse(tradeMemoRaw);
-      tradeMemo.tradeResult = Object.assign(new TradeResult(), tradeMemo.tradeResult)
-      tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
-      tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
-      return tradeMemo
+      return TradeMemo.fromJSON(tradeMemoRaw)
     }
     return null
   }

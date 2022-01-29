@@ -2,8 +2,7 @@ const USDT = "USDT";
 
 function doGet(e) {
   const store = new DefaultStore(PropertiesService.getScriptProperties());
-  const binance = new Binance(store);
-  return ContentService.createTextOutput(`handled doGet: ${binance.getFreeAsset(USDT)}`);
+  return new V2TradeVisualizer(store).render();
 }
 
 enum TradeAction {
