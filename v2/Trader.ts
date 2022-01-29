@@ -86,8 +86,16 @@ class V2Trader implements Trader, StopLossSeller {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
 
-    tradeMemo.stopLossPrice = Number.MAX_SAFE_INTEGER;
-    this.saveTradeMemo(symbol, tradeMemo)
+    try {
+      const price = tradeMemo.tradeResult.price;
+      const currentPrice = this.exchange.getPrice(symbol);
+      if ((currentPrice < price * (1 + this.lossLimit)) && (currentPrice > tradeMemo.stopLossPrice)) {
+        return TradeResult.fromMsg(symbol, "Not selling as price jitter is ignored.")
+      }
+    } finally {
+      tradeMemo.stopLossPrice = Number.MAX_SAFE_INTEGER;
+      this.saveTradeMemo(symbol, tradeMemo)
+    }
 
     return this.sellAndClose(symbol, tradeMemo)
   }
