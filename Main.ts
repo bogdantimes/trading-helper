@@ -35,8 +35,6 @@ function doPost(e) {
     const symbol = new ExchangeSymbol(eventData.sym, priceAsset)
 
     const actions = new Map()
-    actions.set(`${TraderVersion.V1}/${TradeAction.BUY}`, () => new V1Trader(store, new Binance(store)).buy(symbol, buyQuantity))
-    actions.set(`${TraderVersion.V1}/${TradeAction.SELL}`, () => new V1Trader(store, new Binance(store)).sell(symbol))
     actions.set(`${TraderVersion.V2}/${TradeAction.BUY}`, () => new V2Trader(store, new Binance(store)).buy(symbol, buyQuantity))
     actions.set(`${TraderVersion.V2}/${TradeAction.SELL}`, () => new V2Trader(store, new Binance(store)).sell(symbol))
 

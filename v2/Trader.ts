@@ -154,7 +154,7 @@ class V2Trader implements Trader, StopLossSeller {
     tradeMemo.prices.push(currentPrice)
 
     if (this.priceGoesUp(tradeMemo.prices)) {
-      Log.info("Price goes up")
+      Log.info(`${symbol} price goes up`)
       // Using previous price to calculate new stop limit
       const newStopLimit = tradeMemo.prices[1] * (1 - this.lossLimit);
       tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
@@ -169,7 +169,6 @@ class V2Trader implements Trader, StopLossSeller {
   }
 
   private sellAndClose(symbol: ExchangeSymbol, memo: TradeMemo) {
-    Log.info(`Selling ${symbol} by request.`)
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
 
     if (tradeResult.fromExchange) {

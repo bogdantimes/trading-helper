@@ -3,7 +3,7 @@ interface IExchange {
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult
 
-  marketSell(symbol: ExchangeSymbol, quantity?: number): TradeResult
+  marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult
 
   getPrice(symbol: ExchangeSymbol): number
 }
@@ -14,14 +14,12 @@ class Binance implements IExchange {
   private readonly secret: string;
   private readonly tradeReqParams: object;
   private readonly reqParams: object;
-  private readonly priceCache: Map<string, number>;
 
   constructor(store: IStore) {
     this.key = store.get('KEY')
     this.secret = store.get('SECRET')
     this.tradeReqParams = {method: 'post', headers: {'X-MBX-APIKEY': this.key}}
     this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
-    this.priceCache = new Map()
   }
 
   getPrice(symbol: ExchangeSymbol): number {
@@ -32,9 +30,7 @@ class Binance implements IExchange {
       runnable: ctx => UrlFetchApp.fetch(ctx, this.reqParams)
     });
     Log.debug(data.getContentText())
-    const price = +JSON.parse(data.getContentText()).price;
-    this.priceCache.set(symbol.toString(), price)
-    return price
+    return +JSON.parse(data.getContentText()).price
   }
 
   getFreeAsset(assetName: string): number {
@@ -73,19 +69,8 @@ class Binance implements IExchange {
    * @param symbol
    * @param quantity
    */
-  marketSell(symbol: ExchangeSymbol, quantity?: number): TradeResult {
-    let query;
-    if (quantity) {
-      query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
-    } else {
-      const freeAsset = this.getFreeAsset(symbol.quantityAsset)
-      const price = this.priceCache.get(symbol.toString()) || this.getPrice(symbol);
-      const quoteQty = Math.floor(price * freeAsset)
-      if (quoteQty <= 10) { // Binance order limit in USD
-        return TradeResult.fromMsg(symbol, `Account has insufficient balance for ${symbol.quantityAsset}: free=${freeAsset}, ${symbol.priceAsset}=${quoteQty}`)
-      }
-      query = `symbol=${symbol}&type=MARKET&side=SELL&quoteOrderQty=${quoteQty}`;
-    }
+  marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
+    const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
     Log.info(`Selling ${symbol}`);
     try {
       const tradeResult = this.marketTrade(query);
