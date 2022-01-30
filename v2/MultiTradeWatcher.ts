@@ -31,6 +31,7 @@ new DefaultStore(PropertiesService.getScriptProperties())
   .forEach(key => {
     _runtimeCtx[TradeMemoKey.from(key).symbol.quantityAsset] = function () {
       const store = new DefaultStore(PropertiesService.getScriptProperties());
+      const statistics = new Statistics(store);
       const tradeMemo = TradeMemo.fromJSON(store.get(key));
       if (tradeMemo) {
         let sendLog = true;
@@ -38,6 +39,7 @@ new DefaultStore(PropertiesService.getScriptProperties())
           const result = new V2Trader(store, new Binance(store)).stopLossSell(tradeMemo.tradeResult.symbol);
           Log.info(result.toString())
           sendLog = result.fromExchange
+          statistics.addProfit(result.profit)
         } catch (e) {
           Log.error(e)
         }

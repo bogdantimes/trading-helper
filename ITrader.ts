@@ -30,14 +30,14 @@ class ExchangeSymbol {
 
 class TradeResult {
   symbol: ExchangeSymbol
-  quantity: number;
-  cost: number
-  paid: number;
-  gained: number;
-  price: number
-  profit: number
-  msg: string
-  fromExchange: boolean;
+  quantity: number = 0;
+  cost: number = 0;
+  paid: number = 0;
+  gained: number = 0;
+  price: number = 0
+  profit: number = 0
+  msg: string = ""
+  fromExchange: boolean = false;
 
   static fromMsg(symbol: ExchangeSymbol, msg: string) {
     const result = new TradeResult();

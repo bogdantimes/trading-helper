@@ -29,6 +29,7 @@ function doPost(e) {
     const eventData: EventData = JSON.parse(e.postData.contents)
 
     store = new DefaultStore(PropertiesService.getScriptProperties())
+    const statistics = new Statistics(store);
     const priceAsset = store.getOrSet("PriceAsset", USDT);
     const buyQuantity = +store.getOrSet("BuyQuantity", "50")
     const symbol = new ExchangeSymbol(eventData.sym, priceAsset)
@@ -39,7 +40,9 @@ function doPost(e) {
 
     const action = `${eventData.ver}/${eventData.act}`;
     if (actions.has(action)) {
-      Log.info(actions.get(action)().toString())
+      const result = actions.get(action)();
+      statistics.addProfit(result.profit)
+      Log.info(result.toString())
     } else {
       Log.info(`Unsupported action: ${action}`)
     }
