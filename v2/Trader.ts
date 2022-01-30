@@ -46,7 +46,8 @@ class V2Trader implements Trader {
     try {
       const price = tradeMemo.tradeResult.price;
       const currentPrice = this.exchange.getPrice(symbol);
-      if ((currentPrice < price * (1 + this.lossLimit)) && (currentPrice > tradeMemo.stopLossPrice)) {
+      const halfOfLossLimitAbovePrice = price * (1 + (this.lossLimit / 2));
+      if ((currentPrice < halfOfLossLimitAbovePrice) && (currentPrice > tradeMemo.stopLossPrice)) {
         return TradeResult.fromMsg(symbol, "Not selling as price jitter is ignored.")
       }
     } catch (e) {
@@ -103,6 +104,7 @@ class V2Trader implements Trader {
       tradeResult.msg = `Asset sold.`
     }
 
+    Log.debug(`Deleting memo from store: ${memo.getKey()}`)
     this.store.delete(memo.getKey().toString())
     MultiTradeWatcher.unwatch(memo)
 
