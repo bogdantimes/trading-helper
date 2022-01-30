@@ -52,7 +52,8 @@ class V2TradeVisualizer implements TradeVisualizer {
     const htmlOutput = HtmlService.createHtmlOutput().setTitle('Trader bot');
     const statistics = new Statistics(this.store);
 
-    htmlOutput.append(`<h1>Total profit: ${statistics.getTotalProfit().toFixed(2)}</h1>`);
+    const profit = statistics.getTotalProfit().toFixed(2);
+    htmlOutput.append(`<h1 style="color: ${+profit >= 0 ? 'forestgreen' : 'orangered'}">Total profit: ${profit}</h1>`);
     renderedCharts.forEach(chart => {
       htmlOutput.append("<div><img src=\"" + chart + "\"></div>");
     })
