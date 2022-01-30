@@ -2,6 +2,7 @@
   "scriptId": "1US5MUp4OI4tYbKi_OOjkS02CbSdtapmBSTgTKU3Rxlt84slAaB2fh191",
   "filePushOrder": [
     "Common.ts",
-    "Store.ts"
+    "Store.ts",
+    "TradeMemo.ts"
   ]
 }
