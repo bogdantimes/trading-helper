@@ -4,10 +4,6 @@ interface Trader {
   sell(symbol: ExchangeSymbol): TradeResult
 }
 
-interface StopLossSeller {
-  stopLoss(): TradeResult[]
-}
-
 class ExchangeSymbol {
   readonly quantityAsset: string
   readonly priceAsset: string

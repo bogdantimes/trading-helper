@@ -46,7 +46,7 @@ class TradeMemoKey {
 
 type PriceMemo = [number, number, number]
 
-class V2Trader implements Trader, StopLossSeller {
+class V2Trader implements Trader {
   private readonly store: IStore;
   private readonly exchange: IExchange;
   private readonly lossLimit: number;
@@ -55,27 +55,6 @@ class V2Trader implements Trader, StopLossSeller {
     this.lossLimit = +store.getOrSet("LossLimit", "0.03")
     this.store = store
     this.exchange = exchange
-  }
-
-  stopLoss(): TradeResult[] {
-    const results: TradeResult[] = []
-    let failed = false
-    this.store.getKeys().forEach(k => {
-      try {
-        const tradeMemo: TradeMemo = this.readTradeMemo(k);
-        if (tradeMemo) {
-          results.push(this.stopLossSell(tradeMemo.tradeResult.symbol))
-        }
-      } catch (e) {
-        Log.error(e)
-        failed = true
-      }
-    })
-    if (!failed && !results.length) {
-      StopLossWatcher.stop()
-      Log.info("StopLossWatcher stopped as there are no assets to watch.")
-    }
-    return results
   }
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
@@ -90,7 +69,7 @@ class V2Trader implements Trader, StopLossSeller {
 
     if (tradeResult.fromExchange) {
       const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
-      const prices: PriceMemo = [tradeResult.price, 0, 0]
+      const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
       this.saveTradeMemo(new TradeMemo(tradeResult, stopLossPrice, prices))
       Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
 
@@ -99,8 +78,7 @@ class V2Trader implements Trader, StopLossSeller {
       _runtimeCtx[AppScriptExecutor.INSTANCE_NAME] = () => {
       }
 
-      StopLossWatcher.restart()
-      Log.info(`StopLossWatcher restarted to watch ${symbol}`)
+      MultiTradeWatcher.watch(symbol)
     }
 
     return tradeResult
@@ -174,9 +152,10 @@ class V2Trader implements Trader, StopLossSeller {
     if (tradeResult.fromExchange) {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
       tradeResult.msg = `Asset sold.`
+      MultiTradeWatcher.unwatch(symbol)
     }
 
-    this.store.delete(`${new TradeMemoKey(symbol)}`)
+    this.store.delete(memo.getKey().toString())
 
     return tradeResult
   }
