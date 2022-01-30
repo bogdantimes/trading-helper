@@ -152,10 +152,10 @@ class V2Trader implements Trader {
     if (tradeResult.fromExchange) {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
       tradeResult.msg = `Asset sold.`
-      MultiTradeWatcher.unwatch(symbol)
     }
 
     this.store.delete(memo.getKey().toString())
+    MultiTradeWatcher.unwatch(symbol)
 
     return tradeResult
   }

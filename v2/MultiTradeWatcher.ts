@@ -47,3 +47,16 @@ class MultiTradeWatcher {
 }
 
 MultiTradeWatcher.init()
+
+
+function Start() {
+  const store = new DefaultStore(PropertiesService.getScriptProperties());
+  store.getKeys().filter(TradeMemoKey.isKey).forEach(key => {
+    const tradeMemo = TradeMemo.fromJSON(store.get(key));
+    if (tradeMemo) {
+      MultiTradeWatcher.unwatch(tradeMemo.tradeResult.symbol)
+      MultiTradeWatcher.watch(tradeMemo.tradeResult.symbol)
+    }
+  })
+  Log.ifUsefulDumpAsEmail()
+}
