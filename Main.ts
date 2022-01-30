@@ -11,7 +11,6 @@ enum TradeAction {
 }
 
 enum TraderVersion {
-  V1 = "v1",
   V2 = "v2"
 }
 
