@@ -7,7 +7,7 @@ class V2TradeVisualizer implements TradeVisualizer {
 
   render(): HtmlOutput {
     const renderedCharts: string[] = []
-    this.store.getKeys().filter(k => k.startsWith("trade/")).forEach(k => {
+    this.store.getKeys().filter(TradeMemoKey.isKey).forEach(k => {
       const tradeMemoRaw = this.store.get(k);
       if (tradeMemoRaw) {
         const tradeMemo = TradeMemo.fromJSON(tradeMemoRaw);
@@ -35,10 +35,11 @@ class V2TradeVisualizer implements TradeVisualizer {
           .setXAxisTextStyle(textStyle)
           .setYAxisTextStyle(textStyle)
           .setYAxisTitleTextStyle(textStyle)
+          .setXAxisTitleTextStyle(textStyle)
           .setOption("hAxis.gridlines.color", '#1f3564')
           .setOption("vAxis.gridlines.color", '#1f3564')
           .setColors(["gold", "lightblue", "red"])
-          .setTitle(`trade/${tradeMemo.tradeResult.symbol.quantityAsset}`)
+          .setTitle(tradeMemo.getKey().toString())
           .build();
 
         const imageData = Utilities.base64Encode(chart.getAs('image/png').getBytes());
@@ -51,7 +52,7 @@ class V2TradeVisualizer implements TradeVisualizer {
     const htmlOutput = HtmlService.createHtmlOutput().setTitle('Trader bot');
 
     renderedCharts.forEach(chart => {
-      htmlOutput.append("<img src=\"" + chart + "\">");
+      htmlOutput.append("<div><img src=\"" + chart + "\"></div>");
     })
 
     return htmlOutput;

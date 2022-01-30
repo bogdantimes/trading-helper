@@ -43,6 +43,10 @@ const StopLossWatcher = AppScriptExecutor.New({
  */
 function Start() {
   try {
+    // @ts-ignore
+    // workaround: no-op function to not run the tasks on restart
+    _runtimeCtx[AppScriptExecutor.INSTANCE_NAME] = () => {
+    }
     StopLossWatcher.restart();
     Log.info(StopLossWatcher.getTasks().map(t => t.getTaskName()));
   } finally {

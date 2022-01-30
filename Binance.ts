@@ -82,15 +82,22 @@ class Binance implements IExchange {
       const price = this.priceCache.get(symbol.toString()) || this.getPrice(symbol);
       const quoteQty = Math.floor(price * freeAsset)
       if (quoteQty <= 10) { // Binance order limit in USD
-        return TradeResult.fromMsg(symbol, `Not enough to sell: ${symbol.quantityAsset}=${freeAsset}, ${symbol.priceAsset}=${quoteQty}`)
+        return TradeResult.fromMsg(symbol, `Account has insufficient balance for ${symbol.quantityAsset}: free=${freeAsset}, ${symbol.priceAsset}=${quoteQty}`)
       }
       query = `symbol=${symbol}&type=MARKET&side=SELL&quoteOrderQty=${quoteQty}`;
     }
     Log.info(`Selling ${symbol}`);
-    const tradeResult = this.marketTrade(query);
-    tradeResult.symbol = symbol
-    tradeResult.gained = tradeResult.cost
-    return tradeResult;
+    try {
+      const tradeResult = this.marketTrade(query);
+      tradeResult.symbol = symbol
+      tradeResult.gained = tradeResult.cost
+      return tradeResult;
+    } catch (e) {
+      if (e.message.includes("Account has insufficient balance")) {
+        return TradeResult.fromMsg(symbol, `Account has insufficient balance for ${symbol.quantityAsset}`)
+      }
+      throw e
+    }
   }
 
   marketTrade(query: string): TradeResult {
