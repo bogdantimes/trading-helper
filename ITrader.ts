@@ -36,6 +36,7 @@ class TradeResult {
   gained: number = 0;
   price: number = 0
   profit: number = 0
+  commission: number = 0
   msg: string = ""
   fromExchange: boolean = false;
 

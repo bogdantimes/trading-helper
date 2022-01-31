@@ -42,6 +42,7 @@ function doPost(e) {
     if (actions.has(action)) {
       const result = actions.get(action)();
       statistics.addProfit(result.profit)
+      statistics.addCommission(result.commission)
       Log.info(result.toString())
     } else {
       Log.info(`Unsupported action: ${action}`)

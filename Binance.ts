@@ -94,16 +94,31 @@ class Binance implements IExchange {
     try {
       const order = JSON.parse(response.getContentText());
       const tradeResult = new TradeResult();
-      const price = order.fills && order.fills[0] && order.fills[0].price
+      const [price, commission] = this.reducePriceAndCommission(order.fills)
       tradeResult.quantity = +order.origQty
       tradeResult.cost = +order.cummulativeQuoteQty
-      tradeResult.price = +price
+      tradeResult.price = price
       tradeResult.fromExchange = true
+      tradeResult.commission = commission
       return tradeResult;
     } catch (e) {
       Log.error(e)
       throw e
     }
+  }
+
+  private reducePriceAndCommission(fills = []): [number, number] {
+    let price = 0;
+    let commission = 0
+    fills.forEach(f => {
+      if (f.commissionAsset != "BNB") {
+        Log.info(`Commission is ${f.commissionAsset} instead of BNB`)
+      } else {
+        commission += +f.commission
+      }
+      price = price ? (price + f.price) / 2 : price;
+    }, 0)
+    return [price, commission]
   }
 
   private addSignature(data: string) {

@@ -12,4 +12,12 @@ class Statistics {
   addProfit(profit: number): number {
     return +this.store.set("totalProfit", String(this.getTotalProfit() + profit))
   }
+
+  getTotalCommission(): number {
+    return +this.store.getOrSet("totalCommission", "0")
+  }
+
+  addCommission(commission: number): number {
+    return +this.store.set("totalCommission", String(this.getTotalCommission() + commission))
+  }
 }

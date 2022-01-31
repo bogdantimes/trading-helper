@@ -40,6 +40,7 @@ new DefaultStore(PropertiesService.getScriptProperties())
           Log.info(result.toString())
           sendLog = result.fromExchange
           statistics.addProfit(result.profit)
+          statistics.addCommission(result.commission)
         } catch (e) {
           Log.error(e)
         }

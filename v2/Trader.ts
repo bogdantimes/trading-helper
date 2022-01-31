@@ -34,7 +34,7 @@ class V2Trader implements Trader {
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    let tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
     if (!tradeMemo) {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
@@ -54,6 +54,11 @@ class V2Trader implements Trader {
       Log.error(e)
     }
 
+    // Double-checking the trade memo is still present because it could have been removed in parallel by stopLossSell
+    tradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    if (!tradeMemo) {
+      return TradeResult.fromMsg(symbol, "Asset is not present")
+    }
     tradeMemo.sell = true;
     this.saveTradeMemo(tradeMemo)
 
