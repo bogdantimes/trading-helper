@@ -116,8 +116,8 @@ class Binance implements IExchange {
       } else {
         commission += +f.commission
       }
-      price = price ? (price + f.price) / 2 : price;
-    }, 0)
+      price = price ? (+f.price + price) / 2 : +f.price;
+    })
     return [price, commission]
   }
 
