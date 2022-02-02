@@ -55,12 +55,18 @@ function doPost(e) {
   return ContentService.createTextOutput("handled doPost");
 }
 
+const RetryBuying = "retryBuying";
+
 function quickBuy() {
-  const coin = ""
-  const eventData: EventData = {
-    act: TradeAction.BUY,
-    sym: coin,
-    ver: TraderVersion.V2
+  const store = new DefaultStore(PropertiesService.getScriptProperties())
+  const asset = store.get(RetryBuying);
+  if (asset) {
+    Log.info(`quickBuy called for ${asset}`)
+    const eventData: EventData = {
+      act: TradeAction.BUY,
+      sym: asset,
+      ver: TraderVersion.V2
+    }
+    doPost({postData: {contents: JSON.stringify(eventData)}})
   }
-  doPost({postData: {contents: JSON.stringify(eventData)}})
 }

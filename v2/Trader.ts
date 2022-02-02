@@ -19,18 +19,26 @@ class V2Trader implements Trader {
       return tradeMemo.tradeResult
     }
 
-    const tradeResult = this.exchange.marketBuy(symbol, cost);
+    try {
+      const tradeResult = this.exchange.marketBuy(symbol, cost);
+      this.store.delete(RetryBuying)
 
-    if (tradeResult.fromExchange) {
-      const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
-      const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
-      const tradeMemo = new TradeMemo(tradeResult, stopLossPrice, prices);
-      this.saveTradeMemo(tradeMemo)
-      Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
-      MultiTradeWatcher.watch(tradeMemo)
+      if (tradeResult.fromExchange) {
+        const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
+        const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
+        const tradeMemo = new TradeMemo(tradeResult, stopLossPrice, prices);
+        this.saveTradeMemo(tradeMemo)
+        Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
+        MultiTradeWatcher.watch(tradeMemo)
+      }
+
+      return tradeResult
+    } catch (e) {
+      this.store.set(RetryBuying, symbol.quantityAsset)
+      ScriptApp.newTrigger(quickBuy.name).timeBased().after(5000).create()
+      Log.info(`Scheduled quickBuy to retryBuying of ${symbol.quantityAsset}`)
+      throw e
     }
-
-    return tradeResult
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {
@@ -88,8 +96,8 @@ class V2Trader implements Trader {
 
     if (this.priceGoesUp(tradeMemo.prices)) {
       Log.info(`${symbol} price goes up`)
-      // Using latest price to calculate new stop limit
-      const newStopLimit = tradeMemo.prices[2] * (1 - this.lossLimit);
+      // Using previous price to calculate new stop limit
+      const newStopLimit = tradeMemo.prices[1] * (1 - this.lossLimit);
       tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
     }
 
