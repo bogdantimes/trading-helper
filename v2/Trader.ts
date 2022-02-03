@@ -1,5 +1,8 @@
 type PriceMemo = [number, number, number]
 
+const blockedKey = (s: ExchangeSymbol) => `blocked/${s}`
+const lossesKey = (s: ExchangeSymbol) => `losses/${s}`
+
 class V2Trader implements Trader {
   private readonly store: IStore;
   private readonly exchange: IExchange;
@@ -17,6 +20,10 @@ class V2Trader implements Trader {
       tradeMemo.tradeResult.msg = "Not buying. Asset is already tracked."
       tradeMemo.tradeResult.fromExchange = false
       return tradeMemo.tradeResult
+    }
+
+    if (CacheService.getScriptCache().get(blockedKey(symbol))) {
+      return TradeResult.fromMsg(symbol, "Symbol is blocked after reaching MaxLosses")
     }
 
     try {
@@ -115,6 +122,17 @@ class V2Trader implements Trader {
     if (tradeResult.fromExchange) {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
       tradeResult.msg = `Asset sold.`
+      if (tradeResult.profit > 0) {
+        this.store.delete(lossesKey(symbol))
+      } else {
+        const losses = this.store.increment(lossesKey(symbol));
+        const maxLossesBeforeBlock = +this.store.getOrSet('MaxLosses', '3')
+        if (losses >= maxLossesBeforeBlock) {
+          const blockDurationMin = +this.store.getOrSet('BlockDurationMin', "240");
+          CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin)
+          Log.info(`${symbol} blocked for ${blockDurationMin} minutes after getting ${maxLossesBeforeBlock} losses in a row!`)
+        }
+      }
     }
 
     Log.debug(`Deleting memo from store: ${memo.getKey()}`)

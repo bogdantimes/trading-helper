@@ -26,6 +26,10 @@ class ExchangeSymbol {
   toString() {
     return this.quantityAsset + this.priceAsset
   }
+
+  key(prefix: string): string {
+    return `${prefix}/${this}`
+  }
 }
 
 class TradeResult {

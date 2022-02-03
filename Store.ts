@@ -9,6 +9,8 @@ interface IStore {
 
   getOrSet(key: string, value: string): string
 
+  increment(key: string): number
+
   delete(key: string)
 }
 
@@ -17,6 +19,12 @@ class DefaultStore implements IStore {
 
   constructor(source: Properties) {
     this.source = source
+  }
+
+  increment(key: string): number {
+    const num = +this.get(key) || 0;
+    this.set(key, String(num + 1))
+    return num
   }
 
   delete(key: string) {
