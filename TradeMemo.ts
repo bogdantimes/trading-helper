@@ -28,18 +28,15 @@ class TradeMemo {
   }
 }
 
-class TradeMemoKey {
+class TradeMemoKey extends String {
   symbol: ExchangeSymbol
 
   constructor(symbol: ExchangeSymbol) {
+    super(`trade/${symbol.quantityAsset}`)
     this.symbol = symbol;
   }
 
-  toString(): string {
-    return `trade/${this.symbol.quantityAsset}`
-  }
-
-  static isKey(key: string): boolean {
+  static isKey(key: String): boolean {
     return key.startsWith('trade/')
   }
 

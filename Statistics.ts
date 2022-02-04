@@ -23,11 +23,11 @@ class Statistics {
 
   bumpLossProfitMeter(symbol: ExchangeSymbol): number {
     const val = +this.store.getOrSet(`lpMeter/${symbol}`, "3");
-    return +this.store.set(`lpMeter/${symbol}`, String(Math.max(val + 1, 3)))
+    return +this.store.set(`lpMeter/${symbol}`, String(Math.min(val + 1, 3)))
   }
 
   dumpLossProfitMeter(symbol: ExchangeSymbol): number {
     const val = +this.store.getOrSet(`lpMeter/${symbol}`, "3");
-    return +this.store.set(`lpMeter/${symbol}`, String(Math.min(val - 1, 0)))
+    return +this.store.set(`lpMeter/${symbol}`, String(Math.max(val - 1, 0)))
   }
 }

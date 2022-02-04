@@ -4,11 +4,12 @@ interface Trader {
   sell(symbol: ExchangeSymbol): TradeResult
 }
 
-class ExchangeSymbol {
+class ExchangeSymbol extends String {
   readonly quantityAsset: string
   readonly priceAsset: string
 
   constructor(quantityAsset: string, priceAsset: string) {
+    super(quantityAsset + priceAsset);
     if (!quantityAsset) {
       throw Error(`Invalid quantityAsset: "${quantityAsset}"`)
     }
@@ -21,14 +22,6 @@ class ExchangeSymbol {
 
   static fromObject(object: { quantityAsset: string, priceAsset: string }): ExchangeSymbol {
     return new ExchangeSymbol(object.quantityAsset, object.priceAsset)
-  }
-
-  toString() {
-    return this.quantityAsset + this.priceAsset
-  }
-
-  key(prefix: string): string {
-    return `${prefix}/${this}`
   }
 }
 

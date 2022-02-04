@@ -16,7 +16,7 @@ class V2Trader implements Trader {
   }
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
     if (tradeMemo) {
       tradeMemo.tradeResult.msg = "Not buying. Asset is already tracked."
       tradeMemo.tradeResult.fromExchange = false
@@ -42,15 +42,15 @@ class V2Trader implements Trader {
 
       return tradeResult
     } catch (e) {
-      this.store.set(RetryBuying, symbol.quantityAsset)
+      this.store.set(RetryBuying, symbol)
       ScriptApp.newTrigger(quickBuy.name).timeBased().after(5000).create()
-      Log.info(`Scheduled quickBuy to retryBuying of ${symbol.quantityAsset}`)
+      Log.info(`Scheduled quickBuy to retryBuying of ${symbol}`)
       throw e
     }
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {
-    let tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    let tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
     if (!tradeMemo) {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
@@ -71,7 +71,7 @@ class V2Trader implements Trader {
     }
 
     // Double-checking the trade memo is still present because it could have been removed in parallel by stopLossSell
-    tradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    tradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
     if (!tradeMemo) {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
@@ -83,7 +83,7 @@ class V2Trader implements Trader {
 
   stopLossSell(symbol: ExchangeSymbol): TradeResult {
 
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
     if (!tradeMemo) {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
@@ -137,13 +137,13 @@ class V2Trader implements Trader {
     }
 
     Log.debug(`Deleting memo from store: ${memo.getKey()}`)
-    this.store.delete(memo.getKey().toString())
+    this.store.delete(memo.getKey())
     MultiTradeWatcher.unwatch(memo)
 
     return tradeResult
   }
 
-  private readTradeMemo(key: string): TradeMemo {
+  private readTradeMemo(key: String): TradeMemo {
     const tradeMemoRaw = TradeMemoKey.isKey(key) ? this.store.get(key) : null;
     if (tradeMemoRaw) {
       return TradeMemo.fromJSON(tradeMemoRaw)
@@ -152,7 +152,7 @@ class V2Trader implements Trader {
   }
 
   private saveTradeMemo(tradeMemo: TradeMemo) {
-    this.store.set(`${tradeMemo.getKey()}`, JSON.stringify(tradeMemo))
+    this.store.set(tradeMemo.getKey(), JSON.stringify(tradeMemo))
   }
 
   private priceGoesUp(lastPrices: PriceMemo): boolean {

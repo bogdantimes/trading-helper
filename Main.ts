@@ -57,9 +57,9 @@ function doPost(e) {
 
     const trader = new V2Trader(store, new Binance(store), statistics);
     if (tradeReq.act == TradeAction.BUY) {
-      Log.info(trader.buy(symbol, buyQuantity).toString())
+      Log.info(trader.buy(symbol, buyQuantity))
     } else if (tradeReq.act == TradeAction.SELL) {
-      Log.info(trader.sell(symbol).toString())
+      Log.info(trader.sell(symbol))
     } else {
       Log.info(`Unsupported action: ${tradeReq.act}`)
     }
@@ -78,11 +78,6 @@ function quickBuy() {
   const asset = store.get(RetryBuying);
   if (asset) {
     Log.info(`quickBuy called for ${asset}`)
-    const eventData: TradeRequest = {
-      act: TradeAction.BUY,
-      sym: asset,
-      ver: TraderVersion.V2
-    }
-    doPost({postData: {contents: JSON.stringify(eventData)}})
+    doPost({postData: {contents: `buy ${asset}`}})
   }
 }
