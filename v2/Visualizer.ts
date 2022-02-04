@@ -39,7 +39,7 @@ class V2TradeVisualizer implements TradeVisualizer {
           .setOption("hAxis.gridlines.color", '#1f3564')
           .setOption("vAxis.gridlines.color", '#1f3564')
           .setColors(["gold", "lightblue", "red"])
-          .setTitle(tradeMemo.getKey())
+          .setTitle(tradeMemo.getKey().toString())
           .build();
 
         const imageData = Utilities.base64Encode(chart.getAs('image/png').getBytes());

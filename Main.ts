@@ -53,7 +53,7 @@ function doPost(e) {
     const statistics = new Statistics(store);
     const priceAsset = store.getOrSet("PriceAsset", USDT);
     const buyQuantity = +store.getOrSet("BuyQuantity", "50")
-    const symbol = new ExchangeSymbol(tradeReq.sym, priceAsset)
+    const symbol = new ExchangeSymbol(tradeReq.sym, priceAsset.toString())
 
     const trader = new V2Trader(store, new Binance(store), statistics);
     if (tradeReq.act == TradeAction.BUY) {

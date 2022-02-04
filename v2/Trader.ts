@@ -42,7 +42,7 @@ class V2Trader implements Trader {
 
       return tradeResult
     } catch (e) {
-      this.store.set(RetryBuying, symbol)
+      this.store.set(RetryBuying, symbol.toString())
       ScriptApp.newTrigger(quickBuy.name).timeBased().after(5000).create()
       Log.info(`Scheduled quickBuy to retryBuying of ${symbol}`)
       throw e
@@ -136,15 +136,15 @@ class V2Trader implements Trader {
       }
     }
 
-    Log.debug(`Deleting memo from store: ${memo.getKey()}`)
-    this.store.delete(memo.getKey())
+    Log.debug(`Deleting memo from store: ${memo.getKey().toString()}`)
+    this.store.delete(memo.getKey().toString())
     MultiTradeWatcher.unwatch(memo)
 
     return tradeResult
   }
 
-  private readTradeMemo(key: String): TradeMemo {
-    const tradeMemoRaw = TradeMemoKey.isKey(key) ? this.store.get(key) : null;
+  private readTradeMemo(key: TradeMemoKey): TradeMemo {
+    const tradeMemoRaw = this.store.get(key.toString());
     if (tradeMemoRaw) {
       return TradeMemo.fromJSON(tradeMemoRaw)
     }
@@ -152,7 +152,7 @@ class V2Trader implements Trader {
   }
 
   private saveTradeMemo(tradeMemo: TradeMemo) {
-    this.store.set(tradeMemo.getKey(), JSON.stringify(tradeMemo))
+    this.store.set(tradeMemo.getKey().toString(), JSON.stringify(tradeMemo))
   }
 
   private priceGoesUp(lastPrices: PriceMemo): boolean {

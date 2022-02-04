@@ -28,11 +28,10 @@ class TradeMemo {
   }
 }
 
-class TradeMemoKey extends String {
-  symbol: ExchangeSymbol
+class TradeMemoKey {
+  readonly symbol: ExchangeSymbol
 
   constructor(symbol: ExchangeSymbol) {
-    super(`trade/${symbol.quantityAsset}`)
     this.symbol = symbol;
   }
 
@@ -42,5 +41,9 @@ class TradeMemoKey extends String {
 
   static from(key: string): TradeMemoKey {
     return new TradeMemoKey(new ExchangeSymbol(key.split("/")[1], USDT))
+  }
+
+  toString(): string {
+    return `trade/${this.symbol.quantityAsset}`
   }
 }
