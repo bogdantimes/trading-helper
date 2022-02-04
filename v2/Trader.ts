@@ -128,11 +128,10 @@ class V2Trader implements Trader {
         this.stats.bumpLossProfitMeter(symbol)
       } else {
         const lpMeter = this.stats.dumpLossProfitMeter(symbol);
-        const maxLossesBeforeBlock = +this.store.getOrSet('MaxLosses', '3')
         if (lpMeter <= 0) {
           const blockDurationMin = +this.store.getOrSet('BlockDurationMin', "240");
           CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin)
-          Log.info(`${symbol} blocked for ${blockDurationMin} minutes after getting ${maxLossesBeforeBlock} losses in a row!`)
+          Log.info(`${symbol} blocked for ${blockDurationMin} minutes as loss-profit meter reached 0.`)
         }
       }
     }
