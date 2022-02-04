@@ -14,10 +14,31 @@ enum TraderVersion {
   V2 = "v2"
 }
 
-type EventData = {
+type TradeRequest = {
   ver: TraderVersion
   act: TradeAction
   sym: string
+}
+
+/**
+ * Expected format:
+ * "buy BTCUSDT"
+ * "sell ETHUSDT"
+ * @param req
+ */
+function parseTradeRequest(req: string): TradeRequest {
+  const tokens = req.toUpperCase().trim().split(/\s/)
+  if (tokens.length == 2) {
+    const data: TradeRequest = {
+      act: TradeAction[tokens[0]],
+      sym: tokens[1].split(USDT)[0],
+      ver: TraderVersion.V2
+    }
+    if (data.act && data.sym && data.ver) {
+      return data
+    }
+  }
+  throw Error(`invalid request: ${req}`)
 }
 
 function doPost(e) {
@@ -26,26 +47,21 @@ function doPost(e) {
   try {
     Log.debug(e.postData.contents)
 
-    const eventData: EventData = JSON.parse(e.postData.contents)
+    const tradeReq: TradeRequest = parseTradeRequest(e.postData.contents)
 
     store = new DefaultStore(PropertiesService.getScriptProperties())
     const statistics = new Statistics(store);
     const priceAsset = store.getOrSet("PriceAsset", USDT);
     const buyQuantity = +store.getOrSet("BuyQuantity", "50")
-    const symbol = new ExchangeSymbol(eventData.sym, priceAsset)
+    const symbol = new ExchangeSymbol(tradeReq.sym, priceAsset)
 
-    const actions = new Map()
-    actions.set(`${TraderVersion.V2}/${TradeAction.BUY}`, () => new V2Trader(store, new Binance(store)).buy(symbol, buyQuantity))
-    actions.set(`${TraderVersion.V2}/${TradeAction.SELL}`, () => new V2Trader(store, new Binance(store)).sell(symbol))
-
-    const action = `${eventData.ver}/${eventData.act}`;
-    if (actions.has(action)) {
-      const result = actions.get(action)();
-      statistics.addProfit(result.profit)
-      statistics.addCommission(result.commission)
-      Log.info(result.toString())
+    const trader = new V2Trader(store, new Binance(store), statistics);
+    if (tradeReq.act == TradeAction.BUY) {
+      Log.info(trader.buy(symbol, buyQuantity).toString())
+    } else if (tradeReq.act == TradeAction.SELL) {
+      Log.info(trader.sell(symbol).toString())
     } else {
-      Log.info(`Unsupported action: ${action}`)
+      Log.info(`Unsupported action: ${tradeReq.act}`)
     }
   } catch (e) {
     Log.error(e)
@@ -62,7 +78,7 @@ function quickBuy() {
   const asset = store.get(RetryBuying);
   if (asset) {
     Log.info(`quickBuy called for ${asset}`)
-    const eventData: EventData = {
+    const eventData: TradeRequest = {
       act: TradeAction.BUY,
       sym: asset,
       ver: TraderVersion.V2

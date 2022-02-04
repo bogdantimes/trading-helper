@@ -1,17 +1,18 @@
 type PriceMemo = [number, number, number]
 
 const blockedKey = (s: ExchangeSymbol) => `blocked/${s}`
-const lossesKey = (s: ExchangeSymbol) => `losses/${s}`
 
 class V2Trader implements Trader {
   private readonly store: IStore;
   private readonly exchange: IExchange;
   private readonly lossLimit: number;
+  private readonly stats: Statistics;
 
-  constructor(store: IStore, exchange: IExchange) {
+  constructor(store: IStore, exchange: IExchange, stats: Statistics) {
     this.lossLimit = +store.getOrSet("LossLimit", "0.03")
     this.store = store
     this.exchange = exchange
+    this.stats = stats
   }
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
@@ -123,11 +124,11 @@ class V2Trader implements Trader {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
       tradeResult.msg = `Asset sold.`
       if (tradeResult.profit > 0) {
-        this.store.delete(lossesKey(symbol))
+        this.stats.bumpLossProfitMeter(symbol)
       } else {
-        const losses = this.store.increment(lossesKey(symbol));
+        const lpMeter = this.stats.dumpLossProfitMeter(symbol);
         const maxLossesBeforeBlock = +this.store.getOrSet('MaxLosses', '3')
-        if (losses >= maxLossesBeforeBlock) {
+        if (lpMeter <= 0) {
           const blockDurationMin = +this.store.getOrSet('BlockDurationMin', "240");
           CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin)
           Log.info(`${symbol} blocked for ${blockDurationMin} minutes after getting ${maxLossesBeforeBlock} losses in a row!`)
