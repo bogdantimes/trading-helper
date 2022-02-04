@@ -62,8 +62,9 @@ class V2Trader implements Trader {
     try {
       const price = tradeMemo.tradeResult.price;
       const currentPrice = this.exchange.getPrice(symbol);
-      const halfOfLossLimitAbovePrice = price * (1 + (this.lossLimit / 2));
-      if ((currentPrice < halfOfLossLimitAbovePrice) && (currentPrice > tradeMemo.stopLossPrice)) {
+      const priceWithCommission = price * 1.25;
+      // No sense to sell if the price not covers at least the commission and it not yet below the stop limit.
+      if ((currentPrice < priceWithCommission) && (currentPrice > tradeMemo.stopLossPrice)) {
         return TradeResult.fromMsg(symbol, "Not selling as price jitter is ignored.")
       }
     } catch (e) {
