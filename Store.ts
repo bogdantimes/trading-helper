@@ -1,15 +1,17 @@
 import Properties = GoogleAppsScript.Properties.Properties;
 
 interface IStore {
-  get(key: string): string
+  get(key: String): string
 
   getKeys(): string[]
 
-  set(key: string, value: string): string
+  set(key: String, value: String): String
 
-  getOrSet(key: string, value: string): string
+  getOrSet(key: String, value: String): String
 
-  delete(key: string)
+  increment(key: String): number
+
+  delete(key: String)
 }
 
 class DefaultStore implements IStore {
@@ -19,21 +21,27 @@ class DefaultStore implements IStore {
     this.source = source
   }
 
-  delete(key: string) {
+  increment(key: String): number {
+    const num = +this.get(key) || 0;
+    this.set(key, String(num + 1))
+    return num
+  }
+
+  delete(key: String) {
     this.source.deleteProperty(key)
   }
 
-  get(key: string): string {
+  get(key: String): string {
     return this.source.getProperty(key);
   }
 
-  getOrSet(key: string, value: string): string {
+  getOrSet(key: String, value: String): String {
     const val = this.get(key) || value;
     this.source.setProperty(key, val)
     return val
   }
 
-  set(key: string, value: string): string {
+  set(key: String, value: String): String {
     this.source.setProperty(key, value)
     return value
   }

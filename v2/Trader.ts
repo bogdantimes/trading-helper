@@ -1,113 +1,56 @@
-class TradeMemo {
-  tradeResult: TradeResult
-  stopLossPrice: number
-  profitEstimate: number = 0;
-  prices: PriceMemo;
-  sell: boolean;
-
-  constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
-    this.tradeResult = tradeResult;
-    this.stopLossPrice = stopLossPrice;
-    this.prices = prices;
-  }
-
-  static empty(): TradeMemo {
-    return new TradeMemo(null, 0, [0, 0, 0])
-  }
-
-  static fromJSON(json: string): TradeMemo {
-    const tradeMemo: TradeMemo = Object.assign(TradeMemo.empty(), JSON.parse(json));
-    tradeMemo.tradeResult = Object.assign(new TradeResult(), tradeMemo.tradeResult)
-    tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
-    tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
-    return tradeMemo
-  }
-
-  getKey(): TradeMemoKey {
-    return new TradeMemoKey(this.tradeResult.symbol)
-  }
-}
-
-class TradeMemoKey {
-  symbol: ExchangeSymbol
-
-  constructor(symbol: ExchangeSymbol) {
-    this.symbol = symbol;
-  }
-
-  toString(): string {
-    return `trade/${this.symbol.quantityAsset}`
-  }
-
-  static isKey(key: string): boolean {
-    return key.startsWith('trade/')
-  }
-}
-
 type PriceMemo = [number, number, number]
 
-class V2Trader implements Trader, StopLossSeller {
+const blockedKey = (s: ExchangeSymbol) => `blocked/${s}`
+
+class V2Trader implements Trader {
   private readonly store: IStore;
   private readonly exchange: IExchange;
   private readonly lossLimit: number;
+  private readonly stats: Statistics;
 
-  constructor(store: IStore, exchange: IExchange) {
+  constructor(store: IStore, exchange: IExchange, stats: Statistics) {
     this.lossLimit = +store.getOrSet("LossLimit", "0.03")
     this.store = store
     this.exchange = exchange
-  }
-
-  stopLoss(): TradeResult[] {
-    const results: TradeResult[] = []
-    let failed = false
-    this.store.getKeys().forEach(k => {
-      try {
-        const tradeMemo: TradeMemo = this.readTradeMemo(k);
-        if (tradeMemo) {
-          results.push(this.stopLossSell(tradeMemo.tradeResult.symbol))
-        }
-      } catch (e) {
-        Log.error(e)
-        failed = true
-      }
-    })
-    if (!failed && !results.length) {
-      StopLossWatcher.stop()
-      Log.info("StopLossWatcher stopped as there are no assets to watch.")
-    }
-    return results
+    this.stats = stats
   }
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
     if (tradeMemo) {
       tradeMemo.tradeResult.msg = "Not buying. Asset is already tracked."
       tradeMemo.tradeResult.fromExchange = false
       return tradeMemo.tradeResult
     }
 
-    const tradeResult = this.exchange.marketBuy(symbol, cost);
-
-    if (tradeResult.fromExchange) {
-      const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
-      const prices: PriceMemo = [tradeResult.price, 0, 0]
-      this.saveTradeMemo(new TradeMemo(tradeResult, stopLossPrice, prices))
-      Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
-
-      // @ts-ignore
-      // workaround: no-op function to not run the tasks on restart
-      _runtimeCtx[AppScriptExecutor.INSTANCE_NAME] = () => {
-      }
-
-      StopLossWatcher.restart()
-      Log.info(`StopLossWatcher restarted to watch ${symbol}`)
+    if (CacheService.getScriptCache().get(blockedKey(symbol))) {
+      return TradeResult.fromMsg(symbol, "Symbol is blocked after reaching MaxLosses")
     }
 
-    return tradeResult
+    try {
+      const tradeResult = this.exchange.marketBuy(symbol, cost);
+      this.store.delete(RetryBuying)
+
+      if (tradeResult.fromExchange) {
+        const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
+        const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
+        const tradeMemo = new TradeMemo(tradeResult, stopLossPrice, prices);
+        this.saveTradeMemo(tradeMemo)
+        Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
+        MultiTradeWatcher.watch(tradeMemo)
+      }
+
+      return tradeResult
+    } catch (e) {
+      this.store.set(RetryBuying, symbol.toString())
+      ScriptApp.newTrigger(quickBuy.name).timeBased().after(5000).create()
+      Log.info(`Scheduled quickBuy to retryBuying of ${symbol}`)
+      throw e
+    }
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    let tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
     if (!tradeMemo) {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
@@ -119,13 +62,20 @@ class V2Trader implements Trader, StopLossSeller {
     try {
       const price = tradeMemo.tradeResult.price;
       const currentPrice = this.exchange.getPrice(symbol);
-      if ((currentPrice < price * (1 + this.lossLimit)) && (currentPrice > tradeMemo.stopLossPrice)) {
+      const priceWithCommission = price * 1.25;
+      // No sense to sell if the price not covers at least the commission and it not yet below the stop limit.
+      if ((currentPrice < priceWithCommission) && (currentPrice > tradeMemo.stopLossPrice)) {
         return TradeResult.fromMsg(symbol, "Not selling as price jitter is ignored.")
       }
     } catch (e) {
       Log.error(e)
     }
 
+    // Double-checking the trade memo is still present because it could have been removed in parallel by stopLossSell
+    tradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
+    if (!tradeMemo) {
+      return TradeResult.fromMsg(symbol, "Asset is not present")
+    }
     tradeMemo.sell = true;
     this.saveTradeMemo(tradeMemo)
 
@@ -134,7 +84,7 @@ class V2Trader implements Trader, StopLossSeller {
 
   stopLossSell(symbol: ExchangeSymbol): TradeResult {
 
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol).toString());
+    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
     if (!tradeMemo) {
       return TradeResult.fromMsg(symbol, "Asset is not present")
     }
@@ -174,15 +124,27 @@ class V2Trader implements Trader, StopLossSeller {
     if (tradeResult.fromExchange) {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
       tradeResult.msg = `Asset sold.`
+      if (tradeResult.profit > 0) {
+        this.stats.bumpLossProfitMeter(symbol)
+      } else {
+        const lpMeter = this.stats.dumpLossProfitMeter(symbol);
+        if (lpMeter <= 0) {
+          const blockDurationMin = +this.store.getOrSet('BlockDurationMin', "240");
+          CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin)
+          Log.info(`${symbol} blocked for ${blockDurationMin} minutes as loss-profit meter reached 0.`)
+        }
+      }
     }
 
-    this.store.delete(`${new TradeMemoKey(symbol)}`)
+    Log.debug(`Deleting memo from store: ${memo.getKey().toString()}`)
+    this.store.delete(memo.getKey().toString())
+    MultiTradeWatcher.unwatch(memo)
 
     return tradeResult
   }
 
-  private readTradeMemo(key: string): TradeMemo {
-    const tradeMemoRaw = TradeMemoKey.isKey(key) ? this.store.get(key) : null;
+  private readTradeMemo(key: TradeMemoKey): TradeMemo {
+    const tradeMemoRaw = this.store.get(key.toString());
     if (tradeMemoRaw) {
       return TradeMemo.fromJSON(tradeMemoRaw)
     }
@@ -190,7 +152,7 @@ class V2Trader implements Trader, StopLossSeller {
   }
 
   private saveTradeMemo(tradeMemo: TradeMemo) {
-    this.store.set(`${tradeMemo.getKey()}`, JSON.stringify(tradeMemo))
+    this.store.set(tradeMemo.getKey().toString(), JSON.stringify(tradeMemo))
   }
 
   private priceGoesUp(lastPrices: PriceMemo): boolean {

@@ -26,7 +26,7 @@ class Binance implements IExchange {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
     const data = execute({
-      context: `${Binance.API}/${resource}?${query}`, interval: 1000, attempts: 60,
+      context: `${Binance.API}/${resource}?${query}`, interval: 1000, attempts: 30,
       runnable: ctx => UrlFetchApp.fetch(ctx, this.reqParams)
     });
     Log.debug(data.getContentText())
@@ -37,7 +37,7 @@ class Binance implements IExchange {
     const resource = "account"
     const query = "";
     const data = execute({
-      context: `${Binance.API}/${resource}`, interval: 1000, attempts: 60,
+      context: `${Binance.API}/${resource}`, interval: 1000, attempts: 30,
       runnable: ctx => UrlFetchApp.fetch(`${ctx}?${this.addSignature(query)}`, this.reqParams)
     });
     try {
@@ -87,23 +87,38 @@ class Binance implements IExchange {
 
   marketTrade(query: string): TradeResult {
     const response = execute({
-      context: `${Binance.API}/order`, interval: 1000, attempts: 60,
+      context: `${Binance.API}/order`, interval: 1000, attempts: 30,
       runnable: ctx => UrlFetchApp.fetch(`${ctx}?${this.addSignature(query)}`, this.tradeReqParams)
     });
     Log.debug(response.getContentText())
     try {
       const order = JSON.parse(response.getContentText());
       const tradeResult = new TradeResult();
-      const price = order.fills && order.fills[0] && order.fills[0].price
+      const [price, commission] = this.reducePriceAndCommission(order.fills)
       tradeResult.quantity = +order.origQty
       tradeResult.cost = +order.cummulativeQuoteQty
-      tradeResult.price = +price
+      tradeResult.price = price
       tradeResult.fromExchange = true
+      tradeResult.commission = commission
       return tradeResult;
     } catch (e) {
       Log.error(e)
       throw e
     }
+  }
+
+  private reducePriceAndCommission(fills = []): [number, number] {
+    let price = 0;
+    let commission = 0
+    fills.forEach(f => {
+      if (f.commissionAsset != "BNB") {
+        Log.info(`Commission is ${f.commissionAsset} instead of BNB`)
+      } else {
+        commission += +f.commission
+      }
+      price = price ? (+f.price + price) / 2 : +f.price;
+    })
+    return [price, commission]
   }
 
   private addSignature(data: string) {
