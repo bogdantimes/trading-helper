@@ -32,6 +32,14 @@ class Log {
   private static readonly debugLog = []
   private static readonly errLog: Error[] = []
 
+  static alert(msg: string) {
+    try {
+      GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Trader-bot alert", msg)
+    } catch (e) {
+      Log.error(e)
+    }
+  }
+
   static info(arg) {
     this.infoLog.push(arg)
   }

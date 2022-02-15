@@ -61,6 +61,7 @@ class Binance implements IExchange {
     const tradeResult = this.marketTrade(query);
     tradeResult.symbol = symbol
     tradeResult.paid = tradeResult.cost
+    tradeResult.msg = `Bought asset.`
     return tradeResult;
   }
 
@@ -76,6 +77,7 @@ class Binance implements IExchange {
       const tradeResult = this.marketTrade(query);
       tradeResult.symbol = symbol
       tradeResult.gained = tradeResult.cost
+      tradeResult.msg = `Sold asset.`
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Account has insufficient balance")) {

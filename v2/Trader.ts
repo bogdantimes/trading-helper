@@ -38,6 +38,7 @@ class V2Trader implements Trader {
         const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
         const tradeMemo = new TradeMemo(tradeResult, stopLossPrice, prices);
         this.saveTradeMemo(tradeMemo)
+        Log.alert(tradeResult.toString())
         Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
         MultiTradeWatcher.watch(tradeMemo)
       }
@@ -124,7 +125,7 @@ class V2Trader implements Trader {
 
     if (tradeResult.fromExchange) {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
-      tradeResult.msg = `Asset sold.`
+      Log.alert(tradeResult.toString())
       if (tradeResult.profit > 0) {
         this.stats.bumpLossProfitMeter(symbol)
       } else {
