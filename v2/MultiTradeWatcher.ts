@@ -37,7 +37,7 @@ new DefaultStore(PropertiesService.getScriptProperties())
         let sendLog = true;
         try {
           const result = new V2Trader(store, new Binance(store), statistics).stopLossSell(tradeMemo.tradeResult.symbol);
-          Log.info(result)
+          Log.info(result.toString())
           sendLog = result.fromExchange
           statistics.addProfit(result.profit)
           statistics.addCommission(result.commission)

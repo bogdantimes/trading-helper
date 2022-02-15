@@ -57,9 +57,9 @@ function doPost(e) {
 
     const trader = new V2Trader(store, new Binance(store), statistics);
     if (tradeReq.act == TradeAction.BUY) {
-      Log.info(trader.buy(symbol, buyQuantity))
+      Log.info(trader.buy(symbol, buyQuantity).toString())
     } else if (tradeReq.act == TradeAction.SELL) {
-      Log.info(trader.sell(symbol))
+      Log.info(trader.sell(symbol).toString())
     } else {
       Log.info(`Unsupported action: ${tradeReq.act}`)
     }

@@ -7,9 +7,11 @@ class V2Trader implements Trader {
   private readonly exchange: IExchange;
   private readonly lossLimit: number;
   private readonly stats: Statistics;
+  private readonly takeProfit: number;
 
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
     this.lossLimit = +store.getOrSet("LossLimit", "0.03")
+    this.takeProfit = +store.getOrSet("TakeProfit", "0.2")
     this.store = store
     this.exchange = exchange
     this.stats = stats
@@ -62,10 +64,9 @@ class V2Trader implements Trader {
     try {
       const price = tradeMemo.tradeResult.price;
       const currentPrice = this.exchange.getPrice(symbol);
-      const priceWithCommission = price * 1.25;
-      // No sense to sell if the price not covers at least the commission and it not yet below the stop limit.
-      if ((currentPrice < priceWithCommission) && (currentPrice > tradeMemo.stopLossPrice)) {
-        return TradeResult.fromMsg(symbol, "Not selling as price jitter is ignored.")
+      const takeProfitPrice = price * (1+this.takeProfit)
+      if ((currentPrice < takeProfitPrice) && (currentPrice > tradeMemo.stopLossPrice)) {
+        return TradeResult.fromMsg(symbol, `Not selling as price below take profit: ${takeProfitPrice}`)
       }
     } catch (e) {
       Log.error(e)
@@ -130,7 +131,7 @@ class V2Trader implements Trader {
         const lpMeter = this.stats.dumpLossProfitMeter(symbol);
         if (lpMeter <= 0) {
           const blockDurationMin = +this.store.getOrSet('BlockDurationMin', "240");
-          CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin)
+          CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin*60)
           Log.info(`${symbol} blocked for ${blockDurationMin} minutes as loss-profit meter reached 0.`)
         }
       }

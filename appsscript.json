@@ -4,8 +4,8 @@
     "libraries": []
   },
   "webapp": {
-    "access": "ANYONE_ANONYMOUS",
-    "executeAs": "USER_DEPLOYING"
+    "executeAs": "USER_DEPLOYING",
+    "access": "ANYONE_ANONYMOUS"
   },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
