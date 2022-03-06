@@ -47,6 +47,12 @@ class TradeResult {
     return result
   }
 
+  static preciseAverage(a: TradeResult, b: TradeResult): number {
+    const ave = (a.price * a.quantity + b.price * b.quantity) / (a.quantity + b.quantity);
+    const precision = Math.max(getPrecision(a.price), getPrecision(b.price));
+    return +ave.toFixed(precision)
+  }
+
   toString(): string {
     return `${this.symbol} trade result: ${this.price ? 'price=' + this.price : ''} ${this.paid ? 'paid=' + this.paid : ''} ${this.gained ? 'gained=' + this.gained : ''} ${this.profit ? 'profit=' + this.profit : ''} ${this.msg ? 'msg=' + this.msg : ''}`
   }
@@ -59,7 +65,7 @@ class TradeResult {
       throw Error(`Cannot join trades where 'symbol' is not equal: ${next.toString()}`)
     }
     const result = new TradeResult();
-    result.price = preciseAverage(this.price, next.price)
+    result.price = TradeResult.preciseAverage(this, next)
     result.commission = this.commission + next.commission
     result.symbol = next.symbol
     result.msg = next.msg
