@@ -25,7 +25,7 @@ class MultiTradeWatcher {
 
 const _runtimeCtx = this;
 
-Object.values(DefaultStore.get("trade"))
+Object.values(DefaultStore.getOrSet("trade", {}))
   .forEach((tradeRaw: object) => {
     const tradeMemo: TradeMemo = TradeMemo.fromObject(tradeRaw);
     _runtimeCtx[tradeMemo.getKey().symbol.quantityAsset] = function () {
@@ -48,7 +48,7 @@ Object.values(DefaultStore.get("trade"))
   })
 
 function Start() {
-  Object.values(DefaultStore.get("trade")).forEach((tradeRaw: object) => {
+  Object.values(DefaultStore.getOrSet("trade", {})).forEach((tradeRaw: object) => {
     const tradeMemo = TradeMemo.fromObject(tradeRaw);
     MultiTradeWatcher.unwatch(tradeMemo)
     MultiTradeWatcher.watch(tradeMemo)

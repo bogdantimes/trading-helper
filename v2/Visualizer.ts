@@ -7,7 +7,7 @@ class V2TradeVisualizer implements TradeVisualizer {
 
   render(): HtmlOutput {
     const renderedCharts: string[] = []
-    Object.values(DefaultStore.get("trade"))
+    Object.values(DefaultStore.getOrSet("trade", {}))
       .forEach((tradeMemoRaw: object) => {
         const tradeMemo = TradeMemo.fromObject(tradeMemoRaw);
 
