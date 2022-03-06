@@ -15,8 +15,8 @@ class TradeMemo {
     return new TradeMemo(null, 0, [0, 0, 0])
   }
 
-  static fromJSON(json: string): TradeMemo {
-    const tradeMemo: TradeMemo = Object.assign(TradeMemo.empty(), JSON.parse(json));
+  static fromObject(obj: object): TradeMemo {
+    const tradeMemo: TradeMemo = Object.assign(TradeMemo.empty(), obj);
     tradeMemo.tradeResult = Object.assign(new TradeResult(), tradeMemo.tradeResult)
     tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
     tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
@@ -36,14 +36,14 @@ class TradeMemoKey {
   }
 
   static isKey(key: String): boolean {
-    return key.startsWith('trade_')
+    return key.startsWith('trade/')
   }
 
   static from(key: string): TradeMemoKey {
-    return new TradeMemoKey(new ExchangeSymbol(key.split("_")[1], USDT))
+    return new TradeMemoKey(new ExchangeSymbol(key.split("/")[1], USDT))
   }
 
   toString(): string {
-    return `trade_${this.symbol.quantityAsset}`
+    return `trade/${this.symbol.quantityAsset}`
   }
 }

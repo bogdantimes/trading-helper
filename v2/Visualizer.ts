@@ -7,10 +7,9 @@ class V2TradeVisualizer implements TradeVisualizer {
 
   render(): HtmlOutput {
     const renderedCharts: string[] = []
-    this.store.getKeys().filter(TradeMemoKey.isKey).forEach(k => {
-      const tradeMemoRaw = this.store.get(k);
-      if (tradeMemoRaw) {
-        const tradeMemo = TradeMemo.fromJSON(tradeMemoRaw);
+    Object.values(DefaultStore.get("trade"))
+      .forEach((tradeMemoRaw: object) => {
+        const tradeMemo = TradeMemo.fromObject(tradeMemoRaw);
 
         const orderPrice = tradeMemo.tradeResult.price;
         const data = Charts.newDataTable()
@@ -45,8 +44,7 @@ class V2TradeVisualizer implements TradeVisualizer {
         const imageData = Utilities.base64Encode(chart.getAs('image/png').getBytes());
         renderedCharts.push("data:image/png;base64," + encodeURI(imageData));
 
-      }
-    })
+      })
 
 
     const htmlOutput = HtmlService.createHtmlOutput().setTitle('Trader bot');

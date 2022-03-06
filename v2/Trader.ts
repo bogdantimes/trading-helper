@@ -148,13 +148,13 @@ class V2Trader implements Trader {
   private readTradeMemo(key: TradeMemoKey): TradeMemo {
     const tradeMemoRaw = this.store.get(key.toString());
     if (tradeMemoRaw) {
-      return TradeMemo.fromJSON(tradeMemoRaw)
+      return TradeMemo.fromObject(tradeMemoRaw)
     }
     return null
   }
 
   private saveTradeMemo(tradeMemo: TradeMemo) {
-    this.store.set(tradeMemo.getKey().toString(), JSON.stringify(tradeMemo))
+    this.store.set(tradeMemo.getKey().toString(), tradeMemo)
   }
 
   private priceGoesUp(lastPrices: PriceMemo): boolean {

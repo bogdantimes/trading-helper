@@ -1,13 +1,13 @@
 import Properties = GoogleAppsScript.Properties.Properties;
 
 interface IStore {
-  get(key: String): string
+  get(key: String): any
 
   getKeys(): string[]
 
-  set(key: String, value: String): String
+  set(key: String, value: any): any
 
-  getOrSet(key: String, value: String): String
+  getOrSet(key: String, value: any): any
 
   increment(key: String): number
 
@@ -31,17 +31,17 @@ class GapsStore implements IStore {
     this.source.deleteProperty(key)
   }
 
-  get(key: String): string {
+  get(key: String): any {
     return this.source.getProperty(key);
   }
 
-  getOrSet(key: String, value: String): String {
+  getOrSet(key: String, value: any): any {
     const val = this.get(key) || value;
     this.source.setProperty(key, val)
     return val
   }
 
-  set(key: String, value: String): String {
+  set(key: String, value: any): any {
     this.source.setProperty(key, value)
     return value
   }
@@ -75,19 +75,19 @@ class FirebaseStore implements IStore {
     this.source.removeData(key)
   }
 
-  get(key: String): string {
+  get(key: String): any {
     // @ts-ignore
     return this.source.getData(key);
   }
 
-  getOrSet(key: String, value: String): String {
+  getOrSet(key: String, value: any): any {
     const val = this.get(key) || value;
     // @ts-ignore
     this.source.setData(key, val)
     return val
   }
 
-  set(key: String, value: String): String {
+  set(key: String, value: any): any {
     // @ts-ignore
     this.source.setData(key, value)
     return value
