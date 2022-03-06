@@ -98,22 +98,24 @@ class V2Trader implements Trader {
     const currentPrice = this.exchange.getPrice(symbol);
 
     if (currentPrice <= tradeMemo.stopLossPrice) {
-      Log.alert(`Stop limit: ${symbol} price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
-      const sellAtStopLimit = DefaultStore.get("SellAtStopLimit");
-      if (sellAtStopLimit) {
-        this.sellAndClose(symbol, tradeMemo)
+      const stopLimitCrossed = tradeMemo.prices[2] > tradeMemo.stopLossPrice;
+      if (stopLimitCrossed) {
+        Log.alert(`Stop limit crossed: ${symbol} price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
       }
-      return
+      if (DefaultStore.get("SellAtStopLimit")) {
+        return this.sellAndClose(symbol, tradeMemo)
+      }
     }
 
     const takeProfitPrice = tradeMemo.tradeResult.price * (1 + this.takeProfit)
     if (currentPrice >= takeProfitPrice) {
-      Log.alert(`Take profit: ${symbol} price '${currentPrice}' >= '${takeProfitPrice}'`)
-      const sellAtTakeProfit = DefaultStore.get("SellAtTakeProfit");
-      if (sellAtTakeProfit) {
-        this.sellAndClose(symbol, tradeMemo)
+      const takeProfitCrossed = tradeMemo.prices[2] < takeProfitPrice;
+      if (takeProfitCrossed) {
+        Log.alert(`Take profit crossed: ${symbol} price '${currentPrice}' >= '${takeProfitPrice}'`)
       }
-      return
+      if (DefaultStore.get("SellAtTakeProfit")) {
+        return this.sellAndClose(symbol, tradeMemo)
+      }
     }
 
     tradeMemo.prices.shift()
