@@ -18,22 +18,20 @@ class V2Trader implements Trader {
   }
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
-    if (tradeMemo) {
-      tradeMemo.tradeResult.msg = "Not buying. Asset is already tracked."
-      tradeMemo.tradeResult.fromExchange = false
-      return tradeMemo.tradeResult
-    }
 
     if (CacheService.getScriptCache().get(blockedKey(symbol))) {
       return TradeResult.fromMsg(symbol, "Symbol is blocked after reaching MaxLosses")
     }
 
     try {
-      const tradeResult = this.exchange.marketBuy(symbol, cost);
+      let tradeResult = this.exchange.marketBuy(symbol, cost);
       this.store.delete(RetryBuying)
 
       if (tradeResult.fromExchange) {
+        const oldTradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
+        if (oldTradeMemo) {
+          tradeResult = oldTradeMemo.tradeResult.join(tradeResult)
+        }
         const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
         const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
         const tradeMemo = new TradeMemo(tradeResult, stopLossPrice, prices);

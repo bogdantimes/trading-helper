@@ -50,4 +50,25 @@ class TradeResult {
   toString(): string {
     return `${this.symbol} trade result: ${this.price ? 'price=' + this.price : ''} ${this.paid ? 'paid=' + this.paid : ''} ${this.gained ? 'gained=' + this.gained : ''} ${this.profit ? 'profit=' + this.profit : ''} ${this.msg ? 'msg=' + this.msg : ''}`
   }
+
+  join(next: TradeResult): TradeResult {
+    if (this.fromExchange != next.fromExchange) {
+      throw Error(`Cannot join trades where 'fromExchange' is not equal: ${next.toString()}`)
+    }
+    if (this.symbol.toString() != next.symbol.toString()) {
+      throw Error(`Cannot join trades where 'symbol' is not equal: ${next.toString()}`)
+    }
+    const result = new TradeResult();
+    result.price = preciseAverage(this.price, next.price)
+    result.commission = this.commission + next.commission
+    result.symbol = next.symbol
+    result.msg = next.msg
+    result.fromExchange = next.fromExchange
+    result.quantity = this.quantity + next.quantity
+    result.cost = this.cost + next.cost
+    result.paid = this.paid + next.paid
+    result.gained = this.gained + next.gained
+    result.profit = this.profit + next.profit
+    return result
+  }
 }
