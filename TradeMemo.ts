@@ -36,14 +36,14 @@ class TradeMemoKey {
   }
 
   static isKey(key: String): boolean {
-    return key.startsWith('trade/')
+    return key.startsWith('trade_')
   }
 
   static from(key: string): TradeMemoKey {
-    return new TradeMemoKey(new ExchangeSymbol(key.split("/")[1], USDT))
+    return new TradeMemoKey(new ExchangeSymbol(key.split("_")[1], USDT))
   }
 
   toString(): string {
-    return `trade/${this.symbol.quantityAsset}`
+    return `trade_${this.symbol.quantityAsset}`
   }
 }

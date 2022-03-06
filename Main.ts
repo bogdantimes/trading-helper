@@ -1,8 +1,7 @@
 const USDT = "USDT";
 
 function doGet(e) {
-  const store = new DefaultStore(PropertiesService.getScriptProperties());
-  return new V2TradeVisualizer(store).render();
+  return new V2TradeVisualizer(DefaultStore).render();
 }
 
 enum TradeAction {
@@ -49,7 +48,7 @@ function doPost(e) {
 
     const tradeReq: TradeRequest = parseTradeRequest(e.postData.contents)
 
-    store = new DefaultStore(PropertiesService.getScriptProperties())
+    store = DefaultStore
     const statistics = new Statistics(store);
     const priceAsset = store.getOrSet("PriceAsset", USDT);
     const buyQuantity = +store.getOrSet("BuyQuantity", "50")
@@ -74,8 +73,7 @@ function doPost(e) {
 const RetryBuying = "retryBuying";
 
 function quickBuy() {
-  const store = new DefaultStore(PropertiesService.getScriptProperties())
-  const asset = store.get(RetryBuying);
+  const asset = DefaultStore.get(RetryBuying);
   if (asset) {
     Log.info(`quickBuy called for ${asset}`)
     doPost({postData: {contents: `buy ${asset}`}})

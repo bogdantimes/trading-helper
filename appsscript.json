@@ -1,7 +1,11 @@
 {
   "timeZone": "Europe/Kiev",
   "dependencies": {
-    "libraries": []
+    "libraries": [{
+      "userSymbol": "FirebaseApp",
+      "libraryId": "1hguuh4Zx72XVC1Zldm_vTtcUUKUA6iBUOoGnJUWLfqDWx5WlOJHqYkrt",
+      "version": "30"
+    }]
   },
   "webapp": {
     "executeAs": "USER_DEPLOYING",
@@ -14,6 +18,7 @@
     "https://www.googleapis.com/auth/script.scriptapp",
     "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/gmail.compose"
+    "https://www.googleapis.com/auth/gmail.compose",
+    "https://www.googleapis.com/auth/firebase.database"
   ]
 }

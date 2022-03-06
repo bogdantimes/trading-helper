@@ -25,12 +25,12 @@ class MultiTradeWatcher {
 
 const _runtimeCtx = this;
 
-new DefaultStore(PropertiesService.getScriptProperties())
+DefaultStore
   .getKeys()
   .filter(TradeMemoKey.isKey)
   .forEach(key => {
     _runtimeCtx[TradeMemoKey.from(key).symbol.quantityAsset] = function () {
-      const store = new DefaultStore(PropertiesService.getScriptProperties());
+      const store = DefaultStore;
       const statistics = new Statistics(store);
       const tradeMemo = TradeMemo.fromJSON(store.get(key));
       if (tradeMemo) {
@@ -52,7 +52,7 @@ new DefaultStore(PropertiesService.getScriptProperties())
   })
 
 function Start() {
-  const store = new DefaultStore(PropertiesService.getScriptProperties());
+  const store = DefaultStore;
   store.getKeys().filter(TradeMemoKey.isKey).forEach(key => {
     const tradeMemo = TradeMemo.fromJSON(store.get(key));
     if (tradeMemo) {
