@@ -65,7 +65,7 @@ class V2Trader implements Trader {
     try {
       const price = tradeMemo.tradeResult.price;
       const currentPrice = this.exchange.getPrice(symbol);
-      const takeProfitPrice = price * (1+this.takeProfit)
+      const takeProfitPrice = price * (1 + this.takeProfit)
       if ((currentPrice < takeProfitPrice) && (currentPrice > tradeMemo.stopLossPrice)) {
         return TradeResult.fromMsg(symbol, `Not selling as price below take profit: ${takeProfitPrice}`)
       }
@@ -98,8 +98,22 @@ class V2Trader implements Trader {
     const currentPrice = this.exchange.getPrice(symbol);
 
     if (currentPrice <= tradeMemo.stopLossPrice) {
-      Log.info(`Selling ${symbol} as current price '${currentPrice}' <= stop loss price '${tradeMemo.stopLossPrice}'`)
-      return this.sellAndClose(symbol, tradeMemo)
+      Log.alert(`Stop limit: ${symbol} price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
+      const sellAtStopLimit = DefaultStore.get("SellAtStopLimit");
+      if (sellAtStopLimit) {
+        this.sellAndClose(symbol, tradeMemo)
+      }
+      return
+    }
+
+    const takeProfitPrice = tradeMemo.tradeResult.price * (1 + this.takeProfit)
+    if (currentPrice >= takeProfitPrice) {
+      Log.alert(`Take profit: ${symbol} price '${currentPrice}' >= '${takeProfitPrice}'`)
+      const sellAtTakeProfit = DefaultStore.get("SellAtTakeProfit");
+      if (sellAtTakeProfit) {
+        this.sellAndClose(symbol, tradeMemo)
+      }
+      return
     }
 
     tradeMemo.prices.shift()
@@ -132,7 +146,7 @@ class V2Trader implements Trader {
         const lpMeter = this.stats.dumpLossProfitMeter(symbol);
         if (lpMeter <= 0) {
           const blockDurationMin = +this.store.getOrSet('BlockDurationMin', "240");
-          CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin*60)
+          CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin * 60)
           Log.info(`${symbol} blocked for ${blockDurationMin} minutes as loss-profit meter reached 0.`)
         }
       }
