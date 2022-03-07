@@ -23,31 +23,23 @@ class V2Trader implements Trader {
       return TradeResult.fromMsg(symbol, "Symbol is blocked after reaching MaxLosses")
     }
 
-    try {
-      let tradeResult = this.exchange.marketBuy(symbol, cost);
-      this.store.delete(RetryBuying)
+    let tradeResult = this.exchange.marketBuy(symbol, cost);
 
-      if (tradeResult.fromExchange) {
-        const oldTradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
-        if (oldTradeMemo) {
-          tradeResult = oldTradeMemo.tradeResult.join(tradeResult)
-        }
-        const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
-        const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
-        const tradeMemo = new TradeMemo(tradeResult, stopLossPrice, prices);
-        this.saveTradeMemo(tradeMemo)
-        Log.alert(tradeResult.toString())
-        Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
-        MultiTradeWatcher.watch(tradeMemo)
+    if (tradeResult.fromExchange) {
+      const oldTradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
+      if (oldTradeMemo) {
+        tradeResult = oldTradeMemo.tradeResult.join(tradeResult)
       }
-
-      return tradeResult
-    } catch (e) {
-      this.store.set(RetryBuying, symbol.toString())
-      ScriptApp.newTrigger(quickBuy.name).timeBased().after(5000).create()
-      Log.info(`Scheduled quickBuy to retryBuying of ${symbol}`)
-      throw e
+      const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
+      const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
+      const tradeMemo = new TradeMemo(tradeResult, stopLossPrice, prices);
+      this.saveTradeMemo(tradeMemo)
+      Log.alert(tradeResult.toString())
+      Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
+      MultiTradeWatcher.watch(tradeMemo)
     }
+
+    return tradeResult
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {

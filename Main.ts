@@ -70,10 +70,7 @@ function doPost(e) {
   return ContentService.createTextOutput("handled doPost");
 }
 
-const RetryBuying = "retryBuying";
-
-function quickBuy() {
-  const asset = DefaultStore.get(RetryBuying);
+function quickBuy(asset: string) {
   if (asset) {
     Log.info(`quickBuy called for ${asset}`)
     doPost({postData: {contents: `buy ${asset}`}})
