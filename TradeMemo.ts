@@ -1,7 +1,7 @@
 class TradeMemo {
   tradeResult: TradeResult
   stopLossPrice: number
-  profitEstimate: number = 0;
+  lossEstimate: number = 0;
   prices: PriceMemo;
   sell: boolean;
 

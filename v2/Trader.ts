@@ -126,7 +126,7 @@ class V2Trader implements Trader {
       tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
     }
 
-    tradeMemo.profitEstimate = tradeMemo.tradeResult.paid * (tradeMemo.stopLossPrice / tradeMemo.tradeResult.price - 1)
+    tradeMemo.lossEstimate = tradeMemo.tradeResult.paid * (tradeMemo.stopLossPrice / tradeMemo.tradeResult.price - 1)
     this.saveTradeMemo(tradeMemo)
 
     Log.info(`${symbol} asset kept. Stop loss price: '${tradeMemo.stopLossPrice}'`)
