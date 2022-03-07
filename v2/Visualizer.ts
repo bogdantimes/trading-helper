@@ -1,12 +1,14 @@
 class V2TradeVisualizer implements TradeVisualizer {
   private readonly store: IStore;
   private readonly bnbPrice: number;
+  private readonly takeProfit: number;
 
   constructor(store: IStore) {
     const HOUR = 60 * 60;
     const BNB_RPICE = "BNB_PRICE";
 
     this.store = store
+    this.takeProfit = +store.getOrSet("TakeProfit", "0.2")
     this.bnbPrice = +CacheService.getScriptCache().get(BNB_RPICE);
     if (!this.bnbPrice) {
       this.bnbPrice = new Binance(store).getPrice(new ExchangeSymbol("BNB", USDT));
@@ -21,14 +23,16 @@ class V2TradeVisualizer implements TradeVisualizer {
         const tradeMemo = TradeMemo.fromObject(tradeMemoRaw);
 
         const orderPrice = tradeMemo.tradeResult.price;
+        const takeProfitPrice = orderPrice * (1 + this.takeProfit)
         const data = Charts.newDataTable()
           .addColumn(Charts.ColumnType.NUMBER, 'X')
+          .addColumn(Charts.ColumnType.NUMBER, 'Take profit')
           .addColumn(Charts.ColumnType.NUMBER, 'Order')
           .addColumn(Charts.ColumnType.NUMBER, 'Price')
           .addColumn(Charts.ColumnType.NUMBER, 'Stop limit')
 
         tradeMemo.prices.forEach((p, i) => {
-          data.addRow([i, orderPrice, tradeMemo.prices[i], tradeMemo.stopLossPrice])
+          data.addRow([i, takeProfitPrice, orderPrice, tradeMemo.prices[i], tradeMemo.stopLossPrice])
         })
 
         const textStyle = Charts.newTextStyle().setColor('#e7e7e7').build();
@@ -48,7 +52,7 @@ class V2TradeVisualizer implements TradeVisualizer {
           .setXAxisTitleTextStyle(textStyle)
           .setOption("hAxis.gridlines.color", '#1f3564')
           .setOption("vAxis.gridlines.color", '#1f3564')
-          .setColors(["gold", "lightblue", "red"])
+          .setColors(["green", "gold", "lightblue", "red"])
           .setTitle(tradeMemo.getKey().toString())
           .build();
 
