@@ -53,7 +53,7 @@ class V2TradeVisualizer implements TradeVisualizer {
     const profit = statistics.getTotalProfit().toFixed(2);
     const commission = statistics.getTotalCommission();
     htmlOutput.append(`<h1 style="color: ${+profit >= 0 ? 'forestgreen' : 'orangered'}">Total profit: ${profit} ${USDT}</h1>`);
-    htmlOutput.append(`<h3 style="color: white">Total commission: ${commission} BNB</h3>`);
+    htmlOutput.append(`<h3 style="color: darkorange">Total commission: ${commission} BNB</h3>`);
     renderedCharts.forEach(chart => {
       htmlOutput.append("<div><img src=\"" + chart + "\"></div>");
     })
