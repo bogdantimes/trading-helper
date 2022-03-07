@@ -2,7 +2,7 @@ class MultiTradeWatcher {
   static watch(memo: TradeMemo) {
     try {
       const fn = memo.getKey().symbol.quantityAsset;
-      ScriptApp.newTrigger(fn).timeBased().everyMinutes(2).create()
+      ScriptApp.newTrigger(fn).timeBased().everyMinutes(1).create()
       Log.info(`Started watching ${fn}`)
     } catch (e) {
       Log.error(e)
