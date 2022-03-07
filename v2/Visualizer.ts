@@ -17,7 +17,14 @@ class V2TradeVisualizer implements TradeVisualizer {
   }
 
   render(): HtmlOutput {
-    const renderedCharts: string[] = []
+    const htmlOutput = HtmlService.createHtmlOutput().setTitle('Trader bot');
+    const statistics = new Statistics(this.store);
+
+    const profit = statistics.getTotalProfit().toFixed(2);
+    const commission = (statistics.getTotalCommission() * this.bnbPrice).toFixed(2);
+    htmlOutput.append(`<h1 style="color: ${+profit >= 0 ? 'forestgreen' : 'orangered'}">Total profit: ${profit} ${USDT}</h1>`);
+    htmlOutput.append(`<h3 style="color: darkorange">Total commission: ~ ${commission} ${USDT}</h3>`);
+
     Object.values(DefaultStore.getOrSet("trade", {}))
       .forEach((tradeMemoRaw: object) => {
         const tradeMemo = TradeMemo.fromObject(tradeMemoRaw);
@@ -57,21 +64,12 @@ class V2TradeVisualizer implements TradeVisualizer {
           .build();
 
         const imageData = Utilities.base64Encode(chart.getAs('image/png').getBytes());
-        renderedCharts.push("data:image/png;base64," + encodeURI(imageData));
-
+        htmlOutput.append(`<div>
+            <img src="data:image/png;base64,${encodeURI(imageData)}">
+            <input type="button" value="SELL NOW" 
+                onclick="google.script.run.quickSell('${tradeMemo.getKey().symbol.quantityAsset}')" />
+        </div>`)
       })
-
-
-    const htmlOutput = HtmlService.createHtmlOutput().setTitle('Trader bot');
-    const statistics = new Statistics(this.store);
-
-    const profit = statistics.getTotalProfit().toFixed(2);
-    const commission = (statistics.getTotalCommission() * this.bnbPrice).toFixed(2);
-    htmlOutput.append(`<h1 style="color: ${+profit >= 0 ? 'forestgreen' : 'orangered'}">Total profit: ${profit} ${USDT}</h1>`);
-    htmlOutput.append(`<h3 style="color: darkorange">Total commission: ~ ${commission} ${USDT}</h3>`);
-    renderedCharts.forEach(chart => {
-      htmlOutput.append("<div><img src=\"" + chart + "\"></div>");
-    })
 
     return htmlOutput;
   }

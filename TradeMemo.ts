@@ -4,7 +4,7 @@ class TradeMemo {
   maxLoss: number = 0;
   maxProfit: number = 0;
   prices: PriceMemo;
-  sell: boolean;
+  sell: boolean = false;
 
   constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
     this.tradeResult = tradeResult;

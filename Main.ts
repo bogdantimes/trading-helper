@@ -79,3 +79,10 @@ function quickBuy() {
     doPost({postData: {contents: `buy ${asset}`}})
   }
 }
+
+function quickSell(asset: string) {
+  if (asset) {
+    Log.info(`quickSell called for ${asset}`)
+    doPost({postData: {contents: `sell ${asset}`}})
+  }
+}
