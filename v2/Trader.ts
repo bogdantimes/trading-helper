@@ -39,7 +39,7 @@ class V2Trader implements Trader {
       this.saveTradeMemo(tradeMemo)
       Log.alert(tradeResult.toString())
       Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
-      MultiTradeWatcher.watch(tradeMemo)
+      // MultiTradeWatcher.watch(tradeMemo)
     }
 
     return tradeResult
@@ -159,7 +159,7 @@ class V2Trader implements Trader {
 
     Log.debug(`Deleting memo from store: ${memo.getKey().toString()}`)
     this.store.delete(memo.getKey().toString())
-    MultiTradeWatcher.unwatch(memo)
+    // MultiTradeWatcher.unwatch(memo)
 
     return tradeResult
   }
