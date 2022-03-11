@@ -16,7 +16,8 @@ class V2Trader implements Trader {
     this.store = store
     this.exchange = exchange
     this.stats = stats
-    this.prices = {}
+    Log.info("Fetching prices")
+    this.prices = exchange.getPrices()
   }
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
@@ -130,10 +131,6 @@ class V2Trader implements Trader {
   }
 
   private getPrice(symbol: ExchangeSymbol): number {
-    if (!this.prices[symbol.toString()]) {
-      Log.info("Fetching prices")
-      this.prices = this.exchange.getPrices()
-    }
     const price = this.prices[symbol.toString()];
     if (!price) {
       throw Error(`No symbol price: ${symbol}`)
