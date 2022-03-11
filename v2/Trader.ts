@@ -8,6 +8,7 @@ class V2Trader implements Trader {
   private readonly lossLimit: number;
   private readonly stats: Statistics;
   private readonly takeProfit: number;
+  private prices: { [p: string]: number };
 
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
     this.lossLimit = +store.getOrSet("LossLimit", "0.03")
@@ -15,6 +16,7 @@ class V2Trader implements Trader {
     this.store = store
     this.exchange = exchange
     this.stats = stats
+    this.prices = {}
   }
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
@@ -54,7 +56,7 @@ class V2Trader implements Trader {
 
     try {
       const price = tradeMemo.tradeResult.price;
-      const currentPrice = this.exchange.getPrice(symbol);
+      const currentPrice = this.getPrice(symbol);
       const takeProfitPrice = price * (1 + this.takeProfit)
       if ((currentPrice < takeProfitPrice) && (currentPrice > tradeMemo.stopLossPrice)) {
         return TradeResult.fromMsg(symbol, `Not selling as price below take profit: ${takeProfitPrice}`)
@@ -85,7 +87,7 @@ class V2Trader implements Trader {
       return this.sellAndClose(symbol, tradeMemo)
     }
 
-    const currentPrice = this.exchange.getPrice(symbol);
+    const currentPrice = this.getPrice(symbol);
 
     if (currentPrice <= tradeMemo.stopLossPrice) {
       const stopLimitCrossed = tradeMemo.prices[2] > tradeMemo.stopLossPrice;
@@ -125,6 +127,19 @@ class V2Trader implements Trader {
     Log.info(`${symbol} asset kept. Stop loss price: '${tradeMemo.stopLossPrice}'`)
 
     return TradeResult.fromMsg(symbol, "Keeping the asset.")
+  }
+
+  private getPrice(symbol: ExchangeSymbol): number {
+    if (!this.prices[symbol.toString()]) {
+      Log.info("Fetching prices")
+      this.prices = this.exchange.getPrices()
+    }
+    const price = this.prices[symbol.toString()];
+    if (!price) {
+      throw Error(`No symbol price: ${symbol}`)
+    }
+    Log.info(`Symbol price: ${symbol} = ${price}`)
+    return price
   }
 
   private sellAndClose(symbol: ExchangeSymbol, memo: TradeMemo) {

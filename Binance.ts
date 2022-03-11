@@ -6,10 +6,12 @@ interface IExchange {
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult
 
   getPrice(symbol: ExchangeSymbol): number
+
+  getPrices(): { [p: string]: number }
 }
 
-const ATTEMPTS = 6;
-const INTERVAL = 5000;
+const ATTEMPTS = 10;
+const INTERVAL = 100;
 
 class Binance implements IExchange {
   private static readonly API = "https://api.binance.com/api/v3";
@@ -23,6 +25,19 @@ class Binance implements IExchange {
     this.secret = store.get('SECRET')
     this.tradeReqParams = {method: 'post', headers: {'X-MBX-APIKEY': this.key}}
     this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
+  }
+
+  getPrices(): { [p: string]: number } {
+    const resource = "ticker/price"
+    const data = execute({
+      context: `${Binance.API}/${resource}`, interval: INTERVAL, attempts: ATTEMPTS,
+      runnable: ctx => UrlFetchApp.fetch(ctx, this.reqParams)
+    });
+    const prices: { symbol: string, price: string }[] = JSON.parse(data.getContentText())
+    Log.debug(`Got ${prices.length} prices`)
+    const map: { [p: string]: number } = {}
+    prices.forEach(p => map[p.symbol] = +p.price)
+    return map
   }
 
   getPrice(symbol: ExchangeSymbol): number {
