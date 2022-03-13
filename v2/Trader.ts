@@ -1,45 +1,34 @@
 type PriceMemo = [number, number, number]
 
-const blockedKey = (s: ExchangeSymbol) => `blocked/${s}`
-
 class V2Trader implements Trader {
   private readonly store: IStore;
   private readonly exchange: IExchange;
   private readonly lossLimit: number;
   private readonly stats: Statistics;
   private readonly takeProfit: number;
-  private prices: { [p: string]: number };
+  private readonly prices: { [p: string]: number };
 
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
-    this.lossLimit = +store.getOrSet("LossLimit", "0.03")
-    this.takeProfit = +store.getOrSet("TakeProfit", "0.2")
+    this.lossLimit = +store.getOrSet("LossLimit", "0.05") // default: 5%
+    this.takeProfit = +store.getOrSet("TakeProfit", "0.2") // default: 20%
     this.store = store
     this.exchange = exchange
     this.stats = stats
-    Log.info("Fetching prices")
     this.prices = exchange.getPrices()
   }
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
 
-    if (CacheService.getScriptCache().get(blockedKey(symbol))) {
-      return TradeResult.fromMsg(symbol, "Symbol is blocked after reaching MaxLosses")
-    }
-
     let tradeResult = this.exchange.marketBuy(symbol, cost);
 
     if (tradeResult.fromExchange) {
-      const oldTradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
-      if (oldTradeMemo) {
-        tradeResult = oldTradeMemo.tradeResult.join(tradeResult)
-      }
-      const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
-      const prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price]
-      const tradeMemo = new TradeMemo(tradeResult, stopLossPrice, prices);
-      this.saveTradeMemo(tradeMemo)
       Log.alert(tradeResult.toString())
+      const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
+      tradeResult = tradeMemo ? tradeMemo.tradeResult.join(tradeResult): tradeResult
+      const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
+      const prices: PriceMemo = tradeMemo ? tradeMemo.prices : [tradeResult.price, tradeResult.price, tradeResult.price]
+      this.saveTradeMemo(new TradeMemo(tradeResult, stopLossPrice, prices))
       Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
-      // MultiTradeWatcher.watch(tradeMemo)
     }
 
     return tradeResult
@@ -145,21 +134,10 @@ class V2Trader implements Trader {
     if (tradeResult.fromExchange) {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
       Log.alert(tradeResult.toString())
-      if (tradeResult.profit > 0) {
-        this.stats.bumpLossProfitMeter(symbol)
-      } else {
-        const lpMeter = this.stats.dumpLossProfitMeter(symbol);
-        if (lpMeter <= 0) {
-          const blockDurationMin = +this.store.getOrSet('BlockDurationMin', "240");
-          CacheService.getScriptCache().put(blockedKey(symbol), "true", blockDurationMin * 60)
-          Log.info(`${symbol} blocked for ${blockDurationMin} minutes as loss-profit meter reached 0.`)
-        }
-      }
     }
 
     Log.debug(`Deleting memo from store: ${memo.getKey().toString()}`)
     this.store.delete(memo.getKey().toString())
-    // MultiTradeWatcher.unwatch(memo)
 
     return tradeResult
   }

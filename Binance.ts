@@ -10,7 +10,7 @@ interface IExchange {
   getPrices(): { [p: string]: number }
 }
 
-const ATTEMPTS = 10;
+const ATTEMPTS = 20;
 const INTERVAL = 100;
 
 class Binance implements IExchange {
@@ -28,6 +28,7 @@ class Binance implements IExchange {
   }
 
   getPrices(): { [p: string]: number } {
+    Log.info("Fetching prices")
     const resource = "ticker/price"
     const data = execute({
       context: `${Binance.API}/${resource}`, interval: INTERVAL, attempts: ATTEMPTS,

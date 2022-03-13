@@ -19,29 +19,6 @@ class MultiTradeWatcher {
       }
     }
   }
-
-  static watch(memo: TradeMemo) {
-    try {
-      const fn = memo.getKey().symbol.quantityAsset;
-      ScriptApp.newTrigger(fn).timeBased().everyMinutes(5).create()
-      Log.info(`Started watching ${fn}`)
-    } catch (e) {
-      Log.error(e)
-    }
-  }
-
-  static unwatch(memo: TradeMemo) {
-    const fn = memo.getKey().symbol.quantityAsset;
-    const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() == fn);
-    if (trigger) {
-      try {
-        ScriptApp.deleteTrigger(trigger);
-        Log.info(`Stopped watching ${fn}`)
-      } catch (e) {
-        Log.error(e)
-      }
-    }
-  }
 }
 
 function CHECK_ALL() {
