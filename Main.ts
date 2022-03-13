@@ -67,7 +67,7 @@ function doPost(e) {
   }
 
   Log.ifUsefulDumpAsEmail()
-  return ContentService.createTextOutput("handled doPost");
+  return ContentService.createTextOutput(Log.print());
 }
 
 function quickBuy(asset: string) {

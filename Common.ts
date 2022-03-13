@@ -52,7 +52,7 @@ class Log {
     this.errLog.push(err)
   }
 
-  static dump(): string {
+  static print(): string {
     return `
 Info:
 ${this.infoLog.map(val => JSON.stringify(val)).join("\n")}
@@ -65,7 +65,7 @@ ${this.debugLog.length ? "Debug:\n" + this.debugLog.map(val => JSON.stringify(va
 
   static ifUsefulDumpAsEmail() {
     if (this.infoLog.length > 0 || this.debugLog.length > 0 || this.errLog.some(e => !e.message.includes("IP banned until"))) {
-      GmailApp.createDraft(Session.getEffectiveUser().getEmail(), "Trader-bot log", this.dump())
+      GmailApp.createDraft(Session.getEffectiveUser().getEmail(), "Trader-bot log", this.print())
     }
   }
 }
