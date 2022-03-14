@@ -24,7 +24,7 @@ class V2Trader implements Trader {
     if (tradeResult.fromExchange) {
       Log.alert(tradeResult.toString())
       const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
-      tradeResult = tradeMemo ? tradeMemo.tradeResult.join(tradeResult): tradeResult
+      tradeResult = tradeMemo ? tradeMemo.tradeResult.join(tradeResult) : tradeResult
       const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
       const prices: PriceMemo = tradeMemo ? tradeMemo.prices : [tradeResult.price, tradeResult.price, tradeResult.price]
       this.saveTradeMemo(new TradeMemo(tradeResult, stopLossPrice, prices))
@@ -35,35 +35,12 @@ class V2Trader implements Trader {
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {
-    let tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
-    if (!tradeMemo) {
-      return TradeResult.fromMsg(symbol, "Asset is not present")
-    }
-
-    if (tradeMemo.sell) {
+    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
+    if (tradeMemo) {
+      this.store.set(`${tradeMemo.getKey().toString()}/sell`, true)
       return this.sellAndClose(symbol, tradeMemo)
     }
-
-    try {
-      const price = tradeMemo.tradeResult.price;
-      const currentPrice = this.getPrice(symbol);
-      const takeProfitPrice = price * (1 + this.takeProfit)
-      if ((currentPrice < takeProfitPrice) && (currentPrice > tradeMemo.stopLossPrice)) {
-        return TradeResult.fromMsg(symbol, `Not selling as price below take profit: ${takeProfitPrice}`)
-      }
-    } catch (e) {
-      Log.error(e)
-    }
-
-    // Double-checking the trade memo is still present because it could have been removed in parallel by stopLossSell
-    tradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
-    if (!tradeMemo) {
-      return TradeResult.fromMsg(symbol, "Asset is not present")
-    }
-    tradeMemo.sell = true;
-    this.saveTradeMemo(tradeMemo)
-
-    return this.sellAndClose(symbol, tradeMemo)
+    return TradeResult.fromMsg(symbol, "Asset is not present")
   }
 
   stopLossSell(symbol: ExchangeSymbol): TradeResult {
@@ -104,7 +81,7 @@ class V2Trader implements Trader {
     tradeMemo.prices.push(currentPrice)
 
     if (this.priceGoesUp(tradeMemo.prices)) {
-      Log.info(`${symbol} price goes up`)
+      Log.alert(`${symbol} price goes up`)
       // Using previous price to calculate new stop limit
       const newStopLimit = tradeMemo.prices[1] * (1 - this.lossLimit);
       tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice

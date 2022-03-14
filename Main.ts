@@ -80,12 +80,6 @@ function quickBuy(asset: string) {
 function quickSell(asset: string) {
   if (asset) {
     Log.info(`quickSell called for ${asset}`)
-    const key = new TradeMemoKey(new ExchangeSymbol(asset, USDT)).toString();
-    if (DefaultStore.get(key)) {
-      // mark trade memo as selling
-      // this will omit trader checks that can prevent it to sell
-      DefaultStore.set(`${key}/sell`, true)
-    }
     doPost({postData: {contents: `sell ${asset}`}})
   }
 }
