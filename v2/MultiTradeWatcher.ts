@@ -1,7 +1,7 @@
 class MultiTradeWatcher {
   static start() {
     try {
-      ScriptApp.newTrigger(CHECK_ALL.name).timeBased().everyMinutes(5).create()
+      ScriptApp.newTrigger(CHECK_ALL.name).timeBased().everyMinutes(10).create()
       Log.info(`Started ${CHECK_ALL.name}`)
     } catch (e) {
       Log.error(e)
