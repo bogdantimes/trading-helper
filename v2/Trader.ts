@@ -111,6 +111,8 @@ class V2Trader implements Trader {
     if (tradeResult.fromExchange) {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
       Log.alert(tradeResult.toString())
+      this.stats.addProfit(tradeResult.profit)
+      this.stats.addCommission(tradeResult.commission)
     }
 
     Log.debug(`Deleting memo from store: ${memo.getKey().toString()}`)
