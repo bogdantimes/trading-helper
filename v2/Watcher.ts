@@ -1,4 +1,4 @@
-class MultiTradeWatcher {
+class Watcher {
   static start() {
     try {
       ScriptApp.newTrigger(CHECK_ALL.name).timeBased().everyMinutes(10).create()
@@ -45,7 +45,7 @@ function CHECK_ALL() {
 }
 
 function Start() {
-  MultiTradeWatcher.stop()
-  MultiTradeWatcher.start()
+  Watcher.stop()
+  Watcher.start()
   Log.ifUsefulDumpAsEmail()
 }

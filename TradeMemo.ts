@@ -4,7 +4,14 @@ class TradeMemo {
   maxLoss: number = 0;
   maxProfit: number = 0;
   prices: PriceMemo;
+  /**
+   * Marks the asset for selling as soon as possible.
+   */
   sell: boolean = false;
+  /**
+   * Marks the asset for holding even if price drops.
+   */
+  hodl: boolean = false;
 
   constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
     this.tradeResult = tradeResult;

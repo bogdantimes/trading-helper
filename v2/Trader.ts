@@ -61,7 +61,7 @@ class V2Trader implements Trader {
       if (stopLimitCrossed) {
         Log.alert(`Stop limit crossed: ${symbol} price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
       }
-      if (DefaultStore.get("SellAtStopLimit")) {
+      if (!tradeMemo.hodl && DefaultStore.get("SellAtStopLimit")) {
         return this.sellAndClose(symbol, tradeMemo)
       }
     }
