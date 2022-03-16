@@ -67,7 +67,7 @@ class V2TradeVisualizer implements TradeVisualizer {
         const chart = Charts.newLineChart()
           .setDataTable(data)
           .setYAxisTitle(`Price (${USDT})`)
-          .setXAxisTitle(`Profit estimate (${USDT}): ${profit} (${profitPercent} %)\nLoss estimate (${USDT}): ${loss} (${lossPercent} %)`)
+          .setXAxisTitle(`Paid: ${tradeMemo.tradeResult.paid}\nProfit estimate: ${profit} (${profitPercent} %)\nLoss estimate: ${loss} (${lossPercent} %)`)
           .setBackgroundColor('#081f21')
           .setTitleTextStyle(textStyle)
           .setLegendTextStyle(textStyle)
