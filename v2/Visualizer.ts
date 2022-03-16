@@ -62,12 +62,13 @@ class V2TradeVisualizer implements TradeVisualizer {
 
         const loss = tradeMemo.maxLoss.toFixed(2);
         const profit = tradeMemo.maxProfit.toFixed(2);
+        const paidTotal = tradeMemo.tradeResult.paid.toFixed(2);
         const lossPercent = (100 * (tradeMemo.maxLoss / tradeMemo.tradeResult.paid)).toFixed(2)
         const profitPercent = (100 * (tradeMemo.maxProfit / tradeMemo.tradeResult.paid)).toFixed(2)
         const chart = Charts.newLineChart()
           .setDataTable(data)
           .setYAxisTitle(`Price (${USDT})`)
-          .setXAxisTitle(`Paid: ${tradeMemo.tradeResult.paid}\nProfit estimate: ${profit} (${profitPercent} %)\nLoss estimate: ${loss} (${lossPercent} %)`)
+          .setXAxisTitle(`Paid total: ${paidTotal}\nProfit estimate: ${profit} (${profitPercent} %)\nLoss estimate: ${loss} (${lossPercent} %)`)
           .setBackgroundColor('#081f21')
           .setTitleTextStyle(textStyle)
           .setLegendTextStyle(textStyle)
