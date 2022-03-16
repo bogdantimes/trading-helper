@@ -20,9 +20,12 @@ class V2TradeVisualizer implements TradeVisualizer {
     const htmlOutput = HtmlService.createHtmlOutput().setTitle('Trader bot');
     const statistics = new Statistics(this.store);
 
-    const profit = statistics.getTotalProfit().toFixed(2);
-    const commission = (statistics.getTotalCommission() * this.bnbPrice).toFixed(2);
     htmlOutput.append(`
+        <style>
+            body {
+                background-color: #1f2020;
+            }
+        </style>
         <script>
           function confirmAndSell(asset, button) {
             if (confirm(\`Do you confirm selling \${asset}?\`)) {
@@ -32,6 +35,9 @@ class V2TradeVisualizer implements TradeVisualizer {
           }
         </script>
 `);
+
+    const profit = statistics.getTotalProfit().toFixed(2);
+    const commission = (statistics.getTotalCommission() * this.bnbPrice).toFixed(2);
     htmlOutput.append(`<h1 style="color: ${+profit >= 0 ? 'forestgreen' : 'orangered'}">Total profit: ${profit} ${USDT}</h1>`);
     htmlOutput.append(`<h3 style="color: darkorange">Total commission: ~ ${commission} ${USDT}</h3>`);
 
