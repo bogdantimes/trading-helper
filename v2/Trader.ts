@@ -81,7 +81,7 @@ class V2Trader implements Trader {
     tradeMemo.prices.push(currentPrice)
 
     if (this.priceGoesUp(tradeMemo.prices)) {
-      Log.alert(`${symbol} price goes up`)
+      Log.info(`${symbol} price goes up`)
       // Using previous price to calculate new stop limit
       const newStopLimit = tradeMemo.prices[1] * (1 - this.lossLimit);
       tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
