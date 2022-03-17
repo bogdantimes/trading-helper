@@ -17,7 +17,7 @@ The current features are:
 
 ### Setup
 
-Google Apps Script project, "trading-helper (beta/1.0.0)":
+Google Apps Script project:
 [trading-helper (beta/1.0.0)](https://script.google.com/home/projects/1URFgGawDWVs-1eT5y1PBQwtFYgwBrf-Df_jMxyjyRTWK_D_N1Yc-IqSe)
 
 See the YouTube video on how to setup the project.
