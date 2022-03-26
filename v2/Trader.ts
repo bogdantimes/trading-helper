@@ -72,7 +72,7 @@ class V2Trader implements Trader {
       if (takeProfitCrossed) {
         Log.alert(`Take profit crossed: ${symbol} price '${currentPrice}' >= '${takeProfitPrice}'`)
       }
-      if (DefaultStore.get("SellAtTakeProfit")) {
+      if (!tradeMemo.hodl && DefaultStore.get("SellAtTakeProfit")) {
         return this.sellAndClose(symbol, tradeMemo)
       }
     }
