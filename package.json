@@ -1,20 +1,29 @@
 {
-  "name": "trader-bot",
-  "version": "1.0.0",
-  "description": "/* * Deployment of code * https://developers.google.com/apps-script/guides/clasp * * */",
-  "main": "Main.ts",
-  "dependencies": {
-    "@types/google-apps-script": "^1.0.44"
+  "name": "trading-helper",
+  "version": "2.0.0",
+  "description": "",
+  "scripts": {
+    "glogin": "clasp login",
+    "glogout": "clasp logout",
+    "gcreate": "clasp create --title 'Trading Helper' --root-dir ./apps-script",
+    "gpull": "clasp pull",
+    "gpush": "clasp push",
+    "gstart": "clasp push --watch",
+    "start": "parcel src/index.html --dist-dir ./apps-script",
+    "build": "parcel build src/index.html --out-dir ./apps-script"
   },
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bogdan-kovalev/trader-bot.git"
+  "devDependencies": {
+    "@google/clasp": "^2.4.1",
+    "@types/google-apps-script": "^1.0.45",
+    "parcel": "^2.4.0"
   },
   "author": "Bogdan Kovalev",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/bogdan-kovalev/trader-bot/issues"
-  },
-  "homepage": "https://github.com/bogdan-kovalev/trader-bot#readme"
+  "dependencies": {
+    "@emotion/react": "^11.8.2",
+    "@emotion/styled": "^11.8.1",
+    "@mui/material": "^5.5.3",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
 }
