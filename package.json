@@ -9,8 +9,10 @@
     "gpull": "clasp pull",
     "gpush": "clasp push",
     "gstart": "clasp push --watch",
+    "gversion": "clasp version",
+    "gdeploy": "clasp deploy",
     "start": "parcel src/index.html --dist-dir ./apps-script",
-    "build": "parcel build src/index.html --out-dir ./apps-script"
+    "build": "parcel build src/index.html --dist-dir ./apps-script"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.1",

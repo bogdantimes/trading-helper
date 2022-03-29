@@ -1,20 +1,17 @@
 const USDT = "USDT";
 
-function doGet(e) {
-  return new V2TradeVisualizer(DefaultStore).render();
+function doGet() {
+  return HtmlService
+    .createTemplateFromFile('index')
+    .evaluate()
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 enum TradeAction {
   BUY = "BUY",
   SELL = "SELL"
 }
-
-enum TraderVersion {
-  V2 = "v2"
-}
-
 type TradeRequest = {
-  ver: TraderVersion
   act: TradeAction
   sym: string
 }
@@ -30,10 +27,9 @@ function parseTradeRequest(req: string): TradeRequest {
   if (tokens.length == 2) {
     const data: TradeRequest = {
       act: TradeAction[tokens[0]],
-      sym: tokens[1].split(USDT)[0],
-      ver: TraderVersion.V2
+      sym: tokens[1].split(USDT)[0]
     }
-    if (data.act && data.sym && data.ver) {
+    if (data.act && data.sym) {
       return data
     }
   }
