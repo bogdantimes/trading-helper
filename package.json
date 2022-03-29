@@ -7,7 +7,7 @@
     "glogout": "clasp logout",
     "gcreate": "clasp create --title 'Trading Helper' --root-dir ./apps-script",
     "gpull": "clasp pull",
-    "gpush": "clasp push",
+    "gpush": "npm run build && clasp push",
     "gstart": "clasp push --watch",
     "gversion": "clasp version",
     "gdeploy": "clasp deploy",
@@ -26,6 +26,7 @@
     "@emotion/styled": "^11.8.1",
     "@mui/material": "^5.5.3",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "react-vis": "^1.11.7"
   }
 }
