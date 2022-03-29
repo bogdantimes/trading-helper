@@ -19,7 +19,7 @@
     "@types/google-apps-script": "^1.0.45",
     "parcel": "^2.4.0"
   },
-  "author": "Bogdan Kovalev",
+  "author": "Bohdan Kovalov",
   "license": "MIT",
   "dependencies": {
     "@emotion/react": "^11.8.2",
