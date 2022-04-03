@@ -79,3 +79,7 @@ function getPrecision(a: number): number {
   }
   return p;
 }
+
+function getRandomFromList(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}

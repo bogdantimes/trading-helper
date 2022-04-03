@@ -6,20 +6,23 @@ import {XYPlot, XAxis, YAxis, HorizontalGridLines, LineSeries} from 'react-vis';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {CardHeader} from "@mui/material";
+import {TradeMemo} from "../../apps-script/TradeMemo";
 
-export default function TradeView() {
+export default function Trade(props) {
+  const tradeMemo: TradeMemo = props.data;
   return (
     <Card sx={{maxWidth: 345}}>
-      <CardHeader title="trade/SOL" />
+      <CardHeader title={props.name}/>
       <XYPlot xType="linear" width={300} height={200}>
-        <HorizontalGridLines />
+        <HorizontalGridLines/>
         <XAxis hideTicks/>
         <YAxis title="Price"/>
         <LineSeries
-          data={[{x: 1, y: 15}, {x: 2, y: 16}, {x: 3, y: 15}]}
+          data={tradeMemo.prices.map((price, index) => ({x: index + 1, y: price}))}
         />
         <LineSeries
-          data={[{x: 1, y: 17}, {x: 2, y: 17}, {x: 3, y: 17}]}
+          data={[].fill(tradeMemo.prices.length, tradeMemo.stopLossPrice)
+            .map((price, index) => ({x: index + 1, y: price}))}
         />
       </XYPlot>
       <CardContent>

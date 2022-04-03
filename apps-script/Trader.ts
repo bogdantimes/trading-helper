@@ -1,6 +1,8 @@
-type PriceMemo = [number, number, number]
+import {TradeMemo, TradeMemoKey} from "./TradeMemo";
 
-class V2Trader implements Trader {
+export type PriceMemo = [number, number, number]
+
+export class V2Trader implements Trader {
   private readonly store: IStore;
   private readonly exchange: IExchange;
   private readonly lossLimit: number;

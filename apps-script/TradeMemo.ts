@@ -1,4 +1,7 @@
-class TradeMemo {
+import {PriceMemo} from "./Trader";
+import {USDT} from "./Main";
+
+export class TradeMemo {
   tradeResult: TradeResult
   stopLossPrice: number = 0
   maxLoss: number = 0;
@@ -36,7 +39,7 @@ class TradeMemo {
   }
 }
 
-class TradeMemoKey {
+export class TradeMemoKey {
   readonly symbol: ExchangeSymbol
 
   constructor(symbol: ExchangeSymbol) {

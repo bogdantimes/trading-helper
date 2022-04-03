@@ -14,7 +14,13 @@ const ATTEMPTS = 20;
 const INTERVAL = 100;
 
 class Binance implements IExchange {
-  private static readonly API = "https://api.binance.com/api/v3";
+  private static readonly API = () => {
+    return getRandomFromList([
+      "https://api1.binance.com/api/v3",
+      "https://api2.binance.com/api/v3",
+      "https://api3.binance.com/api/v3",
+    ]);
+  }
   private readonly key: string;
   private readonly secret: string;
   private readonly tradeReqParams: object;
@@ -31,8 +37,8 @@ class Binance implements IExchange {
     Log.info("Fetching prices")
     const resource = "ticker/price"
     const data = execute({
-      context: `${Binance.API}/${resource}`, interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: ctx => UrlFetchApp.fetch(ctx, this.reqParams)
+      context: '', interval: INTERVAL, attempts: ATTEMPTS,
+      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}`, this.reqParams)
     });
     const prices: { symbol: string, price: string }[] = JSON.parse(data.getContentText())
     Log.debug(`Got ${prices.length} prices`)
@@ -45,8 +51,8 @@ class Binance implements IExchange {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
     const data = execute({
-      context: `${Binance.API}/${resource}?${query}`, interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: ctx => UrlFetchApp.fetch(ctx, this.reqParams)
+      context: '', interval: INTERVAL, attempts: ATTEMPTS,
+      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}?${query}`, this.reqParams)
     });
     Log.debug(data.getContentText())
     return +JSON.parse(data.getContentText()).price
@@ -56,8 +62,8 @@ class Binance implements IExchange {
     const resource = "account"
     const query = "";
     const data = execute({
-      context: `${Binance.API}/${resource}`, interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: ctx => UrlFetchApp.fetch(`${ctx}?${this.addSignature(query)}`, this.reqParams)
+      context: '', interval: INTERVAL, attempts: ATTEMPTS,
+      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}?${this.addSignature(query)}`, this.reqParams)
     });
     try {
       const account = JSON.parse(data.getContentText());
@@ -108,8 +114,8 @@ class Binance implements IExchange {
 
   marketTrade(query: string): TradeResult {
     const response = execute({
-      context: `${Binance.API}/order`, interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: ctx => UrlFetchApp.fetch(`${ctx}?${this.addSignature(query)}`, this.tradeReqParams)
+      context: '', interval: INTERVAL, attempts: ATTEMPTS,
+      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/order?${this.addSignature(query)}`, this.tradeReqParams)
     });
     Log.debug(response.getContentText())
     try {

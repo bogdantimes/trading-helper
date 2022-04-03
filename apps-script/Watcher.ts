@@ -1,3 +1,6 @@
+import {TradeMemo} from "./TradeMemo";
+import {V2Trader} from "./Trader";
+
 class Watcher {
   static start() {
     try {
@@ -48,4 +51,8 @@ function Start() {
   Watcher.stop()
   Watcher.start()
   Log.ifUsefulDumpAsEmail()
+}
+
+export function getTrades(): { [p: string]: TradeMemo } {
+  return DefaultStore.getOrSet("trade", {})
 }

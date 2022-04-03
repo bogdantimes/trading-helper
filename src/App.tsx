@@ -3,8 +3,9 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import TradeView from "./components/TradeView";
+import Trade from "./components/Trade";
 import {createTheme, CssBaseline, ThemeProvider, useMediaQuery} from "@mui/material";
+import {useEffect} from "react";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -58,6 +59,11 @@ export default function App() {
     [prefersDarkMode],
   );
 
+  const [trades, setTrades] = React.useState({});
+  useEffect(() => {
+    google.script.run.withSuccessHandler(setTrades).getTrades();
+  }, [])
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>
@@ -69,7 +75,8 @@ export default function App() {
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
-          <TradeView/>
+          {Object.keys(trades).map((key, index) =>
+            <Trade key={index} name={key} data={trades[key]}/>)}
         </TabPanel>
         <TabPanel value={value} index={1}>
           Item Two

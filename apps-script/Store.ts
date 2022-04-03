@@ -28,21 +28,21 @@ class GapsStore implements IStore {
   }
 
   delete(key: String) {
-    this.source.deleteProperty(key)
+    this.source.deleteProperty(key.toString())
   }
 
   get(key: String): any {
-    return this.source.getProperty(key);
+    return this.source.getProperty(key.toString());
   }
 
   getOrSet(key: String, value: any): any {
     const val = this.get(key) || value;
-    this.source.setProperty(key, val)
+    this.source.setProperty(key.toString(), val)
     return val
   }
 
   set(key: String, value: any): any {
-    this.source.setProperty(key, value)
+    this.source.setProperty(key.toString(), value)
     return value
   }
 

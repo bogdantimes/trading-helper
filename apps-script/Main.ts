@@ -1,4 +1,6 @@
-const USDT = "USDT";
+import {V2Trader} from "./Trader";
+
+export const USDT = "USDT";
 
 function doGet() {
   return HtmlService
