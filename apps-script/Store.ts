@@ -1,6 +1,7 @@
 import Properties = GoogleAppsScript.Properties.Properties;
+import {TradeMemo} from "./TradeMemo";
 
-interface IStore {
+export interface IStore {
   get(key: String): any
 
   getKeys(): string[]
@@ -100,4 +101,38 @@ class FirebaseStore implements IStore {
 
 }
 
-const DefaultStore = new FirebaseStore()
+// @ts-ignore
+export const DefaultStore = this["DefaultStore"] = new FirebaseStore();
+
+export type Config = {
+  TakeProfit: number
+  SellAtTakeProfit: boolean
+  BuyQuantity: number
+  LossLimit: number
+  SECRET: string
+  KEY: string
+  PriceAsset: string
+  SellAtStopLimit: boolean
+}
+
+function getTrades(): { [p: string]: TradeMemo } {
+  return DefaultStore.getOrSet("trade", {})
+}
+
+function getConfig(): Config {
+  return DefaultStore.getOrSet("Config", {
+    TakeProfit: 0.1,
+    SellAtTakeProfit: true,
+    BuyQuantity: 10,
+    LossLimit: 0.05,
+    SECRET: 'none',
+    KEY: 'none',
+    PriceAsset: 'USDT',
+    SellAtStopLimit: false,
+  })
+}
+
+function setConfig(config: Config) {
+  DefaultStore.set("Config", config)
+}
+

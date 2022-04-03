@@ -1,4 +1,6 @@
-class Statistics {
+import {IStore} from "./Store";
+
+export class Statistics {
   private readonly store: IStore
 
   constructor(store: IStore) {

@@ -1,4 +1,7 @@
 import {TradeMemo, TradeMemoKey} from "./TradeMemo";
+import {DefaultStore, IStore} from "./Store";
+import {IExchange} from "./Binance";
+import {Statistics} from "./Statistics";
 
 export type PriceMemo = [number, number, number]
 

@@ -7,22 +7,48 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {CardHeader} from "@mui/material";
 import {TradeMemo} from "../../apps-script/TradeMemo";
+import {Config} from "../../apps-script/Store";
+import {useState} from "react";
 
 export default function Trade(props) {
-  const tradeMemo: TradeMemo = props.data;
+  const trade: TradeMemo = props.data;
+  const config: Config = props.config;
+  const takeProfitPrice = trade.tradeResult.price * (1 + config.TakeProfit);
+  const [sellDisabled, setSellDisabled] = useState(false);
+
+  function onSell() {
+    if (prompt('Are you sure you want to sell?') === 'yes') {
+      // @ts-ignore
+      google.script.run.withSuccessHandler((resp) => {
+        setSellDisabled(true);
+        alert(resp.toString())
+      }).quickSell(props.name);
+    }
+  }
+
+  // @ts-ignore
   return (
-    <Card sx={{maxWidth: 345}}>
+    <Card sx={{bgcolor: "#0b1538", maxWidth: 345}}>
       <CardHeader title={props.name}/>
       <XYPlot xType="linear" width={300} height={200}>
         <HorizontalGridLines/>
         <XAxis hideTicks/>
         <YAxis title="Price"/>
         <LineSeries
-          data={tradeMemo.prices.map((price, index) => ({x: index + 1, y: price}))}
+          color='blue'
+          data={trade.prices.map((y, x) => ({x, y}))}
         />
         <LineSeries
-          data={[].fill(tradeMemo.prices.length, tradeMemo.stopLossPrice)
-            .map((price, index) => ({x: index + 1, y: price}))}
+          color='red'
+          data={new Array(trade.prices.length).fill(trade.stopLossPrice).map((y, x) => ({x, y}))}
+        />
+        <LineSeries
+          color='green'
+          data={new Array(trade.prices.length).fill(takeProfitPrice).map((y, x) => ({x, y}))}
+        />
+        <LineSeries
+          color='gold'
+          data={new Array(trade.prices.length).fill(trade.tradeResult.price).map((y, x) => ({x, y}))}
         />
       </XYPlot>
       <CardContent>
@@ -33,8 +59,8 @@ export default function Trade(props) {
         </Typography>
       </CardContent>
       <CardActions>
-        <Button size="small">Sell</Button>
-        <Button size="small">Buy More</Button>
+        <Button size="small" disabled={sellDisabled} onClick={onSell}>Sell</Button>
+        <Button size="small" disabled={true}>Buy More</Button>
       </CardActions>
     </Card>
   );

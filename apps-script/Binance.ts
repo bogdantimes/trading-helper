@@ -1,4 +1,6 @@
-interface IExchange {
+import {IStore} from "./Store";
+
+export interface IExchange {
   getFreeAsset(assetName: string): number
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult
@@ -13,7 +15,7 @@ interface IExchange {
 const ATTEMPTS = 20;
 const INTERVAL = 100;
 
-class Binance implements IExchange {
+export class Binance implements IExchange {
   private static readonly API = () => {
     return getRandomFromList([
       "https://api1.binance.com/api/v3",

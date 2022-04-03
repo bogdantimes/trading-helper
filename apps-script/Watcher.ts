@@ -1,10 +1,13 @@
 import {TradeMemo} from "./TradeMemo";
 import {V2Trader} from "./Trader";
+import {BinanceStats} from "./BinanceStats";
+import {Statistics} from "./Statistics";
+import {DefaultStore} from "./Store";
 
 class Watcher {
   static start() {
     try {
-      ScriptApp.newTrigger(CHECK_ALL.name).timeBased().everyMinutes(10).create()
+      ScriptApp.newTrigger(CHECK_ALL.name).timeBased().everyMinutes(1).create()
       Log.info(`Started ${CHECK_ALL.name}`)
     } catch (e) {
       Log.error(e)
@@ -27,7 +30,7 @@ class Watcher {
 function CHECK_ALL() {
   const store = DefaultStore;
   const statistics = new Statistics(store);
-  const trader = new V2Trader(store, new Binance(store), statistics);
+  const trader = new V2Trader(store, new BinanceStats(store), statistics);
   let sendLog = true;
 
   Object.values(DefaultStore.getOrSet("trade", {}))
@@ -51,8 +54,4 @@ function Start() {
   Watcher.stop()
   Watcher.start()
   Log.ifUsefulDumpAsEmail()
-}
-
-export function getTrades(): { [p: string]: TradeMemo } {
-  return DefaultStore.getOrSet("trade", {})
 }

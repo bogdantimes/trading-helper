@@ -1,4 +1,7 @@
 import {V2Trader} from "./Trader";
+import {BinanceStats} from "./BinanceStats";
+import {DefaultStore, IStore} from "./Store";
+import {Statistics} from "./Statistics";
 
 export const USDT = "USDT";
 
@@ -52,7 +55,7 @@ function doPost(e) {
     const buyQuantity = +store.getOrSet("BuyQuantity", "50")
     const symbol = new ExchangeSymbol(tradeReq.sym, priceAsset.toString())
 
-    const trader = new V2Trader(store, new Binance(store), statistics);
+    const trader = new V2Trader(store, new BinanceStats(store), statistics);
     if (tradeReq.act == TradeAction.BUY) {
       Log.info(trader.buy(symbol, buyQuantity).toString())
     } else if (tradeReq.act == TradeAction.SELL) {

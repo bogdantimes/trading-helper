@@ -7,7 +7,7 @@ interface ExecParams {
 
 const INTERRUPT = 'INTERRUPT';
 
-function execute({context, runnable, interval = 2000, attempts = 5}: ExecParams) {
+function execute({context, runnable, interval = 500, attempts = 5}: ExecParams) {
   let err: Error;
   do {
     try {

@@ -61,7 +61,14 @@ export default function App() {
 
   const [trades, setTrades] = React.useState({});
   useEffect(() => {
+    // @ts-ignore
     google.script.run.withSuccessHandler(setTrades).getTrades();
+  }, [])
+
+  const [config, setConfig] = React.useState({});
+  useEffect(() => {
+    // @ts-ignore
+    google.script.run.withSuccessHandler(setConfig).getConfig();
   }, [])
 
   return (
@@ -76,7 +83,10 @@ export default function App() {
         </Box>
         <TabPanel value={value} index={0}>
           {Object.keys(trades).map((key, index) =>
-            <Trade key={index} name={key} data={trades[key]}/>)}
+            <Box sx={{display: 'inline-flex', margin: '10px'}}>
+              <Trade key={index} name={key} data={trades[key]} config={config}/>
+            </Box>
+          )}
         </TabPanel>
         <TabPanel value={value} index={1}>
           Item Two
