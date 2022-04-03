@@ -11,9 +11,9 @@ import {Config} from "../../apps-script/Store";
 import {useState} from "react";
 
 export default function Trade(props) {
-  const trade: TradeMemo = props.data;
+  const tradeMemo: TradeMemo = props.data;
   const config: Config = props.config;
-  const takeProfitPrice = trade.tradeResult.price * (1 + config.TakeProfit);
+  const takeProfitPrice = tradeMemo.tradeResult.price * (1 + config.TakeProfit);
   const [sellDisabled, setSellDisabled] = useState(false);
 
   function onSell() {
@@ -26,6 +26,9 @@ export default function Trade(props) {
     }
   }
 
+  const lossPercent = (100 * (tradeMemo.maxLoss / tradeMemo.tradeResult.paid)).toFixed(2)
+  const profitPercent = (100 * (tradeMemo.maxProfit / tradeMemo.tradeResult.paid)).toFixed(2)
+
   // @ts-ignore
   return (
     <Card sx={{bgcolor: "#0b1538", maxWidth: 345}}>
@@ -36,26 +39,26 @@ export default function Trade(props) {
         <YAxis title="Price"/>
         <LineSeries
           color='blue'
-          data={trade.prices.map((y, x) => ({x, y}))}
+          data={tradeMemo.prices.map((y, x) => ({x, y}))}
         />
         <LineSeries
           color='red'
-          data={new Array(trade.prices.length).fill(trade.stopLossPrice).map((y, x) => ({x, y}))}
+          data={new Array(tradeMemo.prices.length).fill(tradeMemo.stopLossPrice).map((y, x) => ({x, y}))}
         />
         <LineSeries
           color='green'
-          data={new Array(trade.prices.length).fill(takeProfitPrice).map((y, x) => ({x, y}))}
+          data={new Array(tradeMemo.prices.length).fill(takeProfitPrice).map((y, x) => ({x, y}))}
         />
         <LineSeries
           color='gold'
-          data={new Array(trade.prices.length).fill(trade.tradeResult.price).map((y, x) => ({x, y}))}
+          data={new Array(tradeMemo.prices.length).fill(tradeMemo.tradeResult.price).map((y, x) => ({x, y}))}
         />
       </XYPlot>
       <CardContent>
         <Typography variant="body2" color="text.secondary">
-          <div>Total: 0.00 (0.00%)</div>
-          <div>Profit: 0.00 (0.00%)</div>
-          <div>Loss: 0.00 (0.00%)</div>
+          <div>Total: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
+          <div>Profit: {tradeMemo.maxProfit.toFixed(2)} ({profitPercent}%)</div>
+          <div>Loss: {tradeMemo.maxLoss.toFixed(2)} ({lossPercent}%)</div>
         </Typography>
       </CardContent>
       <CardActions>
