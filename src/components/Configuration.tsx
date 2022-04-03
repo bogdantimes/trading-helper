@@ -12,7 +12,7 @@ export default function Configuration(props) {
   function onClickSave() {
     props.onSave({
       BuyQuantity: buyQuantity,
-      LossLimit: takeProfit,
+      TakeProfit: takeProfit,
       SellAtTakeProfit: sellAtTakeProfit
     });
   }
