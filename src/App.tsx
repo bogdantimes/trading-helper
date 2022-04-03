@@ -6,6 +6,8 @@ import Box from '@mui/material/Box';
 import Trade from "./components/Trade";
 import {createTheme, CssBaseline, ThemeProvider, useMediaQuery} from "@mui/material";
 import {useEffect} from "react";
+import {Config} from "../apps-script/Store";
+import Configuration from "./components/Configuration";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -71,6 +73,12 @@ export default function App() {
     google.script.run.withSuccessHandler(setConfig).getConfig();
   }, [])
 
+  function saveConfig(cfg: Config) {
+    // @ts-ignore
+    google.script.run.setConfig({...config, ...cfg});
+    setConfig({...config, ...cfg});
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>
@@ -89,7 +97,7 @@ export default function App() {
           )}
         </TabPanel>
         <TabPanel value={value} index={1}>
-          Item Two
+          <Configuration config={config} onSave={saveConfig}/>
         </TabPanel>
       </Box>
     </ThemeProvider>

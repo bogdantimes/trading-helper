@@ -115,11 +115,11 @@ export type Config = {
   SellAtStopLimit: boolean
 }
 
-function getTrades(): { [p: string]: TradeMemo } {
+export function getTrades(): { [p: string]: TradeMemo } {
   return DefaultStore.getOrSet("trade", {})
 }
 
-function getConfig(): Config {
+export function getConfig(): Config {
   return DefaultStore.getOrSet("Config", {
     TakeProfit: 0.1,
     SellAtTakeProfit: true,
@@ -132,7 +132,7 @@ function getConfig(): Config {
   })
 }
 
-function setConfig(config: Config) {
+export function setConfig(config: Config) {
   DefaultStore.set("Config", config)
 }
 

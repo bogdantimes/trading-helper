@@ -1,4 +1,4 @@
-import {IStore} from "./Store";
+import {Config} from "./Store";
 
 export interface IExchange {
   getFreeAsset(assetName: string): number
@@ -28,9 +28,9 @@ export class Binance implements IExchange {
   private readonly tradeReqParams: object;
   private readonly reqParams: object;
 
-  constructor(store: IStore) {
-    this.key = store.get('KEY')
-    this.secret = store.get('SECRET')
+  constructor(config: Config) {
+    this.key = config.KEY
+    this.secret = config.SECRET
     this.tradeReqParams = {method: 'post', headers: {'X-MBX-APIKEY': this.key}}
     this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
   }

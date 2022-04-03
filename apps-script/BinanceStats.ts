@@ -1,13 +1,13 @@
 import {CoinStats} from "./CoinStats";
 import {Binance, IExchange} from "./Binance";
-import {IStore} from "./Store";
+import {Config, IStore} from "./Store";
 
 export class BinanceStats implements IExchange {
   private binance: Binance;
   private coinStats: CoinStats;
 
-  constructor(store: IStore) {
-    this.binance = new Binance(store);
+  constructor(config: Config) {
+    this.binance = new Binance(config);
     this.coinStats = new CoinStats();
   }
 

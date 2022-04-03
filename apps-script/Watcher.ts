@@ -2,7 +2,7 @@ import {TradeMemo} from "./TradeMemo";
 import {V2Trader} from "./Trader";
 import {BinanceStats} from "./BinanceStats";
 import {Statistics} from "./Statistics";
-import {DefaultStore} from "./Store";
+import {DefaultStore, getConfig, getTrades} from "./Store";
 
 class Watcher {
   static start() {
@@ -30,10 +30,10 @@ class Watcher {
 function CHECK_ALL() {
   const store = DefaultStore;
   const statistics = new Statistics(store);
-  const trader = new V2Trader(store, new BinanceStats(store), statistics);
+  const trader = new V2Trader(store, new BinanceStats(getConfig()), statistics);
   let sendLog = true;
 
-  Object.values(DefaultStore.getOrSet("trade", {}))
+  Object.values(getTrades())
     .forEach((tradeRaw: object) => {
       const tradeMemo: TradeMemo = TradeMemo.fromObject(tradeRaw);
       try {
