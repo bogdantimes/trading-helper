@@ -46,7 +46,7 @@ export class FirebaseStore implements IStore {
   }
 
   setConfig(config: Config): void {
-    this.getOrSet("Config", config)
+    this.set("Config", config)
   }
 
   increment(key: String): number {
