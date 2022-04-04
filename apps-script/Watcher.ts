@@ -2,24 +2,24 @@ import {TradeMemo} from "./TradeMemo";
 import {V2Trader} from "./Trader";
 import {BinanceStats} from "./BinanceStats";
 import {Statistics} from "./Statistics";
-import {DefaultStore, getConfig, getTrades} from "./Store";
+import {DefaultStore} from "./Store";
 
 class Watcher {
   static start() {
     try {
-      ScriptApp.newTrigger(CHECK_ALL.name).timeBased().everyMinutes(1).create()
-      Log.info(`Started ${CHECK_ALL.name}`)
+      ScriptApp.newTrigger(Ticker.name).timeBased().everyMinutes(1).create()
+      Log.info(`Started ${Ticker.name}`)
     } catch (e) {
       Log.error(e)
     }
   }
 
   static stop() {
-    const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() == CHECK_ALL.name);
+    const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() == Ticker.name);
     if (trigger) {
       try {
         ScriptApp.deleteTrigger(trigger);
-        Log.info(`Stopped ${CHECK_ALL.name}`)
+        Log.info(`Stopped ${Ticker.name}`)
       } catch (e) {
         Log.error(e)
       }
@@ -27,13 +27,13 @@ class Watcher {
   }
 }
 
-function CHECK_ALL() {
+function Ticker() {
   const store = DefaultStore;
   const statistics = new Statistics(store);
-  const trader = new V2Trader(store, new BinanceStats(getConfig()), statistics);
+  const trader = new V2Trader(store, new BinanceStats(store.getConfig()), statistics);
   let sendLog = true;
 
-  Object.values(getTrades())
+  Object.values(store.getTrades())
     .forEach((tradeRaw: object) => {
       const tradeMemo: TradeMemo = TradeMemo.fromObject(tradeRaw);
       try {
@@ -51,7 +51,12 @@ function CHECK_ALL() {
 }
 
 function Start() {
-  Watcher.stop()
+  Stop()
   Watcher.start()
+  Log.ifUsefulDumpAsEmail()
+}
+
+function Stop() {
+  Watcher.stop()
   Log.ifUsefulDumpAsEmail()
 }

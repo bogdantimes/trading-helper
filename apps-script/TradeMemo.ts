@@ -1,5 +1,4 @@
 import {PriceMemo} from "./Trader";
-import {USDT} from "./Main";
 
 export class TradeMemo {
   tradeResult: TradeResult
@@ -44,14 +43,6 @@ export class TradeMemoKey {
 
   constructor(symbol: ExchangeSymbol) {
     this.symbol = symbol;
-  }
-
-  static isKey(key: String): boolean {
-    return key.startsWith('trade/')
-  }
-
-  static from(key: string): TradeMemoKey {
-    return new TradeMemoKey(new ExchangeSymbol(key.split("/")[1], USDT))
   }
 
   toString(): string {

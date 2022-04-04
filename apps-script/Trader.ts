@@ -1,7 +1,7 @@
 import {TradeMemo, TradeMemoKey} from "./TradeMemo";
-import {DefaultStore, getConfig, IStore} from "./Store";
 import {IExchange} from "./Binance";
 import {Statistics} from "./Statistics";
+import {IStore} from "./Store";
 
 export type PriceMemo = [number, number, number]
 
@@ -14,7 +14,7 @@ export class V2Trader implements Trader {
   private readonly prices: { [p: string]: number };
 
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
-    const config = getConfig();
+    const config = store.getConfig();
     this.lossLimit = config.LossLimit;
     this.takeProfit = config.TakeProfit;
     this.store = store
@@ -67,7 +67,7 @@ export class V2Trader implements Trader {
       if (stopLimitCrossed) {
         Log.alert(`Stop limit crossed: ${symbol} price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
       }
-      if (!tradeMemo.hodl && getConfig().SellAtStopLimit) {
+      if (!tradeMemo.hodl && this.store.getConfig().SellAtStopLimit) {
         return this.sellAndClose(symbol, tradeMemo)
       }
     }
@@ -78,7 +78,7 @@ export class V2Trader implements Trader {
       if (takeProfitCrossed) {
         Log.alert(`Take profit crossed: ${symbol} price '${currentPrice}' >= '${takeProfitPrice}'`)
       }
-      if (!tradeMemo.hodl && getConfig().SellAtTakeProfit) {
+      if (!tradeMemo.hodl && this.store.getConfig().SellAtTakeProfit) {
         return this.sellAndClose(symbol, tradeMemo)
       }
     }

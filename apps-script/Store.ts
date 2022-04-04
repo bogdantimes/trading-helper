@@ -1,4 +1,3 @@
-import Properties = GoogleAppsScript.Properties.Properties;
 import {TradeMemo} from "./TradeMemo";
 
 export interface IStore {
@@ -8,52 +7,20 @@ export interface IStore {
 
   set(key: String, value: any): any
 
+  getConfig(): Config
+
+  setConfig(config: Config): void
+
   getOrSet(key: String, value: any): any
 
   increment(key: String): number
 
   delete(key: String)
+
+  getTrades(): { [key: string]: TradeMemo }
 }
 
-class GapsStore implements IStore {
-  private readonly source: GoogleAppsScript.Properties.Properties;
-
-  constructor(source: Properties) {
-    this.source = source
-  }
-
-  increment(key: String): number {
-    const num = +this.get(key) || 0;
-    this.set(key, String(num + 1))
-    return num
-  }
-
-  delete(key: String) {
-    this.source.deleteProperty(key.toString())
-  }
-
-  get(key: String): any {
-    return this.source.getProperty(key.toString());
-  }
-
-  getOrSet(key: String, value: any): any {
-    const val = this.get(key) || value;
-    this.source.setProperty(key.toString(), val)
-    return val
-  }
-
-  set(key: String, value: any): any {
-    this.source.setProperty(key.toString(), value)
-    return value
-  }
-
-  getKeys(): string[] {
-    return this.source.getKeys()
-  }
-
-}
-
-class FirebaseStore implements IStore {
+export class FirebaseStore implements IStore {
   private readonly source: object
 
   constructor() {
@@ -63,6 +30,23 @@ class FirebaseStore implements IStore {
     }
     // @ts-ignore
     this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken());
+  }
+
+  getConfig(): Config {
+    return this.getOrSet("Config", {
+      TakeProfit: 0.1,
+      SellAtTakeProfit: true,
+      BuyQuantity: 10,
+      LossLimit: 0.05,
+      SECRET: 'none',
+      KEY: 'none',
+      PriceAsset: 'USDT',
+      SellAtStopLimit: false,
+    })
+  }
+
+  setConfig(config: Config): void {
+    this.getOrSet("Config", config)
   }
 
   increment(key: String): number {
@@ -99,10 +83,11 @@ class FirebaseStore implements IStore {
     return Object.keys(this.source.getData())
   }
 
-}
+  getTrades(): { [p: string]: TradeMemo } {
+    return this.getOrSet("trade", {});
+  }
 
-// @ts-ignore
-export const DefaultStore = this["DefaultStore"] = new FirebaseStore();
+}
 
 export type Config = {
   TakeProfit: number
@@ -115,24 +100,5 @@ export type Config = {
   SellAtStopLimit: boolean
 }
 
-export function getTrades(): { [p: string]: TradeMemo } {
-  return DefaultStore.getOrSet("trade", {})
-}
-
-export function getConfig(): Config {
-  return DefaultStore.getOrSet("Config", {
-    TakeProfit: 0.1,
-    SellAtTakeProfit: true,
-    BuyQuantity: 10,
-    LossLimit: 0.05,
-    SECRET: 'none',
-    KEY: 'none',
-    PriceAsset: 'USDT',
-    SellAtStopLimit: false,
-  })
-}
-
-export function setConfig(config: Config) {
-  DefaultStore.set("Config", config)
-}
-
+// @ts-ignore
+export const DefaultStore = this['DefaultStore'] = new FirebaseStore()
