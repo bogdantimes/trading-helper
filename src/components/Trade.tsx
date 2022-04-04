@@ -31,7 +31,7 @@ export default function Trade(props) {
 
   // @ts-ignore
   return (
-    <Card sx={{bgcolor: "#0b1538", maxWidth: 345}}>
+    <Card>
       <CardHeader title={props.name}/>
       <XYPlot xType="linear" width={300} height={200}>
         <HorizontalGridLines/>
