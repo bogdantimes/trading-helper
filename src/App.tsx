@@ -4,10 +4,18 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Trade from "./components/Trade";
-import {createTheme, CssBaseline, ThemeProvider, useMediaQuery} from "@mui/material";
+import {
+  Button,
+  createTheme,
+  CssBaseline,
+  FormGroup,
+  TextField,
+  ThemeProvider,
+  useMediaQuery
+} from "@mui/material";
 import {useEffect} from "react";
 import {Config} from "../apps-script/Store";
-import Configuration from "./components/Configuration";
+import Settings from "./components/Settings";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -79,14 +87,22 @@ export default function App() {
     setConfig({...config, ...cfg});
   }
 
+  const [coinName, setCoinName] = React.useState("BTC");
+
+  function quickBuy(coinName: string) {
+    // @ts-ignore
+    google.script.run.withSuccessHandler(alert).quickBuy(coinName);
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>
       <Box sx={{width: '100%'}}>
         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-            <Tab label="Trades" {...a11yProps(0)} />
-            <Tab label="Config" {...a11yProps(1)} />
+            <Tab label="Assets" {...a11yProps(0)} />
+            <Tab label="Trading" {...a11yProps(1)} />
+            <Tab label="Settings" {...a11yProps(2)} />
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
@@ -97,7 +113,16 @@ export default function App() {
           )}
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <Configuration config={config} onSave={saveConfig}/>
+          <FormGroup>
+            <TextField
+              label="Coin name"
+              value={coinName}
+              onChange={(e) => setCoinName(e.target.value)}/>
+            <Button onClick={() => quickBuy(coinName)}>Buy</Button>
+          </FormGroup>
+        </TabPanel>
+        <TabPanel value={value} index={2}>
+          <Settings config={config} onSave={saveConfig}/>
         </TabPanel>
       </Box>
     </ThemeProvider>

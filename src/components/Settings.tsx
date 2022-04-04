@@ -3,7 +3,7 @@ import {useState} from "react";
 import {Config} from "../../apps-script/Store";
 import {Button, Checkbox, FormControlLabel, FormGroup, TextField} from "@mui/material";
 
-export default function Configuration(props) {
+export default function Settings(props) {
   const config: Config = props.config;
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity);
   const [takeProfit, setTakeProfit] = useState(config.TakeProfit);
@@ -19,22 +19,15 @@ export default function Configuration(props) {
 
   return (
     <FormGroup>
-      <FormControlLabel control={
-        <TextField type={"number"} value={buyQuantity}
-                   onChange={(e) => setBuyQuantity(+e.target.value)}/>
-      } label={"Buy Quantity"}/>
-      <FormControlLabel control={
-        <TextField type={"number"} value={takeProfit}
-                   onChange={(e) => setTakeProfit(+e.target.value)}/>
-      } label={"Take profit"}/>
+      <TextField type={"number"} value={buyQuantity} label={"Buy Quantity"}
+                 onChange={(e) => setBuyQuantity(+e.target.value)}/>
+      <TextField type={"number"} value={takeProfit} label={"Take profit"}
+                 onChange={(e) => setTakeProfit(+e.target.value)}/>
       <FormControlLabel control={
         <Checkbox checked={sellAtTakeProfit}
                   onChange={(e) => setSellAtTakeProfit(e.target.checked)}/>
       } label="Sell at profit"/>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={onClickSave}>Save</Button>
+      <Button onClick={onClickSave}>Save</Button>
     </FormGroup>
   );
 }

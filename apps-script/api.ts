@@ -15,14 +15,14 @@ function doPost(e) {
 function quickBuy(asset: string) {
   if (asset) {
     Log.info(`quickBuy called for ${asset}`)
-    GasEventHandler.handle({postData: {contents: `buy ${asset}`}})
+    return GasEventHandler.handle({postData: {contents: `buy ${asset}`}})
   }
 }
 
 function quickSell(asset: string) {
   if (asset) {
     Log.info(`quickSell called for ${asset}`)
-    GasEventHandler.handle({postData: {contents: `sell ${asset}`}})
+    return GasEventHandler.handle({postData: {contents: `sell ${asset}`}})
   }
 }
 
