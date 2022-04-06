@@ -1,5 +1,6 @@
 import {DefaultStore} from "./Store";
 import {GasEventHandler} from "./Main";
+import {BuyingQueue} from "./BuyingQueue";
 
 function doGet() {
   return HtmlService
@@ -10,6 +11,16 @@ function doGet() {
 
 function doPost(e) {
   return GasEventHandler.handle(e)
+}
+
+function lazyBuy(coinName: string) {
+  if (coinName) {
+    Log.alert("Lazy buying called for " + coinName);
+    const config = DefaultStore.getConfig();
+    BuyingQueue.add(new ExchangeSymbol(coinName, config.PriceAsset), config.BuyQuantity);
+    return `Added ${coinName} to the buying queue`;
+  }
+  return "No coinName specified";
 }
 
 function quickBuy(asset: string) {

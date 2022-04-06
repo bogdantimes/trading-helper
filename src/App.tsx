@@ -89,9 +89,9 @@ export default function App() {
 
   const [coinName, setCoinName] = React.useState("BTC");
 
-  function quickBuy(coinName: string) {
+  function buy(coinName: string) {
     // @ts-ignore
-    google.script.run.withSuccessHandler(alert).quickBuy(coinName);
+    google.script.run.withSuccessHandler(alert).lazyBuy(coinName);
   }
 
   return (
@@ -118,7 +118,7 @@ export default function App() {
               label="Coin name"
               value={coinName}
               onChange={(e) => setCoinName(e.target.value)}/>
-            <Button onClick={() => quickBuy(coinName)}>Buy</Button>
+            <Button onClick={() => buy(coinName)}>Buy</Button>
           </FormGroup>
         </TabPanel>
         <TabPanel value={value} index={2}>

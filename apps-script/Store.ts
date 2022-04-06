@@ -49,6 +49,7 @@ export class FirebaseStore implements IStore {
       KEY: 'none',
       PriceAsset: 'USDT',
       SellAtStopLimit: false,
+      BuyingQueueEnabled: true,
     })
   }
 
@@ -127,6 +128,7 @@ export type Config = {
   KEY: string
   PriceAsset: string
   SellAtStopLimit: boolean
+  BuyingQueueEnabled: boolean
 }
 
 // @ts-ignore

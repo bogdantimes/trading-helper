@@ -15,8 +15,8 @@ class ExchangeSymbol {
     if (!priceAsset) {
       throw Error(`Invalid priceAsset: "${priceAsset}"`)
     }
-    this.quantityAsset = quantityAsset;
-    this.priceAsset = priceAsset;
+    this.quantityAsset = quantityAsset.toUpperCase();
+    this.priceAsset = priceAsset.toUpperCase();
   }
 
   toString(): string {
