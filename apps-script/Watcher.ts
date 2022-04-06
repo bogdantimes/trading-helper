@@ -47,18 +47,15 @@ function Ticker() {
       }
     })
 
-  if (config.BuyingQueueEnabled) {
-    BuyingQueue.getAll().forEach(item => {
-      try {
-        Log.info(`Trying to buy from queue: ${item.quantityAsset}`)
-        const symbol = ExchangeSymbol.fromObject(item);
-        trader.buy(symbol, item.cost)
-        BuyingQueue.remove(symbol)
-      } catch (e) {
-        Log.error(e)
-      }
-    });
-  }
+  BuyingQueue.getAll().forEach(coinName => {
+    try {
+      Log.info(`Trying to buy from queue: ${coinName}`)
+      trader.buy(new ExchangeSymbol(coinName, config.PriceAsset), config.BuyQuantity)
+      BuyingQueue.remove(coinName)
+    } catch (e) {
+      Log.error(e)
+    }
+  });
 
   store.dumpChanges();
 

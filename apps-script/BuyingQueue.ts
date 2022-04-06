@@ -1,25 +1,15 @@
 import {DefaultStore} from "./Store";
 
-export type BuyingQueueItem = {
-  quantityAsset: string;
-  priceAsset: string;
-  cost: number;
-};
-
 export class BuyingQueue {
-  static getAll(): BuyingQueueItem[] {
-    return Object.values(DefaultStore.get("buyingQueue") || {});
+  static getAll(): string[] {
+    return Object.values(DefaultStore.get("lazyBuy") || {});
   }
 
-  static add(symbol: ExchangeSymbol, cost: number): void {
-    DefaultStore.set(`buyingQueue/${symbol.quantityAsset}`, {
-      quantityAsset: symbol.quantityAsset,
-      priceAsset: symbol.priceAsset,
-      cost: cost,
-    });
+  static add(coinName: string): void {
+    DefaultStore.set(`lazyBuy/${coinName}`, coinName);
   }
 
-  static remove(symbol: ExchangeSymbol) {
-    DefaultStore.delete(`buyingQueue/${symbol.quantityAsset}`);
+  static remove(coinName: string) {
+    DefaultStore.delete(`lazyBuy/${coinName}`);
   }
 }

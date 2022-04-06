@@ -13,28 +13,22 @@ function doPost(e) {
   return GasEventHandler.handle(e)
 }
 
-function lazyBuy(coinName: string) {
+function buyCoin(coinName: string) {
   if (coinName) {
     Log.alert("Lazy buying called for " + coinName);
-    const config = DefaultStore.getConfig();
-    BuyingQueue.add(new ExchangeSymbol(coinName, config.PriceAsset), config.BuyQuantity);
-    return `Added ${coinName} to the buying queue`;
+    BuyingQueue.add(coinName);
+    return "Buying " + coinName + " as soon as possible";
   }
   return "No coinName specified";
 }
 
-function quickBuy(asset: string) {
-  if (asset) {
-    Log.info(`quickBuy called for ${asset}`)
-    return GasEventHandler.handle({postData: {contents: `buy ${asset}`}})
+function sellCoin(coinName: string) {
+  if (coinName) {
+    Log.alert("Lazy selling called for " + coinName);
+    DefaultStore.set(`trade/${coinName}/sell`, true);
+    return "Selling " + coinName + " as soon as possible";
   }
-}
-
-function quickSell(asset: string) {
-  if (asset) {
-    Log.info(`quickSell called for ${asset}`)
-    return GasEventHandler.handle({postData: {contents: `sell ${asset}`}})
-  }
+  return "No coinName specified";
 }
 
 function getTrades() {

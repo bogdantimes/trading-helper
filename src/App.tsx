@@ -91,7 +91,7 @@ export default function App() {
 
   function buy(coinName: string) {
     // @ts-ignore
-    google.script.run.withSuccessHandler(alert).lazyBuy(coinName);
+    google.script.run.withSuccessHandler(alert).buyCoin(coinName);
   }
 
   return (

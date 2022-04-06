@@ -22,7 +22,7 @@ export default function Trade(props) {
       google.script.run.withSuccessHandler((resp) => {
         setSellDisabled(true);
         alert(resp.toString())
-      }).quickSell(props.name);
+      }).sellCoin(props.name);
     }
   }
 
