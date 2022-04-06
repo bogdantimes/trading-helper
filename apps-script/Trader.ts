@@ -1,23 +1,20 @@
 import {TradeMemo, TradeMemoKey} from "./TradeMemo";
 import {IExchange} from "./Binance";
 import {Statistics} from "./Statistics";
-import {IStore} from "./Store";
+import {Config, IStore} from "./Store";
 
 export type PriceMemo = [number, number, number]
 
 export class V2Trader implements Trader {
   private readonly store: IStore;
+  private readonly config: Config;
   private readonly exchange: IExchange;
-  private readonly lossLimit: number;
   private readonly stats: Statistics;
-  private readonly takeProfit: number;
   private readonly prices: { [p: string]: number };
 
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
-    const config = store.getConfig();
-    this.lossLimit = config.LossLimit;
-    this.takeProfit = config.TakeProfit;
-    this.store = store
+    this.store = store;
+    this.config = store.getConfig();
     this.exchange = exchange
     this.stats = stats
     this.prices = exchange.getPrices()
@@ -31,7 +28,7 @@ export class V2Trader implements Trader {
       Log.alert(tradeResult.toString())
       const tradeMemo: TradeMemo = this.store.getTrades()[symbol.quantityAsset];
       tradeResult = tradeMemo ? tradeMemo.tradeResult.join(tradeResult) : tradeResult
-      const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
+      const stopLossPrice = tradeResult.price * (1 - this.config.LossLimit);
       const prices: PriceMemo = tradeMemo ? tradeMemo.prices : [tradeResult.price, tradeResult.price, tradeResult.price]
       this.store.setTrade(new TradeMemo(tradeResult, stopLossPrice, prices))
       Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
@@ -68,7 +65,7 @@ export class V2Trader implements Trader {
       }
     }
 
-    const takeProfitPrice = tradeMemo.tradeResult.price * (1 + this.takeProfit)
+    const takeProfitPrice = tradeMemo.tradeResult.price * (1 + this.config.TakeProfit);
     if (currentPrice >= takeProfitPrice) {
       const takeProfitCrossed = tradeMemo.prices[2] < takeProfitPrice;
       if (takeProfitCrossed) {
@@ -85,7 +82,7 @@ export class V2Trader implements Trader {
     if (this.priceGoesUp(tradeMemo.prices)) {
       Log.info(`${symbol} price goes up`)
       // Using previous price to calculate new stop limit
-      const newStopLimit = tradeMemo.prices[0] * (1 - this.lossLimit);
+      const newStopLimit = tradeMemo.prices[0] * (1 - this.config.LossLimit);
       tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
     }
 
@@ -111,10 +108,11 @@ export class V2Trader implements Trader {
     const tradeResult = this.exchange.marketSell(memo.tradeResult.symbol, memo.tradeResult.quantity);
 
     if (tradeResult.fromExchange) {
-      tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
-      Log.alert(tradeResult.toString())
+      const commission = this.getBNBCommissionCost(tradeResult.commission);
+      Log.info(`Commission in ${this.config.PriceAsset}: ~${commission}`)
+      tradeResult.profit = tradeResult.gained - memo.tradeResult.paid - commission;
+      Log.alert(tradeResult.toString());
       this.stats.addProfit(tradeResult.profit)
-      this.stats.addCommission(tradeResult.commission)
     }
 
     Log.debug(`Deleting memo from store: ${memo.getKey().toString()}`)
@@ -125,6 +123,11 @@ export class V2Trader implements Trader {
 
   private priceGoesUp(lastPrices: PriceMemo): boolean {
     return lastPrices.every((value, index) => index == 0 ? true : value > lastPrices[index - 1])
+  }
+
+  private getBNBCommissionCost(commission: number): number {
+    const bnbPrice = this.prices["BNB" + this.config.PriceAsset];
+    return bnbPrice ? commission * bnbPrice : 0;
   }
 
 }
