@@ -18,10 +18,17 @@ export interface IStore {
   delete(key: String)
 
   getTrades(): { [key: string]: TradeMemo }
+
+  setTrade(tradeMemo: TradeMemo): void
+
+  deleteTrade(tradeMemo: TradeMemo): void
+
+  dumpChanges(): void
 }
 
 export class FirebaseStore implements IStore {
   private readonly source: object
+  private tradesCache: { [key: string]: TradeMemo }
 
   constructor() {
     const url = PropertiesService.getScriptProperties().getProperty("FB_URL")
@@ -84,7 +91,29 @@ export class FirebaseStore implements IStore {
   }
 
   getTrades(): { [p: string]: TradeMemo } {
-    return this.getOrSet("trade", {});
+    if (!this.tradesCache) {
+      const trades = this.getOrSet("trade", {});
+      // Fetches raw trades from Firebase and converts them to TradeMemo objects
+      this.tradesCache = Object.keys(trades).reduce((acc, key) => {
+        acc[key] = TradeMemo.fromObject(trades[key])
+        return acc
+      }, {})
+    }
+    return this.tradesCache;
+  }
+
+  setTrade(tradeMemo: TradeMemo) {
+    const trades = this.getTrades()
+    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
+  }
+
+  deleteTrade(tradeMemo: TradeMemo) {
+    const trades = this.getTrades()
+    delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
+  }
+
+  dumpChanges() {
+    this.set("trade", this.getTrades())
   }
 
 }

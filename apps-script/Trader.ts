@@ -29,11 +29,11 @@ export class V2Trader implements Trader {
 
     if (tradeResult.fromExchange) {
       Log.alert(tradeResult.toString())
-      const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
+      const tradeMemo: TradeMemo = this.store.getTrades()[symbol.quantityAsset];
       tradeResult = tradeMemo ? tradeMemo.tradeResult.join(tradeResult) : tradeResult
       const stopLossPrice = tradeResult.price * (1 - this.lossLimit);
       const prices: PriceMemo = tradeMemo ? tradeMemo.prices : [tradeResult.price, tradeResult.price, tradeResult.price]
-      this.saveTradeMemo(new TradeMemo(tradeResult, stopLossPrice, prices))
+      this.store.setTrade(new TradeMemo(tradeResult, stopLossPrice, prices))
       Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
     }
 
@@ -41,25 +41,21 @@ export class V2Trader implements Trader {
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
+    const tradeMemo: TradeMemo = this.store.getTrades()[symbol.quantityAsset];
     if (tradeMemo) {
-      this.store.set(`${tradeMemo.getKey().toString()}/sell`, true)
-      return this.sellAndClose(symbol, tradeMemo)
+      tradeMemo.sell = true;
+      this.store.setTrade(tradeMemo)
+      return this.sellAndClose(tradeMemo)
     }
     return TradeResult.fromMsg(symbol, "Asset is not present")
   }
 
-  stopLossSell(symbol: ExchangeSymbol): TradeResult {
-
-    const tradeMemo: TradeMemo = this.readTradeMemo(new TradeMemoKey(symbol));
-    if (!tradeMemo) {
-      return TradeResult.fromMsg(symbol, "Asset is not present")
-    }
-
+  tickerCheck(tradeMemo: TradeMemo): TradeResult {
     if (tradeMemo.sell) {
-      return this.sellAndClose(symbol, tradeMemo)
+      return this.sellAndClose(tradeMemo)
     }
 
+    const symbol = tradeMemo.tradeResult.symbol;
     const currentPrice = this.getPrice(symbol);
 
     if (currentPrice <= tradeMemo.stopLossPrice) {
@@ -68,7 +64,7 @@ export class V2Trader implements Trader {
         Log.alert(`Stop limit crossed: ${symbol} price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
       }
       if (!tradeMemo.hodl && this.store.getConfig().SellAtStopLimit) {
-        return this.sellAndClose(symbol, tradeMemo)
+        return this.sellAndClose(tradeMemo)
       }
     }
 
@@ -79,7 +75,7 @@ export class V2Trader implements Trader {
         Log.alert(`Take profit crossed: ${symbol} price '${currentPrice}' >= '${takeProfitPrice}'`)
       }
       if (!tradeMemo.hodl && this.store.getConfig().SellAtTakeProfit) {
-        return this.sellAndClose(symbol, tradeMemo)
+        return this.sellAndClose(tradeMemo)
       }
     }
 
@@ -95,7 +91,7 @@ export class V2Trader implements Trader {
 
     tradeMemo.maxLoss = tradeMemo.tradeResult.paid * (tradeMemo.stopLossPrice / tradeMemo.tradeResult.price - 1)
     tradeMemo.maxProfit = (currentPrice * tradeMemo.tradeResult.quantity) - tradeMemo.tradeResult.paid
-    this.saveTradeMemo(tradeMemo)
+    this.store.setTrade(tradeMemo)
 
     Log.info(`${symbol} asset kept. Stop loss price: '${tradeMemo.stopLossPrice}'`)
 
@@ -111,8 +107,8 @@ export class V2Trader implements Trader {
     return price
   }
 
-  private sellAndClose(symbol: ExchangeSymbol, memo: TradeMemo) {
-    const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
+  private sellAndClose(memo: TradeMemo) {
+    const tradeResult = this.exchange.marketSell(memo.tradeResult.symbol, memo.tradeResult.quantity);
 
     if (tradeResult.fromExchange) {
       tradeResult.profit = tradeResult.gained - memo.tradeResult.paid
@@ -122,21 +118,9 @@ export class V2Trader implements Trader {
     }
 
     Log.debug(`Deleting memo from store: ${memo.getKey().toString()}`)
-    this.store.delete(memo.getKey().toString())
+    this.store.deleteTrade(memo)
 
     return tradeResult
-  }
-
-  private readTradeMemo(key: TradeMemoKey): TradeMemo {
-    const tradeMemoRaw = this.store.get(key.toString());
-    if (tradeMemoRaw) {
-      return TradeMemo.fromObject(tradeMemoRaw)
-    }
-    return null
-  }
-
-  private saveTradeMemo(tradeMemo: TradeMemo) {
-    this.store.set(tradeMemo.getKey().toString(), tradeMemo)
   }
 
   private priceGoesUp(lastPrices: PriceMemo): boolean {

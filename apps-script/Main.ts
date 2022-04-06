@@ -40,6 +40,10 @@ export class GasEventHandler {
       }
     } catch (e) {
       Log.error(e)
+    } finally {
+      if (store) {
+        store.dumpChanges()
+      }
     }
 
     Log.ifUsefulDumpAsEmail()

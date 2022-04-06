@@ -14,6 +14,10 @@ export class TradeMemo {
    * Marks the asset for holding even if price drops.
    */
   hodl: boolean = false;
+  /**
+   * Marks the asset for buying as soon as possible.
+   */
+  buy: boolean = false;
 
   constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
     this.tradeResult = tradeResult;

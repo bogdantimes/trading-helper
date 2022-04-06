@@ -37,13 +37,15 @@ function Ticker() {
     .forEach((tradeRaw: object) => {
       const tradeMemo: TradeMemo = TradeMemo.fromObject(tradeRaw);
       try {
-        const result = trader.stopLossSell(tradeMemo.tradeResult.symbol);
+        const result = trader.tickerCheck(tradeMemo);
         Log.info(result.toString())
         sendLog = result.fromExchange
       } catch (e) {
         Log.error(e)
       }
     })
+
+  store.dumpChanges();
 
   if (sendLog) {
     Log.ifUsefulDumpAsEmail()
