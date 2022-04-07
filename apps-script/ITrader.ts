@@ -54,7 +54,7 @@ class TradeResult {
   }
 
   toString(): string {
-    return `${this.symbol} trade result: ${this.price ? 'price=' + this.price : ''} ${this.paid ? 'paid=' + this.paid : ''} ${this.gained ? 'gained=' + this.gained : ''} ${this.profit ? 'profit=' + this.profit : ''} ${this.msg ? 'msg=' + this.msg : ''}`
+    return `${this.symbol}: ${this.msg ? this.msg : ''} => ${this.price ? 'price=' + this.price : ''} ${this.paid ? 'paid=' + this.paid : ''} ${this.gained ? 'gained=' + this.gained : ''} ${this.profit ? 'profit=' + this.profit : ''}`
   }
 
   join(next: TradeResult): TradeResult {
