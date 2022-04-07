@@ -17,7 +17,7 @@ export default function Trade(props) {
   const [sellDisabled, setSellDisabled] = useState(false);
 
   function onSell() {
-    if (confirm('Are you sure you want to sell?')) {
+    if (confirm(`Are you sure you want to sell ${props.name}?`)) {
       // @ts-ignore
       google.script.run.withSuccessHandler((resp) => {
         setSellDisabled(true);

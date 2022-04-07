@@ -90,8 +90,10 @@ export default function App() {
   const [coinName, setCoinName] = React.useState("BTC");
 
   function buy(coinName: string) {
-    // @ts-ignore
-    google.script.run.withSuccessHandler(alert).buyCoin(coinName);
+    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
+      // @ts-ignore
+      google.script.run.withSuccessHandler(alert).buyCoin(coinName);
+    }
   }
 
   return (
