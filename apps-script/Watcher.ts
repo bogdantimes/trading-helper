@@ -33,7 +33,6 @@ function Ticker() {
   const config = store.getConfig();
   const statistics = new Statistics(store);
   const trader = new V2Trader(store, new BinanceStats(config), statistics);
-  let sendLog = true;
 
   Object.values(store.getTrades())
     .forEach((tradeRaw: object) => {
@@ -41,7 +40,6 @@ function Ticker() {
       try {
         const result = trader.tickerCheck(tradeMemo);
         Log.info(result.toString())
-        sendLog = result.fromExchange
       } catch (e) {
         Log.error(e)
       }
@@ -59,9 +57,7 @@ function Ticker() {
 
   store.dumpChanges();
 
-  if (sendLog) {
-    Log.ifUsefulDumpAsEmail()
-  }
+  Log.ifUsefulDumpAsEmail()
 }
 
 function Start() {

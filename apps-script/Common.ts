@@ -62,8 +62,6 @@ class Log {
     const email = Session.getEffectiveUser().getEmail();
     if (this.alerts.length > 0) {
       GmailApp.sendEmail(email, "Trader-bot alert", this.print())
-    } else if (this.infoLog.length > 0 || this.debugLog.length > 0 || this.errLog.some(e => !e.message.includes("IP banned until"))) {
-      GmailApp.createDraft(email, "Trader-bot log", this.print())
     }
   }
 }
