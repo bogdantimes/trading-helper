@@ -12,6 +12,17 @@ export class Statistics {
   }
 
   addProfit(profit: number): number {
-    return +this.store.set("totalProfit", String(this.getTotalProfit() + profit))
+    const totalProfit = this.getTotalProfit();
+
+    const date = new Date().toDateString();
+    const statistics = this.store.get("Statistics") || {};
+
+    statistics.DailyProfit = statistics.DailyProfit || {};
+    statistics.DailyProfit[date] = +(statistics.DailyProfit[date] || 0) + profit;
+    statistics.TotalProfit = totalProfit + profit;
+
+    this.store.set("Statistics", statistics);
+
+    return +this.store.set("totalProfit", totalProfit + profit)
   }
 }
