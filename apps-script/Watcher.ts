@@ -34,26 +34,27 @@ function Ticker() {
   const statistics = new Statistics(store);
   const trader = new V2Trader(store, new BinanceStats(config), statistics);
 
-  Object.values(store.getTrades())
-    .forEach((tradeRaw: object) => {
-      const tradeMemo: TradeMemo = TradeMemo.fromObject(tradeRaw);
-      try {
-        const result = trader.tickerCheck(tradeMemo);
-        Log.info(result.toString())
-      } catch (e) {
-        Log.error(e)
-      }
-    })
-
   BuyingQueue.getAll().forEach(coinName => {
     try {
-      Log.info(`Trying to buy from queue: ${coinName}`)
-      trader.buy(new ExchangeSymbol(coinName, config.PriceAsset), config.BuyQuantity)
+      Log.info(`Adding from queue to trades: ${coinName}`)
+      const symbol = new ExchangeSymbol(coinName, config.PriceAsset);
+      const trade = store.getTrade(symbol) || TradeMemo.memoToBuy(symbol);
+      trade.buy = true;
+      store.setTrade(trade);
       BuyingQueue.remove(coinName)
     } catch (e) {
       Log.error(e)
     }
   });
+
+  store.getTradesList().forEach(tradeMemo => {
+    try {
+      const result = trader.tickerCheck(tradeMemo);
+      Log.info(result.toString())
+    } catch (e) {
+      Log.error(e)
+    }
+  })
 
   store.dumpChanges();
 

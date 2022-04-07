@@ -20,9 +20,7 @@ export class Statistics {
     statistics.DailyProfit = statistics.DailyProfit || {};
     statistics.DailyProfit[date] = +(statistics.DailyProfit[date] || 0) + profit;
     statistics.TotalProfit = totalProfit + profit;
-
     this.store.set("Statistics", statistics);
-
-    return +this.store.set("totalProfit", totalProfit + profit)
+    return statistics.TotalProfit
   }
 }

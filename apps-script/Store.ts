@@ -19,6 +19,10 @@ export interface IStore {
 
   getTrades(): { [key: string]: TradeMemo }
 
+  getTradesList(): TradeMemo[]
+
+  getTrade(symbol: ExchangeSymbol): TradeMemo
+
   setTrade(tradeMemo: TradeMemo): void
 
   deleteTrade(tradeMemo: TradeMemo): void
@@ -107,9 +111,16 @@ export class FirebaseStore implements IStore {
     return this.tradesCache;
   }
 
+  getTradesList(): TradeMemo[] {
+    return Object.values(this.getTrades())
+  }
+
+  getTrade(symbol: ExchangeSymbol): TradeMemo {
+    return this.getTrades()[symbol.quantityAsset]
+  }
+
   setTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades()
-    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
+    this.getTrades()[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
   }
 
   deleteTrade(tradeMemo: TradeMemo) {

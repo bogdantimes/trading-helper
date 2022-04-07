@@ -14,6 +14,10 @@ export class TradeMemo {
    * Marks the asset for holding even if price drops.
    */
   hodl: boolean = false;
+  /**
+   * Marks the asset for buying as soon as possible.
+   */
+  buy: boolean = false;
 
   constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
     this.tradeResult = tradeResult;
@@ -23,6 +27,13 @@ export class TradeMemo {
 
   static empty(): TradeMemo {
     return new TradeMemo(null, 0, [0, 0, 0])
+  }
+
+  static memoToBuy(symbol: ExchangeSymbol): TradeMemo {
+    const tradeMemo = this.empty();
+    tradeMemo.buy = true
+    tradeMemo.tradeResult = TradeResult.fromMsg(symbol, "New lazy buy");
+    return tradeMemo;
   }
 
   static fromObject(obj: object): TradeMemo {
