@@ -57,8 +57,8 @@ export default function Trade(props) {
       <CardContent>
         <Typography variant="body2" color="text.secondary">
           <div>Total: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
-          <div>Profit: {tradeMemo.maxProfit.toFixed(2)} ({profitPercent}%)</div>
-          <div>Loss: {tradeMemo.maxLoss.toFixed(2)} ({lossPercent}%)</div>
+          <div>{tradeMemo.maxProfit > 0 ? "Profit" : "Loss"}: {tradeMemo.maxProfit.toFixed(2)} ({profitPercent}%)</div>
+          <div>Stop: {tradeMemo.maxLoss.toFixed(2)} ({lossPercent}%)</div>
         </Typography>
       </CardContent>
       <CardActions>
