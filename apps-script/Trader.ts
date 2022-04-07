@@ -55,8 +55,11 @@ export class V2Trader implements Trader {
     const symbol = tradeMemo.tradeResult.symbol;
     const currentPrice = this.getPrice(symbol);
 
+    tradeMemo.prices.shift()
+    tradeMemo.prices.push(currentPrice)
+
     if (currentPrice <= tradeMemo.stopLossPrice) {
-      const stopLimitCrossed = tradeMemo.prices[2] > tradeMemo.stopLossPrice;
+      const stopLimitCrossed = tradeMemo.prices[1] > tradeMemo.stopLossPrice;
       if (stopLimitCrossed) {
         Log.alert(`Stop limit crossed: ${symbol} price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
       }
@@ -65,21 +68,20 @@ export class V2Trader implements Trader {
       }
     }
 
+    const priceGoesUp = this.priceGoesUp(tradeMemo.prices);
     const takeProfitPrice = tradeMemo.tradeResult.price * (1 + this.config.TakeProfit);
     if (currentPrice >= takeProfitPrice) {
-      const takeProfitCrossed = tradeMemo.prices[2] < takeProfitPrice;
+      const takeProfitCrossed = tradeMemo.prices[1] < takeProfitPrice;
       if (takeProfitCrossed) {
         Log.alert(`Take profit crossed: ${symbol} price '${currentPrice}' >= '${takeProfitPrice}'`)
       }
-      if (!tradeMemo.hodl && this.store.getConfig().SellAtTakeProfit) {
+      // We do not sell if price goes up, or we are in hodl mode, or if taking profit is disabled
+      if (!priceGoesUp && !tradeMemo.hodl && this.store.getConfig().SellAtTakeProfit) {
         return this.sellAndClose(tradeMemo)
       }
     }
 
-    tradeMemo.prices.shift()
-    tradeMemo.prices.push(currentPrice)
-
-    if (this.priceGoesUp(tradeMemo.prices)) {
+    if (priceGoesUp) {
       Log.info(`${symbol} price goes up`)
       // Using previous price to calculate new stop limit
       const newStopLimit = tradeMemo.prices[0] * (1 - this.config.LossLimit);
