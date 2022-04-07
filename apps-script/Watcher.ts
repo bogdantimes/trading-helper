@@ -32,7 +32,7 @@ function Ticker() {
   const store = DefaultStore;
   const config = store.getConfig();
   const statistics = new Statistics(store);
-  const trader = new V2Trader(store, new BinanceStats(store.getConfig()), statistics);
+  const trader = new V2Trader(store, new BinanceStats(config), statistics);
   let sendLog = true;
 
   Object.values(store.getTrades())

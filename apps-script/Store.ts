@@ -29,6 +29,7 @@ export interface IStore {
 export class FirebaseStore implements IStore {
   private readonly source: object
   private tradesCache: { [key: string]: TradeMemo }
+  private configCache: Config;
 
   constructor() {
     const url = PropertiesService.getScriptProperties().getProperty("FB_URL")
@@ -40,19 +41,23 @@ export class FirebaseStore implements IStore {
   }
 
   getConfig(): Config {
-    return this.getOrSet("Config", {
-      TakeProfit: 0.1,
-      SellAtTakeProfit: true,
-      BuyQuantity: 10,
-      LossLimit: 0.05,
-      SECRET: 'none',
-      KEY: 'none',
-      PriceAsset: 'USDT',
-      SellAtStopLimit: false,
-    })
+    if (!this.configCache) {
+      this.configCache = this.getOrSet("Config", {
+        TakeProfit: 0.1,
+        SellAtTakeProfit: true,
+        BuyQuantity: 10,
+        LossLimit: 0.05,
+        SECRET: 'none',
+        KEY: 'none',
+        PriceAsset: 'USDT',
+        SellAtStopLimit: false,
+      })
+    }
+    return this.configCache;
   }
 
   setConfig(config: Config): void {
+    this.configCache = config;
     this.set("Config", config)
   }
 

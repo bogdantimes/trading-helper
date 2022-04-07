@@ -34,6 +34,7 @@ class Log {
 
   static alert(msg: string) {
     try {
+      this.info(msg);
       GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Trader-bot alert", msg)
     } catch (e) {
       Log.error(e)

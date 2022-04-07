@@ -15,7 +15,7 @@ function doPost(e) {
 
 function buyCoin(coinName: string) {
   if (coinName) {
-    Log.alert("Lazy buying called for " + coinName);
+    Log.info("Lazy buying called for " + coinName);
     BuyingQueue.add(coinName);
     return "Buying " + coinName + " as soon as possible";
   }
@@ -24,7 +24,7 @@ function buyCoin(coinName: string) {
 
 function sellCoin(coinName: string) {
   if (coinName) {
-    Log.alert("Lazy selling called for " + coinName);
+    Log.info("Lazy selling called for " + coinName);
     DefaultStore.set(`trade/${coinName}/sell`, true);
     return "Selling " + coinName + " as soon as possible";
   }
