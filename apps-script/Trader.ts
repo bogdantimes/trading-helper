@@ -126,7 +126,8 @@ export class V2Trader implements Trader {
       const sellCommission = this.getBNBCommissionCost(tradeResult.commission);
       Log.info(`Commission when buying: ~${buyCommission}`)
       Log.info(`Commission when selling: ~${sellCommission}`)
-      tradeResult.profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
+      const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
+      tradeResult.profit = +profit.toFixed(2);
       Log.alert(tradeResult.toString());
       this.stats.addProfit(tradeResult.profit)
     }
