@@ -22,22 +22,21 @@ export class V2Trader implements Trader {
 
   buy(symbol: ExchangeSymbol, cost: number): TradeResult {
 
-    let tradeResult = this.exchange.marketBuy(symbol, cost);
+    let trade = this.exchange.marketBuy(symbol, cost);
 
-    if (tradeResult.fromExchange) {
-      Log.alert(tradeResult.toString())
-      let prices: PriceMemo = [tradeResult.price, tradeResult.price, tradeResult.price];
-      const tradeMemo: TradeMemo = this.store.getTrade(symbol);
-      if (tradeMemo && tradeMemo.tradeResult.fromExchange) {
-        tradeResult = tradeMemo.tradeResult.join(tradeResult);
-        prices = tradeMemo.prices;
+    if (trade.fromExchange) {
+      Log.alert(trade.toString())
+      const memo: TradeMemo = this.store.getTrade(symbol);
+      if (memo && memo.tradeResult.fromExchange) {
+        trade = memo.tradeResult.join(trade);
       }
-      const stopLossPrice = tradeResult.price * (1 - this.config.LossLimit);
-      this.store.setTrade(new TradeMemo(tradeResult, stopLossPrice, prices))
+      const stopLossPrice = trade.price * (1 - this.config.LossLimit);
+      const prices: PriceMemo = memo ? memo.prices : [trade.price, trade.price, trade.price];
+      this.store.setTrade(new TradeMemo(trade, stopLossPrice, prices))
       Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
     }
 
-    return tradeResult
+    return trade
   }
 
   sell(symbol: ExchangeSymbol): TradeResult {
