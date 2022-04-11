@@ -1,4 +1,4 @@
-import {TradeMemo, TradeMemoKey} from "./TradeMemo";
+import {TradeMemo} from "./TradeMemo";
 import {IExchange} from "./Binance";
 import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
@@ -73,7 +73,7 @@ export class V2Trader implements Trader {
     if (currentPrice <= tradeMemo.stopLossPrice) {
       const stopLimitCrossed = tradeMemo.prices[1] > tradeMemo.stopLossPrice;
       if (stopLimitCrossed) {
-        Log.alert(`${symbol}: crossed stop limit: price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
+        Log.info(`${symbol}: crossed stop limit: price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
       }
       if (!tradeMemo.hodl && this.store.getConfig().SellAtStopLimit) {
         return this.sellAndClose(tradeMemo)

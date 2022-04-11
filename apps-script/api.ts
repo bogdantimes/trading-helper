@@ -1,6 +1,7 @@
 import {DefaultStore} from "./Store";
 import {GasEventHandler} from "./Main";
 import {BuyingQueue} from "./BuyingQueue";
+import {Statistics} from "./Statistics";
 
 function doGet() {
   return HtmlService
@@ -41,4 +42,8 @@ function getConfig() {
 
 function setConfig(config) {
   DefaultStore.setConfig(config)
+}
+
+function getStatistics() {
+  return new Statistics(DefaultStore).getAll()
 }

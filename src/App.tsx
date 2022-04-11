@@ -1,21 +1,14 @@
 import * as React from 'react';
+import {useEffect} from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Trade from "./components/Trade";
-import {
-  Button,
-  createTheme,
-  CssBaseline,
-  FormGroup,
-  TextField,
-  ThemeProvider,
-  useMediaQuery
-} from "@mui/material";
-import {useEffect} from "react";
+import {Button, createTheme, CssBaseline, FormGroup, TextField, ThemeProvider, useMediaQuery} from "@mui/material";
 import {Config} from "../apps-script/Store";
 import Settings from "./components/Settings";
+import {Info} from "./components/Info";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -101,10 +94,11 @@ export default function App() {
       <CssBaseline/>
       <Box sx={{width: '100%'}}>
         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+          <Tabs value={value} onChange={handleChange}>
             <Tab label="Assets" {...a11yProps(0)} />
             <Tab label="Trading" {...a11yProps(1)} />
             <Tab label="Settings" {...a11yProps(2)} />
+            <Tab label="Info" {...a11yProps(3)} />
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
@@ -125,6 +119,9 @@ export default function App() {
         </TabPanel>
         <TabPanel value={value} index={2}>
           <Settings config={config} onSave={saveConfig}/>
+        </TabPanel>
+        <TabPanel value={value} index={3}>
+          <Info/>
         </TabPanel>
       </Box>
     </ThemeProvider>
