@@ -25,15 +25,14 @@ export class V2Trader implements Trader {
     let trade = this.exchange.marketBuy(symbol, cost);
 
     if (trade.fromExchange) {
-      Log.alert(trade.toString())
       const memo: TradeMemo = this.store.getTrade(symbol);
       if (memo && memo.tradeResult.fromExchange) {
         trade = memo.tradeResult.join(trade);
       }
+      Log.alert(trade.toString())
       const stopLossPrice = trade.price * (1 - this.config.LossLimit);
       const prices: PriceMemo = memo ? memo.prices : [trade.price, trade.price, trade.price];
       this.store.setTrade(new TradeMemo(trade, stopLossPrice, prices))
-      Log.info(`${symbol} stopLossPrice saved: ${stopLossPrice}`)
     }
 
     return trade
@@ -57,8 +56,18 @@ export class V2Trader implements Trader {
     const symbol = tradeMemo.tradeResult.symbol;
     const currentPrice = this.getPrice(symbol);
 
+    if (this.config.SwingTradeEnabled && tradeMemo.sold) {
+      // check if we can buy again if price dropped below max observed price minus take profit percentage
+      if (currentPrice < tradeMemo.maxObservedPrice * (1 - this.config.TakeProfit)) {
+        tradeMemo.buy = true;
+        Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
+      }
+    }
+
     tradeMemo.prices.shift()
     tradeMemo.prices.push(currentPrice)
+    tradeMemo.maxObservedPrice = Math.max(...tradeMemo.prices)
+    this.store.setTrade(tradeMemo)
 
     const priceGoesUp = this.priceGoesUp(tradeMemo.prices);
     // Checking if it is marked to buy it (either a new asset or buying more for existing one).
@@ -66,7 +75,6 @@ export class V2Trader implements Trader {
       if (priceGoesUp) {
         return this.buy(symbol, this.config.BuyQuantity)
       }
-      this.store.setTrade(tradeMemo)
       return TradeResult.fromMsg(symbol, "Not buying yet. Price is not going up")
     }
 
@@ -103,8 +111,6 @@ export class V2Trader implements Trader {
     tradeMemo.maxProfit = (currentPrice * tradeMemo.tradeResult.quantity) - tradeMemo.tradeResult.paid
     this.store.setTrade(tradeMemo)
 
-    Log.info(`${symbol} asset kept. Stop loss price: '${tradeMemo.stopLossPrice}'`)
-
     return TradeResult.fromMsg(symbol, "Keeping the asset.")
   }
 
@@ -123,16 +129,23 @@ export class V2Trader implements Trader {
     if (tradeResult.fromExchange) {
       const buyCommission = this.getBNBCommissionCost(memo.tradeResult.commission);
       const sellCommission = this.getBNBCommissionCost(tradeResult.commission);
-      Log.info(`Commission when buying: ~${buyCommission}`)
-      Log.info(`Commission when selling: ~${sellCommission}`)
+      Log.info(`Commission: ~${buyCommission + sellCommission}`)
       const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
       tradeResult.profit = +profit.toFixed(2);
       Log.alert(tradeResult.toString());
       this.stats.addProfit(tradeResult.profit)
+      memo.tradeResult = tradeResult
+      memo.sold = true;
+      memo.sell = false;
+      memo.buy = false;
     }
 
-    Log.debug(`Deleting memo from store: ${memo.getKey().toString()}`)
-    this.store.deleteTrade(memo)
+    if (!this.config.SwingTradeEnabled || tradeResult.profit <= 0) {
+      Log.alert(`No profit. Deleting memo from store: ${memo.getKey().toString()}`)
+      this.store.deleteTrade(memo)
+    } else {
+      this.store.setTrade(memo)
+    }
 
     return tradeResult
   }

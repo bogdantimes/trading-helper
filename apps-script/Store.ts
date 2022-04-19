@@ -55,6 +55,7 @@ export class FirebaseStore implements IStore {
         KEY: 'none',
         PriceAsset: 'USDT',
         SellAtStopLimit: false,
+        SwingTradeEnabled: false,
       })
     }
     return this.configCache;
@@ -143,6 +144,7 @@ export type Config = {
   KEY?: string
   PriceAsset: string
   SellAtStopLimit: boolean
+  SwingTradeEnabled?: boolean
 }
 
 // @ts-ignore

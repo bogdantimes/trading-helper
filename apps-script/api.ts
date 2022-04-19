@@ -33,7 +33,14 @@ function sellCoin(coinName: string) {
 }
 
 function getTrades() {
-  return DefaultStore.getTrades()
+  // return trades that are not sold
+  const trades = DefaultStore.getTrades();
+  return Object.keys(trades).reduce((acc, key) => {
+    if (!trades[key].sold) {
+      acc[key] = trades[key];
+    }
+    return acc;
+  }, {});
 }
 
 function getConfig() {

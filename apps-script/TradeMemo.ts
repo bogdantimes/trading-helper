@@ -18,6 +18,14 @@ export class TradeMemo {
    * Marks the asset for buying as soon as possible.
    */
   buy: boolean = false;
+  /**
+   * Marks the asset as sold.
+   */
+  sold: boolean = false;
+  /**
+   * Maximum price ever observed for this asset.
+   */
+  maxObservedPrice: number = 0;
 
   constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
     this.tradeResult = tradeResult;
