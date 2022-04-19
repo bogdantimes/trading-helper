@@ -58,7 +58,7 @@ export default function Settings() {
           control={
             <Switch checked={config.SellAtStopLimit} onChange={handleChange("SellAtStopLimit")}/>
           }
-          label="Sell at stop limit"
+          label="Sell at loss limit"
         />
       </Stack>
       <Box>
