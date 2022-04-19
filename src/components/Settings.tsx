@@ -11,7 +11,8 @@ export default function Settings() {
     PriceAsset: "",
     SellAtStopLimit: false,
     SellAtTakeProfit: false,
-    TakeProfit: 0
+    TakeProfit: 0,
+    SwingTradeEnabled: false,
   });
 
   // @ts-ignore
@@ -19,6 +20,10 @@ export default function Settings() {
 
   const handleChange = (prop: keyof Config) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setConfig({...config, [prop]: event.target.value});
+  };
+
+  const handleSwitchChange = (prop: keyof Config) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setConfig({...config, [prop]: event.target.checked});
   };
 
   const handlePercentChange = (prop: keyof Config) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +49,7 @@ export default function Settings() {
         />
         <FormControlLabel
           control={
-            <Switch checked={config.SellAtTakeProfit} onChange={handleChange("SellAtTakeProfit")}/>
+            <Switch checked={config.SellAtTakeProfit} onChange={handleSwitchChange("SellAtTakeProfit")}/>
           }
           label="Sell at profit"
         />
@@ -56,11 +61,17 @@ export default function Settings() {
         />
         <FormControlLabel
           control={
-            <Switch checked={config.SellAtStopLimit} onChange={handleChange("SellAtStopLimit")}/>
+            <Switch checked={config.SellAtStopLimit} onChange={handleSwitchChange("SellAtStopLimit")}/>
           }
           label="Sell at loss limit"
         />
       </Stack>
+      <FormControlLabel
+        control={
+          <Switch checked={config.SwingTradeEnabled} onChange={handleSwitchChange("SwingTradeEnabled")}/>
+        }
+        label="Swing trade (EXPERIMENTAL)"
+      />
       <Box>
         <Button
           onClick={save}
