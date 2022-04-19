@@ -53,12 +53,19 @@ export class V2Trader implements Trader {
       return this.sellAndClose(tradeMemo)
     }
 
+    if (tradeMemo.sold && !this.config.SwingTradeEnabled) {
+      return TradeResult.fromMsg(tradeMemo.tradeResult.symbol, "Asset is sold");
+    }
+
     const symbol = tradeMemo.tradeResult.symbol;
     const currentPrice = this.getPrice(symbol);
 
-    if (this.config.SwingTradeEnabled && tradeMemo.sold) {
-      // check if we can buy again if price dropped below max observed price minus take profit percentage
-      if (currentPrice < tradeMemo.maxObservedPrice * (1 - this.config.TakeProfit)) {
+    if (tradeMemo.sold) {
+      // Swing trade enabled.
+      // Checking if price dropped below max observed price minus take profit percentage,
+      // and we can buy again
+      const priceDropped = currentPrice < tradeMemo.maxObservedPrice * (1 - this.config.TakeProfit);
+      if (priceDropped) {
         tradeMemo.buy = true;
         Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
       }
