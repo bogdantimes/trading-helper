@@ -74,12 +74,6 @@ export default function App() {
     google.script.run.withSuccessHandler(setConfig).getConfig();
   }, [])
 
-  function saveConfig(cfg: Config) {
-    // @ts-ignore
-    google.script.run.setConfig({...config, ...cfg});
-    setConfig({...config, ...cfg});
-  }
-
   const [coinName, setCoinName] = React.useState("BTC");
 
   function buy(coinName: string) {
@@ -118,7 +112,7 @@ export default function App() {
           </FormGroup>
         </TabPanel>
         <TabPanel value={value} index={2}>
-          <Settings config={config} onSave={saveConfig}/>
+          <Settings/>
         </TabPanel>
         <TabPanel value={value} index={3}>
           <Info/>

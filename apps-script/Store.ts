@@ -139,8 +139,8 @@ export type Config = {
   SellAtTakeProfit: boolean
   BuyQuantity: number
   LossLimit: number
-  SECRET: string
-  KEY: string
+  SECRET?: string
+  KEY?: string
   PriceAsset: string
   SellAtStopLimit: boolean
 }
