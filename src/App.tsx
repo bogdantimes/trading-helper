@@ -5,7 +5,16 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Trade from "./components/Trade";
-import {Button, createTheme, CssBaseline, FormGroup, TextField, ThemeProvider, useMediaQuery} from "@mui/material";
+import {
+  Button,
+  createTheme,
+  CssBaseline,
+  FormGroup,
+  Stack,
+  TextField,
+  ThemeProvider,
+  useMediaQuery
+} from "@mui/material";
 import {Config} from "../apps-script/Store";
 import Settings from "./components/Settings";
 import {Info} from "./components/Info";
@@ -103,13 +112,13 @@ export default function App() {
           )}
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <FormGroup>
+          <Stack direction={"row"} spacing={2}>
             <TextField
               label="Coin name"
               value={coinName}
               onChange={(e) => setCoinName(e.target.value)}/>
-            <Button onClick={() => buy(coinName)}>Buy</Button>
-          </FormGroup>
+            <Button variant="contained" onClick={() => buy(coinName)}>Buy</Button>
+          </Stack>
         </TabPanel>
         <TabPanel value={value} index={2}>
           <Settings/>
