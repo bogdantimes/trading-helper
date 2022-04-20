@@ -43,7 +43,7 @@ export default function Settings() {
                  InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
       />
       <Stack direction="row" spacing={2}>
-        <TextField value={config.TakeProfit * 100} label={"Take profit"}
+        <TextField value={config.TakeProfit ? config.TakeProfit * 100 : ''} label={"Take profit"}
                    onChange={handlePercentChange('TakeProfit')}
                    InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
         />
@@ -55,7 +55,7 @@ export default function Settings() {
         />
       </Stack>
       <Stack direction="row" spacing={2}>
-        <TextField value={config.LossLimit * 100} label={"Loss limit"}
+        <TextField value={config.LossLimit ? config.LossLimit * 100 : ''} label={"Loss limit"}
                    onChange={handlePercentChange('LossLimit')}
                    InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
         />
