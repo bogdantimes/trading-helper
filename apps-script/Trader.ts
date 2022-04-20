@@ -49,15 +49,16 @@ export class V2Trader implements Trader {
   }
 
   tickerCheck(tradeMemo: TradeMemo): TradeResult {
+    const symbol = tradeMemo.tradeResult.symbol;
+
     if (tradeMemo.sell) {
       return this.sellAndClose(tradeMemo)
     }
 
     if (tradeMemo.sold && !this.config.SwingTradeEnabled) {
-      return TradeResult.fromMsg(tradeMemo.tradeResult.symbol, "Asset is sold");
+      return TradeResult.fromMsg(symbol, "Asset is sold");
     }
 
-    const symbol = tradeMemo.tradeResult.symbol;
     const currentPrice = this.getPrice(symbol);
 
     if (tradeMemo.sold) {
@@ -65,10 +66,11 @@ export class V2Trader implements Trader {
       // Checking if price dropped below max observed price minus take profit percentage,
       // and we can buy again
       const priceDropped = currentPrice < tradeMemo.maxObservedPrice * (1 - this.config.TakeProfit);
-      if (priceDropped) {
-        tradeMemo.buy = true;
-        Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
+      if (!priceDropped) {
+        return TradeResult.fromMsg(symbol, "Price has not dropped sufficiently. Waiting...")
       }
+      tradeMemo.buy = true;
+      Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
     }
 
     tradeMemo.prices.shift()
