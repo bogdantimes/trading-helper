@@ -73,7 +73,7 @@ export class V2Trader implements Trader {
       if (!priceDropped) {
         return TradeResult.fromMsg(symbol, "Price has not dropped sufficiently. Waiting...")
       }
-      tradeMemo = TradeMemo.memoToBuy(symbol);
+      tradeMemo = TradeMemo.memoToBuy(symbol, tradeMemo.prices);
       Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
     }
 

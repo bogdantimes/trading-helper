@@ -44,10 +44,12 @@ export class TradeMemo {
     return tradeMemo;
   }
 
-  static memoToBuy(symbol: ExchangeSymbol): TradeMemo {
+  static memoToBuy(symbol: ExchangeSymbol, prices?: PriceMemo): TradeMemo {
     const tradeMemo = this.empty();
     tradeMemo.buy = true
     tradeMemo.tradeResult = TradeResult.fromMsg(symbol, "New lazy buy");
+    tradeMemo.prices = prices || [0, 0, 0];
+    tradeMemo.maxObservedPrice = Math.max(...tradeMemo.prices);
     return tradeMemo;
   }
 
