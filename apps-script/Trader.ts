@@ -63,7 +63,7 @@ export class V2Trader implements Trader {
 
     tradeMemo.prices.shift()
     tradeMemo.prices.push(currentPrice)
-    tradeMemo.maxObservedPrice = Math.max(...tradeMemo.prices)
+    tradeMemo.maxObservedPrice = Math.max(tradeMemo.maxObservedPrice, ...tradeMemo.prices)
 
     if (tradeMemo.sold) {
       // Swing trade enabled.
