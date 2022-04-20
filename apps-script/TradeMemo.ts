@@ -37,10 +37,12 @@ export class TradeMemo {
     return new TradeMemo(null, 0, [0, 0, 0])
   }
 
-  static memoToWait(symbol: ExchangeSymbol): TradeMemo {
+  static memoToWait(symbol: ExchangeSymbol, prices?: PriceMemo): TradeMemo {
     const tradeMemo = this.empty();
     tradeMemo.sold = true
     tradeMemo.tradeResult = TradeResult.fromMsg(symbol, "Asset sold.");
+    tradeMemo.prices = prices || [0, 0, 0];
+    tradeMemo.maxObservedPrice = Math.max(...tradeMemo.prices);
     return tradeMemo;
   }
 

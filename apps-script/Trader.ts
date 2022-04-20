@@ -147,7 +147,7 @@ export class V2Trader implements Trader {
     }
 
     if (this.config.SwingTradeEnabled && tradeResult.profit > 0) {
-      this.store.setTrade(TradeMemo.memoToWait(tradeResult.symbol))
+      this.store.setTrade(TradeMemo.memoToWait(tradeResult.symbol, memo.prices))
     } else {
       Log.alert(`Swing trade disabled, or no profit. Deleting memo from store: ${memo.getKey().toString()}`)
       this.store.deleteTrade(memo)
