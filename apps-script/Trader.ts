@@ -61,6 +61,10 @@ export class V2Trader implements Trader {
 
     const currentPrice = this.getPrice(symbol);
 
+    tradeMemo.prices.shift()
+    tradeMemo.prices.push(currentPrice)
+    tradeMemo.maxObservedPrice = Math.max(...tradeMemo.prices)
+
     if (tradeMemo.sold) {
       // Swing trade enabled.
       // Checking if price dropped below max observed price minus take profit percentage,
@@ -74,9 +78,6 @@ export class V2Trader implements Trader {
       Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
     }
 
-    tradeMemo.prices.shift()
-    tradeMemo.prices.push(currentPrice)
-    tradeMemo.maxObservedPrice = Math.max(...tradeMemo.prices)
     this.store.setTrade(tradeMemo)
 
     const priceGoesUp = this.priceGoesUp(tradeMemo.prices);
