@@ -37,6 +37,13 @@ export class TradeMemo {
     return new TradeMemo(null, 0, [0, 0, 0])
   }
 
+  static memoToWait(symbol: ExchangeSymbol): TradeMemo {
+    const tradeMemo = this.empty();
+    tradeMemo.sold = true
+    tradeMemo.tradeResult = TradeResult.fromMsg(symbol, "Asset sold.");
+    return tradeMemo;
+  }
+
   static memoToBuy(symbol: ExchangeSymbol): TradeMemo {
     const tradeMemo = this.empty();
     tradeMemo.buy = true
