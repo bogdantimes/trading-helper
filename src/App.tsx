@@ -4,20 +4,18 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import Trade from "./components/Trade";
 import {
   Button,
   createTheme,
   CssBaseline,
-  FormGroup,
   Stack,
   TextField,
   ThemeProvider,
   useMediaQuery
 } from "@mui/material";
-import {Config} from "../apps-script/Store";
 import Settings from "./components/Settings";
 import {Info} from "./components/Info";
+import {Assets} from "./components/Assets";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -54,34 +52,10 @@ function a11yProps(index: number) {
 
 export default function App() {
   const [value, setValue] = React.useState(0);
+  const handleChange = (e: React.SyntheticEvent, v: number) => setValue(v);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  };
-
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-
-  const theme = React.useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode: prefersDarkMode ? 'dark' : 'light',
-        },
-      }),
-    [prefersDarkMode],
-  );
-
-  const [trades, setTrades] = React.useState({});
-  useEffect(() => {
-    // @ts-ignore
-    google.script.run.withSuccessHandler(setTrades).getTrades();
-  }, [])
-
-  const [config, setConfig] = React.useState({});
-  useEffect(() => {
-    // @ts-ignore
-    google.script.run.withSuccessHandler(setConfig).getConfig();
-  }, [])
+  const mode = useMediaQuery('(prefers-color-scheme: dark)');
+  const theme = React.useMemo(() => createTheme({palette: {mode: mode ? 'dark' : 'light'}}), [mode]);
 
   const [coinName, setCoinName] = React.useState("BTC");
 
@@ -105,17 +79,11 @@ export default function App() {
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
-          {Object.keys(trades).map((key, index) =>
-            <Box sx={{display: 'inline-flex', margin: '10px'}}>
-              <Trade key={index} name={key} data={trades[key]} config={config}/>
-            </Box>
-          )}
+          <Assets/>
         </TabPanel>
         <TabPanel value={value} index={1}>
           <Stack direction={"row"} spacing={2}>
-            <TextField
-              label="Coin name"
-              value={coinName}
+            <TextField label="Coin name" value={coinName}
               onChange={(e) => setCoinName(e.target.value)}/>
             <Button variant="contained" onClick={() => buy(coinName)}>Buy</Button>
           </Stack>
