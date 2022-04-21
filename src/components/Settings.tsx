@@ -1,11 +1,14 @@
 import * as React from 'react';
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import SaveIcon from '@mui/icons-material/Save';
 import {Config} from "../../apps-script/Store";
 import {Box, Button, FormControlLabel, InputAdornment, Stack, Switch, TextField} from "@mui/material";
 
-export default function Settings() {
-  const [config, setConfig] = React.useState<Config>({
+export function Settings() {
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const [config, setConfig] = useState<Config>({
     BuyQuantity: 0,
     LossLimit: 0,
     PriceAsset: "",
@@ -30,8 +33,20 @@ export default function Settings() {
     setConfig({...config, [prop]: (+event.target.value / 100)});
   };
 
-  // @ts-ignore
-  const save = () => google.script.run.setConfig(config);
+  const onSave = () => {
+    setIsSaving(true);
+    // @ts-ignore
+    google.script.run
+      .withFailureHandler(r => {
+        setIsSaving(false);
+        setError(r);
+      })
+      .withSuccessHandler(() => {
+        setIsSaving(false);
+        setError('');
+      })
+      .setConfig(config);
+  }
 
   return (
     <Stack spacing={2}>
@@ -74,11 +89,14 @@ export default function Settings() {
       />
       <Box>
         <Button
-          onClick={save}
-          startIcon={<SaveIcon/>}
+          aria-errormessage={error}
           variant="contained"
+          color="primary"
+          startIcon={<SaveIcon/>}
+          onClick={onSave}
+          disabled={isSaving}
         >
-          Save
+          {isSaving ? 'Saving...' : 'Save'}
         </Button>
       </Box>
     </Stack>

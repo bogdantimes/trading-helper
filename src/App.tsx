@@ -11,7 +11,7 @@ import {
   ThemeProvider,
   useMediaQuery
 } from "@mui/material";
-import Settings from "./components/Settings";
+import {Settings} from "./components/Settings";
 import {Info} from "./components/Info";
 import {Assets} from "./components/Assets";
 import {TabPanel} from "./components/TabPanel";
