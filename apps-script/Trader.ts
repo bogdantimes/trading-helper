@@ -100,7 +100,6 @@ export class V2Trader {
     if (!price) {
       throw Error(`No symbol price: ${symbol}`)
     }
-    Log.info(`Symbol price: ${symbol} = ${price}`)
     return price
   }
 
