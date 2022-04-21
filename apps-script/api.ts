@@ -1,7 +1,7 @@
 import {DefaultStore} from "./Store";
-import {GasEventHandler} from "./Main";
-import {BuyingQueue} from "./BuyingQueue";
+import {TradesQueue} from "./TradesQueue";
 import {Statistics} from "./Statistics";
+import {TradeState} from "./TradeMemo";
 
 function doGet() {
   return HtmlService
@@ -11,13 +11,13 @@ function doGet() {
 }
 
 function doPost(e) {
-  return GasEventHandler.handle(e)
+  return "404";
 }
 
 function buyCoin(coinName: string) {
   if (coinName) {
     Log.info("Lazy buying called for " + coinName);
-    BuyingQueue.add(coinName);
+    TradesQueue.buy(coinName);
     return "Buying " + coinName + " as soon as possible";
   }
   return "No coinName specified";
@@ -26,7 +26,7 @@ function buyCoin(coinName: string) {
 function sellCoin(coinName: string) {
   if (coinName) {
     Log.info("Lazy selling called for " + coinName);
-    DefaultStore.set(`trade/${coinName}/sell`, true);
+    TradesQueue.sell(coinName);
     return "Selling " + coinName + " as soon as possible";
   }
   return "No coinName specified";
@@ -36,7 +36,7 @@ function getTrades() {
   // return trades that are not sold
   const trades = DefaultStore.getTrades();
   return Object.keys(trades).reduce((acc, key) => {
-    if (!trades[key].sold) {
+    if (!trades[key].stateIs(TradeState.SOLD)) {
       acc[key] = trades[key];
     }
     return acc;

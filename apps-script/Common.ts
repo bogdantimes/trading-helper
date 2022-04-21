@@ -52,15 +52,15 @@ class Log {
   static print(): string {
     return `
       ${this.alerts.length > 0 ? `${this.alerts.join('\n')}\n\n` : ''}
+      ${this.errLog.length > 0 ? `Errors:\n${this.errLog.join('\n')}` : ''}
       ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join('\n')}` : ''}
       ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.map(v => JSON.stringify(v)).join('\n')}` : ''}
-      ${this.errLog.length > 0 ? `Errors:\n${this.errLog.join('\n')}` : ''}
     `
   }
 
   static ifUsefulDumpAsEmail() {
     const email = Session.getEffectiveUser().getEmail();
-    if (this.alerts.length > 0) {
+    if (this.alerts.length > 0 || this.errLog.length > 0) {
       GmailApp.sendEmail(email, "Trader-bot alert", this.print())
     }
   }

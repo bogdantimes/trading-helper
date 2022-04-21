@@ -1,5 +1,12 @@
 import {PriceMemo} from "./Trader";
 
+export enum TradeState {
+  BUY = 'buy',
+  BOUGHT = 'bought',
+  SELL = 'sell',
+  SOLD = 'sold'
+}
+
 export class TradeMemo {
   tradeResult: TradeResult
   stopLossPrice: number = 0
@@ -26,38 +33,20 @@ export class TradeMemo {
    * Maximum price ever observed for this asset.
    */
   maxObservedPrice: number = 0;
+  /**
+   * The current state of the asset.
+   */
+  private state: TradeState;
 
-  constructor(tradeResult: TradeResult, stopLossPrice: number, prices: PriceMemo) {
+  constructor(tradeResult: TradeResult, stopLossPrice?: number, prices?: PriceMemo) {
     this.tradeResult = tradeResult;
     this.stopLossPrice = stopLossPrice;
     this.prices = prices;
   }
 
-  static empty(): TradeMemo {
-    return new TradeMemo(null, 0, [0, 0, 0])
-  }
-
-  static memoToWait(symbol: ExchangeSymbol, prices?: PriceMemo): TradeMemo {
-    const tradeMemo = this.empty();
-    tradeMemo.sold = true
-    tradeMemo.tradeResult = TradeResult.fromMsg(symbol, "Asset sold.");
-    tradeMemo.prices = prices || [0, 0, 0];
-    tradeMemo.maxObservedPrice = Math.max(...tradeMemo.prices);
-    return tradeMemo;
-  }
-
-  static memoToBuy(symbol: ExchangeSymbol, prices?: PriceMemo): TradeMemo {
-    const tradeMemo = this.empty();
-    tradeMemo.buy = true
-    tradeMemo.tradeResult = TradeResult.fromMsg(symbol, "New lazy buy");
-    tradeMemo.prices = prices || [0, 0, 0];
-    tradeMemo.maxObservedPrice = Math.max(...tradeMemo.prices);
-    return tradeMemo;
-  }
-
   static fromObject(obj: object): TradeMemo {
-    const tradeMemo: TradeMemo = Object.assign(TradeMemo.empty(), obj);
-    tradeMemo.tradeResult = Object.assign(new TradeResult(), tradeMemo.tradeResult)
+    const tradeMemo: TradeMemo = Object.assign(new TradeMemo(null), obj);
+    tradeMemo.tradeResult = Object.assign(new TradeResult(null), tradeMemo.tradeResult)
     tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
     tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
     return tradeMemo
@@ -65,6 +54,43 @@ export class TradeMemo {
 
   getKey(): TradeMemoKey {
     return new TradeMemoKey(this.tradeResult.symbol)
+  }
+
+  setState(state: TradeState): void {
+    this.state = state
+    if (state === TradeState.SOLD) {
+      this.maxLoss = 0
+      this.maxProfit = 0
+      this.stopLossPrice = 0
+      this.tradeResult = new TradeResult(this.tradeResult.symbol, "Asset sold")
+    }
+  }
+
+  stateIs(state: TradeState): boolean {
+    return this.state === state
+  }
+
+  initState() {
+    if (!this.state) {
+      if (this.sold) {
+        this.state = TradeState.SOLD
+      } else if (this.buy) {
+        this.state = TradeState.BUY
+      } else if (this.sell) {
+        this.state = TradeState.SELL
+      } else {
+        this.state = TradeState.BOUGHT
+      }
+    }
+  }
+
+  joinWithNewTrade(tradeResult: TradeResult): void {
+    if (this.tradeResult.fromExchange) {
+      this.tradeResult = this.tradeResult.join(tradeResult);
+    } else {
+      this.tradeResult = tradeResult;
+    }
+    this.setState(TradeState.BOUGHT);
   }
 }
 

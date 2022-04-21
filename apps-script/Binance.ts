@@ -81,14 +81,14 @@ export class Binance implements IExchange {
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
     const moneyAvailable = this.getFreeAsset(symbol.priceAsset)
     if (moneyAvailable < cost) {
-      return TradeResult.fromMsg(symbol, `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`)
+      return new TradeResult(symbol, `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`)
     }
-    Log.info(`Buying ${symbol}`);
+    Log.alert(`Buying ${symbol}`);
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
-    const tradeResult = this.marketTrade(query);
+    const tradeResult = this.marketTrade(symbol, query);
     tradeResult.symbol = symbol
     tradeResult.paid = tradeResult.cost
-    tradeResult.msg = `Bought asset.`
+    tradeResult.msg = "Bought."
     return tradeResult;
   }
 
@@ -99,22 +99,21 @@ export class Binance implements IExchange {
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
-    Log.info(`Selling ${symbol}`);
+    Log.alert(`Selling ${symbol}`);
     try {
-      const tradeResult = this.marketTrade(query);
-      tradeResult.symbol = symbol
+      const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost
-      tradeResult.msg = `Sold asset.`
+      tradeResult.msg = "Sold."
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Account has insufficient balance")) {
-        return TradeResult.fromMsg(symbol, `Account has insufficient balance for ${symbol.quantityAsset}`)
+        return new TradeResult(symbol, `Account has insufficient balance for ${symbol.quantityAsset}`)
       }
       throw e
     }
   }
 
-  marketTrade(query: string): TradeResult {
+  marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
     const response = execute({
       context: '', interval: INTERVAL, attempts: ATTEMPTS,
       runnable: () => UrlFetchApp.fetch(`${Binance.API()}/order?${this.addSignature(query)}`, this.tradeReqParams)
@@ -122,7 +121,7 @@ export class Binance implements IExchange {
     Log.debug(response.getContentText())
     try {
       const order = JSON.parse(response.getContentText());
-      const tradeResult = new TradeResult();
+      const tradeResult = new TradeResult(symbol);
       const [price, commission] = this.reducePriceAndCommission(order.fills)
       tradeResult.quantity = +order.origQty
       tradeResult.cost = +order.cummulativeQuoteQty
