@@ -35,6 +35,10 @@ export class V2Trader {
 
     const priceGoesUp = this.priceGoesUp(tradeMemo.prices);
 
+    if (priceGoesUp) {
+      Log.info(`${symbol} price goes up`)
+    }
+
     if (tradeMemo.stateIs(TradeState.BOUGHT)) {
 
       if (currentPrice <= tradeMemo.stopLossPrice) {
@@ -60,7 +64,6 @@ export class V2Trader {
       }
 
       if (priceGoesUp) {
-        Log.info(`${symbol} price goes up`)
         // Using previous price to calculate new stop limit
         const newStopLimit = tradeMemo.prices[0] * (1 - this.config.LossLimit);
         tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
