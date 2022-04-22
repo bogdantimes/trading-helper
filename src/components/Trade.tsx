@@ -112,7 +112,7 @@ export default function Trade(props) {
             control={
               <Switch checked={isHodl} disabled={isHodlSwitching} onChange={flipHold}/>
             }
-            label="Hodl"
+            label="HODL"
           />
         </Stack>
       </CardActions>
