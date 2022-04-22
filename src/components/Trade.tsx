@@ -87,7 +87,7 @@ export default function Trade(props) {
       setIsHodlSwitching(false);
     };
     // @ts-ignore
-    google.script.run.withSuccessHandler(handle).withFailureHandler(handle).flipHold(props.name);
+    google.script.run.withSuccessHandler(handle).withFailureHandler(handle).setHold(props.name, !isHodl);
   }
 
   const lossPercent = (100 * (tradeMemo.maxLoss / tradeMemo.tradeResult.paid)).toFixed(2)

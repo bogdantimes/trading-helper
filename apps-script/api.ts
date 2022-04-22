@@ -32,11 +32,11 @@ function sellCoin(coinName: string) {
   return "No coinName specified";
 }
 
-function flipHold(coinName: string) {
+function setHold(coinName: string, value: boolean) {
   if (coinName) {
-    Log.info("Flip hold called for " + coinName);
-    TradesQueue.flipHold(coinName);
-    return "Requested to flip hold for " + coinName;
+    Log.info("Flip hold called for " + coinName + " to " + value);
+    TradesQueue.setHold(coinName, value);
+    return "Requested to flip hold for " + coinName + " to " + value;
   }
   return "No coinName specified";
 }

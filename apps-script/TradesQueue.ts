@@ -15,8 +15,8 @@ export class TradesQueue {
     DefaultStore.set(`Queue/${coinName}`, 'sell');
   }
 
-  static flipHold(coinName: string): void {
-    DefaultStore.set(`Queue/${coinName}`, 'flipHold');
+  static setHold(coinName: string, value: boolean): void {
+    DefaultStore.set(`Queue/${coinName}`, value ? 'setHoldTrue' : 'setHoldFalse');
   }
 
   static flush(): void {
@@ -38,10 +38,10 @@ export class TradesQueue {
             trade.setState(TradeState.SELL);
             store.setTrade(trade);
           }
-        } else if (action === 'flipHold') {
+        } else if (action === 'setHoldTrue' || action === 'setHoldFalse') {
           const trade = store.getTrade(symbol);
           if (trade) {
-            trade.hodl = !trade.hodl;
+            trade.hodl = action === 'setHoldTrue';
             store.setTrade(trade);
           }
         }
