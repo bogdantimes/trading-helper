@@ -41,7 +41,7 @@ export class TradeMemo {
   constructor(tradeResult: TradeResult, stopLossPrice?: number, prices?: PriceMemo) {
     this.tradeResult = tradeResult;
     this.stopLossPrice = stopLossPrice;
-    this.prices = prices;
+    this.prices = prices || [0, 0, 0];
   }
 
   static fromObject(obj: object): TradeMemo {
