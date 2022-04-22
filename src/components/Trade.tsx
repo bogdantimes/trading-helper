@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import {TradeMemo} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
 import {createChart} from 'lightweight-charts';
+import {FormControlLabel, Stack, Switch} from "@mui/material";
 
 export default function Trade(props) {
   const tradeMemo: TradeMemo = props.data;
@@ -75,6 +76,20 @@ export default function Trade(props) {
     }
   }
 
+  const [isHodlSwitching, setIsHodlSwitching] = useState(false);
+  const [isHodl, setIsHodl] = useState(tradeMemo.hodl);
+
+  function flipHold() {
+    setIsHodlSwitching(true);
+    const handle = resp => {
+      alert(resp.toString());
+      setIsHodl(!isHodl);
+      setIsHodlSwitching(false);
+    };
+    // @ts-ignore
+    google.script.run.withSuccessHandler(handle).withFailureHandler(handle).flipHold(props.name);
+  }
+
   const lossPercent = (100 * (tradeMemo.maxLoss / tradeMemo.tradeResult.paid)).toFixed(2)
   const profitPercent = (100 * (tradeMemo.maxProfit / tradeMemo.tradeResult.paid)).toFixed(2)
 
@@ -90,8 +105,16 @@ export default function Trade(props) {
         </Typography>
       </CardContent>
       <CardActions>
-        <Button size="small" disabled={isSelling} onClick={onSell}>{isSelling ? 'Selling' : 'Sell'}</Button>
-        <Button size="small" disabled={isBuying} onClick={onBuyMore}>{isBuying ? 'Buying...' : 'Buy More'}</Button>
+        <Stack direction={"row"} spacing={1}>
+          <Button size="small" disabled={isSelling} onClick={onSell}>{isSelling ? 'Selling' : 'Sell'}</Button>
+          <Button size="small" disabled={isBuying} onClick={onBuyMore}>{isBuying ? 'Buying...' : 'Buy More'}</Button>
+          <FormControlLabel
+            control={
+              <Switch checked={isHodl} disabled={isHodlSwitching} onChange={flipHold}/>
+            }
+            label="Hodl"
+          />
+        </Stack>
       </CardActions>
     </Card>
   );

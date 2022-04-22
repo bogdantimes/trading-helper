@@ -14,21 +14,9 @@ export class TradeMemo {
   maxProfit: number = 0;
   prices: PriceMemo;
   /**
-   * Marks the asset for selling as soon as possible.
-   */
-  sell: boolean = false;
-  /**
    * Marks the asset for holding even if price drops.
    */
   hodl: boolean = false;
-  /**
-   * Marks the asset for buying as soon as possible.
-   */
-  buy: boolean = false;
-  /**
-   * Marks the asset as sold.
-   */
-  sold: boolean = false;
   /**
    * Maximum price ever observed for this asset.
    */
@@ -69,20 +57,6 @@ export class TradeMemo {
 
   stateIs(state: TradeState): boolean {
     return this.state === state
-  }
-
-  initState() {
-    if (!this.state) {
-      if (this.sold) {
-        this.state = TradeState.SOLD
-      } else if (this.buy) {
-        this.state = TradeState.BUY
-      } else if (this.sell) {
-        this.state = TradeState.SELL
-      } else {
-        this.state = TradeState.BOUGHT
-      }
-    }
   }
 
   joinWithNewTrade(tradeResult: TradeResult): void {

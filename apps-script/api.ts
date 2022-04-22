@@ -18,7 +18,7 @@ function buyCoin(coinName: string) {
   if (coinName) {
     Log.info("Lazy buying called for " + coinName);
     TradesQueue.buy(coinName);
-    return "Buying " + coinName + " as soon as possible";
+    return "Requested to buy " + coinName + "received";
   }
   return "No coinName specified";
 }
@@ -27,7 +27,16 @@ function sellCoin(coinName: string) {
   if (coinName) {
     Log.info("Lazy selling called for " + coinName);
     TradesQueue.sell(coinName);
-    return "Selling " + coinName + " as soon as possible";
+    return "Requested to sell " + coinName + "received";
+  }
+  return "No coinName specified";
+}
+
+function flipHold(coinName: string) {
+  if (coinName) {
+    Log.info("Flip hold called for " + coinName);
+    TradesQueue.flipHold(coinName);
+    return "Requested to flip hold for " + coinName + "received";
   }
   return "No coinName specified";
 }

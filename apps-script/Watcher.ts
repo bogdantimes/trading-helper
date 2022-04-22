@@ -35,7 +35,6 @@ function Ticker() {
 
   store.getTradesList().forEach(tradeMemo => {
     try {
-      tradeMemo.initState();
       trader.tickerCheck(tradeMemo);
     } catch (e) {
       Log.error(e)
