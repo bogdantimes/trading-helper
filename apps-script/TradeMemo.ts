@@ -62,6 +62,7 @@ export class TradeMemo {
       this.maxLoss = 0
       this.maxProfit = 0
       this.stopLossPrice = 0
+      this.maxObservedPrice = 0
       this.tradeResult = new TradeResult(this.tradeResult.symbol, "Asset sold")
     }
   }
