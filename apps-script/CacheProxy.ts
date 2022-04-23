@@ -11,7 +11,7 @@ export class CacheProxy {
     return CacheService.getScriptCache().get(key);
   }
 
-  static put(key: string, value: string): void {
+  static put(key: string, value: string, expirationInSeconds?: number): void {
     const size = byteCount(value);
     if (size > 0.9 * MAX_CACHE_VAL_SIZE_BYTES) {
       Log.info(`Cache value for key ${key} is more than 90% of the maximum size of ${MAX_CACHE_VAL_SIZE_BYTES} bytes.`);
@@ -21,7 +21,7 @@ export class CacheProxy {
       Log.error(error);
       throw error;
     }
-    CacheService.getScriptCache().put(key, value);
+    CacheService.getScriptCache().put(key, value, expirationInSeconds);
   }
 
   static remove(key: string): void {

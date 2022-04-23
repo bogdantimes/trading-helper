@@ -10,7 +10,7 @@ export interface IExchange {
 
   getPrice(symbol: ExchangeSymbol): number
 
-  getPrices(): { [p: string]: number }
+  getPrices(symbols?: ExchangeSymbol[]): { [p: string]: number }
 }
 
 const ATTEMPTS = 20;

@@ -16,7 +16,7 @@ export class CoinStats implements IExchange {
     return data.tickers[0].price;
   }
 
-  getPrices(): { [p: string]: number } {
+  getPrices(symbols?: ExchangeSymbol[]): { [p: string]: number } {
     const tickers = execute({
       context: '',
       runnable: () => UrlFetchApp.fetch(CoinStats.API_URL + '/tickers?exchange=binance')
