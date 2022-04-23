@@ -105,19 +105,24 @@ export default function Trade(props) {
   function onRemove() {
     if (confirm(`Are you sure you want to remove ${props.name}?`)) {
       setIsRemoving(true);
-      const handle = resp => {
-        alert(resp.toString());
-        setIsRemoving(false);
-      };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).dropCoin(props.name);
+      google.script.run
+        .withSuccessHandler(() => {
+          setIsRemoving(false);
+          setRemoved(true);
+        })
+        .withFailureHandler(resp => {
+          alert(resp.toString());
+          setIsRemoving(false);
+        })
+        .dropCoin(props.name);
     }
   }
 
   return (
     <>
       {removed ? '' :
-        <Card hidden={removed}>
+        <Card>
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
             <div ref={chartContainerRef} className="chart-container"/>
