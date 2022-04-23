@@ -25,14 +25,14 @@ export function Assets() {
 
   return (
     <>
-      <div>
+      <Box sx={{margin: '10px'}}>
         <ToggleButtonGroup color="primary" value={state} exclusive onChange={changeState}>
           <ToggleButton value={TradeState.BOUGHT}>Bought</ToggleButton>
           <ToggleButton value={TradeState.SOLD}>Sold</ToggleButton>
           <ToggleButton value={TradeState.SELL}>Selling</ToggleButton>
           <ToggleButton value={TradeState.BUY}>Buying</ToggleButton>
         </ToggleButtonGroup>
-      </div>
+      </Box>
       {filterByState(trades, state).sort(byProfit).map((trade, index) =>
         <Box sx={{display: 'inline-flex', margin: '10px'}}>
           <Trade key={index} name={trade.tradeResult.symbol.quantityAsset} data={trade} config={config}/>
