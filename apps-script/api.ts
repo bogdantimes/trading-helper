@@ -1,7 +1,6 @@
 import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {Statistics} from "./Statistics";
-import {TradeState} from "./TradeMemo";
 
 function doGet() {
   return HtmlService
@@ -14,54 +13,75 @@ function doPost(e) {
   return "404";
 }
 
-function buyCoin(coinName: string) {
-  if (coinName) {
-    Log.info("Lazy buying called for " + coinName);
-    TradesQueue.buy(coinName);
-    return "Requested to buy " + coinName;
+function catchError(fn: () => any): any {
+  try {
+    return fn();
+  } catch (e) {
+    Log.error(e);
+    Log.ifUsefulDumpAsEmail();
+    throw e;
   }
-  return "No coinName specified";
+}
+
+function buyCoin(coinName: string) {
+  return catchError(() => {
+    if (coinName) {
+      Log.info("Lazy buying called for " + coinName);
+      TradesQueue.buy(coinName);
+      return "Requested to buy " + coinName;
+    }
+    return "No coinName specified";
+  });
 }
 
 function sellCoin(coinName: string) {
-  if (coinName) {
-    Log.info("Lazy selling called for " + coinName);
-    TradesQueue.sell(coinName);
-    return "Requested to sell " + coinName;
-  }
-  return "No coinName specified";
+  return catchError(() => {
+    if (coinName) {
+      Log.info("Lazy selling called for " + coinName);
+      TradesQueue.sell(coinName);
+      return "Requested to sell " + coinName;
+    }
+    return "No coinName specified";
+  });
 }
 
 function setHold(coinName: string, value: boolean) {
-  if (coinName) {
-    Log.info("Flip hold called for " + coinName + " to " + value);
-    TradesQueue.setHold(coinName, value);
-    return "Requested to flip hold for " + coinName + " to " + value;
-  }
-  return "No coinName specified";
+  return catchError(() => {
+    if (coinName) {
+      Log.info("Flip hold called for " + coinName + " to " + value);
+      TradesQueue.setHold(coinName, value);
+      return "Requested to flip hold for " + coinName + " to " + value;
+    }
+    return "No coinName specified";
+  });
 }
 
 function dropCoin(coinName: string) {
-  if (coinName) {
-    Log.info("Drop called for " + coinName);
-    TradesQueue.dropCoin(coinName);
-    return "Requested to drop " + coinName;
-  }
-  return "No coinName specified";
+  return catchError(() => {
+    if (coinName) {
+      Log.info("Drop called for " + coinName);
+      TradesQueue.dropCoin(coinName);
+      return "Requested to drop " + coinName;
+    }
+    return "No coinName specified";
+  });
 }
 
 function getTrades() {
-  return DefaultStore.getTrades()
+  return catchError(() => DefaultStore.getTrades());
 }
 
 function getConfig() {
-  return DefaultStore.getConfig()
+  return catchError(() => DefaultStore.getConfig());
 }
 
 function setConfig(config) {
-  DefaultStore.setConfig(config)
+  return catchError(() => {
+    DefaultStore.setConfig(config);
+    return "Config updated";
+  });
 }
 
 function getStatistics() {
-  return new Statistics(DefaultStore).getAll()
+  return catchError(() => new Statistics(DefaultStore).getAll());
 }

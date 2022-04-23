@@ -1,23 +1,31 @@
 import {DefaultStore} from "./Store";
 import {TradeMemo, TradeState} from "./TradeMemo";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
+import {CacheProxy} from "./CacheProxy";
 
 export class TradesQueue {
 
   static getQueue() {
-    return DefaultStore.get('Queue') || {LazyBuy: {}, LazySell: {}};
+    const queueJson = CacheProxy.get('Queue');
+    return queueJson ? JSON.parse(queueJson) : {};
   }
 
   static buy(coinName: string): void {
-    DefaultStore.set(`Queue/${coinName}`, 'buy');
+    const queue = this.getQueue();
+    queue[coinName] = QueueAction.BUY;
+    CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
   static sell(coinName: string): void {
-    DefaultStore.set(`Queue/${coinName}`, 'sell');
+    const queue = this.getQueue();
+    queue[coinName] = QueueAction.SELL;
+    CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
   static setHold(coinName: string, value: boolean): void {
-    DefaultStore.set(`Queue/${coinName}`, value ? 'setHoldTrue' : 'setHoldFalse');
+    const queue = this.getQueue();
+    queue[coinName] = value ? QueueAction.HOLD : QueueAction.NOT_HOLD;
+    CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
   static flush(): void {
@@ -29,23 +37,23 @@ export class TradesQueue {
       try {
         const symbol = new ExchangeSymbol(coinName, config.PriceAsset);
         const action = queue[coinName];
-        if (action === 'buy') {
+        if (action === QueueAction.BUY) {
           const trade = store.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));
           trade.setState(TradeState.BUY);
           store.setTrade(trade);
-        } else if (action === 'sell') {
+        } else if (action === QueueAction.SELL) {
           const trade = store.getTrade(symbol);
           if (trade) {
             trade.setState(TradeState.SELL);
             store.setTrade(trade);
           }
-        } else if (action === 'setHoldTrue' || action === 'setHoldFalse') {
+        } else if (action === QueueAction.HOLD || action === QueueAction.NOT_HOLD) {
           const trade = store.getTrade(symbol);
           if (trade) {
-            trade.hodl = action === 'setHoldTrue';
+            trade.hodl = action === QueueAction.HOLD;
             store.setTrade(trade);
           }
-        } else if (action === 'drop'){
+        } else if (action === QueueAction.DROP) {
           const trade = store.getTrade(symbol);
           if (trade && (trade.stateIs(TradeState.SOLD) || trade.stateIs(TradeState.BUY))) {
             store.deleteTrade(trade);
@@ -59,10 +67,20 @@ export class TradesQueue {
       }
     });
 
-    DefaultStore.set('Queue', queue);
+    CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
   static dropCoin(coinName: string) {
-    DefaultStore.set(`Queue/${coinName}`, 'drop');
+    const queue = this.getQueue();
+    queue[coinName] = QueueAction.DROP;
+    CacheProxy.put('Queue', JSON.stringify(queue));
   }
+}
+
+enum QueueAction {
+  BUY = 'BUY',
+  SELL = 'SELL',
+  HOLD = 'HOLD',
+  NOT_HOLD = 'NOT_HOLD',
+  DROP = 'DROP'
 }
