@@ -1,6 +1,7 @@
 import {CoinStats} from "./CoinStats";
 import {Binance, IExchange} from "./Binance";
 import {Config} from "./Store";
+import {ExchangeSymbol, TradeResult} from "./TradeResult";
 
 export class BinanceStats implements IExchange {
   private binance: Binance;

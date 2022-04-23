@@ -1,4 +1,5 @@
 import {IExchange} from "./Binance";
+import {ExchangeSymbol, TradeResult} from "./TradeResult";
 
 export class CoinStats implements IExchange {
 

@@ -1,4 +1,5 @@
 import {PriceMemo} from "./Trader";
+import {ExchangeSymbol, TradeResult} from "./TradeResult";
 
 export enum TradeState {
   BUY = 'buy',

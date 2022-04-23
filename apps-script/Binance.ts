@@ -1,4 +1,5 @@
 import {Config} from "./Store";
+import {ExchangeSymbol, TradeResult} from "./TradeResult";
 
 export interface IExchange {
   getFreeAsset(assetName: string): number

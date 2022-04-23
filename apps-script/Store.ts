@@ -1,4 +1,5 @@
 import {TradeMemo} from "./TradeMemo";
+import {ExchangeSymbol} from "./TradeResult";
 
 export interface IStore {
   get(key: String): any

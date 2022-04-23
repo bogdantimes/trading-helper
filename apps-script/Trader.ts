@@ -2,6 +2,7 @@ import {TradeMemo, TradeState} from "./TradeMemo";
 import {IExchange} from "./Binance";
 import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
+import {ExchangeSymbol} from "./TradeResult";
 
 export type PriceMemo = [number, number, number]
 

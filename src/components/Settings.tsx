@@ -85,7 +85,7 @@ export function Settings() {
         control={
           <Switch checked={config.SwingTradeEnabled} onChange={handleSwitchChange("SwingTradeEnabled")}/>
         }
-        label="Swing trade (EXPERIMENTAL)"
+        label="Swing trade"
       />
       <Box>
         <Button

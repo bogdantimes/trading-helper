@@ -1,5 +1,6 @@
 import {DefaultStore} from "./Store";
 import {TradeMemo, TradeState} from "./TradeMemo";
+import {ExchangeSymbol, TradeResult} from "./TradeResult";
 
 export class TradesQueue {
 
@@ -44,6 +45,13 @@ export class TradesQueue {
             trade.hodl = action === 'setHoldTrue';
             store.setTrade(trade);
           }
+        } else if (action === 'drop'){
+          const trade = store.getTrade(symbol);
+          if (trade && (trade.stateIs(TradeState.SOLD) || trade.stateIs(TradeState.BUY))) {
+            store.deleteTrade(trade);
+          } else {
+            Log.error(new Error(`Cannot drop ${coinName} as it is not sold`));
+          }
         }
         delete queue[coinName];
       } catch (e) {
@@ -52,5 +60,9 @@ export class TradesQueue {
     });
 
     DefaultStore.set('Queue', queue);
+  }
+
+  static dropCoin(coinName: string) {
+    DefaultStore.set(`Queue/${coinName}`, 'drop');
   }
 }

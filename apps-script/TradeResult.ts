@@ -1,4 +1,4 @@
-class ExchangeSymbol {
+export class ExchangeSymbol {
   readonly quantityAsset: string
   readonly priceAsset: string
 
@@ -22,7 +22,7 @@ class ExchangeSymbol {
   }
 }
 
-class TradeResult {
+export class TradeResult {
   symbol: ExchangeSymbol
   quantity: number = 0;
   cost: number = 0;

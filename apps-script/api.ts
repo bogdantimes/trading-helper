@@ -41,15 +41,17 @@ function setHold(coinName: string, value: boolean) {
   return "No coinName specified";
 }
 
+function dropCoin(coinName: string) {
+  if (coinName) {
+    Log.info("Drop called for " + coinName);
+    TradesQueue.dropCoin(coinName);
+    return "Requested to drop " + coinName;
+  }
+  return "No coinName specified";
+}
+
 function getTrades() {
-  // return trades that are not sold
-  const trades = DefaultStore.getTrades();
-  return Object.keys(trades).reduce((acc, key) => {
-    if (!trades[key].stateIs(TradeState.SOLD)) {
-      acc[key] = trades[key];
-    }
-    return acc;
-  }, {});
+  return DefaultStore.getTrades()
 }
 
 function getConfig() {
