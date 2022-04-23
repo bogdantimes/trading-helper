@@ -31,7 +31,7 @@ export interface IStore {
 }
 
 export class FirebaseStore implements IStore {
-  private readonly dbURLKey = "dbURL2";
+  private readonly dbURLKey = "dbURL";
   private source: object
 
   constructor() {
