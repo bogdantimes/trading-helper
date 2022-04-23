@@ -1,6 +1,7 @@
 import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {Statistics} from "./Statistics";
+import {Binance} from "./Binance";
 
 function doGet() {
   return HtmlService
@@ -21,6 +22,29 @@ function catchError(fn: () => any): any {
     Log.ifUsefulDumpAsEmail();
     throw e;
   }
+}
+
+function initialSetup(params: InitialSetupParams) {
+  return catchError(() => {
+    Log.info("Initial setup");
+    Log.info("Connecting to Firebase with URL: " + params.dbURL);
+    DefaultStore.connect(params.dbURL);
+    Log.info("Connected to Firebase");
+    const config = DefaultStore.getConfig();
+    config.KEY = params.binanceAPIKey ? params.binanceAPIKey : config.KEY;
+    config.SECRET = params.binanceSecretKey ? params.binanceSecretKey : config.SECRET;
+    Log.info("Checking if Binance is reachable");
+    new Binance(config).getFreeAsset(config.PriceAsset);
+    DefaultStore.setConfig(config);
+    Log.info("Configured Binance API key and secret key");
+    return "OK";
+  });
+}
+
+export type InitialSetupParams = {
+  dbURL: string,
+  binanceAPIKey: string,
+  binanceSecretKey: string
 }
 
 function buyCoin(coinName: string) {
@@ -72,7 +96,9 @@ function getTrades() {
 }
 
 function getConfig() {
-  return catchError(() => DefaultStore.getConfig());
+  return catchError(() => {
+    return DefaultStore.isConnected() ? DefaultStore.getConfig() : null;
+  });
 }
 
 function setConfig(config) {

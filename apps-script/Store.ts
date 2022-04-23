@@ -26,18 +26,34 @@ export interface IStore {
   deleteTrade(tradeMemo: TradeMemo): void
 
   dumpChanges(): void
+
+  isConnected(): boolean
 }
 
 export class FirebaseStore implements IStore {
-  private readonly source: object
+  private readonly dbURLKey = "dbURL2";
+  private source: object
 
   constructor() {
-    const url = PropertiesService.getScriptProperties().getProperty("FB_URL")
-    if (!url) {
-      throw Error("Firebase URL key 'FB_URL' is not set.")
+    const url = PropertiesService.getScriptProperties().getProperty(this.dbURLKey)
+    if (url) {
+      // @ts-ignore
+      this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken());
+    } else {
+      Log.info("Firebase URL key 'dbURL' is not set.")
     }
+  }
+
+
+  connect(dbURL: string) {
     // @ts-ignore
-    this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken());
+    this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken());
+    Log.alert("Connected to Firebase.")
+    PropertiesService.getScriptProperties().setProperty(this.dbURLKey, dbURL);
+  }
+
+  isConnected(): boolean {
+    return !!this.source
   }
 
   getConfig(): Config {
@@ -66,11 +82,17 @@ export class FirebaseStore implements IStore {
   }
 
   delete(key: String) {
+    if (!this.isConnected()) {
+      throw new Error("Firebase is not connected.")
+    }
     // @ts-ignore
     this.source.removeData(key)
   }
 
   get(key: String): any {
+    if (!this.isConnected()) {
+      throw new Error("Firebase is not connected.")
+    }
     // @ts-ignore
     return this.source.getData(key);
   }
@@ -83,6 +105,9 @@ export class FirebaseStore implements IStore {
   }
 
   set(key: String, value: any): any {
+    if (!this.isConnected()) {
+      throw new Error("Firebase is not connected.")
+    }
     // @ts-ignore
     this.source.setData(key, value)
     return value
