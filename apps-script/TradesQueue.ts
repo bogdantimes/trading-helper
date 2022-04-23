@@ -55,10 +55,12 @@ export class TradesQueue {
           }
         } else if (action === QueueAction.DROP) {
           const trade = store.getTrade(symbol);
-          if (trade && (trade.stateIs(TradeState.SOLD) || trade.stateIs(TradeState.BUY))) {
-            store.deleteTrade(trade);
-          } else {
-            Log.error(new Error(`Cannot drop ${coinName} as it is not sold`));
+          if (trade) {
+            if (trade.stateIs(TradeState.SOLD) || trade.stateIs(TradeState.BUY)) {
+              store.deleteTrade(trade);
+            } else {
+              Log.error(new Error(`Cannot drop ${coinName} as it is not sold`));
+            }
           }
         }
         delete queue[coinName];
