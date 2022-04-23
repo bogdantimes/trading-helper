@@ -2,7 +2,17 @@ import * as React from 'react';
 import {useEffect, useState} from "react";
 import SaveIcon from '@mui/icons-material/Save';
 import {Config} from "../../apps-script/Store";
-import {Box, Button, FormControlLabel, InputAdornment, Stack, Switch, TextField} from "@mui/material";
+import {
+  Box,
+  Button,
+  FormControlLabel,
+  InputAdornment,
+  Snackbar,
+  Stack,
+  Switch,
+  TextField,
+} from "@mui/material";
+import {circularProgress} from "./Common";
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false);
@@ -49,56 +59,54 @@ export function Settings() {
   }
 
   return (
-    <Stack spacing={2}>
-      <TextField value={config.PriceAsset} label={"Price Asset"}
-                 onChange={handleChange('PriceAsset')}
-      />
-      <TextField value={config.BuyQuantity} label={"Buy Quantity"}
-                 onChange={handleChange('BuyQuantity')}
-                 InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
-      />
-      <Stack direction="row" spacing={2}>
-        <TextField value={config.TakeProfit ? config.TakeProfit * 100 : ''} label={"Take profit"}
-                   onChange={handlePercentChange('TakeProfit')}
-                   InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+    <Box sx={{display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
+      <Stack spacing={2}>
+        <TextField value={config.PriceAsset} label={"Price Asset"}
+                   onChange={handleChange('PriceAsset')}
         />
+        <TextField value={config.BuyQuantity} label={"Buy Quantity"}
+                   onChange={handleChange('BuyQuantity')}
+                   InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
+        />
+        <Stack direction="row" spacing={2}>
+          <TextField value={config.TakeProfit ? config.TakeProfit * 100 : ''} label={"Take profit"}
+                     onChange={handlePercentChange('TakeProfit')}
+                     InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+          />
+          <FormControlLabel
+            control={
+              <Switch checked={config.SellAtTakeProfit} onChange={handleSwitchChange("SellAtTakeProfit")}/>
+            }
+            label="Auto-sell"
+          />
+        </Stack>
+        <Stack direction="row" spacing={2}>
+          <TextField value={config.LossLimit ? config.LossLimit * 100 : ''} label={"Loss limit"}
+                     onChange={handlePercentChange('LossLimit')}
+                     InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+          />
+          <FormControlLabel
+            control={
+              <Switch checked={config.SellAtStopLimit} onChange={handleSwitchChange("SellAtStopLimit")}/>
+            }
+            label="Auto-sell"
+          />
+        </Stack>
         <FormControlLabel
           control={
-            <Switch checked={config.SellAtTakeProfit} onChange={handleSwitchChange("SellAtTakeProfit")}/>
+            <Switch checked={config.SwingTradeEnabled} onChange={handleSwitchChange("SwingTradeEnabled")}/>
           }
-          label="Sell at profit"
+          label="Swing trade"
         />
+        <Stack direction={"row"}>
+          <Box sx={{position: 'relative'}}>
+            <Button variant="contained" color="primary" startIcon={<SaveIcon/>}
+                    onClick={onSave} disabled={isSaving}>Save</Button>
+            {isSaving && circularProgress}
+          </Box>
+        </Stack>
       </Stack>
-      <Stack direction="row" spacing={2}>
-        <TextField value={config.LossLimit ? config.LossLimit * 100 : ''} label={"Loss limit"}
-                   onChange={handlePercentChange('LossLimit')}
-                   InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
-        />
-        <FormControlLabel
-          control={
-            <Switch checked={config.SellAtStopLimit} onChange={handleSwitchChange("SellAtStopLimit")}/>
-          }
-          label="Sell at loss limit"
-        />
-      </Stack>
-      <FormControlLabel
-        control={
-          <Switch checked={config.SwingTradeEnabled} onChange={handleSwitchChange("SwingTradeEnabled")}/>
-        }
-        label="Swing trade"
-      />
-      <Box>
-        <Button
-          aria-errormessage={error}
-          variant="contained"
-          color="primary"
-          startIcon={<SaveIcon/>}
-          onClick={onSave}
-          disabled={isSaving}
-        >
-          {isSaving ? 'Saving...' : 'Save'}
-        </Button>
-      </Box>
-    </Stack>
+      {error && <Snackbar open={!!error} message={error}/>}
+    </Box>
   );
 }

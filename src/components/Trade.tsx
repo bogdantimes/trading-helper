@@ -8,7 +8,8 @@ import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
 import {createChart} from 'lightweight-charts';
-import {Stack, ToggleButton} from "@mui/material";
+import {Box, Stack, ToggleButton} from "@mui/material";
+import {circularProgress} from "./Common";
 
 export default function Trade(props) {
   const tradeMemo: TradeMemo = props.data;
@@ -128,13 +129,16 @@ export default function Trade(props) {
           </CardContent>
           <CardActions>
             <Stack direction={"row"} spacing={1}>
-              {tradeMemo.stateIs(TradeState.BOUGHT) ?
+              {tradeMemo.stateIs(TradeState.BOUGHT) &&
                 <>
                   <Button size="small" disabled={isSelling} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
                   <Button size="small" disabled={isBuying} onClick={onBuyMore}>{isBuying ? '...' : 'Buy More'}</Button>
-                  <ToggleButton size="small" value="check" selected={isHodl} color="primary" onChange={flipHodl}
-                                disabled={isHodlSwitching}>{isHodlSwitching ? 'HODL...' : 'HODL'}</ToggleButton>
-                </> : <></>
+                  <Box sx={{position: 'relative'}}>
+                    <ToggleButton size="small" value="check" selected={isHodl} color="primary" onChange={flipHodl}
+                                  disabled={isHodlSwitching}>HODL</ToggleButton>
+                    {isHodlSwitching && circularProgress}
+                  </Box>
+                </>
               }
 
               {tradeMemo.stateIs(TradeState.SOLD) || tradeMemo.stateIs(TradeState.BUY) ?
