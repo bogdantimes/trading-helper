@@ -11,14 +11,23 @@ const filterByState = (trades, state: TradeState): TradeMemo[] => {
   return Object.values(trades).map(TradeMemo.fromObject).filter(t => t.stateIs(state));
 };
 
-export function Assets() {
-  const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({});
-  // @ts-ignore
-  useEffect(() => google.script.run.withSuccessHandler(setTrades).getTrades(), [])
+// @ts-ignore
+const gsr = google.script.run;
 
+export function Assets() {
   const [config, setConfig] = React.useState({});
-  // @ts-ignore
-  useEffect(() => google.script.run.withSuccessHandler(setConfig).getConfig(), [])
+  const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({});
+
+  function fetchData() {
+    gsr.withSuccessHandler(setConfig).getConfig()
+    gsr.withSuccessHandler(setTrades).getTrades()
+  }
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [state, setState] = React.useState<TradeState>(TradeState.BOUGHT);
   const changeState = (e, newState) => setState(newState);
@@ -33,9 +42,10 @@ export function Assets() {
           <ToggleButton value={TradeState.BUY}>Buying</ToggleButton>
         </ToggleButtonGroup>
       </Box>
-      {filterByState(trades, state).sort(byProfit).map((trade, index) =>
+      {filterByState(trades, state).sort(byProfit).map((trade) =>
         <Box sx={{display: 'inline-flex', margin: '10px'}}>
-          <Trade key={index} name={trade.tradeResult.symbol.quantityAsset} data={trade} config={config}/>
+          <Trade key={trade.tradeResult.symbol.quantityAsset}
+                 name={trade.tradeResult.symbol.quantityAsset} data={trade} config={config}/>
         </Box>
       )}
     </>
