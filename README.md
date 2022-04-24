@@ -1,11 +1,13 @@
 # trading-helper
 
-This is an experimental project that helps with crypto trading, written for Google Apps Script.
+The project to help you with crypto trading, written for Google Apps Script.
 
 The current features are:
-* Integration with Trading View notifications and Binance to buy or sell coins.
+* Integration with Binance: buy and sell coins on the spot.
+* Set up your profit and loss limits to automatically sell coins when you reach them.
 * A moving stop-loss limit, which goes up together with the price.
-* A simple plot of currently tracked assets and the total profit counter.
+* Swing trading: automatically sell and buy coins when the price goes up or down.
+* Your statistics: see how much you have made and how much you have lost on a daily basis.
 
 ## How to
 
@@ -13,13 +15,11 @@ The current features are:
 
 1. Google account.
 2. Binance account and Binance API token and key for spot trading.
-3. Trading View account.
 
 ### Setup
 
-Google Apps Script project:
-[trading-helper (beta/1.0.0)](https://script.google.com/home/projects/1URFgGawDWVs-1eT5y1PBQwtFYgwBrf-Df_jMxyjyRTWK_D_N1Yc-IqSe)
+See the YouTube playlist on how to set up and use the tool:
+[![Trading-helper tutorials](https://img.youtube.com/vi/UUnTdhwumw4/0.jpg)](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox)
 
-See the YouTube video on how to setup the project.
-[![Trading helper setup (beta/1.0.0)](https://img.youtube.com/vi/UUnTdhwumw4/0.jpg)](https://youtu.be/UUnTdhwumw4)
-
+Links:
+[trading-helper (2.0.0-beta)](https://script.google.com/d/1plns0V4xjI3nARAIEPsKM0jTlAB2_-EhweMt3jR2YeJgABfu_fQntXou)
