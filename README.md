@@ -20,8 +20,7 @@ The current features are:
 
 ### Setup
 
-See the YouTube playlist on how to set up and use the tool:
-[![Trading-helper tutorials](https://img.youtube.com/vi/UUnTdhwumw4/0.jpg)](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox)
+See the [YouTube playlist](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox) on how to set up and use the tool.
 
 Links:
-[trading-helper (2.0.0-beta)](https://script.google.com/d/1plns0V4xjI3nARAIEPsKM0jTlAB2_-EhweMt3jR2YeJgABfu_fQntXou)
+* Latest published version: [trading-helper (2.0.0-beta)](https://script.google.com/d/1plns0V4xjI3nARAIEPsKM0jTlAB2_-EhweMt3jR2YeJgABfu_fQntXou)
