@@ -1,10 +1,15 @@
-interface Trader {
-  buy(symbol: ExchangeSymbol, cost: number): TradeResult
-
-  sell(symbol: ExchangeSymbol): TradeResult
+export enum PriceProvider {
+  Binance = "Binance",
+  CoinStats = "CoinStats",
 }
 
-class ExchangeSymbol {
+export enum StableCoin {
+  USDT = "USDT",
+  USDC = "USDC",
+  BUSD = "BUSD",
+}
+
+export class ExchangeSymbol {
   readonly quantityAsset: string
   readonly priceAsset: string
 
@@ -15,8 +20,8 @@ class ExchangeSymbol {
     if (!priceAsset) {
       throw Error(`Invalid priceAsset: "${priceAsset}"`)
     }
-    this.quantityAsset = quantityAsset;
-    this.priceAsset = priceAsset;
+    this.quantityAsset = quantityAsset.toUpperCase();
+    this.priceAsset = priceAsset.toUpperCase();
   }
 
   toString(): string {
@@ -28,7 +33,7 @@ class ExchangeSymbol {
   }
 }
 
-class TradeResult {
+export class TradeResult {
   symbol: ExchangeSymbol
   quantity: number = 0;
   cost: number = 0;
@@ -40,11 +45,9 @@ class TradeResult {
   msg: string = ""
   fromExchange: boolean = false;
 
-  static fromMsg(symbol: ExchangeSymbol, msg: string) {
-    const result = new TradeResult();
-    result.symbol = symbol
-    result.msg = msg
-    return result
+  constructor(symbol: ExchangeSymbol, msg?: string) {
+    this.symbol = symbol
+    this.msg = msg
   }
 
   static preciseAverage(a: TradeResult, b: TradeResult): number {
@@ -54,7 +57,7 @@ class TradeResult {
   }
 
   toString(): string {
-    return `${this.symbol} trade result: ${this.price ? 'price=' + this.price : ''} ${this.paid ? 'paid=' + this.paid : ''} ${this.gained ? 'gained=' + this.gained : ''} ${this.profit ? 'profit=' + this.profit : ''} ${this.msg ? 'msg=' + this.msg : ''}`
+    return `${this.symbol}: ${this.msg ? this.msg : ''} => ${this.price ? 'price=' + this.price : ''} ${this.paid ? 'paid=' + this.paid : ''} ${this.gained ? 'gained=' + this.gained : ''} ${this.profit ? 'profit=' + this.profit : ''}`
   }
 
   join(next: TradeResult): TradeResult {
@@ -64,17 +67,13 @@ class TradeResult {
     if (this.symbol.toString() != next.symbol.toString()) {
       throw Error(`Cannot join trades where 'symbol' is not equal: ${next.toString()}`)
     }
-    const result = new TradeResult();
+    const result = new TradeResult(this.symbol, next.msg);
     result.price = TradeResult.preciseAverage(this, next)
     result.commission = this.commission + next.commission
-    result.symbol = next.symbol
-    result.msg = next.msg
     result.fromExchange = next.fromExchange
     result.quantity = this.quantity + next.quantity
     result.cost = this.cost + next.cost
     result.paid = this.paid + next.paid
-    result.gained = this.gained + next.gained
-    result.profit = this.profit + next.profit
     return result
   }
 }

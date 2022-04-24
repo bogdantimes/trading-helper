@@ -7,7 +7,7 @@ interface ExecParams {
 
 const INTERRUPT = 'INTERRUPT';
 
-function execute({context, runnable, interval = 2000, attempts = 5}: ExecParams) {
+function execute({context, runnable, interval = 500, attempts = 5}: ExecParams) {
   let err: Error;
   do {
     try {
@@ -28,20 +28,17 @@ function execute({context, runnable, interval = 2000, attempts = 5}: ExecParams)
 }
 
 class Log {
-  private static readonly infoLog = []
+  private static readonly infoLog: string[] = []
   private static readonly debugLog = []
   private static readonly errLog: Error[] = []
+  private static readonly alerts: string[] = []
 
   static alert(msg: string) {
-    try {
-      GmailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Trader-bot alert", msg)
-    } catch (e) {
-      Log.error(e)
-    }
+    this.alerts.push(msg)
   }
 
-  static info(arg) {
-    this.infoLog.push(arg)
+  static info(msg: string) {
+    this.infoLog.push(msg)
   }
 
   static debug(arg) {
@@ -54,18 +51,17 @@ class Log {
 
   static print(): string {
     return `
-Info:
-${this.infoLog.map(val => JSON.stringify(val)).join("\n")}
-
-${this.errLog.length ? "Errors:\n" + this.errLog.join("\n") : ""}
-
-${this.debugLog.length ? "Debug:\n" + this.debugLog.map(val => JSON.stringify(val)).join("\n") : ""}
-`
+      ${this.alerts.length > 0 ? `${this.alerts.join('\n')}\n\n` : ''}
+      ${this.errLog.length > 0 ? `Errors:\n${this.errLog.join('\n')}` : ''}
+      ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join('\n')}` : ''}
+      ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.map(v => JSON.stringify(v)).join('\n')}` : ''}
+    `
   }
 
   static ifUsefulDumpAsEmail() {
-    if (this.infoLog.length > 0 || this.debugLog.length > 0 || this.errLog.some(e => !e.message.includes("IP banned until"))) {
-      GmailApp.createDraft(Session.getEffectiveUser().getEmail(), "Trader-bot log", this.print())
+    const email = Session.getEffectiveUser().getEmail();
+    if (this.alerts.length > 0 || this.errLog.length > 0) {
+      GmailApp.sendEmail(email, "Trader-bot alert", this.print())
     }
   }
 }
@@ -78,4 +74,8 @@ function getPrecision(a: number): number {
     p++;
   }
   return p;
+}
+
+function getRandomFromList(list) {
+  return list[Math.floor(Math.random() * list.length)];
 }

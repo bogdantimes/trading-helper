@@ -1,4 +1,7 @@
-interface IExchange {
+import {Config} from "./Store";
+import {ExchangeSymbol, TradeResult} from "./TradeResult";
+
+export interface IExchange {
   getFreeAsset(assetName: string): number
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult
@@ -13,16 +16,22 @@ interface IExchange {
 const ATTEMPTS = 20;
 const INTERVAL = 100;
 
-class Binance implements IExchange {
-  private static readonly API = "https://api.binance.com/api/v3";
+export class Binance implements IExchange {
+  private static readonly API = () => {
+    return getRandomFromList([
+      "https://api1.binance.com/api/v3",
+      "https://api2.binance.com/api/v3",
+      "https://api3.binance.com/api/v3",
+    ]);
+  }
   private readonly key: string;
   private readonly secret: string;
   private readonly tradeReqParams: object;
   private readonly reqParams: object;
 
-  constructor(store: IStore) {
-    this.key = store.get('KEY')
-    this.secret = store.get('SECRET')
+  constructor(config: Config) {
+    this.key = config.KEY
+    this.secret = config.SECRET
     this.tradeReqParams = {method: 'post', headers: {'X-MBX-APIKEY': this.key}}
     this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
   }
@@ -31,8 +40,8 @@ class Binance implements IExchange {
     Log.info("Fetching prices")
     const resource = "ticker/price"
     const data = execute({
-      context: `${Binance.API}/${resource}`, interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: ctx => UrlFetchApp.fetch(ctx, this.reqParams)
+      context: '', interval: 1000, attempts: 2,
+      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}`, this.reqParams)
     });
     const prices: { symbol: string, price: string }[] = JSON.parse(data.getContentText())
     Log.debug(`Got ${prices.length} prices`)
@@ -45,8 +54,8 @@ class Binance implements IExchange {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
     const data = execute({
-      context: `${Binance.API}/${resource}?${query}`, interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: ctx => UrlFetchApp.fetch(ctx, this.reqParams)
+      context: '', interval: 1000, attempts: 2,
+      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}?${query}`, this.reqParams)
     });
     Log.debug(data.getContentText())
     return +JSON.parse(data.getContentText()).price
@@ -56,8 +65,8 @@ class Binance implements IExchange {
     const resource = "account"
     const query = "";
     const data = execute({
-      context: `${Binance.API}/${resource}`, interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: ctx => UrlFetchApp.fetch(`${ctx}?${this.addSignature(query)}`, this.reqParams)
+      context: '', interval: INTERVAL, attempts: ATTEMPTS,
+      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}?${this.addSignature(query)}`, this.reqParams)
     });
     try {
       const account = JSON.parse(data.getContentText());
@@ -73,14 +82,14 @@ class Binance implements IExchange {
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
     const moneyAvailable = this.getFreeAsset(symbol.priceAsset)
     if (moneyAvailable < cost) {
-      return TradeResult.fromMsg(symbol, `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`)
+      return new TradeResult(symbol, `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`)
     }
-    Log.info(`Buying ${symbol}`);
+    Log.alert(`Buying ${symbol}`);
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
-    const tradeResult = this.marketTrade(query);
+    const tradeResult = this.marketTrade(symbol, query);
     tradeResult.symbol = symbol
     tradeResult.paid = tradeResult.cost
-    tradeResult.msg = `Bought asset.`
+    tradeResult.msg = "Bought."
     return tradeResult;
   }
 
@@ -91,30 +100,29 @@ class Binance implements IExchange {
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
-    Log.info(`Selling ${symbol}`);
+    Log.alert(`Selling ${symbol}`);
     try {
-      const tradeResult = this.marketTrade(query);
-      tradeResult.symbol = symbol
+      const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost
-      tradeResult.msg = `Sold asset.`
+      tradeResult.msg = "Sold."
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Account has insufficient balance")) {
-        return TradeResult.fromMsg(symbol, `Account has insufficient balance for ${symbol.quantityAsset}`)
+        return new TradeResult(symbol, `Account has insufficient balance for ${symbol.quantityAsset}`)
       }
       throw e
     }
   }
 
-  marketTrade(query: string): TradeResult {
+  marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
     const response = execute({
-      context: `${Binance.API}/order`, interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: ctx => UrlFetchApp.fetch(`${ctx}?${this.addSignature(query)}`, this.tradeReqParams)
+      context: '', interval: INTERVAL, attempts: ATTEMPTS,
+      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/order?${this.addSignature(query)}`, this.tradeReqParams)
     });
     Log.debug(response.getContentText())
     try {
       const order = JSON.parse(response.getContentText());
-      const tradeResult = new TradeResult();
+      const tradeResult = new TradeResult(symbol);
       const [price, commission] = this.reducePriceAndCommission(order.fills)
       tradeResult.quantity = +order.origQty
       tradeResult.cost = +order.cummulativeQuoteQty
