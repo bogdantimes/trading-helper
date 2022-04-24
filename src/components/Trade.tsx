@@ -7,51 +7,71 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
-import {createChart} from 'lightweight-charts';
-import {Box, Stack, ToggleButton} from "@mui/material";
+import {createChart, IChartApi, ISeriesApi} from 'lightweight-charts';
+import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress} from "./Common";
 
 export default function Trade(props) {
   const tradeMemo: TradeMemo = props.data;
   const config: Config = props.config;
-  const takeProfitPrice = tradeMemo.tradeResult.price * (1 + config.TakeProfit);
 
   const chartContainerRef = useRef();
   const chart = useRef(null);
+  const theme = useTheme();
+
+  const [priceLine, setPriceLine] = useState<ISeriesApi<"Line">>(null);
+  const [takeProfitLine, setTakeProfitLine] = useState<ISeriesApi<"Line">>(null);
+  const [stopLossLine, setStopLossLine] = useState<ISeriesApi<"Line">>(null);
+  const [orderPriceLine, setOrderPriceLine] = useState<ISeriesApi<"Line">>(null);
 
   const mapFn = (v, i) => ({time: `2000-01-0${i + 1}`, value: v});
 
   useEffect(() => {
-    if (chart.current) {
-      chart.current.remove();
+    if (!chart.current) {
+      chart.current = createChart(chartContainerRef.current, {
+        width: 300,
+        height: 200,
+        timeScale: {visible: false},
+        handleScroll: false,
+        handleScale: false
+      });
+
+      chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: 1.5});
+
+      setPriceLine(chart.current.addLineSeries({color: "blue", lineWidth: 1}));
+      setStopLossLine(chart.current.addLineSeries({color: "red", lineWidth: 1}));
+      setTakeProfitLine(chart.current.addLineSeries({color: "green", lineWidth: 1}))
+      setOrderPriceLine(chart.current.addLineSeries({color: "gold", lineWidth: 1}))
     }
-    chart.current = createChart(chartContainerRef.current, {
-      width: 300,
-      height: 200,
-      timeScale: {visible: false}
-    });
-    chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: 1.5});
 
-    chart.current
-      .addLineSeries({color: "blue", lineWidth: 1})
-      .setData(tradeMemo.prices.map(mapFn));
-
-    if (tradeMemo.stateIs(TradeState.BOUGHT)) {
-      chart.current
-        .addLineSeries({color: "red", lineWidth: 1})
-        .setData(new Array(tradeMemo.prices.length).fill(tradeMemo.stopLossPrice).map(mapFn));
-
-      chart.current
-        .addLineSeries({color: "green", lineWidth: 1})
-        .setData(new Array(tradeMemo.prices.length).fill(takeProfitPrice).map(mapFn));
-
-      chart.current
-        .addLineSeries({color: "gold", lineWidth: 1})
-        .setData(new Array(tradeMemo.prices.length).fill(tradeMemo.tradeResult.price).map(mapFn));
-    }
+    stopLossLine && stopLossLine.applyOptions({visible: tradeMemo.stateIs(TradeState.BOUGHT)});
+    takeProfitLine && takeProfitLine.applyOptions({visible: tradeMemo.stateIs(TradeState.BOUGHT)});
+    orderPriceLine && orderPriceLine.applyOptions({visible: tradeMemo.stateIs(TradeState.BOUGHT)});
 
   }, [tradeMemo]);
 
+  // change chart theme according to the current theme
+  useEffect(() => changeChartTheme(chart.current, theme), [theme]);
+
+  // refresh chart data
+  useEffect(() => {
+    if (priceLine) {
+      priceLine.setData(tradeMemo.prices.map(mapFn));
+    }
+
+    if (takeProfitLine) {
+      const takeProfitPrice = tradeMemo.tradeResult.price * (1 + config.TakeProfit);
+      takeProfitLine.setData(tradeMemo.prices.map(() => takeProfitPrice).map(mapFn));
+    }
+
+    if (stopLossLine) {
+      stopLossLine.setData(tradeMemo.prices.map(() => tradeMemo.stopLossPrice).map(mapFn));
+    }
+
+    if (orderPriceLine) {
+      orderPriceLine.setData(tradeMemo.prices.map(() => tradeMemo.tradeResult.price).map(mapFn));
+    }
+  }, [tradeMemo, config, priceLine, takeProfitLine, stopLossLine, orderPriceLine]);
 
   const [isSelling, setIsSelling] = useState(false);
 
@@ -156,4 +176,17 @@ export default function Trade(props) {
       }
     </>
   );
+}
+
+function changeChartTheme(chart: IChartApi, theme: Theme) {
+  chart && chart.applyOptions({
+    layout: {
+      backgroundColor: theme.palette.background.default,
+      textColor: theme.palette.text.primary,
+    },
+    grid: {
+      vertLines: {color: theme.palette.divider},
+      horzLines: {color: theme.palette.divider},
+    },
+  });
 }
