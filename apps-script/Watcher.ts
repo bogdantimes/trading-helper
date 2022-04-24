@@ -1,5 +1,5 @@
 import {V2Trader} from "./Trader";
-import {BinanceStats} from "./BinanceStats";
+import {Exchange} from "./Exchange";
 import {Statistics} from "./Statistics";
 import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
@@ -31,7 +31,7 @@ function Ticker() {
   TradesQueue.flush();
 
   const store = DefaultStore;
-  const trader = new V2Trader(store, new BinanceStats(store.getConfig()), new Statistics(store));
+  const trader = new V2Trader(store, new Exchange(store.getConfig()), new Statistics(store));
 
   store.getTradesList().forEach(tradeMemo => {
     try {
@@ -46,7 +46,7 @@ function Ticker() {
   Log.ifUsefulDumpAsEmail()
 }
 
-function Start() {
+export function Start() {
   Stop()
   Watcher.start()
   Log.ifUsefulDumpAsEmail()

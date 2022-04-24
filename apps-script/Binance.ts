@@ -40,7 +40,7 @@ export class Binance implements IExchange {
     Log.info("Fetching prices")
     const resource = "ticker/price"
     const data = execute({
-      context: '', interval: INTERVAL, attempts: ATTEMPTS,
+      context: '', interval: 1000, attempts: 2,
       runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}`, this.reqParams)
     });
     const prices: { symbol: string, price: string }[] = JSON.parse(data.getContentText())
@@ -54,7 +54,7 @@ export class Binance implements IExchange {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
     const data = execute({
-      context: '', interval: INTERVAL, attempts: ATTEMPTS,
+      context: '', interval: 1000, attempts: 2,
       runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}?${query}`, this.reqParams)
     });
     Log.debug(data.getContentText())

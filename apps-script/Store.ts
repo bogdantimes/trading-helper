@@ -1,5 +1,5 @@
 import {TradeMemo} from "./TradeMemo";
-import {ExchangeSymbol} from "./TradeResult";
+import {ExchangeSymbol, PriceProvider, StableCoin} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
 
 export interface IStore {
@@ -60,17 +60,19 @@ export class FirebaseStore implements IStore {
     const configCacheJson = CacheProxy.get("Config");
     let configCache = configCacheJson ? JSON.parse(configCacheJson) : null;
     if (!configCache) {
-      configCache = this.getOrSet("Config", {
+      const defaultConfig: Config = {
         TakeProfit: 0.1,
         SellAtTakeProfit: true,
         BuyQuantity: 10,
         LossLimit: 0.05,
         SECRET: '',
         KEY: '',
-        PriceAsset: 'USDT',
+        PriceAsset: StableCoin.USDT,
         SellAtStopLimit: false,
         SwingTradeEnabled: false,
-      })
+        PriceProvider: PriceProvider.Binance
+      }
+      configCache = this.getOrSet("Config", defaultConfig)
       CacheProxy.put("Config", JSON.stringify(configCache))
     }
     return configCache;
@@ -162,7 +164,8 @@ export type Config = {
   KEY?: string
   PriceAsset: string
   SellAtStopLimit: boolean
-  SwingTradeEnabled?: boolean
+  SwingTradeEnabled: boolean
+  PriceProvider: PriceProvider
 }
 
 // @ts-ignore

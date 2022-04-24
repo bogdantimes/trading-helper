@@ -1,18 +1,10 @@
 import * as React from 'react';
-import {useEffect, useState} from "react";
+import {useEffect, useState} from 'react';
 import SaveIcon from '@mui/icons-material/Save';
 import {Config} from "../../apps-script/Store";
-import {
-  Box,
-  Button,
-  FormControlLabel,
-  InputAdornment,
-  Snackbar,
-  Stack,
-  Switch,
-  TextField,
-} from "@mui/material";
+import {Box, Button, FormControlLabel, InputAdornment, Snackbar, Stack, Switch, TextField,} from "@mui/material";
 import {circularProgress} from "./Common";
+import {PriceProvider} from "../../apps-script/TradeResult";
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false);
@@ -26,6 +18,7 @@ export function Settings() {
     SellAtTakeProfit: false,
     TakeProfit: 0,
     SwingTradeEnabled: false,
+    PriceProvider: PriceProvider.Binance,
   });
 
   // @ts-ignore
