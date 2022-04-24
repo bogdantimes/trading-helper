@@ -36,8 +36,7 @@ export default function Trade(props) {
         handleScale: false
       });
 
-      chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: 1.5});
-
+      chart.current.timeScale().fitContent();
       setPriceLine(chart.current.addLineSeries({color: "blue", lineWidth: 1}));
       setStopLossLine(chart.current.addLineSeries({color: "red", lineWidth: 1}));
       setTakeProfitLine(chart.current.addLineSeries({color: "green", lineWidth: 1}))

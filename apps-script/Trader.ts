@@ -4,6 +4,7 @@ import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
 import {ExchangeSymbol} from "./TradeResult";
 
+const PriceMemoMaxCapacity = 10;
 export type PriceMemo = [number, number, number]
 
 export class V2Trader {
@@ -30,8 +31,9 @@ export class V2Trader {
     const symbol = tradeMemo.tradeResult.symbol;
     const currentPrice = this.getPrice(symbol);
 
-    tradeMemo.prices.shift()
     tradeMemo.prices.push(currentPrice)
+    // remove old prices and keep only the last PriceMemoMaxCapacity
+    tradeMemo.prices.splice(0, tradeMemo.prices.length - PriceMemoMaxCapacity)
     tradeMemo.maxObservedPrice = Math.max(tradeMemo.maxObservedPrice, ...tradeMemo.prices)
 
     const priceGoesUp = this.priceGoesUp(tradeMemo.prices);
@@ -139,11 +141,12 @@ export class V2Trader {
     }
   }
 
-  private priceGoesUp(lastPrices: PriceMemo): boolean {
-    if (lastPrices[0] == 0) {
+  private priceGoesUp(prices: PriceMemo, lastN: number = 3): boolean {
+    const lastPrices = prices.slice(-lastN);
+    if (lastPrices[0] == 0 || lastPrices.length < lastN) {
       return false
     }
-    return lastPrices.every((value, index) => index == 0 ? true : value > lastPrices[index - 1])
+    return lastPrices.every((p, i) => i == 0 ? true : p > lastPrices[i - 1])
   }
 
   private getBNBCommissionCost(commission: number): number {
