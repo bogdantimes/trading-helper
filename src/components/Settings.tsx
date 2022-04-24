@@ -54,7 +54,7 @@ export function Settings() {
   return (
     <Box sx={{display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
       <Stack spacing={2}>
-        <TextField value={config.PriceAsset} label={"Price Asset"}
+        <TextField value={config.PriceAsset} label={"Stable Coin"}
                    onChange={handleChange('PriceAsset')}
         />
         <TextField value={config.BuyQuantity} label={"Buy Quantity"}
@@ -62,7 +62,7 @@ export function Settings() {
                    InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
         />
         <Stack direction="row" spacing={2}>
-          <TextField value={config.TakeProfit ? config.TakeProfit * 100 : ''} label={"Take profit"}
+          <TextField value={config.TakeProfit ? config.TakeProfit * 100 : ''} label={"Profit Limit"}
                      onChange={handlePercentChange('TakeProfit')}
                      InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
           />
@@ -74,7 +74,7 @@ export function Settings() {
           />
         </Stack>
         <Stack direction="row" spacing={2}>
-          <TextField value={config.LossLimit ? config.LossLimit * 100 : ''} label={"Loss limit"}
+          <TextField value={config.LossLimit ? config.LossLimit * 100 : ''} label={"Loss Limit"}
                      onChange={handlePercentChange('LossLimit')}
                      InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
           />

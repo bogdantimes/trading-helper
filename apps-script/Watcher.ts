@@ -46,7 +46,7 @@ function Ticker() {
   Log.ifUsefulDumpAsEmail()
 }
 
-export function Start() {
+function Start() {
   Stop()
   Watcher.start()
   Log.ifUsefulDumpAsEmail()

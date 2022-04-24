@@ -2,7 +2,6 @@ import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {Statistics} from "./Statistics";
 import {Binance} from "./Binance";
-import {Start} from "./Watcher";
 
 function doGet() {
   return HtmlService
@@ -38,6 +37,7 @@ function initialSetup(params: InitialSetupParams) {
     new Binance(config).getFreeAsset(config.PriceAsset);
     DefaultStore.setConfig(config);
     Log.info("Configured Binance API key and secret key");
+    // @ts-ignore
     Start();
     return "OK";
   });
