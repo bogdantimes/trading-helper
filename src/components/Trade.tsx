@@ -37,13 +37,14 @@ export default function Trade(props) {
         handleScale: false
       });
 
-      chart.current.timeScale().fitContent();
       const boughtState = {lineWidth: 1, visible: tradeMemo.stateIs(TradeState.BOUGHT)};
       setPriceLine(chart.current.addLineSeries({color: "blue", lineWidth: 1}));
       setStopLossLine(chart.current.addLineSeries({color: "red", ...boughtState}));
       setTakeProfitLine(chart.current.addLineSeries({color: "green", ...boughtState}))
       setOrderPriceLine(chart.current.addLineSeries({color: "gold", ...boughtState}))
     }
+
+    chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tradeMemo.prices.length - 1.5});
 
   }, [tradeMemo]);
 
