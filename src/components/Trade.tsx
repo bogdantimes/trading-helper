@@ -27,6 +27,7 @@ export default function Trade(props) {
   const mapFn = (v, i) => ({time: `2000-01-0${i + 1}`, value: v});
 
   useEffect(() => {
+
     if (!chart.current) {
       chart.current = createChart(chartContainerRef.current, {
         width: 300,
@@ -37,15 +38,12 @@ export default function Trade(props) {
       });
 
       chart.current.timeScale().fitContent();
+      const boughtState = {lineWidth: 1, visible: tradeMemo.stateIs(TradeState.BOUGHT)};
       setPriceLine(chart.current.addLineSeries({color: "blue", lineWidth: 1}));
-      setStopLossLine(chart.current.addLineSeries({color: "red", lineWidth: 1}));
-      setTakeProfitLine(chart.current.addLineSeries({color: "green", lineWidth: 1}))
-      setOrderPriceLine(chart.current.addLineSeries({color: "gold", lineWidth: 1}))
+      setStopLossLine(chart.current.addLineSeries({color: "red", ...boughtState}));
+      setTakeProfitLine(chart.current.addLineSeries({color: "green", ...boughtState}))
+      setOrderPriceLine(chart.current.addLineSeries({color: "gold", ...boughtState}))
     }
-
-    stopLossLine && stopLossLine.applyOptions({visible: tradeMemo.stateIs(TradeState.BOUGHT)});
-    takeProfitLine && takeProfitLine.applyOptions({visible: tradeMemo.stateIs(TradeState.BOUGHT)});
-    orderPriceLine && orderPriceLine.applyOptions({visible: tradeMemo.stateIs(TradeState.BOUGHT)});
 
   }, [tradeMemo]);
 
