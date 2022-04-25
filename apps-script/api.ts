@@ -36,7 +36,7 @@ function initialSetup(params: InitialSetupParams) {
     Log.info("Checking if Binance is reachable");
     new Binance(config).getFreeAsset(config.PriceAsset);
     DefaultStore.setConfig(config);
-    Log.info("Configured Binance API key and secret key");
+    Log.info("Connected to Binance");
     // @ts-ignore
     Start();
     return "OK";
