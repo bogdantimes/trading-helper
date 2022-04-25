@@ -52,9 +52,10 @@ export default function Trade(props) {
 
     return () => {
       chart.current.remove();
+      chart.current = null;
     };
 
-  }, [tradeMemo]);
+  }, [tradeMemo.prices.length, tradeMemo.getState()]);
 
   // change chart theme according to the current theme
   useEffect(() => changeChartTheme(chart.current, theme), [theme]);
