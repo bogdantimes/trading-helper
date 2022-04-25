@@ -36,13 +36,16 @@ export default function Trade(props) {
     handleScale: false
   };
 
+  // In dark more 'lightblue' color price line looks better
+  const priceLineColor = theme.palette.mode === "light" ? "blue" : "lightblue";
+
   useEffect(() => {
 
     if (!chart.current) {
       chart.current = createChart(chartContainerRef.current, chartOpts);
 
       const boughtState = {lineWidth: 1, visible: tradeMemo.stateIs(TradeState.BOUGHT)};
-      setPriceLine(chart.current.addLineSeries({color: "blue", lineWidth: 1}));
+      setPriceLine(chart.current.addLineSeries({color: priceLineColor, lineWidth: 1}));
       setStopLossLine(chart.current.addLineSeries({color: "red", ...boughtState}));
       setTakeProfitLine(chart.current.addLineSeries({color: "green", ...boughtState}))
       setOrderPriceLine(chart.current.addLineSeries({color: "gold", ...boughtState}))
@@ -58,7 +61,10 @@ export default function Trade(props) {
   }, [tradeMemo.prices.length, tradeMemo.getState()]);
 
   // change chart theme according to the current theme
-  useEffect(() => changeChartTheme(chart.current, theme), [theme]);
+  useEffect(() => {
+    changeChartTheme(chart.current, theme);
+    priceLine && priceLine.applyOptions({color: priceLineColor});
+  }, [theme]);
 
   // refresh chart data
   useEffect(() => {
