@@ -50,6 +50,10 @@ export default function Trade(props) {
 
     chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tradeMemo.prices.length - 1.5});
 
+    return () => {
+      chart.current.remove();
+    };
+
   }, [tradeMemo]);
 
   // change chart theme according to the current theme
