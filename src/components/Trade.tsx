@@ -25,7 +25,7 @@ export default function Trade(props) {
   const [orderPriceLine, setOrderPriceLine] = useState<ISeriesApi<"Line">>(null);
 
   const map = (prices: number[], mapFn: (v: number) => number) => {
-    return prices.map((v, i) => ({time: `2000-01-0${i + 1}`, value: mapFn(v)}));
+    return prices.map((v, i) => ({time: `${2000 + i}-01-01`, value: mapFn(v)}));
   };
 
   const chartOpts = {
