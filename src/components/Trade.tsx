@@ -24,7 +24,9 @@ export default function Trade(props) {
   const [stopLossLine, setStopLossLine] = useState<ISeriesApi<"Line">>(null);
   const [orderPriceLine, setOrderPriceLine] = useState<ISeriesApi<"Line">>(null);
 
-  const mapFn = (v, i) => ({time: `2000-01-0${i + 1}`, value: v});
+  const map = (prices: number[], mapFn: (v: number) => number) => {
+    return prices.map((v, i) => ({time: `2000-01-0${i + 1}`, value: mapFn(v)}));
+  };
 
   useEffect(() => {
 
@@ -53,22 +55,11 @@ export default function Trade(props) {
 
   // refresh chart data
   useEffect(() => {
-    if (priceLine) {
-      priceLine.setData(tradeMemo.prices.map(mapFn));
-    }
-
-    if (takeProfitLine) {
-      const takeProfitPrice = tradeMemo.tradeResult.price * (1 + config.TakeProfit);
-      takeProfitLine.setData(tradeMemo.prices.map(() => takeProfitPrice).map(mapFn));
-    }
-
-    if (stopLossLine) {
-      stopLossLine.setData(tradeMemo.prices.map(() => tradeMemo.stopLossPrice).map(mapFn));
-    }
-
-    if (orderPriceLine) {
-      orderPriceLine.setData(tradeMemo.prices.map(() => tradeMemo.tradeResult.price).map(mapFn));
-    }
+    priceLine && priceLine.setData(map(tradeMemo.prices, v => v));
+    stopLossLine && stopLossLine.setData(map(tradeMemo.prices, () => tradeMemo.stopLossPrice));
+    orderPriceLine && orderPriceLine.setData(map(tradeMemo.prices, () => tradeMemo.tradeResult.price));
+    takeProfitLine && takeProfitLine.setData(map(tradeMemo.prices,
+      () => tradeMemo.tradeResult.price * (1 + config.TakeProfit)));
   }, [tradeMemo, config, priceLine, takeProfitLine, stopLossLine, orderPriceLine]);
 
   const [isSelling, setIsSelling] = useState(false);
