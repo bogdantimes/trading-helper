@@ -28,16 +28,18 @@ export default function Trade(props) {
     return prices.map((v, i) => ({time: `2000-01-0${i + 1}`, value: mapFn(v)}));
   };
 
+  const chartOpts = {
+    width: 300,
+    height: 200,
+    timeScale: {visible: false},
+    handleScroll: false,
+    handleScale: false
+  };
+
   useEffect(() => {
 
     if (!chart.current) {
-      chart.current = createChart(chartContainerRef.current, {
-        width: 300,
-        height: 200,
-        timeScale: {visible: false},
-        handleScroll: false,
-        handleScale: false
-      });
+      chart.current = createChart(chartContainerRef.current, chartOpts);
 
       const boughtState = {lineWidth: 1, visible: tradeMemo.stateIs(TradeState.BOUGHT)};
       setPriceLine(chart.current.addLineSeries({color: "blue", lineWidth: 1}));
@@ -134,7 +136,7 @@ export default function Trade(props) {
         <Card>
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
-            <div ref={chartContainerRef} className="chart-container"/>
+            <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
             <Typography variant="body2" color="text.secondary">
               <div>Total: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
               <div>{tradeMemo.maxProfit > 0 ? "Profit" : "Loss"}: {tradeMemo.maxProfit.toFixed(2)} ({profitPercent}%)</div>
