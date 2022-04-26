@@ -79,8 +79,8 @@ export default function Trade(props) {
 
   // make profitLine and limitLine dashed if config SellAtTakeProfit or SellAtStopLimit is false or HODLing
   useEffect(() => {
-    profitLine && profitLine.applyOptions({lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Solid : LineStyle.Dashed});
-    limitLine && limitLine.applyOptions({lineStyle: !config.SellAtStopLimit || tradeMemo.hodl ? LineStyle.Solid : LineStyle.Dashed});
+    profitLine && profitLine.applyOptions({lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid});
+    limitLine && limitLine.applyOptions({lineStyle: !config.SellAtStopLimit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid});
   }, [tradeMemo.hodl, config.SellAtTakeProfit, config.SellAtStopLimit, profitLine, limitLine]);
 
   const [isSelling, setIsSelling] = useState(false);
