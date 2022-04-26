@@ -23,4 +23,4 @@ The current features are:
 See the [YouTube playlist](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox) on how to set up and use the tool.
 
 Links:
-* Latest published version: [trading-helper (v2.0.0-beta)](https://script.google.com/home/projects/1vgittGklx2fFFOPiMb7t5kX1VEKb3a9viFwPtFI_sPOGlivfrnmcAM9_)
+* Get the latest published version: [trading-helper (latest)](https://github.com/bogdan-kovalev/trading-helper/releases/latest)
