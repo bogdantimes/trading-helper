@@ -128,17 +128,12 @@ export class V2Trader {
       Log.info(`Commission: ~${buyCommission + sellCommission}`)
       const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
       tradeResult.profit = +profit.toFixed(2);
-      Log.alert(tradeResult.toString());
       this.stats.addProfit(tradeResult.profit)
-    }
-
-    if (tradeResult.profit > 0) {
       memo.setState(TradeState.SOLD)
       this.store.setTrade(memo)
-    } else {
-      Log.alert(`No profit. Deleting memo from store: ${memo.getKey().toString()}`)
-      this.store.deleteTrade(memo)
     }
+
+    Log.alert(tradeResult.toString());
   }
 
   private priceGoesUp(prices: PriceMemo, lastN: number = 3): boolean {
