@@ -7,7 +7,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
-import {createChart, IChartApi, ISeriesApi} from 'lightweight-charts';
+import {createChart, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress} from "./Common";
 
@@ -20,56 +20,68 @@ export default function Trade(props) {
   const theme = useTheme();
 
   const [priceLine, setPriceLine] = useState<ISeriesApi<"Line">>(null);
-  const [takeProfitLine, setTakeProfitLine] = useState<ISeriesApi<"Line">>(null);
-  const [stopLossLine, setStopLossLine] = useState<ISeriesApi<"Line">>(null);
-  const [orderPriceLine, setOrderPriceLine] = useState<ISeriesApi<"Line">>(null);
+  const [profitLine, setProfitLine] = useState<ISeriesApi<"Line">>(null);
+  const [limitLine, setLimitLine] = useState<ISeriesApi<"Line">>(null);
+  const [orderLine, setOrderLine] = useState<ISeriesApi<"Line">>(null);
 
-  const mapFn = (v, i) => ({time: `2000-01-0${i + 1}`, value: v});
+  const map = (prices: number[], mapFn: (v: number) => number) => {
+    return prices.map((v, i) => ({time: `${2000 + i}-01-01`, value: mapFn(v)}));
+  };
+
+  const chartOpts = {
+    width: 300,
+    height: 200,
+    timeScale: {visible: false},
+    handleScroll: false,
+    handleScale: false
+  };
+
+  // In dark more 'lightblue' color price line looks better
+  const priceLineColor = theme.palette.mode === "light" ? "blue" : "lightblue";
+  const profitLineColor = theme.palette.mode === "light" ? "green" : "lightgreen";
 
   useEffect(() => {
 
     if (!chart.current) {
-      chart.current = createChart(chartContainerRef.current, {
-        width: 300,
-        height: 200,
-        timeScale: {visible: false},
-        handleScroll: false,
-        handleScale: false
-      });
+      chart.current = createChart(chartContainerRef.current, chartOpts);
 
       const boughtState = {lineWidth: 1, visible: tradeMemo.stateIs(TradeState.BOUGHT)};
-      setPriceLine(chart.current.addLineSeries({color: "blue", lineWidth: 1}));
-      setStopLossLine(chart.current.addLineSeries({color: "red", ...boughtState}));
-      setTakeProfitLine(chart.current.addLineSeries({color: "green", ...boughtState}))
-      setOrderPriceLine(chart.current.addLineSeries({color: "gold", ...boughtState}))
+      setPriceLine(chart.current.addLineSeries({color: priceLineColor, lineWidth: 1}));
+      setLimitLine(chart.current.addLineSeries({color: "red", ...boughtState}));
+      setProfitLine(chart.current.addLineSeries({color: profitLineColor, ...boughtState}))
+      setOrderLine(chart.current.addLineSeries({color: "gold", ...boughtState}))
     }
 
     chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tradeMemo.prices.length - 1.5});
 
-  }, [tradeMemo]);
+    return () => {
+      chart.current.remove();
+      chart.current = null;
+    };
+
+  }, [tradeMemo.prices.length, tradeMemo.getState()]);
 
   // change chart theme according to the current theme
-  useEffect(() => changeChartTheme(chart.current, theme), [theme]);
+  useEffect(() => {
+    changeChartTheme(chart.current, theme);
+    priceLine && priceLine.applyOptions({color: priceLineColor});
+    profitLine && profitLine.applyOptions({color: profitLineColor});
+  }, [theme]);
 
   // refresh chart data
   useEffect(() => {
-    if (priceLine) {
-      priceLine.setData(tradeMemo.prices.map(mapFn));
-    }
+    priceLine && priceLine.setData(map(tradeMemo.prices, v => v));
+    limitLine && limitLine.setData(map(tradeMemo.prices, () => tradeMemo.stopLossPrice));
+    orderLine && orderLine.setData(map(tradeMemo.prices, () => tradeMemo.tradeResult.price));
+    profitLine && profitLine.setData(map(tradeMemo.prices,
+      () => tradeMemo.tradeResult.price * (1 + config.TakeProfit)));
+  }, [tradeMemo, config.TakeProfit, priceLine, profitLine, limitLine, orderLine]);
 
-    if (takeProfitLine) {
-      const takeProfitPrice = tradeMemo.tradeResult.price * (1 + config.TakeProfit);
-      takeProfitLine.setData(tradeMemo.prices.map(() => takeProfitPrice).map(mapFn));
-    }
-
-    if (stopLossLine) {
-      stopLossLine.setData(tradeMemo.prices.map(() => tradeMemo.stopLossPrice).map(mapFn));
-    }
-
-    if (orderPriceLine) {
-      orderPriceLine.setData(tradeMemo.prices.map(() => tradeMemo.tradeResult.price).map(mapFn));
-    }
-  }, [tradeMemo, config, priceLine, takeProfitLine, stopLossLine, orderPriceLine]);
+  // make profitLine and limitLine dashed if config SellAtTakeProfit or SellAtStopLimit is false or HODLing
+  useEffect(() => {
+    profitLine && profitLine.applyOptions({lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid});
+    limitLine && limitLine.applyOptions({lineStyle: !config.SellAtStopLimit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid});
+  }, [tradeMemo.hodl, config.SellAtTakeProfit, config.SellAtStopLimit, profitLine, limitLine]);
 
   const [isSelling, setIsSelling] = useState(false);
 
@@ -143,7 +155,7 @@ export default function Trade(props) {
         <Card>
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
-            <div ref={chartContainerRef} className="chart-container"/>
+            <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
             <Typography variant="body2" color="text.secondary">
               <div>Total: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
               <div>{tradeMemo.maxProfit > 0 ? "Profit" : "Loss"}: {tradeMemo.maxProfit.toFixed(2)} ({profitPercent}%)</div>

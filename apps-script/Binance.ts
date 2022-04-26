@@ -100,7 +100,7 @@ export class Binance implements IExchange {
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
-    Log.alert(`Selling ${symbol}`);
+    Log.alert(`Selling ${quantity} of ${symbol}`);
     try {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost
@@ -141,7 +141,7 @@ export class Binance implements IExchange {
     let commission = 0
     fills.forEach(f => {
       if (f.commissionAsset != "BNB") {
-        Log.info(`Commission is ${f.commissionAsset} instead of BNB`)
+        Log.alert(`Commission is ${f.commissionAsset} instead of BNB`)
       } else {
         commission += +f.commission
       }

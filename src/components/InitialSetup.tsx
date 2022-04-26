@@ -39,6 +39,10 @@ export function InitialSetup({config, onConnect}: { config: Config, onConnect: (
     }).initialSetup(params);
   }
 
+  const welcomeMsg = 'Welcome to the Trading Helper!';
+  const welcomeDescr = 'Before you begin, you need to connect your database.';
+  const step2Header = 'Almost done!';
+  const step2descr = 'Setup API key and secret to connect Binance.';
   return (
     <Stack spacing={2} sx={{
       margin: '10px',
@@ -48,17 +52,17 @@ export function InitialSetup({config, onConnect}: { config: Config, onConnect: (
     }}>
       <StartIcon sx={{fontSize: '100px', color: 'primary'}}/>
       <Typography variant="h5" component="h3">
-        Welcome to the Trading Helper!
+        {!config ? welcomeMsg : step2Header}
       </Typography>
       <Typography variant="body1" component="p">
-        Before you begin, you need to connect your database and Binance API keys.
+        {!config ? welcomeDescr : step2descr}
       </Typography>
-      <TextField value={params.dbURL} label={"Firebase Database URL"}
-                 onChange={onChange} name="dbURL"/>
-      <TextField value={params.binanceAPIKey} label={"Binance API Key"}
-                 onChange={onChange} name="binanceAPIKey"/>
-      <TextField value={params.binanceSecretKey} label={"Binance Secret Key"}
-                 onChange={onChange} name="binanceSecretKey"/>
+      {!config && <TextField value={params.dbURL} label={"Firebase Database URL"}
+                             onChange={onChange} name="dbURL"/>}
+      {config && <TextField type={"password"} value={params.binanceAPIKey} label={"Binance API Key"}
+                            onChange={onChange} name="binanceAPIKey"/>}
+      {config && <TextField type={"password"} value={params.binanceSecretKey} label={"Binance Secret Key"}
+                            onChange={onChange} name="binanceSecretKey"/>}
       <Stack direction={"row"}>
         <Box sx={{position: 'relative'}}>
           <Button variant="contained" color="primary" onClick={onClickConnect} disabled={isConnecting}>Connect</Button>

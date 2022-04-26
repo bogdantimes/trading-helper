@@ -68,6 +68,10 @@ export class TradeMemo {
     }
     this.setState(TradeState.BOUGHT);
   }
+
+  getState() {
+    return this.state
+  }
 }
 
 export class TradeMemoKey {

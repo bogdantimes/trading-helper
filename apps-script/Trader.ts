@@ -123,22 +123,21 @@ export class V2Trader {
     const tradeResult = this.exchange.marketSell(memo.tradeResult.symbol, memo.tradeResult.quantity);
 
     if (tradeResult.fromExchange) {
+      memo.setState(TradeState.SOLD)
       const buyCommission = this.getBNBCommissionCost(memo.tradeResult.commission);
       const sellCommission = this.getBNBCommissionCost(tradeResult.commission);
       Log.info(`Commission: ~${buyCommission + sellCommission}`)
       const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
       tradeResult.profit = +profit.toFixed(2);
-      Log.alert(tradeResult.toString());
       this.stats.addProfit(tradeResult.profit)
+    } else {
+      memo.hodl = true;
+      memo.setState(TradeState.BOUGHT);
+      Log.alert(`An issue happened while selling ${memo.tradeResult.symbol}. The asset is marked HODL. Please, resolve it manually.`)
     }
 
-    if (tradeResult.profit > 0) {
-      memo.setState(TradeState.SOLD)
-      this.store.setTrade(memo)
-    } else {
-      Log.alert(`No profit. Deleting memo from store: ${memo.getKey().toString()}`)
-      this.store.deleteTrade(memo)
-    }
+    this.store.setTrade(memo)
+    Log.alert(tradeResult.toString());
   }
 
   private priceGoesUp(prices: PriceMemo, lastN: number = 3): boolean {
