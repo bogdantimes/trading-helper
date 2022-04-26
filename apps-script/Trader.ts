@@ -130,9 +130,13 @@ export class V2Trader {
       tradeResult.profit = +profit.toFixed(2);
       this.stats.addProfit(tradeResult.profit)
       memo.setState(TradeState.SOLD)
-      this.store.setTrade(memo)
+    } else {
+      memo.hodl = true;
+      memo.setState(TradeState.BOUGHT);
+      Log.alert(`An issue happened while selling ${memo.tradeResult.symbol}. The asset is marked HODL. Please, resolve it manually.`)
     }
 
+    this.store.setTrade(memo)
     Log.alert(tradeResult.toString());
   }
 
