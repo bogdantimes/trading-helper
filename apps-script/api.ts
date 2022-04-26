@@ -26,19 +26,23 @@ function catchError(fn: () => any): any {
 
 function initialSetup(params: InitialSetupParams) {
   return catchError(() => {
-    Log.info("Initial setup");
-    Log.info("Connecting to Firebase with URL: " + params.dbURL);
-    DefaultStore.connect(params.dbURL);
-    Log.info("Connected to Firebase");
+    if (params.dbURL) {
+      Log.alert("Initial setup");
+      Log.alert("Connecting to Firebase with URL: " + params.dbURL);
+      DefaultStore.connect(params.dbURL);
+      Log.alert("Connected to Firebase");
+    }
     const config = DefaultStore.getConfig();
-    config.KEY = params.binanceAPIKey ? params.binanceAPIKey : config.KEY;
-    config.SECRET = params.binanceSecretKey ? params.binanceSecretKey : config.SECRET;
-    Log.info("Checking if Binance is reachable");
-    new Binance(config).getFreeAsset(config.PriceAsset);
+    config.KEY = params.binanceAPIKey || config.KEY;
+    config.SECRET = params.binanceSecretKey || config.SECRET;
+    if (config.KEY && config.SECRET) {
+      Log.alert("Checking if Binance is reachable");
+      new Binance(config).getFreeAsset(config.PriceAsset);
+      Log.alert("Connected to Binance");
+      // @ts-ignore
+      Start();
+    }
     DefaultStore.setConfig(config);
-    Log.info("Connected to Binance");
-    // @ts-ignore
-    Start();
     return "OK";
   });
 }

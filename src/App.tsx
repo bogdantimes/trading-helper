@@ -51,11 +51,11 @@ export default function App() {
     gsr
       .withSuccessHandler((config: Config) => {
         setFetchingData(false);
+        setConfig(config);
         if (!config || !config.KEY || !config.SECRET) {
           setInitialSetup(true);
         } else {
           setInitialSetup(false);
-          setConfig(config);
           gsr.withSuccessHandler(setTrades).getTrades()
         }
       })

@@ -39,10 +39,10 @@ export function InitialSetup({config, onConnect}: { config: Config, onConnect: (
     }).initialSetup(params);
   }
 
-  const step2Header = 'Almost done!';
   const welcomeMsg = 'Welcome to the Trading Helper!';
-  const step2descr = 'Setup API key and secret to connect Binance.';
   const welcomeDescr = 'Before you begin, you need to connect your database.';
+  const step2Header = 'Almost done!';
+  const step2descr = 'Setup API key and secret to connect Binance.';
   return (
     <Stack spacing={2} sx={{
       margin: '10px',
