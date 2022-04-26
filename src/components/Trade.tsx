@@ -7,7 +7,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
-import {createChart, IChartApi, ISeriesApi} from 'lightweight-charts';
+import {createChart, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress} from "./Common";
 
@@ -20,9 +20,9 @@ export default function Trade(props) {
   const theme = useTheme();
 
   const [priceLine, setPriceLine] = useState<ISeriesApi<"Line">>(null);
-  const [takeProfitLine, setTakeProfitLine] = useState<ISeriesApi<"Line">>(null);
-  const [stopLossLine, setStopLossLine] = useState<ISeriesApi<"Line">>(null);
-  const [orderPriceLine, setOrderPriceLine] = useState<ISeriesApi<"Line">>(null);
+  const [profitLine, setProfitLine] = useState<ISeriesApi<"Line">>(null);
+  const [limitLine, setLimitLine] = useState<ISeriesApi<"Line">>(null);
+  const [orderLine, setOrderLine] = useState<ISeriesApi<"Line">>(null);
 
   const map = (prices: number[], mapFn: (v: number) => number) => {
     return prices.map((v, i) => ({time: `${2000 + i}-01-01`, value: mapFn(v)}));
@@ -38,6 +38,7 @@ export default function Trade(props) {
 
   // In dark more 'lightblue' color price line looks better
   const priceLineColor = theme.palette.mode === "light" ? "blue" : "lightblue";
+  const profitLineColor = theme.palette.mode === "light" ? "green" : "lightgreen";
 
   useEffect(() => {
 
@@ -46,9 +47,9 @@ export default function Trade(props) {
 
       const boughtState = {lineWidth: 1, visible: tradeMemo.stateIs(TradeState.BOUGHT)};
       setPriceLine(chart.current.addLineSeries({color: priceLineColor, lineWidth: 1}));
-      setStopLossLine(chart.current.addLineSeries({color: "red", ...boughtState}));
-      setTakeProfitLine(chart.current.addLineSeries({color: "green", ...boughtState}))
-      setOrderPriceLine(chart.current.addLineSeries({color: "gold", ...boughtState}))
+      setLimitLine(chart.current.addLineSeries({color: "red", ...boughtState}));
+      setProfitLine(chart.current.addLineSeries({color: profitLineColor, ...boughtState}))
+      setOrderLine(chart.current.addLineSeries({color: "gold", ...boughtState}))
     }
 
     chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tradeMemo.prices.length - 1.5});
@@ -64,16 +65,23 @@ export default function Trade(props) {
   useEffect(() => {
     changeChartTheme(chart.current, theme);
     priceLine && priceLine.applyOptions({color: priceLineColor});
+    profitLine && profitLine.applyOptions({color: profitLineColor});
   }, [theme]);
 
   // refresh chart data
   useEffect(() => {
     priceLine && priceLine.setData(map(tradeMemo.prices, v => v));
-    stopLossLine && stopLossLine.setData(map(tradeMemo.prices, () => tradeMemo.stopLossPrice));
-    orderPriceLine && orderPriceLine.setData(map(tradeMemo.prices, () => tradeMemo.tradeResult.price));
-    takeProfitLine && takeProfitLine.setData(map(tradeMemo.prices,
+    limitLine && limitLine.setData(map(tradeMemo.prices, () => tradeMemo.stopLossPrice));
+    orderLine && orderLine.setData(map(tradeMemo.prices, () => tradeMemo.tradeResult.price));
+    profitLine && profitLine.setData(map(tradeMemo.prices,
       () => tradeMemo.tradeResult.price * (1 + config.TakeProfit)));
-  }, [tradeMemo, config, priceLine, takeProfitLine, stopLossLine, orderPriceLine]);
+  }, [tradeMemo, config.TakeProfit, priceLine, profitLine, limitLine, orderLine]);
+
+  // make profitLine and limitLine dashed if config SellAtTakeProfit or SellAtStopLimit is false or HODLing
+  useEffect(() => {
+    profitLine && profitLine.applyOptions({lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Solid : LineStyle.Dashed});
+    limitLine && limitLine.applyOptions({lineStyle: !config.SellAtStopLimit || tradeMemo.hodl ? LineStyle.Solid : LineStyle.Dashed});
+  }, [tradeMemo.hodl, config.SellAtTakeProfit, config.SellAtStopLimit, profitLine, limitLine]);
 
   const [isSelling, setIsSelling] = useState(false);
 
