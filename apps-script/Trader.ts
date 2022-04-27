@@ -71,9 +71,6 @@ export class V2Trader {
         const newStopLimit = tradeMemo.prices[0] * (1 - this.config.LossLimit);
         tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
       }
-
-      tradeMemo.maxLoss = tradeMemo.tradeResult.paid * (tradeMemo.stopLossPrice / tradeMemo.tradeResult.price - 1)
-      tradeMemo.maxProfit = (currentPrice * tradeMemo.tradeResult.quantity) - tradeMemo.tradeResult.paid
     }
 
     if (tradeMemo.stateIs(TradeState.SOLD) && this.config.SwingTradeEnabled) {
@@ -123,12 +120,13 @@ export class V2Trader {
     const tradeResult = this.exchange.marketSell(memo.tradeResult.symbol, memo.tradeResult.quantity);
 
     if (tradeResult.fromExchange) {
-      memo.setState(TradeState.SOLD)
+      Log.debug(memo);
       const buyCommission = this.getBNBCommissionCost(memo.tradeResult.commission);
       const sellCommission = this.getBNBCommissionCost(tradeResult.commission);
       Log.info(`Commission: ~${buyCommission + sellCommission}`)
       const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
       tradeResult.profit = +profit.toFixed(2);
+      memo.setState(TradeState.SOLD)
       this.stats.addProfit(tradeResult.profit)
     } else {
       memo.hodl = true;

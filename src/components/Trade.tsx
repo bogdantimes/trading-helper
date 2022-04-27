@@ -7,7 +7,14 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
-import {createChart, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
+import {
+  ChartOptions,
+  createChart,
+  DeepPartial,
+  IChartApi,
+  ISeriesApi,
+  LineStyle
+} from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress} from "./Common";
 
@@ -28,7 +35,7 @@ export default function Trade(props) {
     return prices.map((v, i) => ({time: `${2000 + i}-01-01`, value: mapFn(v)}));
   };
 
-  const chartOpts = {
+  const chartOpts: DeepPartial<ChartOptions> = {
     width: 300,
     height: 200,
     timeScale: {visible: false},
@@ -45,11 +52,10 @@ export default function Trade(props) {
     if (!chart.current) {
       chart.current = createChart(chartContainerRef.current, chartOpts);
 
-      const boughtState = {lineWidth: 1, visible: tradeMemo.stateIs(TradeState.BOUGHT)};
       setPriceLine(chart.current.addLineSeries({color: priceLineColor, lineWidth: 1}));
-      setLimitLine(chart.current.addLineSeries({color: "red", ...boughtState}));
-      setProfitLine(chart.current.addLineSeries({color: profitLineColor, ...boughtState}))
-      setOrderLine(chart.current.addLineSeries({color: "gold", ...boughtState}))
+      setLimitLine(chart.current.addLineSeries({color: "red", lineWidth: 1}));
+      setProfitLine(chart.current.addLineSeries({color: profitLineColor, lineWidth: 1}))
+      setOrderLine(chart.current.addLineSeries({color: "gold", lineWidth: 1}))
     }
 
     chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tradeMemo.prices.length - 1.5});
@@ -61,27 +67,43 @@ export default function Trade(props) {
 
   }, [tradeMemo.prices.length, tradeMemo.getState()]);
 
-  // change chart theme according to the current theme
+  // refresh chart
   useEffect(() => {
+    // change chart theme according to the current theme
     changeChartTheme(chart.current, theme);
-    priceLine && priceLine.applyOptions({color: priceLineColor});
-    profitLine && profitLine.applyOptions({color: profitLineColor});
-  }, [theme]);
 
-  // refresh chart data
-  useEffect(() => {
-    priceLine && priceLine.setData(map(tradeMemo.prices, v => v));
-    limitLine && limitLine.setData(map(tradeMemo.prices, () => tradeMemo.stopLossPrice));
-    orderLine && orderLine.setData(map(tradeMemo.prices, () => tradeMemo.tradeResult.price));
-    profitLine && profitLine.setData(map(tradeMemo.prices,
-      () => tradeMemo.tradeResult.price * (1 + config.TakeProfit)));
-  }, [tradeMemo, config.TakeProfit, priceLine, profitLine, limitLine, orderLine]);
+    if (priceLine) {
+      priceLine.setData(map(tradeMemo.prices, v => v));
+      priceLine.applyOptions({color: priceLineColor});
+    }
 
-  // make profitLine and limitLine dashed if config SellAtTakeProfit or SellAtStopLimit is false or HODLing
-  useEffect(() => {
-    profitLine && profitLine.applyOptions({lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid});
-    limitLine && limitLine.applyOptions({lineStyle: !config.SellAtStopLimit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid});
-  }, [tradeMemo.hodl, config.SellAtTakeProfit, config.SellAtStopLimit, profitLine, limitLine]);
+    if (limitLine) {
+      limitLine.applyOptions({
+        visible: !!tradeMemo.stopLossPrice,
+        // make dashed if config SellAtStopLimit is false or HODLing
+        lineStyle: !config.SellAtStopLimit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid
+      });
+      limitLine.setData(map(tradeMemo.prices, () => tradeMemo.stopLossPrice))
+    }
+
+    const orderPrice = tradeMemo.tradeResult.price;
+
+    if (orderLine) {
+      orderLine.applyOptions({visible: !!orderPrice});
+      orderLine.setData(map(tradeMemo.prices, () => orderPrice))
+    }
+
+    if (profitLine) {
+      profitLine.applyOptions({
+        visible: !!orderPrice,
+        color: profitLineColor,
+        // make dashed if config SellAtTakeProfit is false or HODLing
+        lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid
+      });
+      profitLine.setData(map(tradeMemo.prices, () => orderPrice * (1 + config.TakeProfit)))
+    }
+
+  }, [theme, tradeMemo, config, priceLine, profitLine, limitLine, orderLine]);
 
   const [isSelling, setIsSelling] = useState(false);
 
@@ -126,8 +148,10 @@ export default function Trade(props) {
     }).setHold(props.name, !isHodl);
   }
 
-  const lossPercent = (100 * (tradeMemo.maxLoss / tradeMemo.tradeResult.paid)).toFixed(2)
-  const profitPercent = (100 * (tradeMemo.maxProfit / tradeMemo.tradeResult.paid)).toFixed(2)
+  const curProfit = tradeMemo.profit();
+  const stopLimitLoss = tradeMemo.stopLimitLoss();
+  const curProfitPercent = (100 * (curProfit / tradeMemo.tradeResult.paid)).toFixed(2)
+  const stopLimitLossPercent = (100 * (stopLimitLoss / tradeMemo.tradeResult.paid)).toFixed(2)
 
   const [isRemoving, setIsRemoving] = useState(false);
   const [removed, setRemoved] = useState(false);
@@ -151,15 +175,15 @@ export default function Trade(props) {
 
   return (
     <>
-      {removed ? '' :
+      {!removed &&
         <Card>
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
             <Typography variant="body2" color="text.secondary">
               <div>Total: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
-              <div>{tradeMemo.maxProfit > 0 ? "Profit" : "Loss"}: {tradeMemo.maxProfit.toFixed(2)} ({profitPercent}%)</div>
-              <div>Stop: {tradeMemo.maxLoss.toFixed(2)} ({lossPercent}%)</div>
+              <div>{curProfit > 0 ? "Profit" : "Loss"}: {curProfit.toFixed(2)} ({curProfitPercent}%)</div>
+              <div>Stop: {stopLimitLoss.toFixed(2)} ({stopLimitLossPercent}%)</div>
             </Typography>
           </CardContent>
           <CardActions>
