@@ -120,12 +120,13 @@ export class V2Trader {
     const tradeResult = this.exchange.marketSell(memo.tradeResult.symbol, memo.tradeResult.quantity);
 
     if (tradeResult.fromExchange) {
-      memo.setState(TradeState.SOLD)
+      Log.debug(memo);
       const buyCommission = this.getBNBCommissionCost(memo.tradeResult.commission);
       const sellCommission = this.getBNBCommissionCost(tradeResult.commission);
       Log.info(`Commission: ~${buyCommission + sellCommission}`)
       const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
       tradeResult.profit = +profit.toFixed(2);
+      memo.setState(TradeState.SOLD)
       this.stats.addProfit(tradeResult.profit)
     } else {
       memo.hodl = true;
