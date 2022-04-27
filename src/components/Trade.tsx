@@ -148,8 +148,10 @@ export default function Trade(props) {
     }).setHold(props.name, !isHodl);
   }
 
-  const lossPercent = (100 * (tradeMemo.maxLoss / tradeMemo.tradeResult.paid)).toFixed(2)
-  const profitPercent = (100 * (tradeMemo.maxProfit / tradeMemo.tradeResult.paid)).toFixed(2)
+  const curProfit = tradeMemo.profit();
+  const stopLimitLoss = tradeMemo.stopLimitLoss();
+  const curProfitPercent = (100 * (curProfit / tradeMemo.tradeResult.paid)).toFixed(2)
+  const stopLimitLossPercent = (100 * (stopLimitLoss / tradeMemo.tradeResult.paid)).toFixed(2)
 
   const [isRemoving, setIsRemoving] = useState(false);
   const [removed, setRemoved] = useState(false);
@@ -180,8 +182,8 @@ export default function Trade(props) {
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
             <Typography variant="body2" color="text.secondary">
               <div>Total: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
-              <div>{tradeMemo.maxProfit > 0 ? "Profit" : "Loss"}: {tradeMemo.maxProfit.toFixed(2)} ({profitPercent}%)</div>
-              <div>Stop: {tradeMemo.maxLoss.toFixed(2)} ({lossPercent}%)</div>
+              <div>{curProfit > 0 ? "Profit" : "Loss"}: {curProfit.toFixed(2)} ({curProfitPercent}%)</div>
+              <div>Stop: {stopLimitLoss.toFixed(2)} ({stopLimitLossPercent}%)</div>
             </Typography>
           </CardContent>
           <CardActions>

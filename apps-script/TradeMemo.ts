@@ -11,8 +11,6 @@ export enum TradeState {
 export class TradeMemo {
   tradeResult: TradeResult
   stopLossPrice: number = 0
-  maxLoss: number = 0;
-  maxProfit: number = 0;
   prices: PriceMemo;
   /**
    * Marks the asset for holding even if price drops.
@@ -48,8 +46,6 @@ export class TradeMemo {
   setState(state: TradeState): void {
     this.state = state
     if (state === TradeState.SOLD) {
-      this.maxLoss = 0
-      this.maxProfit = 0
       this.stopLossPrice = 0
       this.maxObservedPrice = 0
       this.tradeResult = new TradeResult(this.tradeResult.symbol, "Asset sold")
@@ -71,6 +67,14 @@ export class TradeMemo {
 
   getState() {
     return this.state
+  }
+
+  profit() {
+    return (this.prices[this.prices.length - 1] * this.tradeResult.quantity) - this.tradeResult.paid
+  }
+
+  stopLimitLoss() {
+    return this.tradeResult.paid * (this.stopLossPrice / this.tradeResult.price - 1)
   }
 }
 

@@ -1,12 +1,11 @@
 import * as React from "react";
-import {useEffect} from "react";
 import Box from "@mui/material/Box";
 import Trade from "./Trade";
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {Config} from "../../apps-script/Store";
 
-const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.maxProfit < t2.maxProfit ? 1 : -1;
+const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.profit() < t2.profit() ? 1 : -1;
 
 const filterByState = (trades, state: TradeState): TradeMemo[] => {
   return Object.values(trades).map(TradeMemo.fromObject).filter(t => t.stateIs(state));
