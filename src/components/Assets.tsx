@@ -27,13 +27,13 @@ export function Assets({trades, config}: {trades: { [k: string]: TradeMemo }, co
   return (
     <>
       <Box sx={{margin: '10px'}}>
-        <ToggleButtonGroup color="primary" value={state} exclusive onChange={changeState}>
-          <ToggleButton value={TradeState.BOUGHT}>Bought</ToggleButton>
-          <ToggleButton value={TradeState.SOLD}>Sold</ToggleButton>
-          <ToggleButton value={TradeState.SELL}>Selling</ToggleButton>
-          <ToggleButton value={TradeState.BUY}>Buying</ToggleButton>
-        </ToggleButtonGroup>
         <Stack direction={"row"} spacing={2}>
+          <ToggleButtonGroup color="primary" value={state} exclusive onChange={changeState}>
+            <ToggleButton value={TradeState.BOUGHT}>Bought</ToggleButton>
+            <ToggleButton value={TradeState.SOLD}>Sold</ToggleButton>
+            <ToggleButton value={TradeState.SELL}>Selling</ToggleButton>
+            <ToggleButton value={TradeState.BUY}>Buying</ToggleButton>
+          </ToggleButtonGroup>
           <TextField label="Coin name" value={coinName} onChange={(e) => setCoinName(e.target.value)}/>
           <Button variant="contained" onClick={buy}>Buy</Button>
         </Stack>
