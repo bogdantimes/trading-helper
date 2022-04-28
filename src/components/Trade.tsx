@@ -7,14 +7,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
-import {
-  ChartOptions,
-  createChart,
-  DeepPartial,
-  IChartApi,
-  ISeriesApi,
-  LineStyle
-} from 'lightweight-charts';
+import {ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress} from "./Common";
 
@@ -189,20 +182,21 @@ export default function Trade(props) {
           <CardActions>
             <Stack direction={"row"} spacing={1}>
               {tradeMemo.stateIs(TradeState.BOUGHT) &&
-                <>
-                  <Button size="small" disabled={isSelling} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
-                  <Button size="small" disabled={isBuying} onClick={onBuyMore}>{isBuying ? '...' : 'Buy More'}</Button>
-                  <Box sx={{position: 'relative'}}>
-                    <ToggleButton size="small" value="check" selected={isHodl} color="primary" onChange={flipHodl}
-                                  disabled={isHodlSwitching}>HODL</ToggleButton>
-                    {isHodlSwitching && circularProgress}
-                  </Box>
-                </>
+                <Button size="small" disabled={isSelling} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
-
-              {tradeMemo.stateIs(TradeState.SOLD) || tradeMemo.stateIs(TradeState.BUY) ?
+              {[TradeState.BOUGHT, TradeState.SOLD].includes(tradeMemo.getState()) &&
+                <Button size="small" disabled={isBuying} onClick={onBuyMore}>
+                  {isBuying ? '...' : `Buy ${TradeState.BOUGHT ? 'More' : 'Again'}`}</Button>
+              }
+              {tradeMemo.stateIs(TradeState.BOUGHT) &&
+                <Box sx={{position: 'relative'}}>
+                  <ToggleButton size="small" value="check" selected={isHodl} color="primary" onChange={flipHodl}
+                                disabled={isHodlSwitching}>HODL</ToggleButton>
+                  {isHodlSwitching && circularProgress}
+                </Box>
+              }
+              {tradeMemo.stateIs(TradeState.SOLD) &&
                 <Button size="small" disabled={isRemoving} onClick={onRemove}>{isRemoving ? '...' : 'Remove'}</Button>
-                : <></>
               }
             </Stack>
           </CardActions>
