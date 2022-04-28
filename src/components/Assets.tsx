@@ -12,7 +12,7 @@ const filterByState = (trades, state: TradeState): TradeMemo[] => {
   return Object.values(trades).map(TradeMemo.fromObject).filter(t => t.stateIs(state));
 };
 
-export function Assets({trades, config}: {trades: { [k: string]: TradeMemo }, config: Config}) {
+export function Assets({trades, config}: { trades: { [k: string]: TradeMemo }, config: Config }) {
   const [state, setState] = React.useState<TradeState>(TradeState.BOUGHT);
   const changeState = (e, newState) => setState(newState);
 
@@ -24,24 +24,25 @@ export function Assets({trades, config}: {trades: { [k: string]: TradeMemo }, co
     }
   }
 
+  const sx = {m: '10px', width: "332px", display: "inline-flex"};
   return (
     <>
-      <Box sx={{margin: '10px'}}>
-        <Stack direction={"row"} spacing={2}>
-          <ToggleButtonGroup color="primary" value={state} exclusive onChange={changeState}>
-            <ToggleButton value={TradeState.BOUGHT}>Bought</ToggleButton>
-            <ToggleButton value={TradeState.SOLD}>Sold</ToggleButton>
-            <ToggleButton value={TradeState.SELL}>Selling</ToggleButton>
-            <ToggleButton value={TradeState.BUY}>Buying</ToggleButton>
-          </ToggleButtonGroup>
-          <TextField label="Coin name" value={coinName} onChange={(e) => setCoinName(e.target.value)}/>
+      <Box>
+        <ToggleButtonGroup sx={sx} fullWidth={true} color="primary" value={state} exclusive onChange={changeState}>
+          <ToggleButton value={TradeState.BOUGHT}>Bought</ToggleButton>
+          <ToggleButton value={TradeState.SOLD}>Sold</ToggleButton>
+          <ToggleButton value={TradeState.SELL}>Selling</ToggleButton>
+          <ToggleButton value={TradeState.BUY}>Buying</ToggleButton>
+        </ToggleButtonGroup>
+        <Stack sx={sx} direction={"row"} spacing={2}>
+          <TextField fullWidth={true} label="Coin name" value={coinName} onChange={(e) => setCoinName(e.target.value)}/>
           <Button variant="contained" onClick={buy}>Buy</Button>
         </Stack>
       </Box>
-      {filterByState(trades, state).sort(byProfit).map((trade) =>
+      {filterByState(trades, state).sort(byProfit).map(t =>
         <Box sx={{display: 'inline-flex', margin: '10px'}}>
-          <Trade key={trade.tradeResult.symbol.quantityAsset}
-                 name={trade.tradeResult.symbol.quantityAsset} data={trade} config={config}/>
+          <Trade key={t.tradeResult.symbol.quantityAsset}
+                 name={t.tradeResult.symbol.quantityAsset} data={t} config={config}/>
         </Box>
       )}
     </>
