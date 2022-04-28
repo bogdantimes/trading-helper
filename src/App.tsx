@@ -83,14 +83,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [initialSetup]);
 
-  const [coinName, setCoinName] = React.useState("BTC");
-
-  function buy(coinName: string) {
-    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
-      gsr.withSuccessHandler(alert).buyCoin(coinName);
-    }
-  }
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>
@@ -107,25 +99,17 @@ export default function App() {
           <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
             <Tabs value={value} onChange={handleChange}>
               <Tab label="Assets" {...a11yProps(0)} />
-              <Tab label="Trading" {...a11yProps(1)} />
-              <Tab label="Settings" {...a11yProps(2)} />
-              <Tab label="Info" {...a11yProps(3)} />
+              <Tab label="Settings" {...a11yProps(1)} />
+              <Tab label="Info" {...a11yProps(2)} />
             </Tabs>
           </Box>
           <TabPanel value={value} index={0}>
             <Assets config={config} trades={trades}/>
           </TabPanel>
           <TabPanel value={value} index={1}>
-            <Stack direction={"row"} spacing={2}>
-              <TextField label="Coin name" value={coinName}
-                         onChange={(e) => setCoinName(e.target.value)}/>
-              <Button variant="contained" onClick={() => buy(coinName)}>Buy</Button>
-            </Stack>
-          </TabPanel>
-          <TabPanel value={value} index={2}>
             <Settings/>
           </TabPanel>
-          <TabPanel value={value} index={3}>
+          <TabPanel value={value} index={2}>
             <Info/>
           </TabPanel>
         </Box>
