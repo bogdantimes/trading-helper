@@ -126,6 +126,7 @@ export class V2Trader {
       Log.info(`Commission: ~${buyCommission + sellCommission}`)
       const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
       tradeResult.profit = +profit.toFixed(2);
+      memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
       this.stats.addProfit(tradeResult.profit)
     } else {

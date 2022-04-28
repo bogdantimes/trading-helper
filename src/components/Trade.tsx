@@ -28,6 +28,7 @@ export default function Trade(props) {
   const [profitLine, setProfitLine] = useState<ISeriesApi<"Line">>(null);
   const [limitLine, setLimitLine] = useState<ISeriesApi<"Line">>(null);
   const [orderLine, setOrderLine] = useState<ISeriesApi<"Line">>(null);
+  const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<"Line">>(null);
 
   const map = (prices: number[], mapFn: (v: number) => number) => {
     return prices.map((v, i) => ({time: `${2000 + i}-01-01`, value: mapFn(v)}));
@@ -54,6 +55,7 @@ export default function Trade(props) {
       setLimitLine(chart.current.addLineSeries({color: "red", lineWidth: 1}));
       setProfitLine(chart.current.addLineSeries({color: profitLineColor, lineWidth: 1}))
       setOrderLine(chart.current.addLineSeries({color: "gold", lineWidth: 1}))
+      setSoldPriceLine(chart.current.addLineSeries({color: "cian", lineWidth: 1}))
     }
 
     chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tradeMemo.prices.length - 1.5});
@@ -99,6 +101,11 @@ export default function Trade(props) {
         lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
       profitLine.setData(map(tradeMemo.prices, () => orderPrice * (1 + config.TakeProfit)))
+    }
+
+    if (soldPriceLine) {
+      soldPriceLine.applyOptions({visible: tradeMemo.stateIs(TradeState.SOLD)});
+      soldPriceLine.setData(map(tradeMemo.prices, () => tradeMemo.tradeResult.price))
     }
 
   }, [theme, tradeMemo, config, priceLine, profitLine, limitLine, orderLine]);

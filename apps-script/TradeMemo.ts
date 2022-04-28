@@ -48,7 +48,9 @@ export class TradeMemo {
     if (state === TradeState.SOLD) {
       this.stopLossPrice = 0
       this.maxObservedPrice = 0
+      const priorPrice = this.tradeResult.price;
       this.tradeResult = new TradeResult(this.tradeResult.symbol, "Asset sold")
+      this.tradeResult.price = priorPrice;
     }
   }
 
