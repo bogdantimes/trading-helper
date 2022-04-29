@@ -21,20 +21,20 @@ export function Settings() {
     PriceProvider: PriceProvider.Binance,
   });
 
-  const [lossLimit, setLossLimit] = useState(0);
-  const [takeProfit, setTakeProfit] = useState(0);
+  const [lossLimit, setLossLimit] = useState('');
+  const [takeProfit, setTakeProfit] = useState('');
 
   useEffect(() => {
-    setLossLimit(+(config.LossLimit * 100).toFixed(2));
-    setTakeProfit(+(config.TakeProfit * 100).toFixed(2));
+    setLossLimit((+(config.LossLimit * 100).toFixed(2)).toString());
+    setTakeProfit((+(config.TakeProfit * 100).toFixed(2)).toString());
   }, [config]);
 
   // @ts-ignore
   useEffect(() => google.script.run.withSuccessHandler(setConfig).getConfig(), [])
 
   const onSave = () => {
-    config.LossLimit = lossLimit / 100;
-    config.TakeProfit = takeProfit / 100;
+    isFinite(+lossLimit) && (config.LossLimit = +lossLimit / 100);
+    isFinite(+takeProfit) && (config.TakeProfit = +takeProfit / 100);
     setConfig(config);
     setIsSaving(true);
     // @ts-ignore
@@ -61,7 +61,7 @@ export function Settings() {
                    InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
         />
         <Stack direction="row" spacing={2}>
-          <TextField value={takeProfit} label={"Profit Limit"} onChange={e => setTakeProfit(+e.target.value)}
+          <TextField value={takeProfit} label={"Profit Limit"} onChange={e => setTakeProfit(e.target.value)}
                      InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
           />
           <FormControlLabel
@@ -73,7 +73,7 @@ export function Settings() {
           />
         </Stack>
         <Stack direction="row" spacing={2}>
-          <TextField value={lossLimit} label={"Loss Limit"} onChange={e => setLossLimit(+e.target.value)}
+          <TextField value={lossLimit} label={"Loss Limit"} onChange={e => setLossLimit(e.target.value)}
                      InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
           />
           <FormControlLabel
