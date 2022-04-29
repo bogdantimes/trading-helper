@@ -9,7 +9,7 @@ The current features are:
 * Swing trading: automatically sell and buy coins when the price goes up or down.
 * Your statistics: see how much you have made and how much you have lost on a daily basis.
 
-![img/dashboard.png](img/dashboard.png)
+![dashboard.png](img/dashboard.png)
 
 ## How to
 

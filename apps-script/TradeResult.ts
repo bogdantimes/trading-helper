@@ -50,14 +50,12 @@ export class TradeResult {
     this.msg = msg
   }
 
-  static preciseAverage(a: TradeResult, b: TradeResult): number {
-    const ave = (a.price * a.quantity + b.price * b.quantity) / (a.quantity + b.quantity);
-    const precision = Math.max(getPrecision(a.price), getPrecision(b.price));
-    return +ave.toFixed(precision)
+  static averagePrice(a: TradeResult, b: TradeResult): number {
+    return (a.price * a.quantity + b.price * b.quantity) / (a.quantity + b.quantity);
   }
 
   toString(): string {
-    return `${this.symbol}: ${this.msg ? this.msg : ''} => ${this.price ? 'price=' + this.price : ''} ${this.paid ? 'paid=' + this.paid : ''} ${this.gained ? 'gained=' + this.gained : ''} ${this.profit ? 'profit=' + this.profit : ''}`
+    return `${this.symbol}: ${this.msg} => ${this.quantity ? `qty=${this.quantity}` : ''} ${this.price ? `price=${this.price}` : ''} ${this.paid ? `paid=${this.paid}` : ''} ${this.gained ? `gained=${this.gained}` : ''} ${this.profit ? `profit=${this.profit}` : ''}`
   }
 
   join(next: TradeResult): TradeResult {
@@ -68,10 +66,11 @@ export class TradeResult {
       throw Error(`Cannot join trades where 'symbol' is not equal: ${next.toString()}`)
     }
     const result = new TradeResult(this.symbol, next.msg);
-    result.price = TradeResult.preciseAverage(this, next)
+    result.price = TradeResult.averagePrice(this, next)
     result.commission = this.commission + next.commission
     result.fromExchange = next.fromExchange
-    result.quantity = this.quantity + next.quantity
+    // we should maintain the precision returned by Binance for quantity
+    result.quantity = sumWithMaxPrecision(this.quantity, next.quantity);
     result.cost = this.cost + next.cost
     result.paid = this.paid + next.paid
     return result
