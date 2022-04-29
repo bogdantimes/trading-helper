@@ -28,9 +28,14 @@ class Watcher {
 }
 
 function Ticker() {
+  const store = DefaultStore;
+  // Sync cache as a first step in the background ticker process is needed to ensure we operate with
+  // the latest data from the DB (in case DB was updated externally).
+  // This is the only place where we can call syncCache().
+  store.syncCache();
+
   TradesQueue.flush();
 
-  const store = DefaultStore;
   const trader = new V2Trader(store, new Exchange(store.getConfig()), new Statistics(store));
 
   store.getTradesList().forEach(tradeMemo => {

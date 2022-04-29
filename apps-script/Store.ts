@@ -28,6 +28,8 @@ export interface IStore {
   dumpChanges(): void
 
   isConnected(): boolean
+
+  syncCache(): void;
 }
 
 export class FirebaseStore implements IStore {
@@ -43,7 +45,6 @@ export class FirebaseStore implements IStore {
       Log.info("Firebase URL key 'dbURL' is not set.")
     }
   }
-
 
   connect(dbURL: string) {
     // @ts-ignore
@@ -115,6 +116,11 @@ export class FirebaseStore implements IStore {
     return value
   }
 
+  syncCache() {
+    const trades = this.getOrSet("trade", {});
+    CacheProxy.put("Trades", JSON.stringify(trades))
+  }
+
   getTrades(): { [p: string]: TradeMemo } {
     const tradesCacheJson = CacheProxy.get("Trades");
     let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null;
@@ -150,7 +156,13 @@ export class FirebaseStore implements IStore {
   }
 
   dumpChanges() {
-    this.set("trade", this.getTrades())
+    const cacheJson = CacheProxy.get("Trades");
+    const tradesCache = cacheJson ? JSON.parse(cacheJson) : null;
+    if (tradesCache) {
+      this.set("trade", tradesCache)
+    } else {
+      Log.error(new Error("Cache does not contain any trades. Nothing to dump."))
+    }
   }
 
 }
@@ -169,4 +181,4 @@ export type Config = {
 }
 
 // @ts-ignore
-export const DefaultStore = this['DefaultStore'] = new FirebaseStore()
+export const DefaultStore: IStore = this['DefaultStore'] = new FirebaseStore()
