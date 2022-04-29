@@ -65,7 +65,7 @@ export default function Trade(props) {
       chart.current = null;
     };
 
-  }, [tradeMemo.prices.length, tradeMemo.getState()]);
+  }, [tradeMemo.prices.length]);
 
   // refresh chart
   useEffect(() => {
