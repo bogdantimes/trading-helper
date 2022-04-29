@@ -187,8 +187,7 @@ export default function Trade(props) {
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
           <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
-            <div>Qty: {tradeMemo.tradeResult.quantity}</div>
-            <div>Paid: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
+            <div>Qty: {tradeMemo.tradeResult.quantity} Paid: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
             <div>{curProfit > 0 ? "Profit" : "Loss"}: {curProfit.toFixed(2)} ({curProfitPercent}%)</div>
             <div>Stop: {stopLimitLoss.toFixed(2)} ({stopLimitLossPercent}%)</div>
           </Typography>
