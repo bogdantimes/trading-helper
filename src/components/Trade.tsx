@@ -185,12 +185,13 @@ export default function Trade(props) {
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
-            <Typography variant="body2" color="text.secondary">
-              <div>Total: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
-              <div>{curProfit > 0 ? "Profit" : "Loss"}: {curProfit.toFixed(2)} ({curProfitPercent}%)</div>
-              <div>Stop: {stopLimitLoss.toFixed(2)} ({stopLimitLossPercent}%)</div>
-            </Typography>
           </CardContent>
+          <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
+            <div>Qty: {tradeMemo.tradeResult.quantity}</div>
+            <div>Paid: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
+            <div>{curProfit > 0 ? "Profit" : "Loss"}: {curProfit.toFixed(2)} ({curProfitPercent}%)</div>
+            <div>Stop: {stopLimitLoss.toFixed(2)} ({stopLimitLossPercent}%)</div>
+          </Typography>
           <CardActions>
             <Stack direction={"row"} spacing={1}>
               {tradeMemo.stateIs(TradeState.BOUGHT) &&
@@ -198,7 +199,7 @@ export default function Trade(props) {
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tradeMemo.getState()) &&
                 <Button size="small" disabled={isBuying} onClick={onBuyMore}>
-                  {isBuying ? '...' : `Buy ${TradeState.BOUGHT ? 'More' : 'Again'}`}</Button>
+                  {isBuying ? '...' : `Buy ${tradeMemo.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
               }
               {tradeMemo.stateIs(TradeState.BOUGHT) &&
                 <Box sx={{position: 'relative'}}>
