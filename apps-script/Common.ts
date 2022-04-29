@@ -65,14 +65,9 @@ ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.map(v => JSON.stringify(v)
   }
 }
 
-function getPrecision(a: number): number {
-  if (!isFinite(a)) return 0;
-  let e = 1, p = 0;
-  while (Math.round(a * e) / e !== a) {
-    e *= 10;
-    p++;
-  }
-  return p;
+function sumWithMaxPrecision(a: number, b: number): number {
+  const precision = Math.max(`${a}`.split(".")[1].length, `${b}`.split(".")[1].length)
+  return +(a + b).toFixed(precision)
 }
 
 function getRandomFromList(list) {
