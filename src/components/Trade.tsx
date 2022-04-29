@@ -55,7 +55,7 @@ export default function Trade(props) {
       setLimitLine(chart.current.addLineSeries({color: "red", lineWidth: 1}));
       setProfitLine(chart.current.addLineSeries({color: profitLineColor, lineWidth: 1}))
       setOrderLine(chart.current.addLineSeries({color: "gold", lineWidth: 1}))
-      setSoldPriceLine(chart.current.addLineSeries({color: "cian", lineWidth: 1}))
+      setSoldPriceLine(chart.current.addLineSeries({color: "cyan", lineWidth: 1}))
     }
 
     chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tradeMemo.prices.length - 1.5});
