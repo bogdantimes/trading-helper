@@ -53,7 +53,7 @@ class Log {
     return `${this.alerts.length > 0 ? `${this.alerts.join('\n')}\n\n` : ''}
 ${this.errLog.length > 0 ? `Errors:\n${this.errLog.join('\n')}` : ''}
 ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join('\n')}` : ''}
-${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.map(v => JSON.stringify(v)).join('\n')}` : ''}
+${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.map(v => JSON.stringify(v)).join('\n\n')}` : ''}
 `
   }
 

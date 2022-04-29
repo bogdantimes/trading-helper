@@ -109,6 +109,7 @@ export class V2Trader {
   private buy(memo: TradeMemo, cost: number): void {
     const tradeResult = this.exchange.marketBuy(memo.tradeResult.symbol, cost);
     if (tradeResult.fromExchange) {
+      Log.debug(memo);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLossPrice = tradeResult.price * (1 - this.config.LossLimit);
       this.store.setTrade(memo)
