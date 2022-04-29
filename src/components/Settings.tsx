@@ -21,22 +21,21 @@ export function Settings() {
     PriceProvider: PriceProvider.Binance,
   });
 
+  const [lossLimit, setLossLimit] = useState(0);
+  const [takeProfit, setTakeProfit] = useState(0);
+
+  useEffect(() => {
+    setLossLimit(+(config.LossLimit * 100).toFixed(2));
+    setTakeProfit(+(config.TakeProfit * 100).toFixed(2));
+  }, [config]);
+
   // @ts-ignore
   useEffect(() => google.script.run.withSuccessHandler(setConfig).getConfig(), [])
 
-  const handleChange = (prop: keyof Config) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig({...config, [prop]: event.target.value});
-  };
-
-  const handleSwitchChange = (prop: keyof Config) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig({...config, [prop]: event.target.checked});
-  };
-
-  const handlePercentChange = (prop: keyof Config) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig({...config, [prop]: (+event.target.value / 100)});
-  };
-
   const onSave = () => {
+    config.LossLimit = lossLimit / 100;
+    config.TakeProfit = takeProfit / 100;
+    setConfig(config);
     setIsSaving(true);
     // @ts-ignore
     google.script.run
@@ -55,39 +54,40 @@ export function Settings() {
     <Box sx={{display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
       <Stack spacing={2}>
         <TextField value={config.PriceAsset} label={"Stable Coin"}
-                   onChange={handleChange('PriceAsset')}
+                   onChange={e => setConfig({...config, PriceAsset: e.target.value})}
         />
         <TextField value={config.BuyQuantity} label={"Buy Quantity"}
-                   onChange={handleChange('BuyQuantity')}
+                   onChange={e => setConfig({...config, BuyQuantity: +e.target.value})}
                    InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
         />
         <Stack direction="row" spacing={2}>
-          <TextField value={config.TakeProfit ? config.TakeProfit * 100 : ''} label={"Profit Limit"}
-                     onChange={handlePercentChange('TakeProfit')}
+          <TextField value={takeProfit} label={"Profit Limit"} onChange={e => setTakeProfit(+e.target.value)}
                      InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
           />
           <FormControlLabel
             control={
-              <Switch checked={config.SellAtTakeProfit} onChange={handleSwitchChange("SellAtTakeProfit")}/>
+              <Switch checked={config.SellAtTakeProfit}
+                      onChange={e => setConfig({...config, SellAtTakeProfit: e.target.checked})}/>
             }
             label="Auto-sell"
           />
         </Stack>
         <Stack direction="row" spacing={2}>
-          <TextField value={config.LossLimit ? config.LossLimit * 100 : ''} label={"Loss Limit"}
-                     onChange={handlePercentChange('LossLimit')}
+          <TextField value={lossLimit} label={"Loss Limit"} onChange={e => setLossLimit(+e.target.value)}
                      InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
           />
           <FormControlLabel
             control={
-              <Switch checked={config.SellAtStopLimit} onChange={handleSwitchChange("SellAtStopLimit")}/>
+              <Switch checked={config.SellAtStopLimit}
+                      onChange={e => setConfig({...config, SellAtStopLimit: e.target.checked})}/>
             }
             label="Auto-sell"
           />
         </Stack>
         <FormControlLabel
           control={
-            <Switch checked={config.SwingTradeEnabled} onChange={handleSwitchChange("SwingTradeEnabled")}/>
+            <Switch checked={config.SwingTradeEnabled}
+                    onChange={e => setConfig({...config, SwingTradeEnabled: e.target.checked})}/>
           }
           label="Swing trade"
         />
