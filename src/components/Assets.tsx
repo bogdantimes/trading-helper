@@ -58,7 +58,7 @@ export function Assets({trades, config}: { trades: { [k: string]: TradeMemo }, c
           <Button variant="contained" onClick={buy}>Buy</Button>
         </Stack>
       </Box>
-      {tradesMap.get(state).sort(byProfit).map(t =>
+      {tradesMap.has(state) && tradesMap.get(state).sort(byProfit).map(t =>
         <Box sx={{display: 'inline-flex', margin: '10px'}}>
           <Trade key={t.tradeResult.symbol.quantityAsset}
                  name={t.tradeResult.symbol.quantityAsset} data={t} config={config}/>
