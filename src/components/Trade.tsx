@@ -95,7 +95,7 @@ export default function Trade(props) {
 
     if (profitLine) {
       profitLine.applyOptions({
-        visible: !!orderPrice,
+        visible: !!orderPrice && !tradeMemo.stateIs(TradeState.SOLD),
         color: profitLineColor,
         // make dashed if config SellAtTakeProfit is false or HODLing
         lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid
