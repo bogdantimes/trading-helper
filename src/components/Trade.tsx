@@ -7,12 +7,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
-import {
-  ChartOptions, createChart, DeepPartial,
-  IChartApi,
-  ISeriesApi,
-  LineStyle
-} from 'lightweight-charts';
+import {ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress} from "./Common";
 
@@ -126,7 +121,7 @@ export default function Trade(props) {
 
   const [isBuying, setIsBuying] = useState(false);
 
-  function onBuyMore() {
+  function onBuy() {
     if (confirm(`Are you sure you want to buy more ${props.name}?`)) {
       setIsBuying(true);
       const handle = resp => {
@@ -135,6 +130,19 @@ export default function Trade(props) {
       };
       // @ts-ignore
       google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(props.name);
+    }
+  }
+
+  const [buyCanceled, setBuyCanceled] = useState(false);
+
+  function onCancelBuy() {
+    if (confirm(`Are you sure you want to cancel buying ${props.name}?`)) {
+      const handle = resp => {
+        alert(resp.toString());
+        setBuyCanceled(true);
+      };
+      // @ts-ignore
+      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelBuy(props.name);
     }
   }
 
@@ -197,7 +205,7 @@ export default function Trade(props) {
                 <Button size="small" disabled={isSelling} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tradeMemo.getState()) &&
-                <Button size="small" disabled={isBuying} onClick={onBuyMore}>
+                <Button size="small" disabled={isBuying} onClick={onBuy}>
                   {isBuying ? '...' : `Buy ${tradeMemo.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
               }
               {tradeMemo.stateIs(TradeState.BOUGHT) &&
@@ -209,6 +217,9 @@ export default function Trade(props) {
               }
               {tradeMemo.stateIs(TradeState.SOLD) &&
                 <Button size="small" disabled={isRemoving} onClick={onRemove}>{isRemoving ? '...' : 'Remove'}</Button>
+              }
+              {tradeMemo.stateIs(TradeState.BUY) &&
+                <Button size="small" disabled={buyCanceled} onClick={onCancelBuy}>Cancel</Button>
               }
             </Stack>
           </CardActions>

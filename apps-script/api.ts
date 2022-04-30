@@ -64,6 +64,17 @@ function buyCoin(coinName: string) {
   });
 }
 
+function cancelBuy(coinName: string) {
+  return catchError(() => {
+    if (coinName) {
+      Log.info("Cancelling buying of " + coinName);
+      TradesQueue.cancelBuy(coinName);
+      return "Requested to cancel buying of " + coinName;
+    }
+    return "No coinName specified";
+  });
+}
+
 function sellCoin(coinName: string) {
   return catchError(() => {
     if (coinName) {
