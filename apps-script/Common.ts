@@ -66,7 +66,12 @@ ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.map(v => JSON.stringify(v)
 }
 
 function sumWithMaxPrecision(a: number, b: number): number {
-  const precision = Math.max(`${a}`.split(".")[1].length, `${b}`.split(".")[1].length)
+  const aSplit = `${a}`.split(".");
+  const bSplit = `${b}`.split(".");
+  const precision = Math.max(
+    (aSplit[1] || aSplit[0]).length,
+    (bSplit[1] || bSplit[0]).length
+  )
   return +(a + b).toFixed(precision)
 }
 

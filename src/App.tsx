@@ -4,11 +4,8 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import {
   Alert,
-  Button,
   createTheme,
   CssBaseline, LinearProgress,
-  Stack,
-  TextField,
   ThemeProvider,
   useMediaQuery,
   Typography
@@ -79,7 +76,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    const interval = setInterval(reFetchData, 60000);
+    const interval = setInterval(reFetchData, 30000); // 30 seconds
     return () => clearInterval(interval);
   }, [initialSetup]);
 
