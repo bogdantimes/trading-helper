@@ -84,7 +84,7 @@ export class Binance implements IExchange {
     if (moneyAvailable < cost) {
       return new TradeResult(symbol, `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`)
     }
-    Log.alert(`Buying ${symbol}`);
+    Log.alert(`Buying ${symbol} for ${cost} ${symbol.priceAsset}`)
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     const tradeResult = this.marketTrade(symbol, query);
     tradeResult.symbol = symbol

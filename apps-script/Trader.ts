@@ -149,7 +149,7 @@ export class V2Trader {
       if (lowestProfitTrade) {
         Log.alert('Averaging down is enabled')
         Log.alert(`All gains from selling ${memo.tradeResult.symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
-        this.buy(lowestProfitTrade, Math.floor(memo.tradeResult.gained));
+        this.buy(lowestProfitTrade, tradeResult.gained);
       }
     }
   }

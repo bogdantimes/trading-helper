@@ -132,16 +132,16 @@ export default function Trade(props) {
     }
   }
 
-  const [buyCanceled, setBuyCanceled] = useState(false);
+  const [actionCanceled, setActionCanceled] = useState(false);
 
-  function onCancelBuy() {
-    if (confirm(`Are you sure you want to cancel buying ${props.name}?`)) {
+  function onCancel() {
+    if (confirm(`Are you sure you want to cancel the action on ${props.name}?`)) {
       const handle = resp => {
         alert(resp.toString());
-        setBuyCanceled(true);
+        setActionCanceled(true);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelBuy(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(props.name);
     }
   }
 
@@ -214,8 +214,8 @@ export default function Trade(props) {
               {tm.stateIs(TradeState.SOLD) &&
                 <Button size="small" disabled={isRemoving} onClick={onRemove}>{isRemoving ? '...' : 'Remove'}</Button>
               }
-              {tm.stateIs(TradeState.BUY) &&
-                <Button size="small" disabled={buyCanceled} onClick={onCancelBuy}>Cancel</Button>
+              {[TradeState.BUY, TradeState.SELL].includes(tm.getState()) &&
+                <Button size="small" disabled={actionCanceled} onClick={onCancel}>Cancel</Button>
               }
             </Stack>
           </CardActions>
