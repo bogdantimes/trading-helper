@@ -67,16 +67,24 @@ export class TradeMemo {
     this.setState(TradeState.BOUGHT);
   }
 
-  getState() {
+  getState(): TradeState {
     return this.state
   }
 
-  profit() {
+  profit(): number {
     return (this.prices[this.prices.length - 1] * this.tradeResult.quantity) - this.tradeResult.paid
   }
 
-  stopLimitLoss() {
+  profitPercent(): number {
+    return (this.profit() / this.tradeResult.paid) * 100
+  }
+
+  stopLimitLoss(): number {
     return this.tradeResult.paid * (this.stopLossPrice / this.tradeResult.price - 1)
+  }
+
+  stopLimitLossPercent(): number {
+    return (this.stopLimitLoss() / this.tradeResult.paid) * 100
   }
 }
 
