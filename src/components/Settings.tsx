@@ -24,10 +24,12 @@ export function Settings() {
 
   const [lossLimit, setLossLimit] = useState('');
   const [takeProfit, setTakeProfit] = useState('');
+  const [buyQuantity, setBuyQuantity] = useState('');
 
   useEffect(() => {
     setLossLimit((+(config.LossLimit * 100).toFixed(2)).toString());
     setTakeProfit((+(config.TakeProfit * 100).toFixed(2)).toString());
+    setBuyQuantity(config.BuyQuantity.toString());
   }, [config]);
 
   // @ts-ignore
@@ -36,6 +38,7 @@ export function Settings() {
   const onSave = () => {
     isFinite(+lossLimit) && (config.LossLimit = +lossLimit / 100);
     isFinite(+takeProfit) && (config.TakeProfit = +takeProfit / 100);
+    isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity));
     setConfig(config);
     setIsSaving(true);
     // @ts-ignore
@@ -57,8 +60,7 @@ export function Settings() {
         <TextField value={config.PriceAsset} label={"Stable Coin"}
                    onChange={e => setConfig({...config, PriceAsset: e.target.value})}
         />
-        <TextField value={config.BuyQuantity} label={"Buy Quantity"}
-                   onChange={e => setConfig({...config, BuyQuantity: +e.target.value})}
+        <TextField value={buyQuantity} label={"Buy Quantity"} onChange={e => setBuyQuantity(e.target.value)}
                    InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
         />
         <Stack direction="row" spacing={2}>
