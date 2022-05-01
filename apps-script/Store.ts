@@ -70,7 +70,8 @@ export class FirebaseStore implements IStore {
         PriceAsset: StableCoin.USDT,
         SellAtStopLimit: false,
         SwingTradeEnabled: false,
-        PriceProvider: PriceProvider.Binance
+        PriceProvider: PriceProvider.Binance,
+        AveragingDown: false,
       }
       configCache = this.getOrSet("Config", defaultConfig)
       CacheProxy.put("Config", JSON.stringify(configCache))
@@ -166,6 +167,16 @@ export type Config = {
   SellAtStopLimit: boolean
   SwingTradeEnabled: boolean
   PriceProvider: PriceProvider
+  /**
+   * When averaging down is enabled, all the money gained from selling is used to buy more your existing
+   * most unprofitable (in percentage) asset.
+   * If you have assets A (+1% profit), B (-10% loss) and C(-15% loss) and A is sold, the tool will buy more
+   * of C, and C loss will be averaged down, for example to -7%.
+   * Next time, if C turns profitable and is sold, the tool will buy more of B.
+   * This way, **if the price decline is temporary** for all of your assets,
+   * the tool will gradually sell all assets without loss.
+   */
+  AveragingDown: boolean
 }
 
 // @ts-ignore

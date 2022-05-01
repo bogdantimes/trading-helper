@@ -19,6 +19,7 @@ export function Settings() {
     TakeProfit: 0,
     SwingTradeEnabled: false,
     PriceProvider: PriceProvider.Binance,
+    AveragingDown: false,
   });
 
   const [lossLimit, setLossLimit] = useState('');
@@ -89,7 +90,14 @@ export function Settings() {
             <Switch checked={config.SwingTradeEnabled}
                     onChange={e => setConfig({...config, SwingTradeEnabled: e.target.checked})}/>
           }
-          label="Swing trade"
+          label="Swing trading"
+        />
+        <FormControlLabel
+          control={
+            <Switch checked={config.AveragingDown}
+                    onChange={e => setConfig({...config, AveragingDown: e.target.checked})}/>
+          }
+          label="Averaging down"
         />
         <Stack direction={"row"}>
           <Box sx={{position: 'relative'}}>

@@ -25,7 +25,7 @@ export class V2Trader {
   tickerCheck(tradeMemo: TradeMemo): void {
 
     if (tradeMemo.stateIs(TradeState.SELL)) {
-      this.sellAndClose(tradeMemo)
+      return this.sellAndClose(tradeMemo)
     }
 
     const symbol = tradeMemo.tradeResult.symbol;
@@ -138,6 +138,20 @@ export class V2Trader {
 
     this.store.setTrade(memo)
     Log.alert(tradeResult.toString());
+
+    if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
+      // all gains are reinvested to most unprofitable asset
+      // find a trade with the lowest profit percentage
+      const byProfitPercentDesc = (t1, t2) => t1.profitPercent() < t2.profitPercent() ? -1 : 1;
+      const lowestProfitTrade = this.store.getTradesList()
+        .filter(t => t.stateIs(TradeState.BOUGHT))
+        .sort(byProfitPercentDesc)[0];
+      if (lowestProfitTrade) {
+        Log.alert('Averaging down is enabled')
+        Log.alert(`All gains from selling ${memo.tradeResult.symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
+        this.buy(lowestProfitTrade, memo.tradeResult.gained);
+      }
+    }
   }
 
   private priceGoesUp(prices: PriceMemo, lastN: number = 3): boolean {
