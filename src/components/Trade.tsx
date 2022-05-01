@@ -121,7 +121,7 @@ export default function Trade(props) {
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy more ${props.name}?`)) {
+    if (confirm(`Are you sure you want to buy ${props.name}?`)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());
