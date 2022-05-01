@@ -26,14 +26,13 @@ export function Settings() {
   const [takeProfit, setTakeProfit] = useState('');
   const [buyQuantity, setBuyQuantity] = useState('');
 
-  useEffect(() => {
+  // @ts-ignore
+  useEffect(() => google.script.run.withSuccessHandler(config => {
     setLossLimit((+(config.LossLimit * 100).toFixed(2)).toString());
     setTakeProfit((+(config.TakeProfit * 100).toFixed(2)).toString());
     setBuyQuantity(config.BuyQuantity.toString());
-  }, [config]);
-
-  // @ts-ignore
-  useEffect(() => google.script.run.withSuccessHandler(setConfig).getConfig(), [])
+    setConfig(config);
+  }).getConfig(), [])
 
   const onSave = () => {
     isFinite(+lossLimit) && (config.LossLimit = +lossLimit / 100);
