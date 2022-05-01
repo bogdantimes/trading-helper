@@ -8,6 +8,8 @@ export enum TradeState {
   SOLD = 'sold'
 }
 
+const PriceMemoMaxCapacity = 10;
+
 export class TradeMemo {
   tradeResult: TradeResult
   stopLossPrice: number = 0
@@ -41,6 +43,18 @@ export class TradeMemo {
 
   getKey(): TradeMemoKey {
     return new TradeMemoKey(this.tradeResult.symbol)
+  }
+
+  pushPrice(price: number): void {
+    if (price[0] === 0) {
+      // initial state, filling it with price
+      this.prices = [price, price, price];
+    } else {
+      this.prices.push(price)
+      // remove old prices and keep only the last PriceMemoMaxCapacity
+      this.prices.splice(0, this.prices.length - PriceMemoMaxCapacity)
+    }
+    this.maxObservedPrice = Math.max(this.maxObservedPrice, ...this.prices)
   }
 
   setState(state: TradeState): void {

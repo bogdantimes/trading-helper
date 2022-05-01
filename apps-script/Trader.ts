@@ -4,7 +4,6 @@ import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
 import {ExchangeSymbol} from "./TradeResult";
 
-const PriceMemoMaxCapacity = 10;
 export type PriceMemo = [number, number, number]
 
 export class V2Trader {
@@ -30,11 +29,7 @@ export class V2Trader {
 
     const symbol = tradeMemo.tradeResult.symbol;
     const currentPrice = this.getPrice(symbol);
-
-    tradeMemo.prices.push(currentPrice)
-    // remove old prices and keep only the last PriceMemoMaxCapacity
-    tradeMemo.prices.splice(0, tradeMemo.prices.length - PriceMemoMaxCapacity)
-    tradeMemo.maxObservedPrice = Math.max(tradeMemo.maxObservedPrice, ...tradeMemo.prices)
+    tradeMemo.pushPrice(currentPrice)
 
     const priceGoesUp = this.priceGoesUp(tradeMemo.prices);
 
