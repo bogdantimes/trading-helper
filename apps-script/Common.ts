@@ -23,7 +23,7 @@ function execute({context, runnable, interval = 500, attempts = 5}: ExecParams) 
     }
   } while (--attempts > 0);
 
-  Log.error(new Error(`All attempts failed. Context: ${JSON.stringify(context)}. Error message: ${err.message}`));
+  Log.error(new Error(`All attempts failed. Context: ${JSON.stringify(context)}. Message: ${err.message}. Stacktrace: ${err.stack}`));
   throw err;
 }
 
@@ -51,7 +51,7 @@ class Log {
 
   static print(): string {
     return `${this.alerts.length > 0 ? `${this.alerts.join('\n')}\n\n` : ''}
-${this.errLog.length > 0 ? `Errors:\n${this.errLog.join('\n')}` : ''}
+${this.errLog.length > 0 ? `Errors:\n${this.errLog.map(e => `Message: ${e.message}\nStacktrace: ${e.stack}`).join('\n')}` : ''}
 ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join('\n')}` : ''}
 ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.map(v => JSON.stringify(v)).join('\n\n')}` : ''}
 `

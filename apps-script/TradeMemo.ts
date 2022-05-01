@@ -1,4 +1,3 @@
-import {PriceMemo} from "./Trader";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
 
 export enum TradeState {
@@ -9,6 +8,7 @@ export enum TradeState {
 }
 
 const PriceMemoMaxCapacity = 10;
+export type PriceMemo = [number, number, number]
 
 export class TradeMemo {
   tradeResult: TradeResult
@@ -48,6 +48,10 @@ export class TradeMemo {
 
   getKey(): TradeMemoKey {
     return new TradeMemoKey(this.tradeResult.symbol)
+  }
+
+  get currentPrice(): number {
+    return this.prices[this.prices.length - 1]
   }
 
   pushPrice(price: number): void {
@@ -115,6 +119,14 @@ export class TradeMemo {
     const prevPrice = this.prices[this.prices.length - 2];
     const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
     return latestPrice > profitLimitPrice && prevPrice <= profitLimitPrice
+  }
+
+  priceGoesUp(lastN: number = 3): boolean {
+    const lastPrices = this.prices.slice(-lastN);
+    if (lastPrices[0] == 0 || lastPrices.length < lastN) {
+      return false
+    }
+    return lastPrices.every((p, i) => i == 0 ? true : p > lastPrices[i - 1])
   }
 }
 
