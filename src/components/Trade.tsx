@@ -74,28 +74,27 @@ export default function Trade(props) {
 
     if (limitLine) {
       limitLine.applyOptions({
-        visible: !!tm.stopLossPrice,
+        visible: !!tm.tradeResult.quantity,
         // make dashed if config SellAtStopLimit is false or HODLing
         lineStyle: !config.SellAtStopLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
       limitLine.setData(map(tm.prices, () => tm.stopLossPrice))
     }
 
-    const orderPrice = tm.tradeResult.price;
-
     if (orderLine) {
-      orderLine.applyOptions({visible: !!orderPrice});
-      orderLine.setData(map(tm.prices, () => orderPrice))
+      orderLine.applyOptions({visible: !!tm.tradeResult.quantity});
+      orderLine.setData(map(tm.prices, () => tm.tradeResult.price))
     }
 
     if (profitLine) {
       profitLine.applyOptions({
-        visible: !!orderPrice && !tm.stateIs(TradeState.SOLD),
+        visible: !!tm.tradeResult.quantity,
         color: profitLineColor,
         // make dashed if config SellAtTakeProfit is false or HODLing
         lineStyle: !config.SellAtTakeProfit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
-      profitLine.setData(map(tm.prices, () => orderPrice * (1 + config.TakeProfit)))
+      const profitPrice = tm.tradeResult.price * (1 + config.TakeProfit);
+      profitLine.setData(map(tm.prices, () => profitPrice))
     }
 
     if (soldPriceLine) {
@@ -189,11 +188,13 @@ export default function Trade(props) {
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
-          <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
-            <div>Qty: {tm.tradeResult.quantity} Paid: {tm.tradeResult.paid.toFixed(2)}</div>
-            <div>{tm.profit() >= 0 ? "Profit" : "Loss"}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
-            <div>Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}%)</div>
-          </Typography>
+          {tm.tradeResult.quantity &&
+            <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
+              <div>Qty: {tm.tradeResult.quantity} Paid: {tm.tradeResult.paid.toFixed(2)}</div>
+              <div>{tm.profit() >= 0 ? "Profit" : "Loss"}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
+              <div>Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}%)</div>
+            </Typography>
+          }
           <CardActions>
             <Stack direction={"row"} spacing={1}>
               {tm.stateIs(TradeState.BOUGHT) &&
