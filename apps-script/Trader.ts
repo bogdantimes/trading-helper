@@ -39,32 +39,27 @@ export class V2Trader {
 
     if (tradeMemo.stateIs(TradeState.BOUGHT)) {
 
-      if (currentPrice <= tradeMemo.stopLossPrice) {
-        const stopLimitCrossed = tradeMemo.prices[1] > tradeMemo.stopLossPrice;
-        if (stopLimitCrossed) {
-          Log.info(`${symbol}: crossed stop limit: price '${currentPrice}' <= '${tradeMemo.stopLossPrice}'`)
-        }
-        if (!tradeMemo.hodl && this.store.getConfig().SellAtStopLimit) {
-          tradeMemo.setState(TradeState.SELL)
-        }
+      if (tradeMemo.profitLimitCrossedUp(this.config.TakeProfit)) {
+        Log.alert(`${symbol} crossed profit limit`)
+      } else if (tradeMemo.lossLimitCrossedDown()) {
+        Log.alert(`${symbol}: crossed loss limit`)
       }
 
-      const takeProfitPrice = tradeMemo.tradeResult.price * (1 + this.config.TakeProfit);
-      if (currentPrice >= takeProfitPrice) {
-        const takeProfitCrossed = tradeMemo.prices[1] < takeProfitPrice;
-        if (takeProfitCrossed) {
-          Log.alert(`${symbol} crossed take profit: price '${currentPrice}' >= '${takeProfitPrice}'`)
-        }
-        // We do not sell if price goes up, or we are in hodl mode, or if taking profit is disabled
-        if (!priceGoesUp && !tradeMemo.hodl && this.store.getConfig().SellAtTakeProfit) {
-          tradeMemo.setState(TradeState.SELL)
-        }
+      if (currentPrice < tradeMemo.stopLimitPrice) {
+        const canSell = !tradeMemo.hodl && this.store.getConfig().SellAtStopLimit;
+        canSell && tradeMemo.setState(TradeState.SELL)
+      }
+
+      const profitLimitPrice = tradeMemo.tradeResult.price * (1 + this.config.TakeProfit);
+      if (currentPrice > profitLimitPrice) {
+        const canSell = !tradeMemo.hodl && this.store.getConfig().SellAtTakeProfit;
+        canSell && !priceGoesUp && tradeMemo.setState(TradeState.SELL)
       }
 
       if (priceGoesUp) {
-        // Using previous price to calculate new stop limit
-        const newStopLimit = tradeMemo.prices[0] * (1 - this.config.LossLimit);
-        tradeMemo.stopLossPrice = tradeMemo.stopLossPrice < newStopLimit ? newStopLimit : tradeMemo.stopLossPrice
+        // Using previous price two measures back to calculate new stop limit
+        const newStopLimit = tradeMemo.prices[tradeMemo.prices.length - 3] * (1 - this.config.LossLimit);
+        tradeMemo.stopLimitPrice = tradeMemo.stopLimitPrice < newStopLimit ? newStopLimit : tradeMemo.stopLimitPrice
       }
     }
 
@@ -106,7 +101,7 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       Log.debug(memo);
       memo.joinWithNewTrade(tradeResult);
-      memo.stopLossPrice = tradeResult.price * (1 - this.config.LossLimit);
+      memo.stopLimitPrice = tradeResult.price * (1 - this.config.LossLimit);
       this.store.setTrade(memo)
     }
     Log.alert(memo.tradeResult.toString())

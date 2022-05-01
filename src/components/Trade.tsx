@@ -78,7 +78,7 @@ export default function Trade(props) {
         // make dashed if config SellAtStopLimit is false or HODLing
         lineStyle: !config.SellAtStopLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
-      limitLine.setData(map(tm.prices, () => tm.stopLossPrice))
+      limitLine.setData(map(tm.prices, () => tm.stopLimitPrice))
     }
 
     if (orderLine) {

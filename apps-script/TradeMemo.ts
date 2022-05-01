@@ -12,8 +12,15 @@ const PriceMemoMaxCapacity = 10;
 
 export class TradeMemo {
   tradeResult: TradeResult
-  stopLossPrice: number = 0
-  prices: PriceMemo;
+  /**
+   * The price at which the asset should be sold automatically if {@link Config.SellAtStopLimit}
+   * is true, and {@link TradeMemo.hodl} is false.
+   */
+  stopLimitPrice: number = 0
+  /**
+   * Keeps the latest measures of the asset price.
+   */
+  prices: PriceMemo = [0, 0, 0];
   /**
    * Marks the asset for holding even if price drops.
    */
@@ -27,10 +34,8 @@ export class TradeMemo {
    */
   private state: TradeState;
 
-  constructor(tradeResult: TradeResult, stopLossPrice?: number, prices?: PriceMemo) {
+  constructor(tradeResult: TradeResult) {
     this.tradeResult = tradeResult;
-    this.stopLossPrice = stopLossPrice;
-    this.prices = prices || [0, 0, 0];
   }
 
   static fromObject(obj: object): TradeMemo {
@@ -58,14 +63,12 @@ export class TradeMemo {
   }
 
   setState(state: TradeState): void {
-    this.state = state
     if (state === TradeState.SOLD) {
-      this.stopLossPrice = 0
-      this.maxObservedPrice = 0
       const priorPrice = this.tradeResult.price;
-      this.tradeResult = new TradeResult(this.tradeResult.symbol, "Asset sold")
+      Object.assign(this, new TradeMemo(new TradeResult(this.tradeResult.symbol, "Asset sold")))
       this.tradeResult.price = priorPrice;
     }
+    this.state = state
   }
 
   stateIs(state: TradeState): boolean {
@@ -94,11 +97,24 @@ export class TradeMemo {
   }
 
   stopLimitLoss(): number {
-    return this.tradeResult.paid * (this.stopLossPrice / this.tradeResult.price - 1)
+    return this.tradeResult.paid * (this.stopLimitPrice / this.tradeResult.price - 1)
   }
 
   stopLimitLossPercent(): number {
     return (this.stopLimitLoss() / this.tradeResult.paid) * 100
+  }
+
+  lossLimitCrossedDown(): boolean {
+    const latestPrice = this.prices[this.prices.length - 1];
+    const prevPrice = this.prices[this.prices.length - 2];
+    return latestPrice < this.stopLimitPrice && prevPrice >= this.stopLimitPrice
+  }
+
+  profitLimitCrossedUp(profitLimit: number): boolean {
+    const latestPrice = this.prices[this.prices.length - 1];
+    const prevPrice = this.prices[this.prices.length - 2];
+    const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
+    return latestPrice > profitLimitPrice && prevPrice <= profitLimitPrice
   }
 }
 
