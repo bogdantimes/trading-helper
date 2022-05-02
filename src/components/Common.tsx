@@ -8,3 +8,7 @@ export const circularProgress = <><CircularProgress size={24} sx={{
   marginTop: '-12px',
   marginLeft: '-12px'
 }}/></>;
+
+export function f2(n: number): number {
+  return +n.toFixed(2)
+}

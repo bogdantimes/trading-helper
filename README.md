@@ -2,11 +2,15 @@
 
 The project to help you with crypto trading, written for Google Apps Script.
 
+The most secure trading tool, as you deploy your own WEB application, and create and connect to your own database.
+No one, except you, have access to the WEB-application and the data. If you trust Google, you can trust the project.
+
 The current features are:
 * Integration with Binance: buy and sell coins on the spot.
-* Set up your profit and loss limits to automatically sell coins when you reach them.
-* A moving stop-loss limit, which goes up together with the price.
-* Swing trading: automatically sell and buy coins when the price goes up or down.
+* Set up your profit and stop limits to automatically sell coins when the limits are crossed.
+* A moving stop-limit, which goes up together with the price.
+* Swing trading: automatically buy low and sell high during the rally.
+* Averaging down: automatically re-invest gains into most unprofitable coins to buy them at discount prices.
 * Your statistics: see how much you have made and how much you have lost on a daily basis.
 
 ![dashboard.png](img/dashboard.png)
@@ -19,6 +23,8 @@ The current features are:
 2. Binance account and Binance API token and key for spot trading.
 
 ### Setup
+
+The setup is shown in the Youtube video and was simplified as much as possible for this kind of project.
 
 See the [YouTube playlist](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox) on how to set up and use the tool.
 

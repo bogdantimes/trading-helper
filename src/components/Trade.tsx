@@ -9,10 +9,10 @@ import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
 import {ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
-import {circularProgress} from "./Common";
+import {circularProgress, f2} from "./Common";
 
 export default function Trade(props) {
-  const tradeMemo: TradeMemo = props.data;
+  const tm: TradeMemo = props.data;
   const config: Config = props.config;
 
   const chartContainerRef = useRef();
@@ -53,14 +53,14 @@ export default function Trade(props) {
       setSoldPriceLine(chart.current.addLineSeries({color: "cyan", lineWidth: 1}))
     }
 
-    chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tradeMemo.prices.length - 1.5});
+    chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tm.prices.length - 1.5});
 
     return () => {
       chart.current.remove();
       chart.current = null;
     };
 
-  }, [tradeMemo.prices.length]);
+  }, [tm.prices.length]);
 
   // refresh chart
   useEffect(() => {
@@ -68,47 +68,46 @@ export default function Trade(props) {
     changeChartTheme(chart.current, theme);
 
     if (priceLine) {
-      priceLine.setData(map(tradeMemo.prices, v => v));
+      priceLine.setData(map(tm.prices, v => v));
       priceLine.applyOptions({color: priceLineColor});
     }
 
     if (limitLine) {
       limitLine.applyOptions({
-        visible: !!tradeMemo.stopLossPrice,
+        visible: !!tm.tradeResult.quantity,
         // make dashed if config SellAtStopLimit is false or HODLing
-        lineStyle: !config.SellAtStopLimit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid
+        lineStyle: !config.SellAtStopLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
-      limitLine.setData(map(tradeMemo.prices, () => tradeMemo.stopLossPrice))
+      limitLine.setData(map(tm.prices, () => tm.stopLimitPrice))
     }
 
-    const orderPrice = tradeMemo.tradeResult.price;
-
     if (orderLine) {
-      orderLine.applyOptions({visible: !!orderPrice});
-      orderLine.setData(map(tradeMemo.prices, () => orderPrice))
+      orderLine.applyOptions({visible: !!tm.tradeResult.quantity});
+      orderLine.setData(map(tm.prices, () => tm.tradeResult.price))
     }
 
     if (profitLine) {
       profitLine.applyOptions({
-        visible: !!orderPrice && !tradeMemo.stateIs(TradeState.SOLD),
+        visible: !!tm.tradeResult.quantity,
         color: profitLineColor,
-        // make dashed if config SellAtTakeProfit is false or HODLing
-        lineStyle: !config.SellAtTakeProfit || tradeMemo.hodl ? LineStyle.Dashed : LineStyle.Solid
+        // make dashed if config SellAtProfitLimit is false or HODLing
+        lineStyle: !config.SellAtProfitLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
-      profitLine.setData(map(tradeMemo.prices, () => orderPrice * (1 + config.TakeProfit)))
+      const profitPrice = tm.tradeResult.price * (1 + config.ProfitLimit);
+      profitLine.setData(map(tm.prices, () => profitPrice))
     }
 
     if (soldPriceLine) {
-      soldPriceLine.applyOptions({visible: tradeMemo.stateIs(TradeState.SOLD)});
-      soldPriceLine.setData(map(tradeMemo.prices, () => tradeMemo.tradeResult.price))
+      soldPriceLine.applyOptions({visible: tm.stateIs(TradeState.SOLD)});
+      soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.price))
     }
 
-  }, [theme, tradeMemo, config, priceLine, profitLine, limitLine, orderLine]);
+  }, [theme, tm, config, priceLine, profitLine, limitLine, orderLine]);
 
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${props.name}?`)) {
+    if (confirm(`Are you sure you want to sell ${props.name}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
@@ -122,7 +121,7 @@ export default function Trade(props) {
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy more ${props.name}?`)) {
+    if (confirm(`Are you sure you want to buy ${props.name}?`)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());
@@ -133,21 +132,21 @@ export default function Trade(props) {
     }
   }
 
-  const [buyCanceled, setBuyCanceled] = useState(false);
+  const [actionCanceled, setActionCanceled] = useState(false);
 
-  function onCancelBuy() {
-    if (confirm(`Are you sure you want to cancel buying ${props.name}?`)) {
+  function onCancel() {
+    if (confirm(`Are you sure you want to cancel the action on ${props.name}?`)) {
       const handle = resp => {
         alert(resp.toString());
-        setBuyCanceled(true);
+        setActionCanceled(true);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelBuy(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(props.name);
     }
   }
 
   const [isHodlSwitching, setIsHodlSwitching] = useState(false);
-  const [isHodl, setIsHodl] = useState(tradeMemo.hodl);
+  const [isHodl, setIsHodl] = useState(tm.hodl);
 
   function flipHodl() {
     setIsHodlSwitching(true);
@@ -160,11 +159,6 @@ export default function Trade(props) {
       setIsHodlSwitching(false);
     }).setHold(props.name, !isHodl);
   }
-
-  const curProfit = tradeMemo.profit();
-  const stopLimitLoss = tradeMemo.stopLimitLoss();
-  const curProfitPercent = (100 * (curProfit / tradeMemo.tradeResult.paid)).toFixed(2)
-  const stopLimitLossPercent = (100 * (stopLimitLoss / tradeMemo.tradeResult.paid)).toFixed(2)
 
   const [isRemoving, setIsRemoving] = useState(false);
   const [removed, setRemoved] = useState(false);
@@ -194,32 +188,34 @@ export default function Trade(props) {
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
-          <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
-            <div>Qty: {tradeMemo.tradeResult.quantity} Paid: {tradeMemo.tradeResult.paid.toFixed(2)}</div>
-            <div>{curProfit > 0 ? "Profit" : "Loss"}: {curProfit.toFixed(2)} ({curProfitPercent}%)</div>
-            <div>Stop: {stopLimitLoss.toFixed(2)} ({stopLimitLossPercent}%)</div>
-          </Typography>
+          {!!tm.tradeResult.quantity &&
+            <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
+              <div>Qty: {tm.tradeResult.quantity} Paid: {tm.tradeResult.paid.toFixed(2)}</div>
+              <div>{tm.profit() >= 0 ? "Profit" : "Loss"}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
+              <div>Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}%)</div>
+            </Typography>
+          }
           <CardActions>
             <Stack direction={"row"} spacing={1}>
-              {tradeMemo.stateIs(TradeState.BOUGHT) &&
+              {tm.stateIs(TradeState.BOUGHT) &&
                 <Button size="small" disabled={isSelling} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
-              {[TradeState.BOUGHT, TradeState.SOLD].includes(tradeMemo.getState()) &&
+              {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
                 <Button size="small" disabled={isBuying} onClick={onBuy}>
-                  {isBuying ? '...' : `Buy ${tradeMemo.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
+                  {isBuying ? '...' : `Buy ${tm.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
               }
-              {tradeMemo.stateIs(TradeState.BOUGHT) &&
+              {tm.stateIs(TradeState.BOUGHT) &&
                 <Box sx={{position: 'relative'}}>
                   <ToggleButton size="small" value="check" selected={isHodl} color="primary" onChange={flipHodl}
                                 disabled={isHodlSwitching}>HODL</ToggleButton>
                   {isHodlSwitching && circularProgress}
                 </Box>
               }
-              {tradeMemo.stateIs(TradeState.SOLD) &&
+              {tm.stateIs(TradeState.SOLD) &&
                 <Button size="small" disabled={isRemoving} onClick={onRemove}>{isRemoving ? '...' : 'Remove'}</Button>
               }
-              {tradeMemo.stateIs(TradeState.BUY) &&
-                <Button size="small" disabled={buyCanceled} onClick={onCancelBuy}>Cancel</Button>
+              {[TradeState.BUY, TradeState.SELL].includes(tm.getState()) &&
+                <Button size="small" disabled={actionCanceled} onClick={onCancel}>Cancel</Button>
               }
             </Stack>
           </CardActions>

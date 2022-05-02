@@ -26,7 +26,7 @@ export function Info() {
     });
 
   return (
-    <div style={{height: 400, width: '100%'}}>
+    <div style={{height: `${window.visualViewport.height - 97}px`, width: '100%'}}>
       <DataGrid
         rows={rows}
         columns={columns}
