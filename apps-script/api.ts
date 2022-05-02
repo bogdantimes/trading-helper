@@ -64,12 +64,12 @@ function buyCoin(coinName: string) {
   });
 }
 
-function cancelBuy(coinName: string) {
+function cancelAction(coinName: string) {
   return catchError(() => {
     if (coinName) {
-      Log.info("Cancelling buying of " + coinName);
-      TradesQueue.cancelBuy(coinName);
-      return "Requested to cancel buying of " + coinName;
+      Log.info("Cancelling the action on " + coinName);
+      TradesQueue.cancelAction(coinName);
+      return "Requested to cancel an action on " + coinName;
     }
     return "No coinName specified";
   });

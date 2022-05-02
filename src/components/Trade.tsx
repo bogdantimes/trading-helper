@@ -74,28 +74,27 @@ export default function Trade(props) {
 
     if (limitLine) {
       limitLine.applyOptions({
-        visible: !!tm.stopLossPrice,
+        visible: !!tm.tradeResult.quantity,
         // make dashed if config SellAtStopLimit is false or HODLing
         lineStyle: !config.SellAtStopLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
-      limitLine.setData(map(tm.prices, () => tm.stopLossPrice))
+      limitLine.setData(map(tm.prices, () => tm.stopLimitPrice))
     }
 
-    const orderPrice = tm.tradeResult.price;
-
     if (orderLine) {
-      orderLine.applyOptions({visible: !!orderPrice});
-      orderLine.setData(map(tm.prices, () => orderPrice))
+      orderLine.applyOptions({visible: !!tm.tradeResult.quantity});
+      orderLine.setData(map(tm.prices, () => tm.tradeResult.price))
     }
 
     if (profitLine) {
       profitLine.applyOptions({
-        visible: !!orderPrice && !tm.stateIs(TradeState.SOLD),
+        visible: !!tm.tradeResult.quantity,
         color: profitLineColor,
-        // make dashed if config SellAtTakeProfit is false or HODLing
-        lineStyle: !config.SellAtTakeProfit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
+        // make dashed if config SellAtProfitLimit is false or HODLing
+        lineStyle: !config.SellAtProfitLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
-      profitLine.setData(map(tm.prices, () => orderPrice * (1 + config.TakeProfit)))
+      const profitPrice = tm.tradeResult.price * (1 + config.ProfitLimit);
+      profitLine.setData(map(tm.prices, () => profitPrice))
     }
 
     if (soldPriceLine) {
@@ -108,7 +107,7 @@ export default function Trade(props) {
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${props.name}?`)) {
+    if (confirm(`Are you sure you want to sell ${props.name}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
@@ -122,7 +121,7 @@ export default function Trade(props) {
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy more ${props.name}?`)) {
+    if (confirm(`Are you sure you want to buy ${props.name}?`)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());
@@ -133,16 +132,16 @@ export default function Trade(props) {
     }
   }
 
-  const [buyCanceled, setBuyCanceled] = useState(false);
+  const [actionCanceled, setActionCanceled] = useState(false);
 
-  function onCancelBuy() {
-    if (confirm(`Are you sure you want to cancel buying ${props.name}?`)) {
+  function onCancel() {
+    if (confirm(`Are you sure you want to cancel the action on ${props.name}?`)) {
       const handle = resp => {
         alert(resp.toString());
-        setBuyCanceled(true);
+        setActionCanceled(true);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelBuy(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(props.name);
     }
   }
 
@@ -189,11 +188,13 @@ export default function Trade(props) {
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
-          <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
-            <div>Qty: {tm.tradeResult.quantity} Paid: {tm.tradeResult.paid.toFixed(2)}</div>
-            <div>{tm.profit() >= 0 ? "Profit" : "Loss"}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
-            <div>Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}%)</div>
-          </Typography>
+          {!!tm.tradeResult.quantity &&
+            <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
+              <div>Qty: {tm.tradeResult.quantity} Paid: {tm.tradeResult.paid.toFixed(2)}</div>
+              <div>{tm.profit() >= 0 ? "Profit" : "Loss"}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
+              <div>Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}%)</div>
+            </Typography>
+          }
           <CardActions>
             <Stack direction={"row"} spacing={1}>
               {tm.stateIs(TradeState.BOUGHT) &&
@@ -213,8 +214,8 @@ export default function Trade(props) {
               {tm.stateIs(TradeState.SOLD) &&
                 <Button size="small" disabled={isRemoving} onClick={onRemove}>{isRemoving ? '...' : 'Remove'}</Button>
               }
-              {tm.stateIs(TradeState.BUY) &&
-                <Button size="small" disabled={buyCanceled} onClick={onCancelBuy}>Cancel</Button>
+              {[TradeState.BUY, TradeState.SELL].includes(tm.getState()) &&
+                <Button size="small" disabled={actionCanceled} onClick={onCancel}>Cancel</Button>
               }
             </Stack>
           </CardActions>

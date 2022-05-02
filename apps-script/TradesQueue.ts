@@ -41,7 +41,7 @@ export class TradesQueue {
           const trade = store.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));
           trade.setState(TradeState.BUY);
           store.setTrade(trade);
-        } else if (action === QueueAction.NOT_BUY) {
+        } else if (action === QueueAction.CANCEL) {
           const trade = store.getTrade(symbol);
           if (trade) {
             if (trade.tradeResult.quantity) {
@@ -88,16 +88,16 @@ export class TradesQueue {
     CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
-  static cancelBuy(coinName: string) {
+  static cancelAction(coinName: string) {
     const queue = this.getQueue();
-    queue[coinName] = QueueAction.NOT_BUY;
+    queue[coinName] = QueueAction.CANCEL;
     CacheProxy.put('Queue', JSON.stringify(queue));
   }
 }
 
 enum QueueAction {
   BUY = 'BUY',
-  NOT_BUY = 'NOT_BUY',
+  CANCEL = 'CANCEL',
   SELL = 'SELL',
   HOLD = 'HOLD',
   NOT_HOLD = 'NOT_HOLD',

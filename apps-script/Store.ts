@@ -58,23 +58,41 @@ export class FirebaseStore implements IStore {
 
   getConfig(): Config {
     const configCacheJson = CacheProxy.get("Config");
-    let configCache = configCacheJson ? JSON.parse(configCacheJson) : null;
+    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
     if (!configCache) {
       const defaultConfig: Config = {
-        TakeProfit: 0.1,
-        SellAtTakeProfit: true,
-        BuyQuantity: 10,
-        LossLimit: 0.05,
-        SECRET: '',
         KEY: '',
+        SECRET: '',
+        BuyQuantity: 10,
         PriceAsset: StableCoin.USDT,
+        StopLimit: 0.05,
+        ProfitLimit: 0.1,
         SellAtStopLimit: false,
+        SellAtProfitLimit: true,
         SwingTradeEnabled: false,
-        PriceProvider: PriceProvider.Binance
+        PriceProvider: PriceProvider.Binance,
+        AveragingDown: false,
       }
       configCache = this.getOrSet("Config", defaultConfig)
-      CacheProxy.put("Config", JSON.stringify(configCache))
     }
+
+    if (configCache.TakeProfit) {
+      configCache.ProfitLimit = configCache.TakeProfit
+      delete configCache.TakeProfit
+    }
+
+    if (configCache.SellAtTakeProfit) {
+      configCache.SellAtProfitLimit = configCache.SellAtTakeProfit
+      delete configCache.SellAtTakeProfit
+    }
+
+    if (configCache.LossLimit) {
+      configCache.StopLimit = configCache.LossLimit
+      delete configCache.LossLimit
+    }
+
+    CacheProxy.put("Config", JSON.stringify(configCache))
+
     return configCache;
   }
 
@@ -156,16 +174,39 @@ export class FirebaseStore implements IStore {
 }
 
 export type Config = {
-  TakeProfit: number
-  SellAtTakeProfit: boolean
-  BuyQuantity: number
-  LossLimit: number
-  SECRET?: string
   KEY?: string
+  SECRET?: string
   PriceAsset: string
+  BuyQuantity: number
+  StopLimit: number
+  ProfitLimit: number
   SellAtStopLimit: boolean
+  SellAtProfitLimit: boolean
   SwingTradeEnabled: boolean
   PriceProvider: PriceProvider
+  /**
+   * When averaging down is enabled, all the money gained from selling is used to buy more your existing
+   * most unprofitable (in percentage) asset.
+   * If you have assets A, B (-10% loss) and C(-15% loss) and A is sold, the tool will buy more
+   * of C, and C loss will be averaged down, for example to -7%.
+   * Next time, if C turns profitable and is sold, the tool will buy more of B.
+   * This way, **if the price decline is temporary** for all of your assets,
+   * the tool will gradually sell all assets without loss.
+   */
+  AveragingDown: boolean
+
+  /**
+   * @deprecated
+   */
+  TakeProfit?: number
+  /**
+   * @deprecated
+   */
+  LossLimit?: number
+  /**
+   * @deprecated
+   */
+  SellAtTakeProfit?: boolean
 }
 
 // @ts-ignore
