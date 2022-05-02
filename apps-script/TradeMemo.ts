@@ -55,7 +55,7 @@ export class TradeMemo {
   }
 
   pushPrice(price: number): void {
-    if (price[0] === 0) {
+    if (this.prices[0] === 0) {
       // initial state, filling it with price
       this.prices = [price, price, price];
     } else {
@@ -68,9 +68,11 @@ export class TradeMemo {
 
   setState(state: TradeState): void {
     if (state === TradeState.SOLD) {
-      const priorPrice = this.tradeResult.price;
-      Object.assign(this, new TradeMemo(new TradeResult(this.tradeResult.symbol, "Asset sold")))
-      this.tradeResult.price = priorPrice;
+      // Assign an empty trade result for SOLD state.
+      // Keep the last trade price and the current prices.
+      const newTradeResult = new TradeResult(this.tradeResult.symbol, "Asset sold");
+      newTradeResult.price = this.tradeResult.price;
+      Object.assign(this, new TradeMemo(newTradeResult), {prices: this.prices});
     }
     this.state = state
   }
