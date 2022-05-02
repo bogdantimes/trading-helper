@@ -19,10 +19,9 @@ export class Binance implements IExchange {
   private readonly secret: string;
   private readonly tradeReqParams: object;
   private readonly reqParams: object;
+  private readonly attempts: number = 3;
   private readonly interval: number = 100;
-  private readonly attempts: number = 30;
   private readonly numberOfAPIServers = 30; // There could be more, but 30 was verified.
-  private apiIndex: number = 0;
 
   constructor(config: Config) {
     this.key = config.KEY
@@ -32,11 +31,11 @@ export class Binance implements IExchange {
   }
 
   /**
-   * API returns a next server URL. It loops over servers from 1 to numberOfAPIServers.
+   * API returns a random server in a range `api1` - `api{numberOfAPIServers}`.
    */
   private get API() {
-    const nextIndex = this.apiIndex++ % this.numberOfAPIServers;
-    return `https://api${nextIndex + 1}.binance.com/api/v3`
+    const randomServer = Math.floor(Math.random() * this.numberOfAPIServers) + 1;
+    return `https://api${randomServer}.binance.com/api/v3`
   }
 
   getPrices(): { [p: string]: number } {
