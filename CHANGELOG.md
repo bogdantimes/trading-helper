@@ -1,3 +1,16 @@
+# v2.2.0
+
+* "Averaging Down" feature.
+* Fixed #8 "Alerts for crossing profit limit are repeated".
+* Added "Cancel" button to cancel the request of selling a coin.
+* Other minor fixes.
+
+# v2.1.1
+
+* Fixed critical issue in `sumWithMaxPrecision`
+* Final fix for  #9 "Trade result quantity is sometimes rounded to wrong number resulting in error"
+* Added "Cancel" button to cancel the request of buying a coin.
+
 # v2.1.0
 
 * Trading tab removed, the "Coin Name" input and the "Buy" button moved to the "Assets" tab.
