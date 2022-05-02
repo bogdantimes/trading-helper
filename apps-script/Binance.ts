@@ -14,18 +14,14 @@ export interface IExchange {
 }
 
 export class Binance implements IExchange {
-  private static API_URLS = [
-    "https://api1.binance.com/api/v3",
-    "https://api2.binance.com/api/v3",
-    "https://api3.binance.com/api/v3"
-  ]
 
   private readonly key: string;
   private readonly secret: string;
   private readonly tradeReqParams: object;
   private readonly reqParams: object;
   private readonly attempts: number;
-  private readonly interval: number = 1000;
+  private readonly interval: number = 100;
+  private readonly numberOfAPIServers = 30; // There could be more, but 30 was verified.
   private apiIndex: number = 0;
 
   constructor(config: Config) {
@@ -33,11 +29,14 @@ export class Binance implements IExchange {
     this.secret = config.SECRET
     this.tradeReqParams = {method: 'post', headers: {'X-MBX-APIKEY': this.key}}
     this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
-    this.attempts = Binance.API_URLS.length;
   }
 
+  /**
+   * API returns a next server URL. It loops over servers from 1 to numberOfAPIServers.
+   */
   private get API() {
-    return Binance.API_URLS[this.apiIndex++ % Binance.API_URLS.length]
+    const nextIndex = this.apiIndex++ % this.numberOfAPIServers;
+    return `https://api${nextIndex + 1}.binance.com/api/v3`
   }
 
   getPrices(): { [p: string]: number } {
