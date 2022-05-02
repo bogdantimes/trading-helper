@@ -12,31 +12,31 @@ export function Settings() {
 
   const [config, setConfig] = useState<Config>({
     BuyQuantity: 0,
-    LossLimit: 0,
+    StopLimit: 0,
     PriceAsset: "",
     SellAtStopLimit: false,
-    SellAtTakeProfit: false,
-    TakeProfit: 0,
+    SellAtProfitLimit: false,
+    ProfitLimit: 0,
     SwingTradeEnabled: false,
     PriceProvider: PriceProvider.Binance,
     AveragingDown: false,
   });
 
-  const [lossLimit, setLossLimit] = useState('');
-  const [takeProfit, setTakeProfit] = useState('');
+  const [stopLimit, setLossLimit] = useState('');
+  const [profitLimit, setProfitLimit] = useState('');
   const [buyQuantity, setBuyQuantity] = useState('');
 
   // @ts-ignore
   useEffect(() => google.script.run.withSuccessHandler(config => {
-    setLossLimit((+(config.LossLimit * 100).toFixed(2)).toString());
-    setTakeProfit((+(config.TakeProfit * 100).toFixed(2)).toString());
+    setLossLimit((+(config.StopLimit * 100).toFixed(2)).toString());
+    setProfitLimit((+(config.ProfitLimit * 100).toFixed(2)).toString());
     setBuyQuantity(config.BuyQuantity.toString());
     setConfig(config);
   }).getConfig(), [])
 
   const onSave = () => {
-    isFinite(+lossLimit) && (config.LossLimit = +lossLimit / 100);
-    isFinite(+takeProfit) && (config.TakeProfit = +takeProfit / 100);
+    isFinite(+stopLimit) && (config.StopLimit = +stopLimit / 100);
+    isFinite(+profitLimit) && (config.ProfitLimit = +profitLimit / 100);
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity));
     setConfig(config);
     setIsSaving(true);
@@ -63,19 +63,19 @@ export function Settings() {
                    InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
         />
         <Stack direction="row" spacing={2}>
-          <TextField value={takeProfit} label={"Profit Limit"} onChange={e => setTakeProfit(e.target.value)}
+          <TextField value={profitLimit} label={"Profit Limit"} onChange={e => setProfitLimit(e.target.value)}
                      InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
           />
           <FormControlLabel
             control={
-              <Switch checked={config.SellAtTakeProfit}
-                      onChange={e => setConfig({...config, SellAtTakeProfit: e.target.checked})}/>
+              <Switch checked={config.SellAtProfitLimit}
+                      onChange={e => setConfig({...config, SellAtProfitLimit: e.target.checked})}/>
             }
             label="Auto-sell"
           />
         </Stack>
         <Stack direction="row" spacing={2}>
-          <TextField value={lossLimit} label={"Loss Limit"} onChange={e => setLossLimit(e.target.value)}
+          <TextField value={stopLimit} label={"Stop Limit"} onChange={e => setLossLimit(e.target.value)}
                      InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
           />
           <FormControlLabel

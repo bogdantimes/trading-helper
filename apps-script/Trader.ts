@@ -66,10 +66,10 @@ export class V2Trader {
       return
     }
     // Swing trade enabled.
-    // Checking if price dropped below max observed price minus take profit percentage,
+    // Checking if price dropped below max observed price minus profit limit percentage,
     // and we can buy again
     const symbol = tm.tradeResult.symbol;
-    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.TakeProfit);
+    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit);
     if (priceDropped) {
       Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
@@ -82,10 +82,10 @@ export class V2Trader {
     const symbol = tm.tradeResult.symbol;
     const priceGoesUp = tm.priceGoesUp()
 
-    if (tm.profitLimitCrossedUp(this.config.TakeProfit)) {
+    if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
       Log.alert(`${symbol} crossed profit limit`)
     } else if (tm.lossLimitCrossedDown()) {
-      Log.alert(`${symbol}: crossed loss limit`)
+      Log.alert(`${symbol}: crossed stop limit`)
     }
 
     if (tm.currentPrice < tm.stopLimitPrice) {
@@ -93,15 +93,15 @@ export class V2Trader {
       canSell && tm.setState(TradeState.SELL)
     }
 
-    const profitLimitPrice = tm.tradeResult.price * (1 + this.config.TakeProfit);
+    const profitLimitPrice = tm.tradeResult.price * (1 + this.config.ProfitLimit);
     if (tm.currentPrice > profitLimitPrice) {
-      const canSell = !tm.hodl && this.store.getConfig().SellAtTakeProfit;
+      const canSell = !tm.hodl && this.store.getConfig().SellAtProfitLimit;
       canSell && !priceGoesUp && tm.setState(TradeState.SELL)
     }
 
     if (priceGoesUp) {
       // Using previous price two measures back to calculate new stop limit
-      const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.LossLimit);
+      const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.StopLimit);
       tm.stopLimitPrice = tm.stopLimitPrice < newStopLimit ? newStopLimit : tm.stopLimitPrice
     }
   }
@@ -119,7 +119,7 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       Log.debug(memo);
       memo.joinWithNewTrade(tradeResult);
-      memo.stopLimitPrice = tradeResult.price * (1 - this.config.LossLimit);
+      memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
       this.store.setTrade(memo)
     }
     Log.alert(memo.tradeResult.toString())

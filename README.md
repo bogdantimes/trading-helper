@@ -5,7 +5,7 @@ The project to help you with crypto trading, written for Google Apps Script.
 The current features are:
 * Integration with Binance: buy and sell coins on the spot.
 * Set up your profit and loss limits to automatically sell coins when you reach them.
-* A moving stop-loss limit, which goes up together with the price.
+* A moving stop-limit, which goes up together with the price.
 * Swing trading: automatically sell and buy coins when the price goes up or down.
 * Your statistics: see how much you have made and how much you have lost on a daily basis.
 

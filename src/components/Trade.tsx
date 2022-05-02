@@ -90,10 +90,10 @@ export default function Trade(props) {
       profitLine.applyOptions({
         visible: !!tm.tradeResult.quantity,
         color: profitLineColor,
-        // make dashed if config SellAtTakeProfit is false or HODLing
-        lineStyle: !config.SellAtTakeProfit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
+        // make dashed if config SellAtProfitLimit is false or HODLing
+        lineStyle: !config.SellAtProfitLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
-      const profitPrice = tm.tradeResult.price * (1 + config.TakeProfit);
+      const profitPrice = tm.tradeResult.price * (1 + config.ProfitLimit);
       profitLine.setData(map(tm.prices, () => profitPrice))
     }
 
