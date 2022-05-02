@@ -58,7 +58,7 @@ export class FirebaseStore implements IStore {
 
   getConfig(): Config {
     const configCacheJson = CacheProxy.get("Config");
-    let configCache = configCacheJson ? JSON.parse(configCacheJson) : null;
+    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
     if (!configCache) {
       const defaultConfig: Config = {
         KEY: '',
@@ -74,8 +74,25 @@ export class FirebaseStore implements IStore {
         AveragingDown: false,
       }
       configCache = this.getOrSet("Config", defaultConfig)
-      CacheProxy.put("Config", JSON.stringify(configCache))
     }
+
+    if (configCache.TakeProfit) {
+      configCache.ProfitLimit = configCache.TakeProfit
+      delete configCache.TakeProfit
+    }
+
+    if (configCache.SellAtTakeProfit) {
+      configCache.SellAtProfitLimit = configCache.SellAtTakeProfit
+      delete configCache.SellAtTakeProfit
+    }
+
+    if (configCache.LossLimit) {
+      configCache.StopLimit = configCache.LossLimit
+      delete configCache.LossLimit
+    }
+
+    CacheProxy.put("Config", JSON.stringify(configCache))
+
     return configCache;
   }
 
@@ -177,6 +194,19 @@ export type Config = {
    * the tool will gradually sell all assets without loss.
    */
   AveragingDown: boolean
+
+  /**
+   * @deprecated
+   */
+  TakeProfit?: number
+  /**
+   * @deprecated
+   */
+  LossLimit?: number
+  /**
+   * @deprecated
+   */
+  SellAtTakeProfit?: boolean
 }
 
 // @ts-ignore
