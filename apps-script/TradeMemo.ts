@@ -110,13 +110,13 @@ export class TradeMemo {
 
   lossLimitCrossedDown(): boolean {
     const latestPrice = this.prices[this.prices.length - 1];
-    const prevPrice = this.prices[this.prices.length - 2];
+    const prevPrice = this.prices[this.prices.length - 3];
     return latestPrice < this.stopLimitPrice && prevPrice >= this.stopLimitPrice
   }
 
   profitLimitCrossedUp(profitLimit: number): boolean {
     const latestPrice = this.prices[this.prices.length - 1];
-    const prevPrice = this.prices[this.prices.length - 2];
+    const prevPrice = this.prices[this.prices.length - 3];
     const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
     return latestPrice > profitLimitPrice && prevPrice <= profitLimitPrice
   }
