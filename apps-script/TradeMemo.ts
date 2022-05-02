@@ -109,16 +109,16 @@ export class TradeMemo {
   }
 
   lossLimitCrossedDown(): boolean {
+    // all prices except the last one are greater than the stop limit price
     const latestPrice = this.prices[this.prices.length - 1];
-    const prevPrice = this.prices[this.prices.length - 3];
-    return latestPrice < this.stopLimitPrice && prevPrice >= this.stopLimitPrice
+    return latestPrice < this.stopLimitPrice && this.prices.slice(0, -1).every(price => price >= this.stopLimitPrice)
   }
 
   profitLimitCrossedUp(profitLimit: number): boolean {
-    const latestPrice = this.prices[this.prices.length - 1];
-    const prevPrice = this.prices[this.prices.length - 3];
+    // all prices except the last one are lower the profit limit price
     const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
-    return latestPrice > profitLimitPrice && prevPrice <= profitLimitPrice
+    const latestPrice = this.prices[this.prices.length - 1];
+    return latestPrice > profitLimitPrice && this.prices.slice(0, -1).every(price => price <= profitLimitPrice)
   }
 
   priceGoesUp(lastN: number = 3): boolean {
