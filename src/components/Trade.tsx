@@ -107,7 +107,7 @@ export default function Trade(props) {
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${props.name}?`)) {
+    if (confirm(`Are you sure you want to sell ${props.name}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
