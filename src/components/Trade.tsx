@@ -31,7 +31,7 @@ export default function Trade(props) {
 
   const chartOpts: DeepPartial<ChartOptions> = {
     width: 300,
-    height: 200,
+    height: 100,
     timeScale: {visible: false},
     handleScroll: false,
     handleScale: false
