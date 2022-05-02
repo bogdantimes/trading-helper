@@ -11,9 +11,7 @@ function execute({context, runnable, interval = 500, attempts = 5}: ExecParams) 
   let err: Error;
   do {
     try {
-      const response = runnable(context);
-      Log.debug(`Succeeded. There are ${attempts} attempts left to run the script.`);
-      return response;
+      return runnable(context);
     } catch (e) {
       err = e;
       if (e.message.includes(INTERRUPT)) {
