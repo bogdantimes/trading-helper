@@ -3,6 +3,7 @@ import {IExchange} from "./Binance";
 import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
 import {ExchangeSymbol} from "./TradeResult";
+import {TradesQueue} from "./TradesQueue";
 
 export class V2Trader {
   private readonly store: IStore;
@@ -115,14 +116,18 @@ export class V2Trader {
   }
 
   private buy(memo: TradeMemo, cost: number): void {
-    const tradeResult = this.exchange.marketBuy(memo.tradeResult.symbol, cost);
+    const symbol = memo.tradeResult.symbol;
+    const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
       this.store.setTrade(memo)
+      Log.alert(memo.tradeResult.toString())
+    } else {
+      Log.alert(tradeResult.toString())
+      TradesQueue.cancelAction(symbol.quantityAsset);
     }
-    Log.alert(memo.tradeResult.toString())
   }
 
   private sellAndClose(memo: TradeMemo): void {
