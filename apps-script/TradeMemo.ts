@@ -110,6 +110,11 @@ export class TradeMemo {
     return (this.stopLimitLoss() / this.tradeResult.paid) * 100
   }
 
+  soldPriceChangePercent(): number {
+    const lastPrice = this.prices[this.prices.length - 1];
+    return (lastPrice - this.tradeResult.price) / this.tradeResult.price * 100
+  }
+
   lossLimitCrossedDown(): boolean {
     // all prices except the last one are greater than the stop limit price
     const latestPrice = this.prices[this.prices.length - 1];
