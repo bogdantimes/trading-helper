@@ -3,6 +3,7 @@ import {Exchange} from "./Exchange";
 import {Statistics} from "./Statistics";
 import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
+import {DefaultRecommender} from "./Recommender";
 
 class Watcher {
   static start() {
@@ -31,7 +32,8 @@ function Ticker() {
   TradesQueue.flush();
 
   const store = DefaultStore;
-  const trader = new V2Trader(store, new Exchange(store.getConfig()), new Statistics(store));
+  const exchange = new Exchange(store.getConfig());
+  const trader = new V2Trader(store, exchange, new Statistics(store));
 
   store.getTradesList().forEach(tradeMemo => {
     try {
@@ -48,6 +50,12 @@ function Ticker() {
   }
 
   store.dumpChanges();
+
+  try {
+    new DefaultRecommender(store, exchange).updateRecommendations();
+  } catch (e) {
+    Log.error(e)
+  }
 
   Log.ifUsefulDumpAsEmail()
 }

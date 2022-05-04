@@ -18,6 +18,7 @@ import {TradeMemo} from "../apps-script/TradeMemo";
 import {useEffect} from "react";
 import {Config} from "../apps-script/Store";
 import {InitialSetup} from "./components/InitialSetup";
+import {Recommendations} from "./components/Recommendations";
 
 // @ts-ignore
 export const gsr = google.script.run;
@@ -98,17 +99,13 @@ export default function App() {
               <Tab label="Assets" {...a11yProps(0)} />
               <Tab label="Settings" {...a11yProps(1)} />
               <Tab label="Info" {...a11yProps(2)} />
+              <Tab label="Recommendations" {...a11yProps(3)} />
             </Tabs>
           </Box>
-          <TabPanel value={value} index={0}>
-            <Assets config={config} trades={trades}/>
-          </TabPanel>
-          <TabPanel value={value} index={1}>
-            <Settings/>
-          </TabPanel>
-          <TabPanel value={value} index={2}>
-            <Info/>
-          </TabPanel>
+          <TabPanel value={value} index={0}><Assets config={config} trades={trades}/></TabPanel>
+          <TabPanel value={value} index={1}><Settings/></TabPanel>
+          <TabPanel value={value} index={2}><Info/></TabPanel>
+          <TabPanel value={value} index={3}><Recommendations/></TabPanel>
         </Box>
       }
     </ThemeProvider>
