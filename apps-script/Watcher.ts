@@ -32,8 +32,17 @@ function Ticker() {
   TradesQueue.flush();
 
   const store = DefaultStore;
-  const exchange = new Exchange(store.getConfig());
-  const trader = new V2Trader(store, exchange, new Statistics(store));
+  let exchange: Exchange;
+  let trader: V2Trader;
+
+  try {
+    exchange = new Exchange(store.getConfig());
+    trader = new V2Trader(store, exchange, new Statistics(store));
+  } catch (e) {
+    Log.error(e)
+    Log.ifUsefulDumpAsEmail()
+    return
+  }
 
   store.getTradesList().forEach(tradeMemo => {
     try {
