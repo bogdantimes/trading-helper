@@ -86,10 +86,8 @@ export default function App() {
       <CssBaseline/>
       {fetchingData && <Box sx={{width: '100%'}}><LinearProgress/></Box>}
       {fetchDataError && <Alert severity="error">
-        <Typography variant="h6">{fetchDataError}</Typography>
-        <Typography variant="caption">
-          Please check your Google Apps Script application is deployed and try again.
-        </Typography>
+        <Typography variant="caption">{fetchDataError}</Typography>
+        <Typography variant="caption">Please check your Google Apps Script application is deployed and try again.</Typography>
       </Alert>}
       {!fetchingData && initialSetup && <InitialSetup config={config} onConnect={initialFetch}/>}
       {!fetchingData && !initialSetup &&
