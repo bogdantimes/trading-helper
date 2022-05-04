@@ -41,7 +41,7 @@ function Ticker() {
   } catch (e) {
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
-    return
+    throw e;
   }
 
   store.getTradesList().forEach(tradeMemo => {
