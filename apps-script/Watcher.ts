@@ -63,7 +63,7 @@ function Ticker() {
   try {
     new DefaultRecommender(store, exchange).updateRecommendations();
   } catch (e) {
-    Log.error(e)
+    Log.info(e)
   }
 
   Log.ifUsefulDumpAsEmail()
