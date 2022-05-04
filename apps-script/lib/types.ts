@@ -14,7 +14,7 @@ export class Recommendation {
     r.r++
   }
 
-  static getRank(r: Recommendation): number {
+  static getScore(r: Recommendation): number {
     return r.r
   }
 

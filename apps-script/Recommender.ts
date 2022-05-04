@@ -4,11 +4,11 @@ import {CacheProxy} from "./CacheProxy";
 import {Recommendation} from "./lib/types";
 
 export interface IRecommender {
-  getRecommendations(): Recommendation[]
+  getRecommends(): Recommendation[]
 
   updateRecommendations(): void
 
-  resetRecommendations(): void
+  resetRecommends(): void
 }
 
 
@@ -27,13 +27,13 @@ export class DefaultRecommender implements IRecommender {
    * Returns first ten recommended symbols if there are more than ten.
    * Sorted by recommendation score.
    */
-  getRecommendations(): Recommendation[] {
+  getRecommends(): Recommendation[] {
     const memosJson = CacheProxy.get("RecommenderMemos");
     const memos: { [key: string]: Recommendation } = memosJson ? JSON.parse(memosJson) : {};
     return Object
       .values(memos)
-      .filter(memo => Recommendation.getRank(memo) > 0)
-      .sort((a, b) => Recommendation.getRank(b) - Recommendation.getRank(a))
+      .filter(memo => Recommendation.getScore(memo) > 0)
+      .sort((a, b) => Recommendation.getScore(b) - Recommendation.getScore(a))
       .slice(0, 10);
   }
 
@@ -74,7 +74,7 @@ export class DefaultRecommender implements IRecommender {
     CacheProxy.put("RecommenderMemos", JSON.stringify(newMemos));
   }
 
-  resetRecommendations(): void {
+  resetRecommends(): void {
     // todo: make concurrent safe
     CacheProxy.put("RecommenderMemos", JSON.stringify({}));
   }

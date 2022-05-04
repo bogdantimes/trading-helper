@@ -3,31 +3,29 @@ import {useEffect} from "react";
 import {Recommendation} from "../../apps-script/lib/types";
 import {Button} from "@mui/material";
 
-export function Recommendations() {
-  const [recommendations, setRecommendations] = React.useState<Recommendation[]>([]);
+export function Recommends() {
+  const [recommends, setRecommends] = React.useState<Recommendation[]>([]);
 
   useEffect(() => {
     // @ts-ignore
-    google.script.run.withSuccessHandler(setRecommendations).getRecommendations();
+    google.script.run.withSuccessHandler(setRecommends).getRecommends();
   }, [])
 
   return (
     <div>
-      {!!recommendations.length &&
+      {!!recommends.length &&
         <>
           <ul>
-            {recommendations.map((rJson) => {
+            {recommends.map((rJson, i) => {
               const coinName = Recommendation.getCoinName(rJson);
               return (
-                <li key={coinName}>#{Recommendation.getRank(rJson)} {coinName}</li>
+                <li key={coinName}>#{i+1} {coinName} (score={Recommendation.getScore(rJson)})</li>
               );
             })}
           </ul>
           <Button onClick={() => {
             // @ts-ignore
-            google.script.run.withSuccessHandler(() => {
-              setRecommendations([]);
-            }).resetRecommendations();
+            google.script.run.withSuccessHandler(() => setRecommends([])).resetRecommends();
           }}>Reset</Button>
         </>
       }

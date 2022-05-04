@@ -130,16 +130,16 @@ function getStatistics() {
   return catchError(() => new Statistics(DefaultStore).getAll());
 }
 
-function getRecommendations() {
+function getRecommends() {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
-    return new DefaultRecommender(DefaultStore, exchange).getRecommendations();
+    return new DefaultRecommender(DefaultStore, exchange).getRecommends();
   });
 }
 
-function resetRecommendations() {
+function resetRecommends() {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
-    return new DefaultRecommender(DefaultStore, exchange).resetRecommendations();
+    return new DefaultRecommender(DefaultStore, exchange).resetRecommends();
   });
 }
