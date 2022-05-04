@@ -19,7 +19,7 @@ export class Binance implements IExchange {
   private readonly secret: string;
   private readonly tradeReqParams: object;
   private readonly reqParams: object;
-  private readonly attempts: number = 3;
+  private readonly attempts: number = 5;
   private readonly interval: number = 100;
   private readonly numberOfAPIServers = 30; // There could be more, but 30 was verified.
 
