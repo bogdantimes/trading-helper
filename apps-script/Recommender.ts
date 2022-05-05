@@ -30,9 +30,11 @@ export class DefaultRecommender implements IRecommender {
   getRecommends(): Recommendation[] {
     const memosJson = CacheProxy.get("RecommenderMemos");
     const memos: { [key: string]: Recommendation } = memosJson ? JSON.parse(memosJson) : {};
+    const priceAsset = this.store.getConfig().PriceAsset;
     return Object
-      .values(memos)
-      .filter(memo => Recommendation.getScore(memo) > 0)
+      .keys(memos)
+      .filter(k => k.endsWith(priceAsset) && Recommendation.getScore(memos[k]) > 0)
+      .map(k => memos[k])
       .sort((a, b) => Recommendation.getScore(b) - Recommendation.getScore(a))
       .slice(0, 10);
   }
@@ -45,15 +47,17 @@ export class DefaultRecommender implements IRecommender {
     const coinsThatGoUp: { [key: string]: Recommendation } = {};
     const updatedMemos: { [key: string]: Recommendation } = {};
     Object.keys(prices).forEach(s => {
-      if (s.endsWith(priceAsset)) {
-        const coinName = s.split(priceAsset)[0];
-        if (coinName && !coinName.endsWith('UP') && !coinName.endsWith('DOWN')) {
-          const price = prices[s];
-          const memo = Object.assign(new Recommendation(coinName), memos[s]);
-          memo.pushPrice(price)
-          memo.priceGoesUp() && (coinsThatGoUp[s] = memo)
-          updatedMemos[s] = memo;
-        }
+      // skip symbols that have "UP" or "DOWN" in the middle of the string
+      if (s.match(/^[A-Z]+(UP|DOWN)[A-Z]+$/)) {
+        return;
+      }
+      const coinName = s.endsWith(priceAsset) ? s.split(priceAsset)[0] : null;
+      if (coinName) {
+        const price = prices[s];
+        const memo = Object.assign(new Recommendation(s), memos[s]);
+        memo.pushPrice(price)
+        memo.priceGoesUp() && (coinsThatGoUp[s] = memo)
+        updatedMemos[s] = memo;
       }
     })
 
