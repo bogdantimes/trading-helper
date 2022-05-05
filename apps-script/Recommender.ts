@@ -55,7 +55,7 @@ export class DefaultRecommender implements IRecommender {
       const coinName = s.endsWith(priceAsset) ? s.split(priceAsset)[0] : null;
       if (coinName) {
         const price = prices[s];
-        const memo = Recommendation.fromObject(memos[s]);
+        const memo = memos[s] ? Recommendation.fromObject(memos[s]) : new Recommendation(coinName);
         memo.pushPrice(price)
         memo.priceGoesUp() && (coinsThatGoUp[s] = memo)
         updatedMemos[s] = memo;
