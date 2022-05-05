@@ -6,8 +6,8 @@ export class Recommendation {
   private p: [number, number, number] = [0, 0, 0]
   private readonly c: string
 
-  constructor(symbol: string) {
-    this.c = symbol
+  constructor(coinName: string) {
+    this.c = coinName
   }
 
   static incrementScore(r: Recommendation) {
@@ -18,7 +18,7 @@ export class Recommendation {
     return r.r
   }
 
-  static getSymbol(r: Recommendation): string {
+  static getCoinName(r: Recommendation): string {
     return r.c
   }
 
@@ -37,14 +37,6 @@ export class Recommendation {
       this.p.shift()
       this.p.push(price)
     }
-  }
-
-  getCoinName(): string {
-    return this.c
-  }
-
-  getRank(): number {
-    return this.r
   }
 
 }
