@@ -15,7 +15,7 @@ export interface IRecommender {
 export class DefaultRecommender implements IRecommender {
   private store: IStore;
   private exchange: IExchange;
-  private readonly RECOMMENDED_MARKET_FRACTION = 0.005; // 0.5% (Binance has 2030 prices right now, 0.5% is ~10 coins)
+  private readonly MARKET_UP_FRACTION = 0.01; // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
 
   constructor(store: IStore, exchange: IExchange) {
     this.store = store;
@@ -64,9 +64,9 @@ export class DefaultRecommender implements IRecommender {
     const goUpPercent = (Object.keys(coinsThatGoUp).length / Object.keys(prices).length) * 100;
     Log.info(`${(goUpPercent).toFixed(2)}% of prices went up`);
 
-    // if only RECOMMENDED_MARKET_FRACTION% of coins go up, we update their recommendation rank
-    const marketMostlyDown = Object.keys(coinsThatGoUp).length <= (this.RECOMMENDED_MARKET_FRACTION * Object.keys(prices).length);
-    if (marketMostlyDown && Object.keys(coinsThatGoUp).length > 0) {
+    // if only MARKET_UP_FRACTION% of coins go up, we update their recommendation score
+    const fractionMet = Object.keys(coinsThatGoUp).length <= (this.MARKET_UP_FRACTION * Object.keys(prices).length);
+    if (fractionMet && Object.keys(coinsThatGoUp).length > 0) {
       Object.values(coinsThatGoUp).forEach(Recommendation.incrementScore);
       Log.info(`Updated recommendations.`);
     }
