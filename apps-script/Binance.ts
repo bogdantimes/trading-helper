@@ -165,11 +165,13 @@ export class Binance implements IExchange {
         if (resp.getResponseCode() === 418) {
           // Limit reached, mark server as blocked for 5 minutes
           CacheProxy.put(`${BLOCKED_SERVER_(index)}`, 'true', FIVE_MINUTES_IN_SEC);
+          Log.debug("Error 418, blocked server: " + server)
         }
 
         if (resp.getResponseCode() === 400 && resp.getContentText().includes('Not all sent parameters were read')) {
           // Server that doesn't support some parameters, mark it as blocked for 6 hours
           CacheProxy.put(`${BLOCKED_SERVER_(index)}`, 'true', SIX_HOURS_IN_SEC);
+          Log.debug("Error 400, blocked server: " + server)
         }
 
         throw new Error(`${resp.getResponseCode()} ${resp.getContentText()}`)
