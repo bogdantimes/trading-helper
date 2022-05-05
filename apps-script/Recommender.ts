@@ -42,20 +42,17 @@ export class DefaultRecommender implements IRecommender {
     const memosJson = CacheProxy.get("RecommenderMemos");
     const memos: { [key: string]: Recommendation } = memosJson ? JSON.parse(memosJson) : {};
     const priceAsset = this.store.getConfig().PriceAsset;
-    const otherCoins: { [key: string]: Recommendation } = {};
     const coinsThatGoUp: { [key: string]: Recommendation } = {};
-    const newMemos: { [key: string]: Recommendation } = {};
+    const updatedMemos: { [key: string]: Recommendation } = {};
     Object.keys(prices).forEach(s => {
       if (s.endsWith(priceAsset)) {
         const coinName = s.split(priceAsset)[0];
-        if (coinName && !coinName.endsWith('UP') && !s.endsWith('DOWN')) {
+        if (coinName && !coinName.endsWith('UP') && !coinName.endsWith('DOWN')) {
           const price = prices[s];
           const memo = Object.assign(new Recommendation(coinName), memos[s]);
           memo.pushPrice(price)
-          newMemos[s] = memo;
-
-          const bucket = memo.priceGoesUp() ? coinsThatGoUp : otherCoins;
-          bucket[s] = memo;
+          memo.priceGoesUp() && (coinsThatGoUp[s] = memo)
+          updatedMemos[s] = memo;
         }
       }
     })
@@ -71,7 +68,7 @@ export class DefaultRecommender implements IRecommender {
       Log.info(`Updated recommendations.`);
     }
 
-    CacheProxy.put("RecommenderMemos", JSON.stringify(newMemos));
+    CacheProxy.put("RecommenderMemos", JSON.stringify(updatedMemos));
   }
 
   resetRecommends(): void {
