@@ -1,5 +1,5 @@
 interface ExecParams {
-  context: any;
+  context?: any;
   runnable: (any) => any;
   interval?: number;
   attempts?: number;

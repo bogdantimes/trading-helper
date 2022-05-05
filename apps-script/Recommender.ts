@@ -59,7 +59,7 @@ export class DefaultRecommender implements IRecommender {
 
     // percent of prices that went down
     const goUpPercent = (Object.keys(coinsThatGoUp).length / Object.keys(prices).length) * 100;
-    Log.info(`${(goUpPercent).toFixed(2)}% of prices went up`);
+    Log.info(`${(goUpPercent).toFixed(2)}% of market prices went up`);
 
     // if only MARKET_UP_FRACTION% of coins go up, we update their recommendation score
     const fractionMet = Object.keys(coinsThatGoUp).length <= (this.MARKET_UP_FRACTION * Object.keys(prices).length);
