@@ -39,7 +39,7 @@ export class Binance implements IExchange {
 
   getPrices(): { [p: string]: number } {
     Log.info("Fetching prices")
-    const response = this.fetch("ticker/price", this.defaultReqOpts);
+    const response = this.fetch(() => "ticker/price", this.defaultReqOpts);
     const prices: { symbol: string, price: string }[] = JSON.parse(response.getContentText())
     Log.debug(`Got ${prices.length} prices`)
     const map: { [p: string]: number } = {}
@@ -50,7 +50,7 @@ export class Binance implements IExchange {
   getPrice(symbol: ExchangeSymbol): number {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
-    const response = this.fetch(`${resource}?${query}`, this.defaultReqOpts);
+    const response = this.fetch(() => `${resource}?${query}`, this.defaultReqOpts);
     Log.debug(response.getContentText())
     return +JSON.parse(response.getContentText()).price
   }
@@ -58,7 +58,7 @@ export class Binance implements IExchange {
   getFreeAsset(assetName: string): number {
     const resource = "account"
     const query = "";
-    const data = this.fetch(`${resource}?${this.addSignature(query)}`, this.defaultReqOpts);
+    const data = this.fetch(() => `${resource}?${this.addSignature(query)}`, this.defaultReqOpts);
     try {
       const account = JSON.parse(data.getContentText());
       const assetVal = account.balances.find((balance) => balance.asset == assetName);
@@ -106,7 +106,7 @@ export class Binance implements IExchange {
   }
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
-    const response = this.fetch(`order?${this.addSignature(query)}`, this.tradeReqOpts)
+    const response = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
     Log.debug(response.getContentText())
     try {
       const order = JSON.parse(response.getContentText());
@@ -149,7 +149,7 @@ export class Binance implements IExchange {
     return `${sigData}&signature=${sig}`
   }
 
-  fetch(resource: string, options: URLFetchRequestOptions): HTTPResponse {
+  fetch(resource: () => string, options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions): GoogleAppsScript.URL_Fetch.HTTPResponse {
     return execute({
       interval: this.interval,
       attempts: this.attempts,
