@@ -17,9 +17,9 @@ export function Recommends() {
         <>
           <ul>
             {recommends.map((rJson, i) => {
-              const coinName = Recommendation.getCoinName(rJson);
+              const r = Recommendation.fromObject(rJson);
               return (
-                <li key={coinName}>#{i+1} {coinName} (score={Recommendation.getScore(rJson)})</li>
+                <li key={r.getCoinName()}>#{i+1} {r.getCoinName()} (score={r.getScore()})</li>
               );
             })}
           </ul>

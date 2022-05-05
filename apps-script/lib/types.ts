@@ -4,22 +4,34 @@ export class Recommendation {
    */
   private r: number = 0
   private p: [number, number, number] = [0, 0, 0]
+  private readonly n: string
+
+  /**
+   * @deprecated
+   */
   private readonly c: string
 
   constructor(coinName: string) {
-    this.c = coinName
+    this.n = coinName
   }
 
-  static incrementScore(r: Recommendation) {
-    r.r++
+  static fromObject(obj: Recommendation): Recommendation {
+    const rec = new Recommendation(obj.n || obj.c)
+    rec.r = obj.r
+    rec.p = obj.p
+    return rec
   }
 
-  static getScore(r: Recommendation): number {
-    return r.r
+  incrementScore() {
+    this.r++
   }
 
-  static getCoinName(r: Recommendation): string {
-    return r.c
+  getScore(): number {
+    return this.r
+  }
+
+  getCoinName(): string {
+    return this.n
   }
 
   priceGoesUp(): boolean {

@@ -30,11 +30,14 @@ export class DefaultRecommender implements IRecommender {
   getRecommends(): Recommendation[] {
     const memosJson = CacheProxy.get("RecommenderMemos");
     const memos: { [key: string]: Recommendation } = memosJson ? JSON.parse(memosJson) : {};
-    return Object
-      .values(memos)
-      .filter(Recommendation.getScore)
-      .sort((a, b) => Recommendation.getScore(b) - Recommendation.getScore(a))
-      .slice(0, 10);
+    const recommended: Recommendation[] = []
+    Object.values(memos).forEach(m => {
+      const r = Recommendation.fromObject(m);
+      if (r.getScore() > 0) {
+        recommended.push(r);
+      }
+    })
+    return recommended.sort((a, b) => b.getScore() - a.getScore()).slice(0, 10);
   }
 
   updateRecommendations(): void {
@@ -52,7 +55,7 @@ export class DefaultRecommender implements IRecommender {
       const coinName = s.endsWith(priceAsset) ? s.split(priceAsset)[0] : null;
       if (coinName) {
         const price = prices[s];
-        const memo = Object.assign(new Recommendation(coinName), memos[s]);
+        const memo = Recommendation.fromObject(memos[s]);
         memo.pushPrice(price)
         memo.priceGoesUp() && (coinsThatGoUp[s] = memo)
         updatedMemos[s] = memo;
@@ -66,7 +69,7 @@ export class DefaultRecommender implements IRecommender {
     // if only MARKET_UP_FRACTION% of coins go up, we update their recommendation score
     const fractionMet = Object.keys(coinsThatGoUp).length <= (this.MARKET_UP_FRACTION * Object.keys(prices).length);
     if (fractionMet && Object.keys(coinsThatGoUp).length > 0) {
-      Object.values(coinsThatGoUp).forEach(Recommendation.incrementScore);
+      Object.values(coinsThatGoUp).forEach(r => r.incrementScore());
       Log.info(`Updated recommendations.`);
     }
 
