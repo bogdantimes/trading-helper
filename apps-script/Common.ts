@@ -11,6 +11,7 @@ function execute({context, runnable, interval = 500, attempts = 5}: ExecParams) 
   let err: Error;
   do {
     try {
+      err = null
       return runnable(context);
     } catch (e) {
       err = e;
@@ -23,8 +24,9 @@ function execute({context, runnable, interval = 500, attempts = 5}: ExecParams) 
     }
   } while (--attempts > 0);
 
-  Log.error(new Error(`All attempts failed. Context: ${JSON.stringify(context)}. Message: ${err.message}`));
-  throw err;
+  if (err) {
+    throw err;
+  }
 }
 
 class Log {
