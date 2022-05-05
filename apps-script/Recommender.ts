@@ -15,7 +15,7 @@ export interface IRecommender {
 export class DefaultRecommender implements IRecommender {
   private store: IStore;
   private exchange: IExchange;
-  private readonly RECOMMENDED_MARKET_FRACTION = 0.05;
+  private readonly RECOMMENDED_MARKET_FRACTION = 0.005; // 0.5% (Binance has 2030 prices right now, 0.5% is ~10 coins)
 
   constructor(store: IStore, exchange: IExchange) {
     this.store = store;
@@ -45,17 +45,17 @@ export class DefaultRecommender implements IRecommender {
     const otherCoins: { [key: string]: Recommendation } = {};
     const coinsThatGoUp: { [key: string]: Recommendation } = {};
     const newMemos: { [key: string]: Recommendation } = {};
-    Object.keys(prices).forEach(symbolString => {
-      if (symbolString.endsWith(priceAsset) && !symbolString.includes("DOWN")) {
-        const coinName = symbolString.split(priceAsset)[0];
-        if (coinName) {
-          const price = prices[symbolString];
-          const memo = Object.assign(new Recommendation(coinName), memos[symbolString]);
+    Object.keys(prices).forEach(s => {
+      if (s.endsWith(priceAsset)) {
+        const coinName = s.split(priceAsset)[0];
+        if (coinName && !coinName.endsWith('UP') && !s.endsWith('DOWN')) {
+          const price = prices[s];
+          const memo = Object.assign(new Recommendation(coinName), memos[s]);
           memo.pushPrice(price)
-          newMemos[symbolString] = memo;
+          newMemos[s] = memo;
 
           const bucket = memo.priceGoesUp() ? coinsThatGoUp : otherCoins;
-          bucket[symbolString] = memo;
+          bucket[s] = memo;
         }
       }
     })
@@ -67,8 +67,8 @@ export class DefaultRecommender implements IRecommender {
     // if only RECOMMENDED_MARKET_FRACTION% of coins go up, we update their recommendation rank
     const marketMostlyDown = Object.keys(coinsThatGoUp).length <= (this.RECOMMENDED_MARKET_FRACTION * Object.keys(prices).length);
     if (marketMostlyDown && Object.keys(coinsThatGoUp).length > 0) {
-      Log.info(`${goUpPercent.toFixed(2)}% of market went up, updating recommendations`);
-      Object.keys(coinsThatGoUp).forEach(symbolString => Recommendation.incrementRank(coinsThatGoUp[symbolString]))
+      Object.values(coinsThatGoUp).forEach(Recommendation.incrementScore);
+      Log.info(`Updated recommendations.`);
     }
 
     CacheProxy.put("RecommenderMemos", JSON.stringify(newMemos));

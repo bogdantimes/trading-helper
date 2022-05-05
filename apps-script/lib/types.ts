@@ -10,7 +10,7 @@ export class Recommendation {
     this.c = coinName
   }
 
-  static incrementRank(r: Recommendation) {
+  static incrementScore(r: Recommendation) {
     r.r++
   }
 
