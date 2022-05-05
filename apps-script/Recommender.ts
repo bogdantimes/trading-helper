@@ -32,9 +32,8 @@ export class DefaultRecommender implements IRecommender {
     const memos: { [key: string]: Recommendation } = memosJson ? JSON.parse(memosJson) : {};
     const priceAsset = this.store.getConfig().PriceAsset;
     return Object
-      .keys(memos)
-      .filter(k => k.endsWith(priceAsset) && Recommendation.getScore(memos[k]) > 0)
-      .map(k => memos[k])
+      .values(memos)
+      .filter(Recommendation.getScore)
       .sort((a, b) => Recommendation.getScore(b) - Recommendation.getScore(a))
       .slice(0, 10);
   }
