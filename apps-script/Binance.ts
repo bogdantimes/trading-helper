@@ -156,7 +156,7 @@ export class Binance implements IExchange {
       runnable: () => {
         const index = this.getRandomAvailableServerIndex();
         const server = `https://api${index}.binance.com/api/v3`;
-        const resp = UrlFetchApp.fetch(`${server}/${resource}`, options)
+        const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options)
 
         if (resp.getResponseCode() === 200) {
           return resp;
