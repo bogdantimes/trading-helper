@@ -11,7 +11,7 @@ export function Info() {
   }, [])
 
   const columns: GridColDef[] = [
-    {field: 'id', headerName: 'ID', minWidth: 70},
+    {field: 'id', headerName: 'ID', maxWidth: 35},
     {field: 'timeFrame', headerName: 'Time-Frame', flex: 0.5},
     {field: 'profit', headerName: 'Profit', flex: 0.5},
   ];

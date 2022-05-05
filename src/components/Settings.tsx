@@ -54,7 +54,7 @@ export function Settings() {
   }
 
   return (
-    <Box sx={{display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
+    <Box sx={{justifyContent: 'center', display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
       <Stack spacing={2}>
         <TextField value={config.PriceAsset} label={"Stable Coin"}
                    onChange={e => setConfig({...config, PriceAsset: e.target.value})}
