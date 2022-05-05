@@ -6,9 +6,6 @@ function byteCount(s: string): number {
   return encodeURI(s).split(/%..|./).length - 1;
 }
 
-export const SIX_HOURS_IN_SEC = 21600;
-export const FIVE_MINUTES_IN_SEC = 300;
-
 export class CacheProxy {
 
   static getAll(keys: string[]): { [key: string]: any } {

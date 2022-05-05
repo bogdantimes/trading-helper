@@ -1,9 +1,11 @@
 import {Config} from "./Store";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
-import {CacheProxy, FIVE_MINUTES_IN_SEC, SIX_HOURS_IN_SEC} from "./CacheProxy";
+import {CacheProxy} from "./CacheProxy";
 import HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
+const SIX_HOURS_IN_SEC = 21600;
+const FIVE_MINUTES_IN_SEC = 300;
 const BLOCKED_SERVER_ = i => `BlockedBinanceServer_${i}`;
 
 export interface IExchange {

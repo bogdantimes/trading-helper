@@ -30,7 +30,6 @@ export class DefaultRecommender implements IRecommender {
   getRecommends(): Recommendation[] {
     const memosJson = CacheProxy.get("RecommenderMemos");
     const memos: { [key: string]: Recommendation } = memosJson ? JSON.parse(memosJson) : {};
-    const priceAsset = this.store.getConfig().PriceAsset;
     return Object
       .values(memos)
       .filter(Recommendation.getScore)
