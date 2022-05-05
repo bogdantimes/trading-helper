@@ -23,7 +23,7 @@ export class DefaultRecommender implements IRecommender {
   }
 
   /**
-   * Returns symbols that raised in price when 90% of the marked was going down.
+   * Returns symbols that raised in price when most of the marked was going down.
    * Returns first ten recommended symbols if there are more than ten.
    * Sorted by recommendation score.
    */
