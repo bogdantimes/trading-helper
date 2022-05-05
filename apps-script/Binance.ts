@@ -1,10 +1,8 @@
 import {Config} from "./Store";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
-import HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
-const SIX_HOURS_IN_SEC = 21600;
 const FIVE_MINUTES_IN_SEC = 300;
 const BLOCKED_SERVER_ = i => `BlockedBinanceServer_${i}`;
 
@@ -26,7 +24,7 @@ export class Binance implements IExchange {
   private readonly secret: string;
   private readonly attempts: number = 5;
   private readonly interval: number = 100;
-  private readonly numberOfAPIServers = 30; // There could be more, but 30 was verified.
+  private readonly numberOfAPIServers = 5; // 5 distinct addresses were verified.
   private readonly defaultReqOpts: URLFetchRequestOptions;
   private readonly tradeReqOpts: URLFetchRequestOptions;
 
@@ -164,14 +162,13 @@ export class Binance implements IExchange {
 
         if (resp.getResponseCode() === 418) {
           // Limit reached, mark server as blocked for 5 minutes
-          CacheProxy.put(`${BLOCKED_SERVER_(index)}`, 'true', FIVE_MINUTES_IN_SEC);
-          Log.debug("Error 418, blocked server: " + server)
+          // CacheProxy.put(`${BLOCKED_SERVER_(index)}`, 'true', FIVE_MINUTES_IN_SEC);
+          Log.debug("Error 418 from " + server)
         }
 
         if (resp.getResponseCode() === 400 && resp.getContentText().includes('Not all sent parameters were read')) {
-          // Server that doesn't support some parameters, mark it as blocked for 6 hours
-          CacheProxy.put(`${BLOCKED_SERVER_(index)}`, 'true', SIX_HOURS_IN_SEC);
-          Log.debug("Error 400, blocked server: " + server)
+          // Likely a request signature verification timeout
+          Log.debug("Error 400 from " + server)
         }
 
         throw new Error(`${resp.getResponseCode()} ${resp.getContentText()}`)
