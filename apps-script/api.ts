@@ -130,16 +130,16 @@ function getStatistics() {
   return catchError(() => new Statistics(DefaultStore).getAll());
 }
 
-function getRecommends() {
+function getSurvivors() {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
-    return new DefaultRecommender(DefaultStore, exchange).getRecommends();
+    return new DefaultRecommender(DefaultStore, exchange).getSurvivors();
   });
 }
 
-function resetRecommends() {
+function resetSurvivors() {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
-    return new DefaultRecommender(DefaultStore, exchange).resetRecommends();
+    return new DefaultRecommender(DefaultStore, exchange).resetSurvivors();
   });
 }

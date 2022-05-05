@@ -61,7 +61,7 @@ function Ticker() {
   store.dumpChanges();
 
   try {
-    new DefaultRecommender(store, exchange).updateRecommendations();
+    new DefaultRecommender(store, exchange).updateSurvivors();
   } catch (e) {
     Log.info(e)
   }

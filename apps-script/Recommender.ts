@@ -1,14 +1,14 @@
 import {IStore} from "./Store";
 import {IExchange} from "./Binance";
 import {CacheProxy} from "./CacheProxy";
-import {Recommendation} from "./lib/types";
+import {Survivor} from "./lib/types";
 
 export interface IRecommender {
-  getRecommends(): Recommendation[]
+  getSurvivors(): Survivor[]
 
-  updateRecommendations(): void
+  updateSurvivors(): void
 
-  resetRecommends(): void
+  resetSurvivors(): void
 }
 
 
@@ -27,12 +27,12 @@ export class DefaultRecommender implements IRecommender {
    * Returns first ten recommended symbols if there are more than ten.
    * Sorted by recommendation score.
    */
-  getRecommends(): Recommendation[] {
+  getSurvivors(): Survivor[] {
     const memosJson = CacheProxy.get("RecommenderMemos");
-    const memos: { [key: string]: Recommendation } = memosJson ? JSON.parse(memosJson) : {};
-    const recommended: Recommendation[] = []
+    const memos: { [key: string]: Survivor } = memosJson ? JSON.parse(memosJson) : {};
+    const recommended: Survivor[] = []
     Object.values(memos).forEach(m => {
-      const r = Recommendation.fromObject(m);
+      const r = Survivor.fromObject(m);
       if (r.getScore() > 0) {
         recommended.push(r);
       }
@@ -40,13 +40,13 @@ export class DefaultRecommender implements IRecommender {
     return recommended.sort((a, b) => b.getScore() - a.getScore()).slice(0, 10);
   }
 
-  updateRecommendations(): void {
+  updateSurvivors(): void {
     const prices = this.exchange.getPrices();
     const memosJson = CacheProxy.get("RecommenderMemos");
-    const memos: { [key: string]: Recommendation } = memosJson ? JSON.parse(memosJson) : {};
+    const memos: { [key: string]: Survivor } = memosJson ? JSON.parse(memosJson) : {};
     const priceAsset = this.store.getConfig().PriceAsset;
-    const coinsThatGoUp: { [key: string]: Recommendation } = {};
-    const updatedMemos: { [key: string]: Recommendation } = {};
+    const coinsThatGoUp: { [key: string]: Survivor } = {};
+    const updatedMemos: { [key: string]: Survivor } = {};
     Object.keys(prices).forEach(s => {
       // skip symbols that have "UP" or "DOWN" in the middle of the string
       if (s.match(/^[A-Z]+(UP|DOWN)[A-Z]+$/)) {
@@ -55,7 +55,7 @@ export class DefaultRecommender implements IRecommender {
       const coinName = s.endsWith(priceAsset) ? s.split(priceAsset)[0] : null;
       if (coinName) {
         const price = prices[s];
-        const memo = memos[s] ? Recommendation.fromObject(memos[s]) : new Recommendation(coinName);
+        const memo = memos[s] ? Survivor.fromObject(memos[s]) : new Survivor(coinName);
         memo.pushPrice(price)
         memo.priceGoesUp() && (coinsThatGoUp[s] = memo)
         updatedMemos[s] = memo;
@@ -76,7 +76,7 @@ export class DefaultRecommender implements IRecommender {
     CacheProxy.put("RecommenderMemos", JSON.stringify(updatedMemos));
   }
 
-  resetRecommends(): void {
+  resetSurvivors(): void {
     // todo: make concurrent safe
     CacheProxy.put("RecommenderMemos", JSON.stringify({}));
   }

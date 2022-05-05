@@ -1,4 +1,4 @@
-export class Recommendation {
+export class Survivor {
   /**
    * `r` is the number of times this memo was going up when 90% of marked was going down
    */
@@ -15,8 +15,8 @@ export class Recommendation {
     this.n = coinName
   }
 
-  static fromObject(obj: Recommendation): Recommendation {
-    const rec = new Recommendation(obj.n || obj.c)
+  static fromObject(obj: Survivor): Survivor {
+    const rec = new Survivor(obj.n || obj.c)
     rec.r = obj.r
     rec.p = obj.p
     return rec
