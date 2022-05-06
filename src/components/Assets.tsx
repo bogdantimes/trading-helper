@@ -4,6 +4,7 @@ import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {Config} from "../../apps-script/Store";
 import {gsr} from "../App";
+import {useEffect} from "react";
 
 const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.profit() < t2.profit() ? 1 : -1;
 
@@ -21,7 +22,15 @@ const groupByState = (trades: { [key: string]: TradeMemo }): Map<TradeState, Tra
   return groupsMap;
 }
 
-export function Assets({trades, config}: { trades: { [k: string]: TradeMemo }, config: Config }) {
+export function Assets({config}: { config: Config }) {
+  const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({});
+
+  useEffect(() => {
+    gsr.withSuccessHandler(setTrades).getTrades();
+    const interval = setInterval(gsr.withSuccessHandler(setTrades).getTrades, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   const [state, setState] = React.useState<TradeState>(TradeState.BOUGHT);
   const changeState = (e, newState) => setState(newState);
 
@@ -40,7 +49,8 @@ export function Assets({trades, config}: { trades: { [k: string]: TradeMemo }, c
       <Grid item xs={12}>
         <Grid container justifyContent="center" spacing={2}>
           <Grid item>
-            <ToggleButtonGroup sx={{...sx, height: '56px'}} fullWidth={true} color="primary" value={state} exclusive onChange={changeState}>
+            <ToggleButtonGroup sx={{...sx, height: '56px'}} fullWidth={true} color="primary" value={state} exclusive
+                               onChange={changeState}>
               <ToggleButton value={TradeState.BOUGHT}>
                 <Badge badgeContent={tradesMap.get(TradeState.BOUGHT).length}>Bought</Badge>
               </ToggleButton>

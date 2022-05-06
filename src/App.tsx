@@ -38,7 +38,6 @@ export default function App() {
   const theme = React.useMemo(() => createTheme({palette: {mode: mode ? 'dark' : 'light'}}), [mode]);
 
   const [config, setConfig] = React.useState(null);
-  const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({});
 
   const [initialSetup, setInitialSetup] = React.useState(true);
   const [fetchingData, setFetchingData] = React.useState(true);
@@ -54,7 +53,6 @@ export default function App() {
           setInitialSetup(true);
         } else {
           setInitialSetup(false);
-          gsr.withSuccessHandler(setTrades).getTrades()
         }
       })
       .withFailureHandler(resp => {
@@ -69,10 +67,7 @@ export default function App() {
 
   function reFetchData() {
     if (!initialSetup) {
-      gsr.withSuccessHandler((config: Config) => {
-        setConfig(config);
-        gsr.withSuccessHandler(setTrades).getTrades()
-      }).getConfig()
+      gsr.withSuccessHandler(setConfig).getConfig()
     }
   }
 
@@ -100,7 +95,7 @@ export default function App() {
               <Tab label="Survivors" {...a11yProps(3)} />
             </Tabs>
           </Box>
-          <TabPanel value={value} index={0}><Assets config={config} trades={trades}/></TabPanel>
+          <TabPanel value={value} index={0}><Assets config={config}/></TabPanel>
           <TabPanel value={value} index={1}><Settings/></TabPanel>
           <TabPanel value={value} index={2}><Info/></TabPanel>
           <TabPanel value={value} index={3}><Survivors/></TabPanel>
