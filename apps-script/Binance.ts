@@ -1,10 +1,6 @@
 import {Config} from "./Store";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
-import {CacheProxy} from "./CacheProxy";
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
-
-const FIVE_MINUTES_IN_SEC = 300;
-const BLOCKED_SERVER_ = i => `BlockedBinanceServer_${i}`;
 
 export interface IExchange {
   getFreeAsset(assetName: string): number
@@ -27,12 +23,14 @@ export class Binance implements IExchange {
   private readonly numberOfAPIServers = 5; // 5 distinct addresses were verified.
   private readonly defaultReqOpts: URLFetchRequestOptions;
   private readonly tradeReqOpts: URLFetchRequestOptions;
+  private readonly serverIds: number[];
 
   constructor(config: Config) {
     this.key = config.KEY
     this.secret = config.SECRET
     this.defaultReqOpts = {headers: {'X-MBX-APIKEY': this.key}, muteHttpExceptions: true}
     this.tradeReqOpts = {method: 'post', ...this.defaultReqOpts}
+    this.serverIds = this.shuffleServerIds();
   }
 
   getPrices(): { [p: string]: number } {
@@ -152,7 +150,7 @@ export class Binance implements IExchange {
       interval: this.interval,
       attempts: this.attempts,
       runnable: () => {
-        const index = this.getRandomAvailableServerIndex();
+        const index = this.getNextServerIndex();
         const server = `https://api${index}.binance.com/api/v3`;
         const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options)
 
@@ -161,8 +159,7 @@ export class Binance implements IExchange {
         }
 
         if (resp.getResponseCode() === 418) {
-          // Limit reached, mark server as blocked for 5 minutes
-          // CacheProxy.put(`${BLOCKED_SERVER_(index)}`, 'true', FIVE_MINUTES_IN_SEC);
+          // Limit reached
           Log.debug("Error 418 from " + server)
         }
 
@@ -176,32 +173,17 @@ export class Binance implements IExchange {
     });
   }
 
-
-  /**
-   * getRandomAvailableServerIndex returns a random server number in a range `1` - `{numberOfAPIServers}`,
-   * among the ones that are not blocked by the tool.
-   */
-  private getRandomAvailableServerIndex(): number {
-    let index;
-    let isBlocked = true;
-
-    // create and shuffle an array with values from 1 to numberOfAPIServers
-    const serverIds = Array
+  private shuffleServerIds() {
+    return Array
       .from(Array(this.numberOfAPIServers).keys())
       .map(i => i + 1)
-      .sort(() => Math.random() - 0.5);
+      .sort(() => Math.random() - 0.5)
+  }
 
-    const blockedServers = CacheProxy.getAll(serverIds.map(BLOCKED_SERVER_));
-
-    while (isBlocked && serverIds.length > 0) {
-      index = serverIds.pop();
-      isBlocked = !!blockedServers[`${BLOCKED_SERVER_(index)}`];
-    }
-
-    if (isBlocked) {
-      throw new Error(`${INTERRUPT}: All ${this.numberOfAPIServers} Binance servers are blocked.`);
-    }
-
+  private getNextServerIndex(): number {
+    // take first server from the list and move it to the end
+    const index = this.serverIds.shift();
+    this.serverIds.push(index);
     return index;
   }
 }
