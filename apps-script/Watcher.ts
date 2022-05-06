@@ -3,7 +3,7 @@ import {Exchange} from "./Exchange";
 import {Statistics} from "./Statistics";
 import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
-import {DefaultRecommender} from "./Recommender";
+import {SurvivorsRecommender} from "./Recommender";
 
 class Watcher {
   static start() {
@@ -61,7 +61,7 @@ function Ticker() {
   store.dumpChanges();
 
   try {
-    new DefaultRecommender(store, exchange).updateSurvivors();
+    new SurvivorsRecommender(store, exchange).updateScores();
   } catch (e) {
     Log.info(e)
   }

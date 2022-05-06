@@ -2,7 +2,7 @@ import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {Statistics} from "./Statistics";
 import {Exchange} from "./Exchange";
-import {DefaultRecommender} from "./Recommender";
+import {SurvivorsRecommender} from "./Recommender";
 
 function doGet() {
   return HtmlService
@@ -133,13 +133,13 @@ function getStatistics() {
 function getSurvivors() {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
-    return new DefaultRecommender(DefaultStore, exchange).getSurvivors();
+    return new SurvivorsRecommender(DefaultStore, exchange).getScores();
   });
 }
 
 function resetSurvivors() {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
-    return new DefaultRecommender(DefaultStore, exchange).resetSurvivors();
+    return new SurvivorsRecommender(DefaultStore, exchange).resetScores();
   });
 }

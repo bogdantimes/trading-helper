@@ -1,4 +1,4 @@
-export class Survivor {
+export class CoinScore {
   /**
    * `r` is the number of times this memo was going up when 90% of marked was going down
    */
@@ -15,8 +15,15 @@ export class Survivor {
     this.n = coinName
   }
 
-  static fromObject(obj: Survivor): Survivor {
-    const rec = new Survivor(obj.n || obj.c)
+  static new(coinName: string, obj?: CoinScore): CoinScore {
+    const score = new CoinScore(coinName);
+    score.p = obj?.p ?? score.p
+    score.r = obj?.r ?? score.r
+    return score
+  }
+
+  static fromObject(obj: CoinScore): CoinScore {
+    const rec = new CoinScore(obj.n || obj.c)
     rec.r = obj.r
     rec.p = obj.p
     return rec
