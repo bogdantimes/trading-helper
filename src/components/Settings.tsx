@@ -100,13 +100,11 @@ export function Settings() {
           }
           label="Averaging down"
         />
-        <Stack direction={"row"}>
-          <Box sx={{position: 'relative'}}>
-            <Button variant="contained" color="primary" startIcon={<SaveIcon/>}
-                    onClick={onSave} disabled={isSaving}>Save</Button>
-            {isSaving && circularProgress}
-          </Box>
-        </Stack>
+        <Box alignSelf={"center"} sx={{position: 'relative'}}>
+          <Button variant="contained" color="primary" startIcon={<SaveIcon/>}
+                  onClick={onSave} disabled={isSaving}>Save</Button>
+          {isSaving && circularProgress}
+        </Box>
       </Stack>
       {error && <Snackbar open={!!error} message={error}/>}
     </Box>
