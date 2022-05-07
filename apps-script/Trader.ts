@@ -31,34 +31,32 @@ export class V2Trader {
     }
   }
 
-  tickerCheck(tradeMemo: TradeMemo): void {
+  tickerCheck(tm: TradeMemo): void {
+    const symbol = tm.tradeResult.symbol;
 
-    if (tradeMemo.stateIs(TradeState.SELL)) {
-      return this.sellAndClose(tradeMemo)
-    }
+    tm.pushPrice(this.getPrice(symbol))
 
-    const symbol = tradeMemo.tradeResult.symbol;
-    tradeMemo.pushPrice(this.getPrice(symbol))
-
-    const priceGoesUp = tradeMemo.priceGoesUp()
-    priceGoesUp && Log.info(`${symbol} price goes up`)
-
-    if (tradeMemo.stateIs(TradeState.BOUGHT)) {
-      this.processBoughtState(tradeMemo);
-    } else if (tradeMemo.stateIs(TradeState.SOLD)) {
-      this.processSoldState(tradeMemo);
+    if (tm.stateIs(TradeState.BOUGHT)) {
+      this.processBoughtState(tm);
+    } else if (tm.stateIs(TradeState.SOLD)) {
+      this.processSoldState(tm);
     }
 
     // save new pushed price and any intermediate state changes
-    this.store.setTrade(tradeMemo)
+    this.store.setTrade(tm)
+
+    const priceGoesUp = tm.priceGoesUp()
+    priceGoesUp && Log.info(`${symbol} price goes up`)
 
     // take action after processing
-    if (tradeMemo.stateIs(TradeState.SELL)) {
-      this.sellAndClose(tradeMemo)
-    } else if (tradeMemo.stateIs(TradeState.BUY) && priceGoesUp) {
-      this.buy(tradeMemo, this.config.BuyQuantity)
-    } else {
-      Log.info(`${symbol}: waiting`)
+    if (tm.stateIs(TradeState.SELL) && !priceGoesUp) {
+      // sell if price not goes up anymore
+      // this allows to wait if price continues to go up
+      this.sell(tm)
+    } else if (tm.stateIs(TradeState.BUY) && priceGoesUp) {
+      // buy only if price started to go up
+      // this allows to wait if price continues to fall
+      this.buy(tm, this.config.BuyQuantity)
     }
   }
 
@@ -97,22 +95,20 @@ export class V2Trader {
     const profitLimitPrice = tm.tradeResult.price * (1 + this.config.ProfitLimit);
     if (tm.currentPrice > profitLimitPrice) {
       const canSell = !tm.hodl && this.store.getConfig().SellAtProfitLimit;
-      canSell && !priceGoesUp && tm.setState(TradeState.SELL)
+      canSell && tm.setState(TradeState.SELL)
     }
 
     if (priceGoesUp) {
-      // Using previous price two measures back to calculate new stop limit
+      // Using the previous price a few measures back to calculate new stop limit
       const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.StopLimit);
-      tm.stopLimitPrice = tm.stopLimitPrice < newStopLimit ? newStopLimit : tm.stopLimitPrice
+      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
     }
   }
 
   private getPrice(symbol: ExchangeSymbol): number {
     const price = this.prices[symbol.toString()];
-    if (!price) {
-      throw Error(`No symbol price: ${symbol}`)
-    }
-    return price
+    if (price) return price
+    throw Error(`No symbol price: ${symbol}`)
   }
 
   private buy(memo: TradeMemo, cost: number): void {
@@ -130,7 +126,7 @@ export class V2Trader {
     }
   }
 
-  private sellAndClose(memo: TradeMemo): void {
+  private sell(memo: TradeMemo): void {
     const symbol = memo.tradeResult.symbol;
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
     const gained = tradeResult.gained;

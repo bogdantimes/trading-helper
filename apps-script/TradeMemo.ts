@@ -95,7 +95,7 @@ export class TradeMemo {
   }
 
   profit(): number {
-    return (this.prices[this.prices.length - 1] * this.tradeResult.quantity) - this.tradeResult.paid
+    return (this.currentPrice * this.tradeResult.quantity) - this.tradeResult.paid
   }
 
   profitPercent(): number {
@@ -111,21 +111,18 @@ export class TradeMemo {
   }
 
   soldPriceChangePercent(): number {
-    const lastPrice = this.prices[this.prices.length - 1];
-    return (lastPrice - this.tradeResult.price) / this.tradeResult.price * 100
+    return (this.currentPrice - this.tradeResult.price) / this.tradeResult.price * 100
   }
 
   lossLimitCrossedDown(): boolean {
     // all prices except the last one are greater than the stop limit price
-    const latestPrice = this.prices[this.prices.length - 1];
-    return latestPrice < this.stopLimitPrice && this.prices.slice(0, -1).every(price => price >= this.stopLimitPrice)
+    return this.currentPrice < this.stopLimitPrice && this.prices.slice(0, -1).every(price => price >= this.stopLimitPrice)
   }
 
   profitLimitCrossedUp(profitLimit: number): boolean {
     // all prices except the last one are lower the profit limit price
     const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
-    const latestPrice = this.prices[this.prices.length - 1];
-    return latestPrice > profitLimitPrice && this.prices.slice(0, -1).every(price => price <= profitLimitPrice)
+    return this.currentPrice > profitLimitPrice && this.prices.slice(0, -1).every(price => price <= profitLimitPrice)
   }
 
   priceGoesUp(lastN: number = 3): boolean {
