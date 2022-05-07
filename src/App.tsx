@@ -14,7 +14,6 @@ import {Settings} from "./components/Settings";
 import {Info} from "./components/Info";
 import {Assets} from "./components/Assets";
 import {TabPanel} from "./components/TabPanel";
-import {TradeMemo} from "../apps-script/TradeMemo";
 import {useEffect} from "react";
 import {Config} from "../apps-script/Store";
 import {InitialSetup} from "./components/InitialSetup";
