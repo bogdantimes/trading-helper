@@ -3,7 +3,7 @@ import {IExchange} from "./Binance";
 import {CacheProxy} from "./CacheProxy";
 import {CoinScore} from "./shared-lib/types";
 
-export interface IRecommender {
+export interface ScoresManager {
   getScores(): CoinScore[]
 
   updateScores(): void
@@ -13,7 +13,7 @@ export interface IRecommender {
 
 type CoinScoreMap = { [key: string]: CoinScore };
 
-export class SurvivorsRecommender implements IRecommender {
+export class SurvivorsTracker implements ScoresManager {
   private store: IStore;
   private exchange: IExchange;
   private readonly MARKET_UP_FRACTION = 0.01; // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
