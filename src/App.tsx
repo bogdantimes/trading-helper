@@ -88,7 +88,7 @@ export default function App() {
       {!fetchingData && !initialSetup &&
         <Box sx={{width: '100%'}}>
           <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-            <Tabs value={value} onChange={handleChange} centered allowScrollButtonsMobile={true}>
+            <Tabs value={value} onChange={handleChange} centered variant={'scrollable'}>
               <Tab label="Assets" {...a11yProps(0)} />
               <Tab label="Settings" {...a11yProps(1)} />
               <Tab label="Info" {...a11yProps(2)} />
