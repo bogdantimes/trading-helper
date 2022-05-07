@@ -23,15 +23,15 @@ export function Survivors() {
     <Box sx={{justifyContent: 'center', display: 'flex'}}>
       <Stack spacing={2}>
         {!!survivors.length &&
-          <List sx={{ width: 320 }}>
+          <List sx={{ width: 300 }}>
             {survivors.map((rJson, i) => {
               const r = CoinScore.fromObject(rJson);
               return (
-                <ListItem dense={true} secondaryAction={
+                <ListItem disablePadding={true} secondaryAction={
                   <Button size={'small'} onClick={() => buy(r.getCoinName())}>Buy</Button>
                 }>
                   <ListItemAvatar>#{i + 1}</ListItemAvatar>
-                  <ListItemText>{r.getCoinName()} (score={r.getScore()})</ListItemText>
+                  <ListItemText primary={r.getCoinName()} secondary={`Score: ${r.getScore()}`}/>
                 </ListItem>
               );
             })}
