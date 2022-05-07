@@ -11,6 +11,7 @@ export interface IRecommender {
   resetScores(): void
 }
 
+type CoinScoreMap = { [key: string]: CoinScore };
 
 export class SurvivorsRecommender implements IRecommender {
   private store: IStore;
@@ -29,7 +30,7 @@ export class SurvivorsRecommender implements IRecommender {
    */
   getScores(): CoinScore[] {
     const memosJson = CacheProxy.get("RecommenderMemos");
-    const memos: { [key: string]: CoinScore } = memosJson ? JSON.parse(memosJson) : {};
+    const memos: CoinScoreMap = memosJson ? JSON.parse(memosJson) : {};
     const recommended: CoinScore[] = []
     Object.values(memos).forEach(m => {
       const r = CoinScore.fromObject(m);
@@ -41,12 +42,12 @@ export class SurvivorsRecommender implements IRecommender {
   }
 
   updateScores(): void {
-    const prices = this.exchange.getPrices();
     const scoresJson = CacheProxy.get("RecommenderMemos");
-    const scores: { [key: string]: CoinScore } = scoresJson ? JSON.parse(scoresJson) : {};
+    const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : this.store.get("SurvivorScores") || {};
     const priceAsset = this.store.getConfig().PriceAsset;
-    const raisedCoins: { [key: string]: CoinScore } = {};
-    const updatedScores: { [key: string]: CoinScore } = {};
+    const coinsRaisedAmidMarkedDown: CoinScoreMap = {};
+    const updatedScores: CoinScoreMap = {};
+    const prices = this.exchange.getPrices();
     Object.keys(prices).forEach(s => {
       // skip symbols that have "UP" or "DOWN" in the middle of the string
       if (s.match(/^[A-Z]+(UP|DOWN)[A-Z]+$/)) {
@@ -57,27 +58,35 @@ export class SurvivorsRecommender implements IRecommender {
         const price = prices[s];
         const score = CoinScore.new(coinName, scores[s]);
         score.pushPrice(price)
-        score.priceGoesUp() && (raisedCoins[s] = score)
+        score.priceGoesUp() && (coinsRaisedAmidMarkedDown[s] = score)
         updatedScores[s] = score;
       }
     })
 
     // percent of prices that went down
-    const goUpPercent = (Object.keys(raisedCoins).length / Object.keys(prices).length) * 100;
+    const goUpPercent = (Object.keys(coinsRaisedAmidMarkedDown).length / Object.keys(prices).length) * 100;
     Log.info(`${(goUpPercent).toFixed(2)}% of market prices went up`);
 
     // if only MARKET_UP_FRACTION% of coins go up, we update their recommendation score
-    const fractionMet = Object.keys(raisedCoins).length <= (this.MARKET_UP_FRACTION * Object.keys(prices).length);
-    if (fractionMet && Object.keys(raisedCoins).length > 0) {
-      Object.values(raisedCoins).forEach(r => r.incrementScore());
+    const fractionMet = Object.keys(coinsRaisedAmidMarkedDown).length <= (this.MARKET_UP_FRACTION * Object.keys(prices).length);
+    if (fractionMet && Object.keys(coinsRaisedAmidMarkedDown).length > 0) {
+      Object.values(coinsRaisedAmidMarkedDown).forEach(r => r.incrementScore());
       Log.info(`Updated survivors.`);
     }
 
     CacheProxy.put("RecommenderMemos", JSON.stringify(updatedScores));
+
+    // Sync the scores to store every 6 hours
+    if (!CacheProxy.get("SurvivorScoresSynced")) {
+      this.store.set("SurvivorScores", updatedScores);
+      CacheProxy.put("SurvivorScoresSynced", "true", 6 * 60 * 60); // 6 hours
+    }
   }
 
   resetScores(): void {
     // todo: make concurrent safe
     CacheProxy.put("RecommenderMemos", JSON.stringify({}));
+    this.store.set("SurvivorScores", {});
+    CacheProxy.put("SurvivorScoresSynced", "true", 6 * 60 * 60); // 6 hours
   }
 }
