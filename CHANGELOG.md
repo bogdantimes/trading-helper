@@ -1,3 +1,10 @@
+# v2.3.0
+
+* Added "Survivors" feature, which tracks currencies that keep the price when 99% of the market goes down.
+* Visual improvements.
+* Improved Binance connection stability.
+* Trading state machine minor improvements.
+
 # v2.2.0
 
 * "Averaging Down" feature.

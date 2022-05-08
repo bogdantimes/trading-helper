@@ -3,6 +3,7 @@ import {Exchange} from "./Exchange";
 import {Statistics} from "./Statistics";
 import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
+import {Survivors} from "./Survivors";
 
 class Watcher {
   static start() {
@@ -31,7 +32,17 @@ function Ticker() {
   TradesQueue.flush();
 
   const store = DefaultStore;
-  const trader = new V2Trader(store, new Exchange(store.getConfig()), new Statistics(store));
+  let exchange: Exchange;
+  let trader: V2Trader;
+
+  try {
+    exchange = new Exchange(store.getConfig());
+    trader = new V2Trader(store, exchange, new Statistics(store));
+  } catch (e) {
+    Log.error(e)
+    Log.ifUsefulDumpAsEmail()
+    throw e;
+  }
 
   store.getTradesList().forEach(tradeMemo => {
     try {
@@ -48,6 +59,12 @@ function Ticker() {
   }
 
   store.dumpChanges();
+
+  try {
+    new Survivors(store, exchange).updateScores();
+  } catch (e) {
+    Log.info(e)
+  }
 
   Log.ifUsefulDumpAsEmail()
 }

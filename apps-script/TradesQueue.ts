@@ -47,6 +47,9 @@ export class TradesQueue {
             if (trade.tradeResult.quantity) {
               trade.setState(TradeState.BOUGHT);
               store.setTrade(trade);
+            } else if (trade.tradeResult.price) {
+              trade.setState(TradeState.SOLD);
+              store.setTrade(trade);
             } else {
               store.deleteTrade(trade);
             }

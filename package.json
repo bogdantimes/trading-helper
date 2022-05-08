@@ -1,6 +1,6 @@
 {
   "name": "trading-helper",
-  "version": "2.0.0",
+  "version": "2.3.0",
   "description": "",
   "scripts": {
     "glogin": "clasp login",
@@ -29,6 +29,7 @@
     "@mui/x-data-grid": "^5.8.0",
     "lightweight-charts": "^3.8.0",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "react-vis": "^1.11.7"
   }
 }
