@@ -14,10 +14,10 @@ import {Settings} from "./components/Settings";
 import {Info} from "./components/Info";
 import {Assets} from "./components/Assets";
 import {TabPanel} from "./components/TabPanel";
-import {TradeMemo} from "../apps-script/TradeMemo";
 import {useEffect} from "react";
 import {Config} from "../apps-script/Store";
 import {InitialSetup} from "./components/InitialSetup";
+import {Survivors} from "./components/Survivors";
 
 // @ts-ignore
 export const gsr = google.script.run;
@@ -37,7 +37,6 @@ export default function App() {
   const theme = React.useMemo(() => createTheme({palette: {mode: mode ? 'dark' : 'light'}}), [mode]);
 
   const [config, setConfig] = React.useState(null);
-  const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({});
 
   const [initialSetup, setInitialSetup] = React.useState(true);
   const [fetchingData, setFetchingData] = React.useState(true);
@@ -53,7 +52,6 @@ export default function App() {
           setInitialSetup(true);
         } else {
           setInitialSetup(false);
-          gsr.withSuccessHandler(setTrades).getTrades()
         }
       })
       .withFailureHandler(resp => {
@@ -68,10 +66,7 @@ export default function App() {
 
   function reFetchData() {
     if (!initialSetup) {
-      gsr.withSuccessHandler((config: Config) => {
-        setConfig(config);
-        gsr.withSuccessHandler(setTrades).getTrades()
-      }).getConfig()
+      gsr.withSuccessHandler(setConfig).getConfig()
     }
   }
 
@@ -85,30 +80,24 @@ export default function App() {
       <CssBaseline/>
       {fetchingData && <Box sx={{width: '100%'}}><LinearProgress/></Box>}
       {fetchDataError && <Alert severity="error">
-        <Typography variant="h6">{fetchDataError}</Typography>
-        <Typography variant="caption">
-          Please check your Google Apps Script application is deployed and try again.
-        </Typography>
+        <Typography variant="caption">{fetchDataError}</Typography>
+        <Typography variant="caption">Please check your Google Apps Script application is deployed and try again.</Typography>
       </Alert>}
       {!fetchingData && initialSetup && <InitialSetup config={config} onConnect={initialFetch}/>}
       {!fetchingData && !initialSetup &&
         <Box sx={{width: '100%'}}>
           <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-            <Tabs value={value} onChange={handleChange}>
+            <Tabs value={value} onChange={handleChange} centered>
               <Tab label="Assets" {...a11yProps(0)} />
               <Tab label="Settings" {...a11yProps(1)} />
               <Tab label="Info" {...a11yProps(2)} />
+              <Tab label="Survivors" {...a11yProps(3)} />
             </Tabs>
           </Box>
-          <TabPanel value={value} index={0}>
-            <Assets config={config} trades={trades}/>
-          </TabPanel>
-          <TabPanel value={value} index={1}>
-            <Settings/>
-          </TabPanel>
-          <TabPanel value={value} index={2}>
-            <Info/>
-          </TabPanel>
+          <TabPanel value={value} index={0}><Assets config={config}/></TabPanel>
+          <TabPanel value={value} index={1}><Settings/></TabPanel>
+          <TabPanel value={value} index={2}><Info/></TabPanel>
+          <TabPanel value={value} index={3}><Survivors/></TabPanel>
         </Box>
       }
     </ThemeProvider>

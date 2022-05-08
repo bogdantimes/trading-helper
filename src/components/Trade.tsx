@@ -188,11 +188,15 @@ export default function Trade(props) {
             <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
-          {!!tm.tradeResult.quantity &&
+          {!!tm.tradeResult.quantity ?
             <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
               <div>Qty: {tm.tradeResult.quantity} Paid: {tm.tradeResult.paid.toFixed(2)}</div>
               <div>{tm.profit() >= 0 ? "Profit" : "Loss"}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
               <div>Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}%)</div>
+            </Typography>
+            :
+            <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
+              <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
             </Typography>
           }
           <CardActions>

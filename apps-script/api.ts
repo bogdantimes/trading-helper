@@ -1,7 +1,8 @@
 import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {Statistics} from "./Statistics";
-import {Binance} from "./Binance";
+import {Exchange} from "./Exchange";
+import {Survivors} from "./Survivors";
 
 function doGet() {
   return HtmlService
@@ -37,7 +38,7 @@ function initialSetup(params: InitialSetupParams) {
     config.SECRET = params.binanceSecretKey || config.SECRET;
     if (config.KEY && config.SECRET) {
       Log.alert("Checking if Binance is reachable");
-      new Binance(config).getFreeAsset(config.PriceAsset);
+      new Exchange(config).getFreeAsset(config.PriceAsset);
       Log.alert("Connected to Binance");
       // @ts-ignore
       Start();
@@ -127,4 +128,18 @@ function setConfig(config) {
 
 function getStatistics() {
   return catchError(() => new Statistics(DefaultStore).getAll());
+}
+
+function getSurvivors() {
+  return catchError(() => {
+    const exchange = new Exchange(DefaultStore.getConfig());
+    return new Survivors(DefaultStore, exchange).getScores();
+  });
+}
+
+function resetSurvivors() {
+  return catchError(() => {
+    const exchange = new Exchange(DefaultStore.getConfig());
+    return new Survivors(DefaultStore, exchange).resetScores();
+  });
 }
