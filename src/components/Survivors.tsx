@@ -23,7 +23,7 @@ export function Survivors() {
     <Box sx={{justifyContent: 'center', display: 'flex'}}>
       <Stack spacing={2}>
         {!!survivors.length &&
-          <List sx={{ width: 300 }}>
+          <List sx={{padding: 0, width: 300}}>
             {survivors.map((rJson, i) => {
               const r = CoinScore.fromObject(rJson);
               return (
@@ -31,7 +31,7 @@ export function Survivors() {
                   <Button size={'small'} onClick={() => buy(r.getCoinName())}>Buy</Button>
                 }>
                   <ListItemAvatar>#{i + 1}</ListItemAvatar>
-                  <ListItemText primary={r.getCoinName()} secondary={`Score: ${r.getScore()}`}/>
+                  <ListItemText sx={{marginBottom: 0}} primary={r.getCoinName()} secondary={`Score: ${r.getScore()}`}/>
                 </ListItem>
               );
             })}
