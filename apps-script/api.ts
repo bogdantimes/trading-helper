@@ -2,7 +2,7 @@ import {DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {Statistics} from "./Statistics";
 import {Exchange} from "./Exchange";
-import {SurvivorsTracker} from "./SurvivorsTracker";
+import {Survivors} from "./Survivors";
 
 function doGet() {
   return HtmlService
@@ -133,13 +133,13 @@ function getStatistics() {
 function getSurvivors() {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
-    return new SurvivorsTracker(DefaultStore, exchange).getScores();
+    return new Survivors(DefaultStore, exchange).getScores();
   });
 }
 
 function resetSurvivors() {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
-    return new SurvivorsTracker(DefaultStore, exchange).resetScores();
+    return new Survivors(DefaultStore, exchange).resetScores();
   });
 }

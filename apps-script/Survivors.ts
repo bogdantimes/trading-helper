@@ -13,7 +13,7 @@ export interface ScoresManager {
 
 type CoinScoreMap = { [key: string]: CoinScore };
 
-export class SurvivorsTracker implements ScoresManager {
+export class Survivors implements ScoresManager {
   private store: IStore;
   private exchange: IExchange;
   private readonly MARKET_UP_FRACTION = 0.01; // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
@@ -49,8 +49,8 @@ export class SurvivorsTracker implements ScoresManager {
     const updatedScores: CoinScoreMap = {};
     const prices = this.exchange.getPrices();
     Object.keys(prices).forEach(s => {
-      // skip symbols that have "UP" or "DOWN" in the middle of the string
-      if (s.match(/^[A-Z]+(UP|DOWN)[A-Z]+$/)) {
+      // skip symbols that are not spot trading
+      if (s.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/)) {
         return;
       }
       const coinName = s.endsWith(priceAsset) ? s.split(priceAsset)[0] : null;
