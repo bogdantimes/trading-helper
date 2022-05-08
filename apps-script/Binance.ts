@@ -1,5 +1,6 @@
 import {Config} from "./Store";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
+import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
 export interface IExchange {
   getFreeAsset(assetName: string): number
@@ -13,37 +14,29 @@ export interface IExchange {
   getPrices(): { [p: string]: number }
 }
 
-const ATTEMPTS = 20;
-const INTERVAL = 100;
-
 export class Binance implements IExchange {
-  private static readonly API = () => {
-    return getRandomFromList([
-      "https://api1.binance.com/api/v3",
-      "https://api2.binance.com/api/v3",
-      "https://api3.binance.com/api/v3",
-    ]);
-  }
+
   private readonly key: string;
   private readonly secret: string;
-  private readonly tradeReqParams: object;
-  private readonly reqParams: object;
+  private readonly attempts: number = 5;
+  private readonly interval: number = 100;
+  private readonly numberOfAPIServers = 5; // 5 distinct addresses were verified.
+  private readonly defaultReqOpts: URLFetchRequestOptions;
+  private readonly tradeReqOpts: URLFetchRequestOptions;
+  private readonly serverIds: number[];
 
   constructor(config: Config) {
     this.key = config.KEY
     this.secret = config.SECRET
-    this.tradeReqParams = {method: 'post', headers: {'X-MBX-APIKEY': this.key}}
-    this.reqParams = {headers: {'X-MBX-APIKEY': this.key}}
+    this.defaultReqOpts = {headers: {'X-MBX-APIKEY': this.key}, muteHttpExceptions: true}
+    this.tradeReqOpts = {method: 'post', ...this.defaultReqOpts}
+    this.serverIds = this.shuffleServerIds();
   }
 
   getPrices(): { [p: string]: number } {
     Log.info("Fetching prices")
-    const resource = "ticker/price"
-    const data = execute({
-      context: '', interval: 1000, attempts: 2,
-      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}`, this.reqParams)
-    });
-    const prices: { symbol: string, price: string }[] = JSON.parse(data.getContentText())
+    const response = this.fetch(() => "ticker/price", this.defaultReqOpts);
+    const prices: { symbol: string, price: string }[] = JSON.parse(response.getContentText())
     Log.debug(`Got ${prices.length} prices`)
     const map: { [p: string]: number } = {}
     prices.forEach(p => map[p.symbol] = +p.price)
@@ -53,21 +46,15 @@ export class Binance implements IExchange {
   getPrice(symbol: ExchangeSymbol): number {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
-    const data = execute({
-      context: '', interval: 1000, attempts: 2,
-      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}?${query}`, this.reqParams)
-    });
-    Log.debug(data.getContentText())
-    return +JSON.parse(data.getContentText()).price
+    const response = this.fetch(() => `${resource}?${query}`, this.defaultReqOpts);
+    Log.debug(response.getContentText())
+    return +JSON.parse(response.getContentText()).price
   }
 
   getFreeAsset(assetName: string): number {
     const resource = "account"
     const query = "";
-    const data = execute({
-      context: '', interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/${resource}?${this.addSignature(query)}`, this.reqParams)
-    });
+    const data = this.fetch(() => `${resource}?${this.addSignature(query)}`, this.defaultReqOpts);
     try {
       const account = JSON.parse(data.getContentText());
       const assetVal = account.balances.find((balance) => balance.asset == assetName);
@@ -115,10 +102,7 @@ export class Binance implements IExchange {
   }
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
-    const response = execute({
-      context: '', interval: INTERVAL, attempts: ATTEMPTS,
-      runnable: () => UrlFetchApp.fetch(`${Binance.API()}/order?${this.addSignature(query)}`, this.tradeReqParams)
-    });
+    const response = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
     Log.debug(response.getContentText())
     try {
       const order = JSON.parse(response.getContentText());
@@ -159,5 +143,47 @@ export class Binance implements IExchange {
     }).join("")
 
     return `${sigData}&signature=${sig}`
+  }
+
+  fetch(resource: () => string, options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions): GoogleAppsScript.URL_Fetch.HTTPResponse {
+    return execute({
+      interval: this.interval,
+      attempts: this.attempts,
+      runnable: () => {
+        const index = this.getNextServerIndex();
+        const server = `https://api${index}.binance.com/api/v3`;
+        const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options)
+
+        if (resp.getResponseCode() === 200) {
+          return resp;
+        }
+
+        if (resp.getResponseCode() === 418) {
+          // Limit reached
+          Log.debug("Error 418 from " + server)
+        }
+
+        if (resp.getResponseCode() === 400 && resp.getContentText().includes('Not all sent parameters were read')) {
+          // Likely a request signature verification timeout
+          Log.debug("Error 400 from " + server)
+        }
+
+        throw new Error(`${resp.getResponseCode()} ${resp.getContentText()}`)
+      }
+    });
+  }
+
+  private shuffleServerIds() {
+    return Array
+      .from(Array(this.numberOfAPIServers).keys())
+      .map(i => i + 1)
+      .sort(() => Math.random() - 0.5)
+  }
+
+  private getNextServerIndex(): number {
+    // take first server from the list and move it to the end
+    const index = this.serverIds.shift();
+    this.serverIds.push(index);
+    return index;
   }
 }
