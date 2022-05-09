@@ -103,9 +103,9 @@ export class Binance implements IExchange {
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
     const response = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
-    Log.debug(response.getContentText())
     try {
       const order = JSON.parse(response.getContentText());
+      Log.debug(order)
       const tradeResult = new TradeResult(symbol);
       const [price, commission] = this.reducePriceAndCommission(order.fills)
       tradeResult.quantity = +order.origQty
@@ -115,6 +115,7 @@ export class Binance implements IExchange {
       tradeResult.commission = commission
       return tradeResult;
     } catch (e) {
+      Log.debug(response.getContentText())
       Log.error(e)
       throw e
     }
