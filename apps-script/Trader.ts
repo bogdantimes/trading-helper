@@ -32,9 +32,7 @@ export class V2Trader {
   }
 
   tickerCheck(tm: TradeMemo): void {
-    const symbol = tm.tradeResult.symbol;
-
-    tm.pushPrice(this.getPrice(symbol))
+    this.pushNewPrice(tm);
 
     if (tm.stateIs(TradeState.BOUGHT)) {
       this.processBoughtState(tm);
@@ -46,7 +44,7 @@ export class V2Trader {
     this.store.setTrade(tm)
 
     const priceGoesUp = tm.priceGoesUp()
-    priceGoesUp && Log.info(`${symbol} price goes up`)
+    priceGoesUp && Log.info(`${tm.tradeResult.symbol} price goes up`)
 
     // take action after processing
     if (tm.stateIs(TradeState.SELL) && !priceGoesUp) {
@@ -105,10 +103,19 @@ export class V2Trader {
     }
   }
 
-  private getPrice(symbol: ExchangeSymbol): number {
+  private pushNewPrice(tm: TradeMemo): void {
+    const symbol = tm.tradeResult.symbol;
     const price = this.prices[symbol.toString()];
-    if (price) return price
-    throw Error(`No symbol price: ${symbol}`)
+    if (price) {
+      tm.pushPrice(price)
+    } else if (tm.tradeResult.quantity) {
+      // no price available, but we have quantity, which means we bought something earlier
+      throw Error(`Exchange does not have price for ${symbol}`)
+    } else {
+      // no price available, and no quantity, which means we haven't bought anything yet
+      // could be a non-existing symbol, or not yet published in the exchange
+      Log.info(`Exchange does not have price for ${symbol}`)
+    }
   }
 
   private buy(memo: TradeMemo, cost: number): void {
