@@ -161,12 +161,12 @@ export class Binance implements IExchange {
 
         if (resp.getResponseCode() === 418) {
           // Limit reached
-          Log.debug("Error 418 from " + server)
+          Log.debug("Got 418 response code from " + server)
         }
 
         if (resp.getResponseCode() === 400 && resp.getContentText().includes('Not all sent parameters were read')) {
           // Likely a request signature verification timeout
-          Log.debug("Error 400 from " + server)
+          Log.debug("Got 400 response code from " + server)
         }
 
         throw new Error(`${resp.getResponseCode()} ${resp.getContentText()}`)
