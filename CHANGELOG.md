@@ -1,3 +1,9 @@
+# v2.3.1
+
+* Fixed Reset button on Survivors tab crashes the UI #16
+* Adjusted scores update logic to be less sensitive
+* Minor code clean up and fixes under the hood
+
 # v2.3.0
 
 * Added "Survivors" feature, which tracks currencies that keep the price when 99% of the market goes down.

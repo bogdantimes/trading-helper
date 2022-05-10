@@ -1,8 +1,10 @@
-import {DefaultStore} from "./Store";
+import {Config, DefaultStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
-import {Statistics} from "./Statistics";
+import {Statistics, Stats} from "./Statistics";
 import {Exchange} from "./Exchange";
 import {Survivors} from "./Survivors";
+import {CoinScore} from "./shared-lib/types";
+import {TradeMemo} from "./TradeMemo";
 
 function doGet() {
   return HtmlService
@@ -25,7 +27,7 @@ function catchError(fn: () => any): any {
   }
 }
 
-function initialSetup(params: InitialSetupParams) {
+function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
     if (params.dbURL) {
       Log.alert("Initial setup");
@@ -54,7 +56,7 @@ export type InitialSetupParams = {
   binanceSecretKey: string
 }
 
-function buyCoin(coinName: string) {
+function buyCoin(coinName: string): string {
   return catchError(() => {
     if (coinName) {
       Log.info("Lazy buying called for " + coinName);
@@ -65,7 +67,7 @@ function buyCoin(coinName: string) {
   });
 }
 
-function cancelAction(coinName: string) {
+function cancelAction(coinName: string): string {
   return catchError(() => {
     if (coinName) {
       Log.info("Cancelling the action on " + coinName);
@@ -76,7 +78,7 @@ function cancelAction(coinName: string) {
   });
 }
 
-function sellCoin(coinName: string) {
+function sellCoin(coinName: string): string {
   return catchError(() => {
     if (coinName) {
       Log.info("Lazy selling called for " + coinName);
@@ -87,7 +89,7 @@ function sellCoin(coinName: string) {
   });
 }
 
-function setHold(coinName: string, value: boolean) {
+function setHold(coinName: string, value: boolean): string {
   return catchError(() => {
     if (coinName) {
       Log.info("Flip hold called for " + coinName + " to " + value);
@@ -98,7 +100,7 @@ function setHold(coinName: string, value: boolean) {
   });
 }
 
-function dropCoin(coinName: string) {
+function dropCoin(coinName: string): string {
   return catchError(() => {
     if (coinName) {
       Log.info("Drop called for " + coinName);
@@ -109,35 +111,35 @@ function dropCoin(coinName: string) {
   });
 }
 
-function getTrades() {
+function getTrades(): { [p: string]: TradeMemo } {
   return catchError(() => DefaultStore.getTrades());
 }
 
-function getConfig() {
+function getConfig(): Config {
   return catchError(() => {
     return DefaultStore.isConnected() ? DefaultStore.getConfig() : null;
   });
 }
 
-function setConfig(config) {
+function setConfig(config): void {
   return catchError(() => {
     DefaultStore.setConfig(config);
     return "Config updated";
   });
 }
 
-function getStatistics() {
+function getStatistics(): Stats {
   return catchError(() => new Statistics(DefaultStore).getAll());
 }
 
-function getSurvivors() {
+function getSurvivors(): CoinScore[] {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
     return new Survivors(DefaultStore, exchange).getScores();
   });
 }
 
-function resetSurvivors() {
+function resetSurvivors(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig());
     return new Survivors(DefaultStore, exchange).resetScores();

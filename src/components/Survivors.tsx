@@ -41,7 +41,7 @@ export function Survivors() {
           {!!survivors.length &&
             <Button onClick={() => {
               // @ts-ignore
-              google.script.run.withSuccessHandler(setSurvivors).resetSurvivors();
+              google.script.run.withSuccessHandler(() => setSurvivors([])).resetSurvivors();
             }}>Reset</Button>
           }
           <IconButton onClick={() => {
