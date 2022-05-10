@@ -5,6 +5,14 @@ The project to help you with crypto trading, written for Google Apps Script.
 The most secure trading tool, as you deploy your own WEB application, and create and connect to your own database.
 No one, except you, have access to the WEB-application and the data. If you trust Google, you can trust the project.
 
+### Toss a coin to your witcher
+
+Buy me a coffee, to support this project. It will not evolve without your support!
+
+* [patreon.com/bogdantimes](patreon.com/bogdantimes)
+* [revolut.me/bogdantimes](revolut.me/bogdantimes)
+* USDT / BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
+
 ## Features
 
 * Integration with Binance: buy and sell coins on the spot.
