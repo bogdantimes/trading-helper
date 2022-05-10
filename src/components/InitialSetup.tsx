@@ -50,7 +50,7 @@ export function InitialSetup({config, onConnect}: { config: Config, onConnect: (
       justifyContent: 'center',
       '& .MuiTextField-root': {width: '70ch'}
     }}>
-      <StartIcon sx={{fontSize: '100px', color: 'primary'}}/>
+      <img width={200} src="https://user-images.githubusercontent.com/7527778/167667071-e869dfff-3c61-456f-a5bc-89c792cb62c7.jpg" alt="Trading Helper logo" />
       <Typography variant="h5" component="h3">
         {!config ? welcomeMsg : step2Header}
       </Typography>
