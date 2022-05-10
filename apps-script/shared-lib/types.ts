@@ -1,5 +1,5 @@
 export class CoinScore {
-  private static readonly PRICES_MAX_CAP = 5;
+  private static readonly PRICES_MAX_CAP = 4;
   /**
    * `r` is the number of times this memo was going up when 90% of marked was going down
    */
