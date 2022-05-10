@@ -1,9 +1,11 @@
+type ScorePriceMemo = [number, number, number, number, number]
+
 export class CoinScore {
   /**
    * `r` is the number of times this memo was going up when 90% of marked was going down
    */
   private r: number = 0
-  private p: [number, number, number] = [0, 0, 0]
+  private p: ScorePriceMemo = [0, 0, 0, 0, 0]
   private readonly n: string
 
   /**
@@ -51,7 +53,7 @@ export class CoinScore {
   pushPrice(price: number): void {
     if (this.p[0] === 0) {
       // initial state, filling it with price
-      this.p = [price, price, price];
+      this.p = [price, price, price, price, price]
     } else {
       this.p.shift()
       this.p.push(price)
