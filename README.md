@@ -1,5 +1,7 @@
 # trading-helper
 
+<img src="https://user-images.githubusercontent.com/7527778/167667071-e869dfff-3c61-456f-a5bc-89c792cb62c7.jpg" alt="logo" width="200"/>
+
 The project to help you with crypto trading, written for Google Apps Script.
 
 The most secure trading tool, as you deploy your own WEB application, and create and connect to your own database.
