@@ -48,7 +48,6 @@ export class FirebaseStore implements IStore {
   connect(dbURL: string) {
     // @ts-ignore
     this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken());
-    Log.alert("Connected to Firebase.")
     PropertiesService.getScriptProperties().setProperty(this.dbURLKey, dbURL);
   }
 
@@ -209,5 +208,4 @@ export type Config = {
   SellAtTakeProfit?: boolean
 }
 
-// @ts-ignore
-export const DefaultStore = this['DefaultStore'] = new FirebaseStore()
+export const DefaultStore = (this as any)['DefaultStore'] = new FirebaseStore()
