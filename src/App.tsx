@@ -19,9 +19,6 @@ import {Config} from "../apps-script/Store";
 import {InitialSetup} from "./components/InitialSetup";
 import {Survivors} from "./components/Survivors";
 
-// @ts-ignore
-export const gsr = google.script.run;
-
 function a11yProps(index: number) {
   return {
     id: `simple-tab-${index}`,
@@ -44,7 +41,7 @@ export default function App() {
 
   function initialFetch() {
     setFetchingData(true);
-    gsr
+    google.script.run
       .withSuccessHandler((config: Config) => {
         setFetchingData(false);
         setConfig(config);
@@ -66,7 +63,7 @@ export default function App() {
 
   function reFetchData() {
     if (!initialSetup) {
-      gsr.withSuccessHandler(setConfig).getConfig()
+      google.script.run.withSuccessHandler(setConfig).getConfig()
     }
   }
 

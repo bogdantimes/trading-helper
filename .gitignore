@@ -1,5 +1,4 @@
 # Project exclude paths
 /node_modules/
-package-lock.json
 .parcel-cache
 apps-script/index.html

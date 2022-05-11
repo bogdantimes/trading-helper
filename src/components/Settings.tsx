@@ -8,7 +8,7 @@ import {PriceProvider} from "../../apps-script/TradeResult";
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
 
   const [config, setConfig] = useState<Config>({
     BuyQuantity: 0,
@@ -26,7 +26,6 @@ export function Settings() {
   const [profitLimit, setProfitLimit] = useState('');
   const [buyQuantity, setBuyQuantity] = useState('');
 
-  // @ts-ignore
   useEffect(() => google.script.run.withSuccessHandler(config => {
     setLossLimit((+(config.StopLimit * 100).toFixed(2)).toString());
     setProfitLimit((+(config.ProfitLimit * 100).toFixed(2)).toString());
@@ -40,7 +39,6 @@ export function Settings() {
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity));
     setConfig(config);
     setIsSaving(true);
-    // @ts-ignore
     google.script.run
       .withFailureHandler(r => {
         setIsSaving(false);

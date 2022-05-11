@@ -3,7 +3,6 @@ import Trade from "./Trade";
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {Config} from "../../apps-script/Store";
-import {gsr} from "../App";
 import {useEffect} from "react";
 
 const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.profit() < t2.profit() ? 1 : -1;
@@ -26,8 +25,8 @@ export function Assets({config}: { config: Config }) {
   const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({});
 
   useEffect(() => {
-    gsr.withSuccessHandler(setTrades).getTrades();
-    const interval = setInterval(gsr.withSuccessHandler(setTrades).getTrades, 30000); // 30 seconds
+    google.script.run.withSuccessHandler(setTrades).getTrades();
+    const interval = setInterval(google.script.run.withSuccessHandler(setTrades).getTrades, 30000); // 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -38,7 +37,7 @@ export function Assets({config}: { config: Config }) {
 
   function buy() {
     if (confirm(`Are you sure you want to buy ${coinName}?`)) {
-      gsr.withSuccessHandler(alert).buyCoin(coinName);
+      google.script.run.withSuccessHandler(alert).buyCoin(coinName);
     }
   }
 

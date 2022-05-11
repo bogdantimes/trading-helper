@@ -12,7 +12,6 @@ import {
 import {circularProgress} from "./Common";
 import Typography from "@mui/material/Typography";
 import {InitialSetupParams} from "../../apps-script/api";
-import {gsr} from "../App";
 
 export function InitialSetup({config, onConnect}: { config: Config, onConnect: () => void }) {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -30,7 +29,7 @@ export function InitialSetup({config, onConnect}: { config: Config, onConnect: (
 
   function onClickConnect() {
     setIsConnecting(true);
-    gsr.withSuccessHandler(() => {
+    google.script.run.withSuccessHandler(() => {
       setIsConnecting(false);
       onConnect();
     }).withFailureHandler(resp => {

@@ -209,5 +209,4 @@ export type Config = {
   SellAtTakeProfit?: boolean
 }
 
-// @ts-ignore
-export const DefaultStore = this['DefaultStore'] = new FirebaseStore()
+export const DefaultStore = (this as any)['DefaultStore'] = new FirebaseStore()

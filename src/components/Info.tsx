@@ -6,7 +6,6 @@ import {Stats} from "../../apps-script/Statistics";
 export function Info() {
   const [stats, setStats] = React.useState<Stats>({DailyProfit: {}, TotalProfit: NaN});
   useEffect(() => {
-    // @ts-ignore
     google.script.run.withSuccessHandler(setStats).getStatistics();
   }, [])
 
