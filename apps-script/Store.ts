@@ -48,7 +48,6 @@ export class FirebaseStore implements IStore {
   connect(dbURL: string) {
     // @ts-ignore
     this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken());
-    Log.alert("Connected to Firebase.")
     PropertiesService.getScriptProperties().setProperty(this.dbURLKey, dbURL);
   }
 
