@@ -5,7 +5,7 @@
   "scripts": {
     "glogin": "clasp login",
     "glogout": "clasp logout",
-    "gcreate": "clasp create --title 'Trading Helper' --root-dir ./apps-script",
+    "gcreate": "clasp create --title 'Trading Helper' --rootDir ./apps-script",
     "gpull": "clasp pull",
     "gpush": "npm run build && clasp push",
     "gstart": "clasp push --watch",

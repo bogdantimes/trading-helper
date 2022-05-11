@@ -2,3 +2,4 @@
 /node_modules/
 .parcel-cache
 apps-script/index.html
+.clasp.json
