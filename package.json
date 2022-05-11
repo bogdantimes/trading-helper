@@ -5,18 +5,19 @@
   "scripts": {
     "glogin": "clasp login",
     "glogout": "clasp logout",
-    "gcreate": "clasp create --title 'Trading Helper' --root-dir ./apps-script",
-    "gpull": "clasp pull",
-    "gpush": "npm run build && clasp push",
-    "gstart": "clasp push --watch",
-    "gversion": "clasp version",
-    "gdeploy": "clasp deploy",
+    "gcreate": "clasp create --title trading-helper-dev --type standalone --rootDir ./apps-script",
+    "gedit": "clasp open -P ./apps-script",
+    "gopen": "clasp open -P ./apps-script --webapp",
+    "gpush": "npm run build && clasp push -P ./apps-script -f",
+    "gstart": "clasp push -P ./apps-script -w -f",
+    "gdeploy": "clasp deploy -P ./apps-script",
     "start": "parcel src/index.html --dist-dir ./apps-script",
     "build": "parcel build src/index.html --dist-dir ./apps-script"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.1",
     "@types/google-apps-script": "^1.0.45",
+    "@types/google.script.client-side": "^0.1.1",
     "parcel": "^2.4.0"
   },
   "author": "Bohdan Kovalov",

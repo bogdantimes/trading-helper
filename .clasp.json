@@ -1,9 +1,0 @@
-{
-  "scriptId": "1US5MUp4OI4tYbKi_OOjkS02CbSdtapmBSTgTKU3Rxlt84slAaB2fh191",
-  "rootDir": "./apps-script",
-  "filePushOrder": [
-    "apps-script/Common.ts",
-    "apps-script/Store.ts",
-    "apps-script/TradeMemo.ts"
-  ]
-}
