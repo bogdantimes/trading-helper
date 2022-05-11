@@ -1,6 +1,6 @@
 # trading-helper
 
-<img src="https://user-images.githubusercontent.com/7527778/167667071-e869dfff-3c61-456f-a5bc-89c792cb62c7.jpg" alt="logo" width="200"/>
+<img src="https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png" alt="logo" width="200"/>
 
 The project to help you with crypto trading, written for Google Apps Script.
 
