@@ -174,7 +174,7 @@ export class V2Trader {
   }
 
   private getBNBCommissionCost(commission: number): number {
-    const bnbPrice = this.prices["BNB" + this.config.PriceAsset];
+    const bnbPrice = this.prices["BNB" + this.config.StableCoin];
     return bnbPrice ? commission * bnbPrice : 0;
   }
 }

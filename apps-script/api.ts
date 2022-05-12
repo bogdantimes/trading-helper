@@ -40,7 +40,7 @@ function initialSetup(params: InitialSetupParams): string {
     config.SECRET = params.binanceSecretKey || config.SECRET;
     if (config.KEY && config.SECRET) {
       Log.alert("Checking if Binance is reachable");
-      new Exchange(config).getFreeAsset(config.PriceAsset);
+      new Exchange(config).getFreeAsset(config.StableCoin);
       Log.alert("Connected to Binance");
       // @ts-ignore
       Start();

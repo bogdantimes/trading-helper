@@ -13,7 +13,7 @@ export function Settings() {
   const [config, setConfig] = useState<Config>({
     BuyQuantity: 0,
     StopLimit: 0,
-    PriceAsset: "",
+    StableCoin: "",
     SellAtStopLimit: false,
     SellAtProfitLimit: false,
     ProfitLimit: 0,
@@ -54,8 +54,8 @@ export function Settings() {
   return (
     <Box sx={{justifyContent: 'center', display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
       <Stack spacing={2}>
-        <TextField value={config.PriceAsset} label={"Stable Coin"}
-                   onChange={e => setConfig({...config, PriceAsset: e.target.value})}
+        <TextField value={config.StableCoin} label={"Stable Coin"}
+                   onChange={e => setConfig({...config, StableCoin: e.target.value})}
         />
         <TextField value={buyQuantity} label={"Buy Quantity"} onChange={e => setBuyQuantity(e.target.value)}
                    InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}

@@ -63,7 +63,7 @@ export class FirebaseStore implements IStore {
         KEY: '',
         SECRET: '',
         BuyQuantity: 10,
-        PriceAsset: StableCoin.USDT,
+        StableCoin: StableCoin.USDT,
         StopLimit: 0.05,
         ProfitLimit: 0.1,
         SellAtStopLimit: false,
@@ -88,6 +88,11 @@ export class FirebaseStore implements IStore {
     if (configCache.LossLimit) {
       configCache.StopLimit = configCache.LossLimit
       delete configCache.LossLimit
+    }
+
+    if (configCache.PriceAsset) {
+      configCache.StableCoin = configCache.PriceAsset
+      delete configCache.PriceAsset
     }
 
     CacheProxy.put("Config", JSON.stringify(configCache))
@@ -175,7 +180,7 @@ export class FirebaseStore implements IStore {
 export type Config = {
   KEY?: string
   SECRET?: string
-  PriceAsset: string
+  StableCoin: string
   BuyQuantity: number
   StopLimit: number
   ProfitLimit: number
@@ -194,6 +199,10 @@ export type Config = {
    */
   AveragingDown: boolean
 
+  /**
+   * @deprecated
+   */
+  PriceAsset?: string
   /**
    * @deprecated
    */
