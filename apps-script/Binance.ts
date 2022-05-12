@@ -39,7 +39,13 @@ export class Binance implements IExchange {
     const prices: { symbol: string, price: string }[] = JSON.parse(response.getContentText())
     Log.debug(`Got ${prices.length} prices`)
     const map: { [p: string]: number } = {}
-    prices.forEach(p => map[p.symbol] = +p.price)
+    prices.forEach(p => {
+      // skip symbols that are not spot trading
+      if (p.symbol.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/)) {
+        return;
+      }
+      map[p.symbol] = +p.price
+    })
     return map
   }
 

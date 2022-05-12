@@ -29,13 +29,16 @@ export class Survivors implements ScoresManager {
    * Sorted by recommendation score.
    */
   getScores(): CoinScore[] {
-    const memosJson = CacheProxy.get("RecommenderMemos");
-    const memos: CoinScoreMap = memosJson ? JSON.parse(memosJson) : {};
+    const scoresJson = CacheProxy.get("RecommenderMemos");
+    const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : {};
+    const stableCoin = this.store.getConfig().StableCoin;
     const recommended: CoinScore[] = []
-    Object.values(memos).forEach(m => {
-      const r = CoinScore.fromObject(m);
-      if (r.getScore() > 0) {
-        recommended.push(r);
+    Object.keys(scores).forEach(k => {
+      if (k.endsWith(stableCoin)) {
+        const r = CoinScore.fromObject(scores[k]);
+        if (r.getScore() > 0) {
+          recommended.push(r);
+        }
       }
     })
     return recommended.sort((a, b) => b.getScore() - a.getScore()).slice(0, 10);
@@ -44,22 +47,17 @@ export class Survivors implements ScoresManager {
   updateScores(): void {
     const scoresJson = CacheProxy.get("RecommenderMemos");
     const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : this.store.get("SurvivorScores") || {};
-    const priceAsset = this.store.getConfig().PriceAsset;
+    const stableCoin = this.store.getConfig().StableCoin;
     const coinsRaisedAmidMarkedDown: CoinScoreMap = {};
-    const updatedScores: CoinScoreMap = {};
     const prices = this.exchange.getPrices();
     Object.keys(prices).forEach(s => {
-      // skip symbols that are not spot trading
-      if (s.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/)) {
-        return;
-      }
-      const coinName = s.endsWith(priceAsset) ? s.split(priceAsset)[0] : null;
+      const coinName = s.endsWith(stableCoin) ? s.split(stableCoin)[0] : null;
       if (coinName) {
         const price = prices[s];
         const score = CoinScore.new(coinName, scores[s]);
         score.pushPrice(price)
         score.priceGoesUp() && (coinsRaisedAmidMarkedDown[s] = score)
-        updatedScores[s] = score;
+        scores[s] = score;
       }
     })
 
@@ -74,11 +72,11 @@ export class Survivors implements ScoresManager {
       Log.info(`Updated survivors.`);
     }
 
-    CacheProxy.put("RecommenderMemos", JSON.stringify(updatedScores));
+    CacheProxy.put("RecommenderMemos", JSON.stringify(scores));
 
     // Sync the scores to store every 6 hours
     if (!CacheProxy.get("SurvivorScoresSynced")) {
-      this.store.set("SurvivorScores", updatedScores);
+      this.store.set("SurvivorScores", scores);
       CacheProxy.put("SurvivorScoresSynced", "true", 6 * 60 * 60); // 6 hours
     }
   }

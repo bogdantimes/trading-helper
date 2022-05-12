@@ -1,7 +1,15 @@
+export enum StableUSDCoin {
+  USDT = "USDT",
+  USDC = "USDC",
+  BUSD = "BUSD",
+  UST = "UST",
+  DAI = "DAI",
+}
+
 export class CoinScore {
-  private static readonly PRICES_MAX_CAP = 4;
+  private static readonly PRICES_MAX_CAP = 5;
   /**
-   * `r` is the number of times this memo was going up when 90% of marked was going down
+   * `r` is the number of times this memo was going up when the rest of the market wasn't.
    */
   private r: number = 0
   private p: number[] = []

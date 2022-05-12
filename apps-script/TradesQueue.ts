@@ -35,7 +35,7 @@ export class TradesQueue {
 
     Object.keys(queue).forEach(coinName => {
       try {
-        const symbol = new ExchangeSymbol(coinName, config.PriceAsset);
+        const symbol = new ExchangeSymbol(coinName, config.StableCoin);
         const action = queue[coinName];
         if (action === QueueAction.BUY) {
           const trade = store.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));

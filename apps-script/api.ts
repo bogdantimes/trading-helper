@@ -17,7 +17,7 @@ function doPost(e) {
   return "404";
 }
 
-function catchError(fn: () => any): any {
+function catchError<T>(fn: () => T): T {
   try {
     return fn();
   } catch (e) {
@@ -40,7 +40,7 @@ function initialSetup(params: InitialSetupParams): string {
     config.SECRET = params.binanceSecretKey || config.SECRET;
     if (config.KEY && config.SECRET) {
       Log.alert("Checking if Binance is reachable");
-      new Exchange(config).getFreeAsset(config.PriceAsset);
+      new Exchange(config).getFreeAsset(config.StableCoin);
       Log.alert("Connected to Binance");
       // @ts-ignore
       Start();
@@ -121,7 +121,7 @@ function getConfig(): Config {
   });
 }
 
-function setConfig(config): void {
+function setConfig(config): string {
   return catchError(() => {
     DefaultStore.setConfig(config);
     return "Config updated";
@@ -144,4 +144,11 @@ function resetSurvivors(): void {
     const exchange = new Exchange(DefaultStore.getConfig());
     return new Survivors(DefaultStore, exchange).resetScores();
   });
+}
+
+function getCoinNames(): string[] {
+  return catchError(() => {
+    const exchange = new Exchange(DefaultStore.getConfig());
+    return exchange.getCoinNames();
+  })
 }
