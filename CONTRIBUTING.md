@@ -2,6 +2,7 @@
 
 ```bash
 npm install
+npm run glogin
 npm run gcreate
 npm run gpush
 npm run gedit
