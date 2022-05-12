@@ -1,3 +1,9 @@
+# v2.3.2
+
+* Changing "Stable Coin" will not reset collected "Survivors" statistics for this stable coin if you switch back.
+* Added autocompletion for "Coin Name" on the "Assets" tab.
+* Added suggestions for "Stable Coin" on the "Settings" tab.
+
 # v2.3.1
 
 * Fixed Reset button on Survivors tab crashes the UI #16
