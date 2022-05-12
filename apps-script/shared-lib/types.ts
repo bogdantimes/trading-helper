@@ -1,4 +1,4 @@
-export const enum StableCoin {
+export enum StableUSDCoin {
   USDT = "USDT",
   USDC = "USDC",
   BUSD = "BUSD",

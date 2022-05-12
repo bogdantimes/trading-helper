@@ -3,12 +3,6 @@ export enum PriceProvider {
   CoinStats = "CoinStats",
 }
 
-export enum StableUSDCoin {
-  USDT = "USDT",
-  USDC = "USDC",
-  BUSD = "BUSD",
-}
-
 export class ExchangeSymbol {
   readonly quantityAsset: string
   readonly priceAsset: string

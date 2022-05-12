@@ -1,6 +1,7 @@
 import {TradeMemo} from "./TradeMemo";
-import {ExchangeSymbol, PriceProvider, StableUSDCoin} from "./TradeResult";
+import {ExchangeSymbol, PriceProvider} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
+import {StableUSDCoin} from "./shared-lib/types";
 
 export interface IStore {
   get(key: String): any

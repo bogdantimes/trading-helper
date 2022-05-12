@@ -15,7 +15,8 @@ import {
   TextField,
 } from "@mui/material";
 import {circularProgress} from "./Common";
-import {PriceProvider, StableUSDCoin} from "../../apps-script/TradeResult";
+import {PriceProvider} from "../../apps-script/TradeResult";
+import {StableUSDCoin} from "../../apps-script/shared-lib/types";
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false);

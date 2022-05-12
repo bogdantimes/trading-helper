@@ -1,8 +1,9 @@
 import {CoinStats} from "./CoinStats";
 import {Binance, IExchange} from "./Binance";
 import {Config} from "./Store";
-import {ExchangeSymbol, PriceProvider, StableUSDCoin, TradeResult} from "./TradeResult";
+import {ExchangeSymbol, PriceProvider, TradeResult} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
+import {StableUSDCoin} from "./shared-lib/types";
 
 export class Exchange implements IExchange {
   private readonly exchange: Binance;
