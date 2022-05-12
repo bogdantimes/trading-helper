@@ -3,7 +3,7 @@ export enum PriceProvider {
   CoinStats = "CoinStats",
 }
 
-export enum StableCoin {
+export enum StableUSDCoin {
   USDT = "USDT",
   USDC = "USDC",
   BUSD = "BUSD",

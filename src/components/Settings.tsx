@@ -2,9 +2,20 @@ import * as React from 'react';
 import {useEffect, useState} from 'react';
 import SaveIcon from '@mui/icons-material/Save';
 import {Config} from "../../apps-script/Store";
-import {Box, Button, FormControlLabel, InputAdornment, Snackbar, Stack, Switch, TextField,} from "@mui/material";
+import {
+  Alert,
+  Autocomplete,
+  Box,
+  Button,
+  FormControlLabel,
+  InputAdornment,
+  Snackbar,
+  Stack,
+  Switch,
+  TextField,
+} from "@mui/material";
 import {circularProgress} from "./Common";
-import {PriceProvider} from "../../apps-script/TradeResult";
+import {PriceProvider, StableUSDCoin} from "../../apps-script/TradeResult";
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false);
@@ -13,7 +24,7 @@ export function Settings() {
   const [config, setConfig] = useState<Config>({
     BuyQuantity: 0,
     StopLimit: 0,
-    StableCoin: "",
+    StableCoin: '' as StableUSDCoin,
     SellAtStopLimit: false,
     SellAtProfitLimit: false,
     ProfitLimit: 0,
@@ -34,6 +45,12 @@ export function Settings() {
   }).getConfig(), [])
 
   const onSave = () => {
+    if (!config.StableCoin) {
+      setError('Stable Coin is required');
+      return
+    }
+    setError(null);
+
     isFinite(+stopLimit) && (config.StopLimit = +stopLimit / 100);
     isFinite(+profitLimit) && (config.ProfitLimit = +profitLimit / 100);
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity));
@@ -54,8 +71,14 @@ export function Settings() {
   return (
     <Box sx={{justifyContent: 'center', display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
       <Stack spacing={2}>
-        <TextField value={config.StableCoin} label={"Stable Coin"}
-                   onChange={e => setConfig({...config, StableCoin: e.target.value})}
+        <Autocomplete
+          freeSolo
+          value={config.StableCoin}
+          inputValue={config.StableCoin}
+          options={Object.values(StableUSDCoin)}
+          onChange={(e, val) => val && setConfig({...config, StableCoin: val as StableUSDCoin})}
+          onInputChange={(e, val) => setConfig({...config, StableCoin: val as StableUSDCoin})}
+          renderInput={(params) => <TextField {...params} label={"Stable Coin"}/>}
         />
         <TextField value={buyQuantity} label={"Buy Quantity"} onChange={e => setBuyQuantity(e.target.value)}
                    InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
@@ -103,8 +126,8 @@ export function Settings() {
                   onClick={onSave} disabled={isSaving}>Save</Button>
           {isSaving && circularProgress}
         </Box>
+        {error && <Alert severity="error">{error}</Alert>}
       </Stack>
-      {error && <Snackbar open={!!error} message={error}/>}
     </Box>
   );
 }

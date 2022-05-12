@@ -1,5 +1,5 @@
 import {TradeMemo} from "./TradeMemo";
-import {ExchangeSymbol, PriceProvider, StableCoin} from "./TradeResult";
+import {ExchangeSymbol, PriceProvider, StableUSDCoin} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
 
 export interface IStore {
@@ -63,7 +63,7 @@ export class FirebaseStore implements IStore {
         KEY: '',
         SECRET: '',
         BuyQuantity: 10,
-        StableCoin: StableCoin.USDT,
+        StableCoin: StableUSDCoin.USDT,
         StopLimit: 0.05,
         ProfitLimit: 0.1,
         SellAtStopLimit: false,
@@ -91,7 +91,7 @@ export class FirebaseStore implements IStore {
     }
 
     if (configCache.PriceAsset) {
-      configCache.StableCoin = configCache.PriceAsset
+      configCache.StableCoin = <StableUSDCoin>configCache.PriceAsset
       delete configCache.PriceAsset
     }
 
@@ -180,7 +180,7 @@ export class FirebaseStore implements IStore {
 export type Config = {
   KEY?: string
   SECRET?: string
-  StableCoin: string
+  StableCoin: StableUSDCoin
   BuyQuantity: number
   StopLimit: number
   ProfitLimit: number

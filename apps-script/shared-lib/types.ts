@@ -1,3 +1,11 @@
+export const enum StableCoin {
+  USDT = "USDT",
+  USDC = "USDC",
+  BUSD = "BUSD",
+  UST = "UST",
+  DAI = "DAI",
+}
+
 export class CoinScore {
   private static readonly PRICES_MAX_CAP = 5;
   /**
