@@ -51,10 +51,6 @@ export class Survivors implements ScoresManager {
     const coinsRaisedAmidMarkedDown: CoinScoreMap = {};
     const prices = this.exchange.getPrices();
     Object.keys(prices).forEach(s => {
-      // skip symbols that are not spot trading
-      if (s.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/)) {
-        return;
-      }
       const coinName = s.endsWith(stableCoin) ? s.split(stableCoin)[0] : null;
       if (coinName) {
         const price = prices[s];

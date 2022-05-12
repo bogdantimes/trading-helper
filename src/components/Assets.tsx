@@ -1,7 +1,7 @@
 import * as React from "react";
 import Trade from "./Trade";
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
-import {Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup} from "@mui/material";
+import {Autocomplete, Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {Config} from "../../apps-script/Store";
 import {useEffect} from "react";
 
@@ -23,11 +23,16 @@ const groupByState = (trades: { [key: string]: TradeMemo }): Map<TradeState, Tra
 
 export function Assets({config}: { config: Config }) {
   const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({});
+  const [coinNames, setCoinNames] = React.useState([] as string[]);
 
   useEffect(() => {
     google.script.run.withSuccessHandler(setTrades).getTrades();
     const interval = setInterval(google.script.run.withSuccessHandler(setTrades).getTrades, 30000); // 30 seconds
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    google.script.run.withSuccessHandler(setCoinNames).getCoinNames();
   }, []);
 
   const [state, setState] = React.useState<TradeState>(TradeState.BOUGHT);
@@ -66,8 +71,11 @@ export function Assets({config}: { config: Config }) {
           </Grid>
           <Grid item>
             <Stack sx={sx} direction={"row"} spacing={2}>
-              <TextField fullWidth={true} label="Coin name" value={coinName}
-                         onChange={(e) => setCoinName(e.target.value)}/>
+              <Autocomplete value={coinName} fullWidth={true} options={coinNames}
+                            onChange={(e, val) => setCoinName(val)}
+                            disableClearable={true}
+                            renderInput={(params) => <TextField {...params} label={"Coin Name"}/>}
+              />
               <Button variant="contained" onClick={buy}>Buy</Button>
             </Stack>
           </Grid>

@@ -1,15 +1,17 @@
 import {CoinStats} from "./CoinStats";
 import {Binance, IExchange} from "./Binance";
 import {Config} from "./Store";
-import {ExchangeSymbol, PriceProvider, TradeResult} from "./TradeResult";
+import {ExchangeSymbol, PriceProvider, StableUSDCoin, TradeResult} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
 
 export class Exchange implements IExchange {
   private readonly exchange: Binance;
   private priceProvider: CoinStats;
+  private stableCoin: StableUSDCoin;
 
   constructor(config: Config) {
     this.exchange = new Binance(config);
+    this.stableCoin = config.StableCoin;
 
     switch (config.PriceProvider) {
       case PriceProvider.Binance:
@@ -49,5 +51,15 @@ export class Exchange implements IExchange {
 
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     return this.exchange.marketSell(symbol, quantity);
+  }
+
+  getCoinNames(): string[] {
+    const coinNames = [];
+    Object.keys(this.exchange.getPrices()).forEach(coinName => {
+      if (coinName.endsWith(this.stableCoin)) {
+        coinNames.push(coinName.split(this.stableCoin)[0]);
+      }
+    });
+    return coinNames;
   }
 }
