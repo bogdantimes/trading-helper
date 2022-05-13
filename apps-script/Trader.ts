@@ -118,6 +118,7 @@ export class V2Trader {
       Log.alert(memo.tradeResult.toString())
       // The paid amount could be for an existing asset.
       // If it is, we need to update the asset's balance.
+      this.updateBalanceOfExistingAsset("BNB", tradeResult.commission);
       this.updateBalanceOfExistingAsset(symbol.priceAsset, -tradeResult.paid);
     } else {
       Log.alert(tradeResult.toString())
@@ -130,16 +131,17 @@ export class V2Trader {
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
-      const buyCommission = this.getBNBCommissionCost(memo.tradeResult.commission);
-      const sellCommission = this.getBNBCommissionCost(tradeResult.commission);
-      Log.info(`Commission: ~${buyCommission + sellCommission}`)
-      const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
+      const buyFee = this.getBNBCommissionCost(memo.tradeResult.commission);
+      const sellFee = this.getBNBCommissionCost(tradeResult.commission);
+      Log.info(`Fee: ~${buyFee + sellFee}`)
+      const profit = tradeResult.gained - memo.tradeResult.paid - sellFee - buyFee;
       tradeResult.profit = +profit.toFixed(2);
       memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
       this.stats.addProfit(tradeResult.profit)
       // The gained amount could be for an existing asset.
       // If it is, we need to update the asset's balance.
+      this.updateBalanceOfExistingAsset("BNB", tradeResult.commission);
       this.updateBalanceOfExistingAsset(symbol.priceAsset, tradeResult.gained);
     } else {
       memo.hodl = true;
