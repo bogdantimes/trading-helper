@@ -3,7 +3,7 @@ import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {IExchange} from "./Exchange";
-import {ExchangeSymbol} from "./TradeResult";
+import {ExchangeSymbol, TradeResult} from "./TradeResult";
 import {PriceMap} from "./shared-lib/types";
 
 export class V2Trader {
@@ -113,13 +113,13 @@ export class V2Trader {
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
+      this.processBuyFee(tradeResult);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
       // The paid amount could be for an existing asset.
       // If it is, we need to update the asset's balance.
-      this.updateBalanceOfExistingAsset("BNB", tradeResult.commission);
       this.updateBalanceOfExistingAsset(symbol.priceAsset, -tradeResult.paid);
     } else {
       Log.alert(tradeResult.toString())
@@ -132,18 +132,15 @@ export class V2Trader {
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
-      const buyFee = this.getBNBCommissionCost(memo.tradeResult.commission);
-      const sellFee = this.getBNBCommissionCost(tradeResult.commission);
-      Log.info(`Fee: ~${buyFee + sellFee}`)
-      const profit = tradeResult.gained - memo.tradeResult.paid - sellFee - buyFee;
+      const fee = this.processSellFee(memo, tradeResult);
+      const profit = tradeResult.gained - memo.tradeResult.paid - fee;
       tradeResult.profit = +profit.toFixed(2);
       memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
       this.stats.addProfit(tradeResult.profit)
       // The gained amount could be for an existing asset.
       // If it is, we need to update the asset's balance.
-      this.updateBalanceOfExistingAsset("BNB", tradeResult.commission);
-      this.updateBalanceOfExistingAsset(symbol.priceAsset, tradeResult.gained);
+      this.updateBalanceOfExistingAsset(symbol.priceAsset, tradeResult.cost);
     } else {
       memo.hodl = true;
       memo.setState(TradeState.BOUGHT);
@@ -168,17 +165,38 @@ export class V2Trader {
     }
   }
 
+  private processBuyFee(buyResult: TradeResult): void {
+    if (this.updateBalanceOfExistingAsset("BNB", -buyResult.commission)) {
+      // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
+      buyResult.commission = 0;
+    }
+  }
+
+  private processSellFee(tm: TradeMemo, sellResult: TradeResult): number {
+    if (this.updateBalanceOfExistingAsset("BNB", -sellResult.commission)) {
+      // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
+      sellResult.commission = 0;
+    }
+    const buyFee = this.getBNBCommissionCost(tm.tradeResult.commission);
+    const sellFee = this.getBNBCommissionCost(sellResult.commission);
+    const fee = buyFee + sellFee;
+    fee && Log.info(`Fee: ~${buyFee + sellFee}`)
+    return fee;
+  }
+
   private getBNBCommissionCost(commission: number): number {
     const bnbPrice = this.prices["BNB" + this.config.StableCoin];
     return bnbPrice ? commission * bnbPrice : 0;
   }
 
-  private updateBalanceOfExistingAsset(coinName: string, quantity: number) {
+  private updateBalanceOfExistingAsset(coinName: string, quantity: number): boolean {
     const tm = this.store.getTrade(new ExchangeSymbol(coinName, this.config.StableCoin));
     if (tm) {
       tm.tradeResult.addQuantity(quantity);
       this.store.setTrade(tm);
       Log.info(`${coinName} balance updated by ${quantity}`);
+      return true
     }
+    return false
   }
 }
