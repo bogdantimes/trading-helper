@@ -3,7 +3,7 @@ import {Binance} from "./Binance";
 import {Config} from "./Store";
 import {ExchangeSymbol, PriceProvider, TradeResult} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
-import {StableUSDCoin} from "./shared-lib/types";
+import {PriceMap, StableUSDCoin} from "./shared-lib/types";
 
 export interface IExchange {
   getFreeAsset(assetName: string): number
@@ -12,13 +12,13 @@ export interface IExchange {
 
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult
 
-  getPrices(): { [p: string]: number }
+  getPrices(): PriceMap
 
   getPrice(symbol: ExchangeSymbol): number
 }
 
 export interface IPriceProvider {
-  getPrices(): { [p: string]: number }
+  getPrices(): PriceMap
 }
 
 export class Exchange implements IExchange {
@@ -52,7 +52,7 @@ export class Exchange implements IExchange {
     return this.getPrices()[symbol.toString()];
   }
 
-  getPrices(): { [p: string]: number } {
+  getPrices(): PriceMap {
     const pricesJson = CacheProxy.get("Prices");
     let prices = pricesJson ? JSON.parse(pricesJson) : null;
     if (!prices) {

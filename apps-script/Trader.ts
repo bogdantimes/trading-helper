@@ -4,13 +4,14 @@ import {Config, IStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {IExchange} from "./Exchange";
 import {ExchangeSymbol} from "./TradeResult";
+import {PriceMap} from "./shared-lib/types";
 
 export class V2Trader {
   private readonly store: IStore;
   private readonly config: Config;
   private readonly exchange: IExchange;
   private readonly stats: Statistics;
-  private readonly prices: { [p: string]: number };
+  private readonly prices: PriceMap;
 
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
     this.store = store;

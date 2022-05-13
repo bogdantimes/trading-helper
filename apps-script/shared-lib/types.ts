@@ -65,3 +65,5 @@ export class CoinScore {
   }
 
 }
+
+export type PriceMap = { [key: string]: number };
