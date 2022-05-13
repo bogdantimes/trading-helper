@@ -194,7 +194,7 @@ export class V2Trader {
     if (tm) {
       tm.tradeResult.addQuantity(quantity);
       this.store.setTrade(tm);
-      Log.info(`${coinName} balance updated by ${quantity}`);
+      Log.alert(`${coinName} balance updated by ${quantity}`);
       return true
     }
     return false
