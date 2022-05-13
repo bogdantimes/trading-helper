@@ -7,7 +7,7 @@ export enum StableUSDCoin {
 }
 
 export class CoinScore {
-  private static readonly PRICES_MAX_CAP = 5;
+  static readonly PRICES_MAX_CAP = 5;
   /**
    * `r` is the number of times this memo was going up when the rest of the market wasn't.
    */
@@ -65,3 +65,5 @@ export class CoinScore {
   }
 
 }
+
+export type PriceMap = { [key: string]: number };

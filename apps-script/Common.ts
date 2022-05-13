@@ -48,12 +48,12 @@ class Log {
   }
 
   static error(err: Error) {
-    this.errLog.push(err)
+    this.errLog.push(new Error(`${err.stack.slice(0, 1000)}`))
   }
 
   static print(): string {
     return `${this.alerts.length > 0 ? `${this.alerts.join('\n')}\n` : ''}
-${this.errLog.length > 0 ? `Errors:\n${this.errLog.map(e => `Message: ${e.message}\nStacktrace: ${e.stack}`).join('\n')}\n` : ''}
+${this.errLog.length > 0 ? `Errors:\n${this.errLog.map(e => `Stack: ${e.stack}`).join('\n')}\n` : ''}
 ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join('\n')}\n` : ''}
 ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.map(v => JSON.stringify(v)).join('\n\n')}` : ''}
 `

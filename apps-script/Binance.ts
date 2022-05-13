@@ -1,20 +1,10 @@
 import {Config} from "./Store";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
+import {IExchange, IPriceProvider} from "./Exchange";
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
+import {PriceMap} from "./shared-lib/types";
 
-export interface IExchange {
-  getFreeAsset(assetName: string): number
-
-  marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult
-
-  marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult
-
-  getPrice(symbol: ExchangeSymbol): number
-
-  getPrices(): { [p: string]: number }
-}
-
-export class Binance implements IExchange {
+export class Binance implements IExchange, IPriceProvider {
 
   private readonly key: string;
   private readonly secret: string;
@@ -33,43 +23,44 @@ export class Binance implements IExchange {
     this.serverIds = this.shuffleServerIds();
   }
 
-  getPrices(): { [p: string]: number } {
-    Log.info("Fetching prices")
-    const response = this.fetch(() => "ticker/price", this.defaultReqOpts);
-    const prices: { symbol: string, price: string }[] = JSON.parse(response.getContentText())
-    Log.debug(`Got ${prices.length} prices`)
-    const map: { [p: string]: number } = {}
-    prices.forEach(p => {
-      // skip symbols that are not spot trading
-      if (p.symbol.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/)) {
-        return;
-      }
-      map[p.symbol] = +p.price
-    })
-    return map
+  getPrices(): PriceMap {
+    Log.info("Fetching prices from Binance")
+    try {
+      const prices: { symbol: string, price: string }[] = this.fetch(() => "ticker/price", this.defaultReqOpts);
+      Log.debug(`Got ${prices.length} prices`)
+      return prices.reduce<PriceMap>((acc, p) => {
+        const spotPrice = !p.symbol.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/);
+        spotPrice && (acc[p.symbol] = +p.price)
+        return acc
+      }, {})
+    } catch (e) {
+      throw new Error(`Failed to get prices: ${e.message}`);
+    }
   }
 
   getPrice(symbol: ExchangeSymbol): number {
     const resource = "ticker/price"
     const query = `symbol=${symbol}`;
-    const response = this.fetch(() => `${resource}?${query}`, this.defaultReqOpts);
-    Log.debug(response.getContentText())
-    return +JSON.parse(response.getContentText()).price
+    try {
+      const ticker = this.fetch(() => `${resource}?${query}`, this.defaultReqOpts);
+      Log.debug(ticker)
+      return +ticker.price
+    } catch (e) {
+      throw new Error(`Failed to get price for ${symbol}: ${e.message}`);
+    }
   }
 
   getFreeAsset(assetName: string): number {
     const resource = "account"
     const query = "";
-    const data = this.fetch(() => `${resource}?${this.addSignature(query)}`, this.defaultReqOpts);
     try {
-      const account = JSON.parse(data.getContentText());
-      const assetVal = account.balances.find((balance) => balance.asset == assetName);
+      const accountData: any = this.fetch(() => `${resource}?${this.addSignature(query)}`, this.defaultReqOpts);
+      const assetVal = accountData.balances.find((balance) => balance.asset == assetName);
       Log.debug(assetVal)
       return assetVal ? +assetVal.free : 0
     } catch (e) {
-      Log.error(e)
+      throw new Error(`Failed to get available ${assetName}: ${e.message}`);
     }
-    return 0
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
@@ -108,9 +99,8 @@ export class Binance implements IExchange {
   }
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
-    const response = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
     try {
-      const order = JSON.parse(response.getContentText());
+      const order = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
       Log.debug(order)
       const tradeResult = new TradeResult(symbol);
       const [price, commission] = this.reducePriceAndCommission(order.fills)
@@ -121,9 +111,7 @@ export class Binance implements IExchange {
       tradeResult.commission = commission
       return tradeResult;
     } catch (e) {
-      Log.debug(response.getContentText())
-      Log.error(e)
-      throw e
+      throw new Error(`Failed to trade ${symbol}: ${e.message}`);
     }
   }
 
@@ -152,7 +140,7 @@ export class Binance implements IExchange {
     return `${sigData}&signature=${sig}`
   }
 
-  fetch(resource: () => string, options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions): GoogleAppsScript.URL_Fetch.HTTPResponse {
+  fetch(resource: () => string, options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions): any {
     return execute({
       interval: this.interval,
       attempts: this.attempts,
@@ -162,7 +150,11 @@ export class Binance implements IExchange {
         const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options)
 
         if (resp.getResponseCode() === 200) {
-          return resp;
+          try {
+            return JSON.parse(resp.getContentText());
+          } catch (e) {
+            throw new Error(`Failed to parse response from Binance: ${resp.getContentText()}`);
+          }
         }
 
         if (resp.getResponseCode() === 418) {

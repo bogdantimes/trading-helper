@@ -1,17 +1,17 @@
 import {TradeMemo, TradeState} from "./TradeMemo";
-import {IExchange} from "./Binance";
 import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
-import {ExchangeSymbol} from "./TradeResult";
 import {TradesQueue} from "./TradesQueue";
+import {IExchange} from "./Exchange";
+import {ExchangeSymbol, TradeResult} from "./TradeResult";
+import {PriceMap} from "./shared-lib/types";
 
 export class V2Trader {
   private readonly store: IStore;
   private readonly config: Config;
   private readonly exchange: IExchange;
   private readonly stats: Statistics;
-  private readonly prices: { [p: string]: number };
-  private readonly afterAll: Array<() => void> = [];
+  private readonly prices: PriceMap;
 
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
     this.store = store;
@@ -19,16 +19,6 @@ export class V2Trader {
     this.exchange = exchange
     this.stats = stats
     this.prices = exchange.getPrices()
-  }
-
-  /**
-   * After ticker check can be executed after all tickers are checked.
-   * It may contain any additional operations that need to be performed after all.
-   */
-  afterTickerCheck() {
-    while (this.afterAll.length > 0) {
-      this.afterAll.pop()();
-    }
   }
 
   tickerCheck(tm: TradeMemo): void {
@@ -119,14 +109,18 @@ export class V2Trader {
   }
 
   private buy(memo: TradeMemo, cost: number): void {
-    const symbol = memo.tradeResult.symbol;
+    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
+      this.processBuyFee(tradeResult);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
+      // The paid amount could be for an existing asset.
+      // If it is, we need to update the asset's balance.
+      this.updateBalanceOfExistingAsset(symbol.priceAsset, -tradeResult.paid);
     } else {
       Log.alert(tradeResult.toString())
       TradesQueue.cancelAction(symbol.quantityAsset);
@@ -134,19 +128,19 @@ export class V2Trader {
   }
 
   private sell(memo: TradeMemo): void {
-    const symbol = memo.tradeResult.symbol;
+    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
-    const gained = tradeResult.gained;
     if (tradeResult.fromExchange) {
       Log.debug(memo);
-      const buyCommission = this.getBNBCommissionCost(memo.tradeResult.commission);
-      const sellCommission = this.getBNBCommissionCost(tradeResult.commission);
-      Log.info(`Commission: ~${buyCommission + sellCommission}`)
-      const profit = gained - memo.tradeResult.paid - sellCommission - buyCommission;
+      const fee = this.processSellFee(memo, tradeResult);
+      const profit = tradeResult.gained - memo.tradeResult.paid - fee;
       tradeResult.profit = +profit.toFixed(2);
       memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
       this.stats.addProfit(tradeResult.profit)
+      // The gained amount could be for an existing asset.
+      // If it is, we need to update the asset's balance.
+      this.updateBalanceOfExistingAsset(symbol.priceAsset, tradeResult.cost);
     } else {
       memo.hodl = true;
       memo.setState(TradeState.BOUGHT);
@@ -157,24 +151,52 @@ export class V2Trader {
     Log.alert(tradeResult.toString());
 
     if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
-      this.afterAll.push(() => {
-        // all gains are reinvested to most unprofitable asset
-        // find a trade with the lowest profit percentage
-        const byProfitPercentDesc = (t1, t2) => t1.profitPercent() < t2.profitPercent() ? -1 : 1;
-        const lowestProfitTrade = this.store.getTradesList()
-          .filter(t => t.stateIs(TradeState.BOUGHT))
-          .sort(byProfitPercentDesc)[0];
-        if (lowestProfitTrade) {
-          Log.alert('Averaging down is enabled')
-          Log.alert(`All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
-          this.buy(lowestProfitTrade, gained);
-        }
-      })
+      // all gains are reinvested to most unprofitable asset
+      // find a trade with the lowest profit percentage
+      const byProfitPercentDesc = (t1, t2) => t1.profitPercent() < t2.profitPercent() ? -1 : 1;
+      const lowestProfitTrade = this.store.getTradesList()
+        .filter(t => t.stateIs(TradeState.BOUGHT))
+        .sort(byProfitPercentDesc)[0];
+      if (lowestProfitTrade) {
+        Log.alert('Averaging down is enabled')
+        Log.alert(`All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
+        this.buy(lowestProfitTrade, tradeResult.gained);
+      }
     }
+  }
+
+  private processBuyFee(buyResult: TradeResult): void {
+    if (this.updateBalanceOfExistingAsset("BNB", -buyResult.commission)) {
+      // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
+      buyResult.commission = 0;
+    }
+  }
+
+  private processSellFee(tm: TradeMemo, sellResult: TradeResult): number {
+    if (this.updateBalanceOfExistingAsset("BNB", -sellResult.commission)) {
+      // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
+      sellResult.commission = 0;
+    }
+    const buyFee = this.getBNBCommissionCost(tm.tradeResult.commission);
+    const sellFee = this.getBNBCommissionCost(sellResult.commission);
+    const fee = buyFee + sellFee;
+    fee && Log.info(`Fee: ~${buyFee + sellFee}`)
+    return fee;
   }
 
   private getBNBCommissionCost(commission: number): number {
     const bnbPrice = this.prices["BNB" + this.config.StableCoin];
     return bnbPrice ? commission * bnbPrice : 0;
+  }
+
+  private updateBalanceOfExistingAsset(coinName: string, quantity: number): boolean {
+    const tm = this.store.getTrade(new ExchangeSymbol(coinName, this.config.StableCoin));
+    if (tm) {
+      tm.tradeResult.addQuantity(quantity);
+      this.store.setTrade(tm);
+      Log.alert(`${coinName} balance updated by ${quantity}`);
+      return true
+    }
+    return false
   }
 }

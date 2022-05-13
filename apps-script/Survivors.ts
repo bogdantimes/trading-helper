@@ -1,7 +1,7 @@
 import {IStore} from "./Store";
-import {IExchange} from "./Binance";
 import {CacheProxy} from "./CacheProxy";
 import {CoinScore} from "./shared-lib/types";
+import {IExchange} from "./Exchange";
 
 export interface ScoresManager {
   getScores(): CoinScore[]

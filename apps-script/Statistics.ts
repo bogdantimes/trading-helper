@@ -1,10 +1,9 @@
 import {IStore} from "./Store";
+import {PriceMap} from "./shared-lib/types";
 
 export type Stats = {
   TotalProfit: number;
-  DailyProfit: {
-    [key: string]: number;
-  };
+  DailyProfit: PriceMap;
 }
 
 export class Statistics {

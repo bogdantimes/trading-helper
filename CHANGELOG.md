@@ -1,3 +1,10 @@
+# v2.3.3
+
+* Fixed "Old stable coin is used when buying more of existing asset even after stable was changed" #21.
+* Implemented "If BNB is present in the assets and fee was paid using BNB - update it's balance" #22.
+* Added "Info" msg on the "Survivors" tab.
+* Improvements in errors handling.
+
 # v2.3.2
 
 * Changing "Stable Coin" will not reset collected "Survivors" statistics for this stable coin if you switch back.
