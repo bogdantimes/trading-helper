@@ -56,10 +56,10 @@ export class TradeResult {
     if (this.fromExchange != next.fromExchange) {
       throw Error(`Cannot join trades where 'fromExchange' is not equal: ${next.toString()}`)
     }
-    if (this.symbol.toString() != next.symbol.toString()) {
-      throw Error(`Cannot join trades where 'symbol' is not equal: ${next.toString()}`)
+    if (this.symbol.quantityAsset != next.symbol.quantityAsset) {
+      throw Error(`Cannot join trades where 'quantityAsset' is not equal: current=${this.symbol.quantityAsset} next=${next.symbol.quantityAsset}`)
     }
-    const result = new TradeResult(this.symbol, next.msg);
+    const result = new TradeResult(next.symbol, next.msg);
     result.price = TradeResult.averagePrice(this, next)
     result.commission = this.commission + next.commission
     result.fromExchange = next.fromExchange

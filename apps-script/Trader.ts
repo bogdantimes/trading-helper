@@ -108,7 +108,7 @@ export class V2Trader {
   }
 
   private buy(memo: TradeMemo, cost: number): void {
-    const symbol = memo.tradeResult.symbol;
+    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
@@ -127,7 +127,7 @@ export class V2Trader {
   }
 
   private sell(memo: TradeMemo): void {
-    const symbol = memo.tradeResult.symbol;
+    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
