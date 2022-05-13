@@ -57,12 +57,6 @@ function Ticker() {
     }
   })
 
-  try {
-    trader.afterTickerCheck();
-  } catch (e) {
-    Log.error(e)
-  }
-
   store.dumpChanges();
 
   try {

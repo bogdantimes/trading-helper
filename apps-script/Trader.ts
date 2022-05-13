@@ -11,7 +11,6 @@ export class V2Trader {
   private readonly exchange: IExchange;
   private readonly stats: Statistics;
   private readonly prices: { [p: string]: number };
-  private readonly afterAll: Array<() => void> = [];
 
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
     this.store = store;
@@ -19,16 +18,6 @@ export class V2Trader {
     this.exchange = exchange
     this.stats = stats
     this.prices = exchange.getPrices()
-  }
-
-  /**
-   * After ticker check can be executed after all tickers are checked.
-   * It may contain any additional operations that need to be performed after all.
-   */
-  afterTickerCheck() {
-    while (this.afterAll.length > 0) {
-      this.afterAll.pop()();
-    }
   }
 
   tickerCheck(tm: TradeMemo): void {
@@ -162,19 +151,17 @@ export class V2Trader {
     Log.alert(tradeResult.toString());
 
     if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
-      this.afterAll.push(() => {
-        // all gains are reinvested to most unprofitable asset
-        // find a trade with the lowest profit percentage
-        const byProfitPercentDesc = (t1, t2) => t1.profitPercent() < t2.profitPercent() ? -1 : 1;
-        const lowestProfitTrade = this.store.getTradesList()
-          .filter(t => t.stateIs(TradeState.BOUGHT))
-          .sort(byProfitPercentDesc)[0];
-        if (lowestProfitTrade) {
-          Log.alert('Averaging down is enabled')
-          Log.alert(`All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
-          this.buy(lowestProfitTrade, tradeResult.gained);
-        }
-      })
+      // all gains are reinvested to most unprofitable asset
+      // find a trade with the lowest profit percentage
+      const byProfitPercentDesc = (t1, t2) => t1.profitPercent() < t2.profitPercent() ? -1 : 1;
+      const lowestProfitTrade = this.store.getTradesList()
+        .filter(t => t.stateIs(TradeState.BOUGHT))
+        .sort(byProfitPercentDesc)[0];
+      if (lowestProfitTrade) {
+        Log.alert('Averaging down is enabled')
+        Log.alert(`All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
+        this.buy(lowestProfitTrade, tradeResult.gained);
+      }
     }
   }
 
