@@ -48,7 +48,7 @@ class Log {
   }
 
   static error(err: Error) {
-    this.errLog.push(err)
+    this.errLog.push(new Error(`${err.stack.slice(0, 1000)}`))
   }
 
   static print(): string {
