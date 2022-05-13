@@ -1,14 +1,30 @@
 import {CoinStats} from "./CoinStats";
-import {Binance, IExchange} from "./Binance";
+import {Binance} from "./Binance";
 import {Config} from "./Store";
 import {ExchangeSymbol, PriceProvider, TradeResult} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
 import {StableUSDCoin} from "./shared-lib/types";
 
+export interface IExchange {
+  getFreeAsset(assetName: string): number
+
+  marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult
+
+  marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult
+
+  getPrices(): { [p: string]: number }
+
+  getPrice(symbol: ExchangeSymbol): number
+}
+
+export interface IPriceProvider {
+  getPrices(): { [p: string]: number }
+}
+
 export class Exchange implements IExchange {
-  private readonly exchange: Binance;
-  private priceProvider: CoinStats;
-  private stableCoin: StableUSDCoin;
+  private readonly exchange: IExchange;
+  private readonly stableCoin: StableUSDCoin;
+  private priceProvider: IPriceProvider;
 
   constructor(config: Config) {
     this.exchange = new Binance(config);
@@ -33,7 +49,7 @@ export class Exchange implements IExchange {
   }
 
   getPrice(symbol: ExchangeSymbol): number {
-    return this.priceProvider.getPrice(symbol);
+    return this.getPrices()[symbol.toString()];
   }
 
   getPrices(): { [p: string]: number } {
@@ -56,9 +72,9 @@ export class Exchange implements IExchange {
 
   getCoinNames(): string[] {
     const coinNames = [];
-    Object.keys(this.exchange.getPrices()).forEach(coinName => {
-      if (coinName.endsWith(this.stableCoin)) {
-        coinNames.push(coinName.split(this.stableCoin)[0]);
+    Object.keys(this.exchange.getPrices()).forEach(symbol => {
+      if (symbol.endsWith(this.stableCoin)) {
+        coinNames.push(symbol.split(this.stableCoin)[0]);
       }
     });
     return coinNames;

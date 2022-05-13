@@ -1,20 +1,9 @@
 import {Config} from "./Store";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
+import {IExchange, IPriceProvider} from "./Exchange";
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
-export interface IExchange {
-  getFreeAsset(assetName: string): number
-
-  marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult
-
-  marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult
-
-  getPrice(symbol: ExchangeSymbol): number
-
-  getPrices(): { [p: string]: number }
-}
-
-export class Binance implements IExchange {
+export class Binance implements IExchange, IPriceProvider {
 
   private readonly key: string;
   private readonly secret: string;
@@ -34,19 +23,24 @@ export class Binance implements IExchange {
   }
 
   getPrices(): { [p: string]: number } {
-    Log.info("Fetching prices")
+    Log.info("Fetching prices from Binance")
     const response = this.fetch(() => "ticker/price", this.defaultReqOpts);
-    const prices: { symbol: string, price: string }[] = JSON.parse(response.getContentText())
-    Log.debug(`Got ${prices.length} prices`)
-    const map: { [p: string]: number } = {}
-    prices.forEach(p => {
-      // skip symbols that are not spot trading
-      if (p.symbol.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/)) {
-        return;
-      }
-      map[p.symbol] = +p.price
-    })
-    return map
+    try {
+      const prices: { symbol: string, price: string }[] = JSON.parse(response.getContentText())
+      Log.debug(`Got ${prices.length} prices`)
+      const map: { [p: string]: number } = {}
+      prices.forEach(p => {
+        // skip symbols that are not spot trading
+        if (p.symbol.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/)) {
+          return;
+        }
+        map[p.symbol] = +p.price
+      })
+      return map
+    } catch (e) {
+      Log.error(new Error(`Failed to get tickers from Binance: ${response.getContentText()}`));
+      return {};
+    }
   }
 
   getPrice(symbol: ExchangeSymbol): number {

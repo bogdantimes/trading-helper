@@ -1,9 +1,8 @@
 import {TradeMemo, TradeState} from "./TradeMemo";
-import {IExchange} from "./Binance";
 import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
-import {ExchangeSymbol} from "./TradeResult";
 import {TradesQueue} from "./TradesQueue";
+import {IExchange} from "./Exchange";
 
 export class V2Trader {
   private readonly store: IStore;
