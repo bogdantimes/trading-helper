@@ -38,8 +38,7 @@ export class Binance implements IExchange, IPriceProvider {
       })
       return map
     } catch (e) {
-      Log.error(new Error(`Failed to get tickers from Binance: ${response.getContentText()}`));
-      return {};
+      throw new Error(`Failed to get prices from Binance: ${response.getContentText()}`);
     }
   }
 
@@ -61,9 +60,8 @@ export class Binance implements IExchange, IPriceProvider {
       Log.debug(assetVal)
       return assetVal ? +assetVal.free : 0
     } catch (e) {
-      Log.error(e)
+      throw new Error(`Failed to get available ${assetName} from Binance: ${data.getContentText()}`);
     }
-    return 0
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
