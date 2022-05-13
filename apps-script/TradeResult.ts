@@ -63,6 +63,7 @@ export class TradeResult {
     result.price = TradeResult.averagePrice(this, next)
     result.commission = this.commission + next.commission
     result.fromExchange = next.fromExchange
+    result.addQuantity(this.quantity)
     result.addQuantity(next.quantity)
     result.cost = this.cost + next.cost
     result.paid = this.paid + next.paid
