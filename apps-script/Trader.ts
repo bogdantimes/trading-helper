@@ -170,11 +170,12 @@ export class V2Trader {
     return bnbPrice ? commission * bnbPrice : 0;
   }
 
-  private updateBalanceOfExistingAsset(coinName: string, cost: number) {
+  private updateBalanceOfExistingAsset(coinName: string, quantity: number) {
     const tm = this.store.getTrade(new ExchangeSymbol(coinName, this.config.StableCoin));
     if (tm) {
-      tm.tradeResult.addQuantity(cost);
+      tm.tradeResult.addQuantity(quantity);
       this.store.setTrade(tm);
+      Log.info(`${coinName} balance updated by ${quantity}`);
     }
   }
 }
