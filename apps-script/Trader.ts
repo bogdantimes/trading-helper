@@ -42,16 +42,18 @@ export class V2Trader {
       // this allows to wait if price continues to go up
       this.sell(tm)
     } else if (tm.stateIs(TradeState.BUY)) {
-      const coinName = tm.tradeResult.symbol.quantityAsset;
-      const isStableCoin = this.config.StableCoin.toUpperCase() === coinName.toUpperCase()
-        || Object.keys(StableUSDCoin).includes(coinName);
-      if (isStableCoin || priceGoesUp) {
-        // buy only if price started to go up
-        // this allows to wait if price continues to fall
-        // or buy if it is a stable coin
+      // buy only if price started to go up
+      // this allows to wait if price continues to fall
+      // or buy if it is a stable coin
+      if (priceGoesUp || this.isStableCoin(tm.tradeResult.symbol.quantityAsset)) {
         this.buy(tm, this.config.BuyQuantity)
       }
     }
+  }
+
+  private isStableCoin(coinName: string): boolean {
+    return this.config.StableCoin.toUpperCase() === coinName.toUpperCase()
+      || Object.keys(StableUSDCoin).includes(coinName)
   }
 
   private processSoldState(tm: TradeMemo): void {
