@@ -3,6 +3,7 @@ import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {IExchange} from "./Exchange";
+import {ExchangeSymbol} from "./TradeResult";
 
 export class V2Trader {
   private readonly store: IStore;
@@ -126,6 +127,9 @@ export class V2Trader {
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
+      // The paid amount could be for an existing asset.
+      // If it is, we need to update the asset's balance.
+      this.updateBalanceOfExistingAsset(symbol.priceAsset, -tradeResult.paid);
     } else {
       Log.alert(tradeResult.toString())
       TradesQueue.cancelAction(symbol.quantityAsset);
@@ -135,17 +139,19 @@ export class V2Trader {
   private sell(memo: TradeMemo): void {
     const symbol = memo.tradeResult.symbol;
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
-    const gained = tradeResult.gained;
     if (tradeResult.fromExchange) {
       Log.debug(memo);
       const buyCommission = this.getBNBCommissionCost(memo.tradeResult.commission);
       const sellCommission = this.getBNBCommissionCost(tradeResult.commission);
       Log.info(`Commission: ~${buyCommission + sellCommission}`)
-      const profit = gained - memo.tradeResult.paid - sellCommission - buyCommission;
+      const profit = tradeResult.gained - memo.tradeResult.paid - sellCommission - buyCommission;
       tradeResult.profit = +profit.toFixed(2);
       memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
       this.stats.addProfit(tradeResult.profit)
+      // The gained amount could be for an existing asset.
+      // If it is, we need to update the asset's balance.
+      this.updateBalanceOfExistingAsset(symbol.priceAsset, tradeResult.gained);
     } else {
       memo.hodl = true;
       memo.setState(TradeState.BOUGHT);
@@ -166,7 +172,7 @@ export class V2Trader {
         if (lowestProfitTrade) {
           Log.alert('Averaging down is enabled')
           Log.alert(`All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
-          this.buy(lowestProfitTrade, gained);
+          this.buy(lowestProfitTrade, tradeResult.gained);
         }
       })
     }
@@ -175,5 +181,13 @@ export class V2Trader {
   private getBNBCommissionCost(commission: number): number {
     const bnbPrice = this.prices["BNB" + this.config.StableCoin];
     return bnbPrice ? commission * bnbPrice : 0;
+  }
+
+  private updateBalanceOfExistingAsset(coinName: string, cost: number) {
+    const tm = this.store.getTrade(new ExchangeSymbol(coinName, this.config.StableCoin));
+    if (tm) {
+      tm.tradeResult.addQuantity(cost);
+      this.store.setTrade(tm);
+    }
   }
 }

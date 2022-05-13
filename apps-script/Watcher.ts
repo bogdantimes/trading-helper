@@ -46,7 +46,12 @@ function Ticker() {
 
   store.getTradesList().forEach(tradeMemo => {
     try {
-      trader.tickerCheck(tradeMemo);
+      // get the trade to ensure it is up-to-date,
+      // as operations with other trades may have changed it
+      const trade = store.getTrade(tradeMemo.tradeResult.symbol);
+      if (trade) {
+        trader.tickerCheck(trade);
+      }
     } catch (e) {
       Log.error(e)
     }
