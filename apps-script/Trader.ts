@@ -4,7 +4,7 @@ import {Config, IStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {IExchange} from "./Exchange";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
-import {PriceMap} from "./shared-lib/types";
+import {PriceMap, StableUSDCoin} from "./shared-lib/types";
 
 export class V2Trader {
   private readonly store: IStore;
@@ -41,10 +41,16 @@ export class V2Trader {
       // sell if price not goes up anymore
       // this allows to wait if price continues to go up
       this.sell(tm)
-    } else if (tm.stateIs(TradeState.BUY) && priceGoesUp) {
-      // buy only if price started to go up
-      // this allows to wait if price continues to fall
-      this.buy(tm, this.config.BuyQuantity)
+    } else if (tm.stateIs(TradeState.BUY)) {
+      const coinName = tm.tradeResult.symbol.quantityAsset;
+      const isStableCoin = this.config.StableCoin.toUpperCase() === coinName.toUpperCase()
+        || Object.keys(StableUSDCoin).includes(coinName);
+      if (isStableCoin || priceGoesUp) {
+        // buy only if price started to go up
+        // this allows to wait if price continues to fall
+        // or buy if it is a stable coin
+        this.buy(tm, this.config.BuyQuantity)
+      }
     }
   }
 
