@@ -40,6 +40,7 @@ export class TradesQueue {
         if (action === QueueAction.BUY) {
           const trade = store.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));
           trade.setState(TradeState.BUY);
+          trade.tradeResult.symbol = symbol;
           store.setTrade(trade);
         } else if (action === QueueAction.CANCEL) {
           const trade = store.getTrade(symbol);
