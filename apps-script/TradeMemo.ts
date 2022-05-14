@@ -46,8 +46,8 @@ export class TradeMemo {
     return tradeMemo
   }
 
-  getKey(): TradeMemoKey {
-    return new TradeMemoKey(this.tradeResult.symbol)
+  getCoinName(): string {
+    return this.tradeResult.symbol.quantityAsset
   }
 
   get currentPrice(): number {
@@ -131,17 +131,5 @@ export class TradeMemo {
       return false
     }
     return lastPrices.every((p, i) => i == 0 ? true : p > lastPrices[i - 1])
-  }
-}
-
-export class TradeMemoKey {
-  readonly symbol: ExchangeSymbol
-
-  constructor(symbol: ExchangeSymbol) {
-    this.symbol = symbol;
-  }
-
-  toString(): string {
-    return `trade/${this.symbol.quantityAsset}`
   }
 }

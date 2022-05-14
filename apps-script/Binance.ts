@@ -3,6 +3,7 @@ import {ExchangeSymbol, TradeResult} from "./TradeResult";
 import {IExchange, IPriceProvider} from "./Exchange";
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 import {PriceMap} from "./shared-lib/types";
+import {CacheProxy} from "./CacheProxy";
 
 export class Binance implements IExchange, IPriceProvider {
 
@@ -51,16 +52,21 @@ export class Binance implements IExchange, IPriceProvider {
   }
 
   getFreeAsset(assetName: string): number {
-    const resource = "account"
-    const query = "";
-    try {
-      const accountData: any = this.fetch(() => `${resource}?${this.addSignature(query)}`, this.defaultReqOpts);
-      const assetVal = accountData.balances.find((balance) => balance.asset == assetName);
-      Log.debug(assetVal)
-      return assetVal ? +assetVal.free : 0
-    } catch (e) {
-      throw new Error(`Failed to get available ${assetName}: ${e.message}`);
+    const accountDataJson = CacheProxy.get("AccountData");
+    let accountData = accountDataJson ? JSON.parse(accountDataJson) : null;
+    if (!accountData) {
+      const resource = "account"
+      const query = "";
+      try {
+        accountData = this.fetch(() => `${resource}?${this.addSignature(query)}`, this.defaultReqOpts);
+        CacheProxy.put("AccountData", JSON.stringify(accountData), 10); // 10 seconds
+      } catch (e) {
+        throw new Error(`Failed to get available ${assetName}: ${e.message}`);
+      }
     }
+    const assetVal = accountData.balances.find((balance) => balance.asset == assetName);
+    Log.debug(assetVal)
+    return assetVal ? +assetVal.free : 0
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {

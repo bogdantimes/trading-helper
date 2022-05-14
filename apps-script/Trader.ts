@@ -4,7 +4,7 @@ import {Config, IStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {IExchange} from "./Exchange";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
-import {PriceMap, StableUSDCoin} from "./shared-lib/types";
+import {Coin, PriceMap, StableUSDCoin} from "./shared-lib/types";
 
 export class V2Trader {
   private readonly store: IStore;
@@ -45,15 +45,10 @@ export class V2Trader {
       // buy only if price started to go up
       // this allows to wait if price continues to fall
       // or buy if it is a stable coin
-      if (priceGoesUp || this.isStableCoin(tm.tradeResult.symbol.quantityAsset)) {
+      if (priceGoesUp || Coin.isStable(tm.getCoinName())) {
         this.buy(tm, this.config.BuyQuantity)
       }
     }
-  }
-
-  private isStableCoin(coinName: string): boolean {
-    return this.config.StableCoin.toUpperCase() === coinName.toUpperCase()
-      || Object.keys(StableUSDCoin).includes(coinName)
   }
 
   private processSoldState(tm: TradeMemo): void {
@@ -124,6 +119,7 @@ export class V2Trader {
       this.processBuyFee(tradeResult);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
+      memo.hodl = memo.hodl || Coin.isStable(symbol.quantityAsset);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
       // The paid amount could be for an existing asset.
@@ -174,7 +170,7 @@ export class V2Trader {
   }
 
   private updatePLStatistics(gainedCoin: string, profit: number): void {
-    if (this.isStableCoin(gainedCoin)) {
+    if (Coin.isStable(gainedCoin)) {
       this.stats.addProfit(profit)
       Log.info("P/L added to statistics: " + profit);
     }
@@ -205,7 +201,7 @@ export class V2Trader {
   }
 
   private updateBalanceOfExistingAsset(coinName: string, quantity: number): boolean {
-    const tm = this.store.getTrade(new ExchangeSymbol(coinName, null));
+    const tm = this.store.getTrade(new ExchangeSymbol(coinName, this.config.StableCoin));
     if (tm) {
       const cost = this.prices[tm.tradeResult.symbol.toString()] * quantity;
       tm.tradeResult.addQuantity(quantity, cost);
@@ -214,5 +210,31 @@ export class V2Trader {
       return true
     }
     return false
+  }
+
+  private actualizeBalanceFromExchange(tm: TradeMemo): void {
+    // For stable coins, we read the actual balance from the exchange.
+    const symbol = tm.tradeResult.symbol;
+    if (Coin.isStable(symbol.quantityAsset)) {
+      const balance = this.exchange.getFreeAsset(symbol.quantityAsset);
+      if (balance) {
+        tm.tradeResult = new TradeResult(symbol, "Stable coin");
+        tm.tradeResult.quantity = balance;
+        tm.tradeResult.fromExchange = true;
+      }
+    }
+  }
+
+  readStableCoinsBalance() {
+    Object.keys(StableUSDCoin).forEach(coin => {
+      const symbol = new ExchangeSymbol(coin, this.config.StableCoin);
+      const tm = this.store.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));
+      const balance = this.exchange.getFreeAsset(symbol.quantityAsset);
+      tm.setState(tm.getState() || TradeState.BOUGHT);
+      tm.tradeResult = new TradeResult(symbol, "Stable coin");
+      tm.tradeResult.quantity = balance;
+      tm.tradeResult.fromExchange = true;
+      this.store.setTrade(tm);
+    });
   }
 }
