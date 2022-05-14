@@ -122,7 +122,6 @@ export class V2Trader {
       memo.hodl = memo.hodl || Coin.isStable(symbol.quantityAsset);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
-      this.updateStableCoinsBalance();
     } else {
       Log.alert(tradeResult.toString())
       TradesQueue.cancelAction(symbol.quantityAsset);
@@ -140,7 +139,6 @@ export class V2Trader {
       memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
       this.updatePLStatistics(symbol.priceAsset, tradeResult.profit);
-      this.updateStableCoinsBalance();
     } else {
       memo.hodl = true;
       memo.setState(TradeState.BOUGHT);
