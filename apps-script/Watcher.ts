@@ -45,12 +45,6 @@ function Ticker() {
     throw e;
   }
 
-  try {
-    trader.updateStableCoinsBalance();
-  } catch (e) {
-    Log.error(new Error(`Failed to read stable coins balance: ${e.message}`))
-  }
-
   store.getTradesList()
     .filter(t => !Coin.isStable(t.getCoinName()))
     .forEach(tradeMemo => {
@@ -65,6 +59,12 @@ function Ticker() {
         Log.error(e)
       }
     })
+
+  try {
+    trader.updateStableCoinsBalance();
+  } catch (e) {
+    Log.error(new Error(`Failed to read stable coins balance: ${e.message}`))
+  }
 
   store.dumpChanges();
 
