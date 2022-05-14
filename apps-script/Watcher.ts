@@ -46,7 +46,7 @@ function Ticker() {
   }
 
   try {
-    trader.readStableCoinsBalance();
+    trader.updateStableCoinsBalance();
   } catch (e) {
     Log.error(new Error(`Failed to read stable coins balance: ${e.message}`))
   }
