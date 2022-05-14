@@ -4,7 +4,7 @@ import {Config, IStore} from "./Store";
 import {TradesQueue} from "./TradesQueue";
 import {IExchange} from "./Exchange";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
-import {PriceMap, StableUSDCoin} from "./shared-lib/types";
+import {Coin, PriceMap, StableUSDCoin} from "./shared-lib/types";
 
 export class V2Trader {
   private readonly store: IStore;
@@ -45,15 +45,10 @@ export class V2Trader {
       // buy only if price started to go up
       // this allows to wait if price continues to fall
       // or buy if it is a stable coin
-      if (priceGoesUp || this.isStableCoin(tm.tradeResult.symbol.quantityAsset)) {
+      if (priceGoesUp || Coin.isStable(tm.getCoinName())) {
         this.buy(tm, this.config.BuyQuantity)
       }
     }
-  }
-
-  private isStableCoin(coinName: string): boolean {
-    return this.config.StableCoin.toUpperCase() === coinName.toUpperCase()
-      || Object.keys(StableUSDCoin).includes(coinName)
   }
 
   private processSoldState(tm: TradeMemo): void {
@@ -117,18 +112,16 @@ export class V2Trader {
   }
 
   private buy(memo: TradeMemo, cost: number): void {
-    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
+    const symbol = memo.tradeResult.symbol;
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
       this.processBuyFee(tradeResult);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
+      memo.hodl = memo.hodl || Coin.isStable(symbol.quantityAsset);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
-      // The paid amount could be for an existing asset.
-      // If it is, we need to update the asset's balance.
-      this.updateBalanceOfExistingAsset(symbol.priceAsset, -tradeResult.paid);
     } else {
       Log.alert(tradeResult.toString())
       TradesQueue.cancelAction(symbol.quantityAsset);
@@ -145,10 +138,7 @@ export class V2Trader {
       tradeResult.profit = +profit.toFixed(2);
       memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
-      this.stats.addProfit(tradeResult.profit)
-      // The gained amount could be for an existing asset.
-      // If it is, we need to update the asset's balance.
-      this.updateBalanceOfExistingAsset(symbol.priceAsset, tradeResult.cost);
+      this.updatePLStatistics(symbol.priceAsset, tradeResult.profit);
     } else {
       memo.hodl = true;
       memo.setState(TradeState.BOUGHT);
@@ -173,15 +163,22 @@ export class V2Trader {
     }
   }
 
+  private updatePLStatistics(gainedCoin: string, profit: number): void {
+    if (Coin.isStable(gainedCoin)) {
+      this.stats.addProfit(profit)
+      Log.info("P/L added to statistics: " + profit);
+    }
+  }
+
   private processBuyFee(buyResult: TradeResult): void {
-    if (this.updateBalanceOfExistingAsset("BNB", -buyResult.commission)) {
+    if (this.updateBNBBalance(-buyResult.commission)) {
       // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
       buyResult.commission = 0;
     }
   }
 
   private processSellFee(tm: TradeMemo, sellResult: TradeResult): number {
-    if (this.updateBalanceOfExistingAsset("BNB", -sellResult.commission)) {
+    if (this.updateBNBBalance(-sellResult.commission)) {
       // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
       sellResult.commission = 0;
     }
@@ -197,14 +194,29 @@ export class V2Trader {
     return bnbPrice ? commission * bnbPrice : 0;
   }
 
-  private updateBalanceOfExistingAsset(coinName: string, quantity: number): boolean {
-    const tm = this.store.getTrade(new ExchangeSymbol(coinName, this.config.StableCoin));
+  private updateBNBBalance(quantity: number): boolean {
+    const tm = this.store.getTrade(new ExchangeSymbol("BNB", this.config.StableCoin));
     if (tm) {
-      tm.tradeResult.addQuantity(quantity);
+      // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
+      // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
+      tm.tradeResult.addQuantity(quantity, 0);
       this.store.setTrade(tm);
-      Log.alert(`${coinName} balance updated by ${quantity}`);
+      Log.alert(`BNB balance updated by ${quantity}`);
       return true
     }
     return false
+  }
+
+  updateStableCoinsBalance() {
+    Object.keys(StableUSDCoin).forEach(coin => {
+      const symbol = new ExchangeSymbol(coin, this.config.StableCoin);
+      const tm = this.store.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));
+      const balance = this.exchange.getFreeAsset(symbol.quantityAsset);
+      tm.setState(tm.getState() || TradeState.BOUGHT);
+      tm.tradeResult = new TradeResult(symbol, "Stable coin");
+      tm.tradeResult.quantity = balance;
+      tm.tradeResult.fromExchange = true;
+      this.store.setTrade(tm);
+    });
   }
 }

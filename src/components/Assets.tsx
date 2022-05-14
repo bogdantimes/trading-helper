@@ -4,6 +4,8 @@ import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Autocomplete, Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {Config} from "../../apps-script/Store";
 import {useEffect} from "react";
+import StableCoin from "./StableCoin";
+import {Coin} from "../../apps-script/shared-lib/types";
 
 const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.profit() < t2.profit() ? 1 : -1;
 
@@ -83,12 +85,25 @@ export function Assets({config}: { config: Config }) {
       </Grid>
       <Grid item xs={12}>
         <Grid container justifyContent="center" spacing={2}>
-          {tradesMap.has(state) && tradesMap.get(state).sort(byProfit).map(t =>
-            <Grid item>
-              <Trade key={t.tradeResult.symbol.quantityAsset}
-                     name={t.tradeResult.symbol.quantityAsset} data={t} config={config}/>
-            </Grid>
-          )}
+          {tradesMap.has(state) && tradesMap.get(state)
+            .filter(t => Coin.isStable(t.getCoinName()))
+            .map(t =>
+              <Grid item>
+                <StableCoin key={t.getCoinName()} data={t} config={config}/>
+              </Grid>
+            )}
+        </Grid>
+      </Grid>
+      <Grid item xs={12}>
+        <Grid container justifyContent="center" spacing={2}>
+          {tradesMap.has(state) && tradesMap.get(state)
+            .filter(t => !Coin.isStable(t.getCoinName()))
+            .sort(byProfit)
+            .map(t =>
+              <Grid item>
+                <Trade noTrade={!coinNames.includes(t.getCoinName())} key={t.getCoinName()} data={t} config={config}/>
+              </Grid>
+            )}
         </Grid>
       </Grid>
     </Grid>

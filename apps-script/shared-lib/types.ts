@@ -2,8 +2,6 @@ export enum StableUSDCoin {
   USDT = "USDT",
   USDC = "USDC",
   BUSD = "BUSD",
-  UST = "UST",
-  DAI = "DAI",
 }
 
 export class CoinScore {
@@ -67,3 +65,9 @@ export class CoinScore {
 }
 
 export type PriceMap = { [key: string]: number };
+
+export class Coin {
+  static isStable(coinName: string): boolean {
+    return Object.keys(StableUSDCoin).includes(coinName.toUpperCase())
+  }
+}

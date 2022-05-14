@@ -11,9 +11,11 @@ import {ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress, f2} from "./Common";
 
-export default function Trade(props) {
+export default function Trade(props: {data: TradeMemo, config: Config, noTrade: boolean}) {
   const tm: TradeMemo = props.data;
   const config: Config = props.config;
+  const noTrade = props.noTrade;
+  const coinName = tm.getCoinName();
 
   const chartContainerRef = useRef();
   const chart = useRef(null);
@@ -107,41 +109,41 @@ export default function Trade(props) {
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${props.name}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
+    if (confirm(`Are you sure you want to sell ${coinName}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
         setIsSelling(false);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).sellCoin(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).sellCoin(coinName);
     }
   }
 
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy ${props.name}?`)) {
+    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());
         setIsBuying(false);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(coinName);
     }
   }
 
   const [actionCanceled, setActionCanceled] = useState(false);
 
   function onCancel() {
-    if (confirm(`Are you sure you want to cancel the action on ${props.name}?`)) {
+    if (confirm(`Are you sure you want to cancel the action on ${coinName}?`)) {
       const handle = resp => {
         alert(resp.toString());
         setActionCanceled(true);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(coinName);
     }
   }
 
@@ -157,14 +159,14 @@ export default function Trade(props) {
     }).withFailureHandler(resp => {
       alert(resp.toString());
       setIsHodlSwitching(false);
-    }).setHold(props.name, !isHodl);
+    }).setHold(coinName, !isHodl);
   }
 
   const [isRemoving, setIsRemoving] = useState(false);
   const [removed, setRemoved] = useState(false);
 
   function onRemove() {
-    if (confirm(`Are you sure you want to remove ${props.name}?`)) {
+    if (confirm(`Are you sure you want to remove ${coinName}?`)) {
       setIsRemoving(true);
       // @ts-ignore
       google.script.run
@@ -176,7 +178,7 @@ export default function Trade(props) {
           alert(resp.toString());
           setIsRemoving(false);
         })
-        .dropCoin(props.name);
+        .dropCoin(coinName);
     }
   }
 
@@ -185,7 +187,7 @@ export default function Trade(props) {
       {!removed &&
         <Card>
           <CardContent>
-            <Typography gutterBottom variant="h5" component="div">{props.name}</Typography>
+            <Typography gutterBottom variant="h5" component="div">{coinName}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
           {!!tm.tradeResult.quantity ?
@@ -202,10 +204,10 @@ export default function Trade(props) {
           <CardActions>
             <Stack direction={"row"} spacing={1}>
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Button size="small" disabled={isSelling} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
+                <Button size="small" disabled={isSelling || noTrade} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
-                <Button size="small" disabled={isBuying} onClick={onBuy}>
+                <Button size="small" disabled={isBuying || noTrade} onClick={onBuy}>
                   {isBuying ? '...' : `Buy ${tm.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
               }
               {tm.stateIs(TradeState.BOUGHT) &&

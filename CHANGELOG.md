@@ -1,3 +1,8 @@
+# v2.3.4
+
+* Display current balances for top 3 stable coins on the assets page: USDT, USDC, BUSD.
+* Disable Buy/Sell buttons if there is no pair with the current stable coin.
+
 # v2.3.3
 
 * Fixed "Old stable coin is used when buying more of existing asset even after stable was changed" #21.
