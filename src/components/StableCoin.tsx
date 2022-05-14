@@ -79,15 +79,16 @@ export default function StableCoin(props) {
   return (
     <>
       {!removed &&
-        <Card>
-          <CardContent>
+        <Card sx={{width: 332}}>
+          <CardContent sx={{paddingBottom: 0}}>
             <Typography variant="h5">{props.name}</Typography>
-            <Typography variant="subtitle1">{f2(tm.tradeResult.quantity)}</Typography>
+            <Typography variant="h6">{f2(tm.tradeResult.quantity)}</Typography>
           </CardContent>
           <CardActions disableSpacing={true}>
             <Stack direction={"row"} spacing={1}>
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Button size="small" disabled={isSelling || isCurrentStable} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
+                <Button size="small" disabled={isSelling || isCurrentStable}
+                        onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
                 <Button size="small" disabled={isBuying || isCurrentStable} onClick={onBuy}>
