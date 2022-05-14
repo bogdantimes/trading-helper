@@ -2,8 +2,6 @@ export enum StableUSDCoin {
   USDT = "USDT",
   USDC = "USDC",
   BUSD = "BUSD",
-  UST = "UST",
-  DAI = "DAI",
 }
 
 export class CoinScore {

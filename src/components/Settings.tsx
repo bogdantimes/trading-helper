@@ -73,12 +73,10 @@ export function Settings() {
     <Box sx={{justifyContent: 'center', display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
       <Stack spacing={2}>
         <Autocomplete
-          freeSolo
+          disableClearable={true}
           value={config.StableCoin}
-          inputValue={config.StableCoin}
           options={Object.values(StableUSDCoin)}
           onChange={(e, val) => val && setConfig({...config, StableCoin: val as StableUSDCoin})}
-          onInputChange={(e, val) => setConfig({...config, StableCoin: val as StableUSDCoin})}
           renderInput={(params) => <TextField {...params} label={"Stable Coin"}/>}
         />
         <TextField value={buyQuantity} label={"Buy Quantity"} onChange={e => setBuyQuantity(e.target.value)}

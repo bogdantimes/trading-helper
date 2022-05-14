@@ -63,15 +63,15 @@ export class TradeResult {
     result.price = TradeResult.averagePrice(this, next)
     result.commission = this.commission + next.commission
     result.fromExchange = next.fromExchange
-    result.addQuantity(this.quantity)
-    result.addQuantity(next.quantity)
-    result.cost = this.cost + next.cost
-    result.paid = this.paid + next.paid
+    result.addQuantity(this.quantity, this.cost)
+    result.addQuantity(next.quantity, next.cost)
     return result
   }
 
-  addQuantity(quantity: number): void {
+  addQuantity(quantity: number, cost: number): void {
     // we should maintain the precision returned by Binance for quantity
     this.quantity = sumWithMaxPrecision(this.quantity, quantity)
+    this.cost += cost;
+    this.paid += cost;
   }
 }

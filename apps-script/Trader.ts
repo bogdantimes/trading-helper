@@ -117,7 +117,7 @@ export class V2Trader {
   }
 
   private buy(memo: TradeMemo, cost: number): void {
-    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
+    const symbol = memo.tradeResult.symbol;
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
       Log.debug(memo);
@@ -145,10 +145,10 @@ export class V2Trader {
       tradeResult.profit = +profit.toFixed(2);
       memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
-      this.stats.addProfit(tradeResult.profit)
+      this.updatePLStatistics(symbol.priceAsset, tradeResult.profit);
       // The gained amount could be for an existing asset.
       // If it is, we need to update the asset's balance.
-      this.updateBalanceOfExistingAsset(symbol.priceAsset, tradeResult.cost);
+      this.updateBalanceOfExistingAsset(symbol.priceAsset, tradeResult.gained);
     } else {
       memo.hodl = true;
       memo.setState(TradeState.BOUGHT);
@@ -170,6 +170,13 @@ export class V2Trader {
         Log.alert(`All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
         this.buy(lowestProfitTrade, tradeResult.gained);
       }
+    }
+  }
+
+  private updatePLStatistics(gainedCoin: string, profit: number): void {
+    if (this.isStableCoin(gainedCoin)) {
+      this.stats.addProfit(profit)
+      Log.info("P/L added to statistics: " + profit);
     }
   }
 
@@ -198,9 +205,10 @@ export class V2Trader {
   }
 
   private updateBalanceOfExistingAsset(coinName: string, quantity: number): boolean {
-    const tm = this.store.getTrade(new ExchangeSymbol(coinName, this.config.StableCoin));
+    const tm = this.store.getTrade(new ExchangeSymbol(coinName, null));
     if (tm) {
-      tm.tradeResult.addQuantity(quantity);
+      const cost = this.prices[tm.tradeResult.symbol.toString()] * quantity;
+      tm.tradeResult.addQuantity(quantity, cost);
       this.store.setTrade(tm);
       Log.alert(`${coinName} balance updated by ${quantity}`);
       return true
