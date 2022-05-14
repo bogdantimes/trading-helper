@@ -89,7 +89,7 @@ export function Assets({config}: { config: Config }) {
             .filter(t => Coin.isStable(t.getCoinName()))
             .map(t =>
               <Grid item>
-                <StableCoin key={t.getCoinName()} name={t.getCoinName()} data={t} config={config}/>
+                <StableCoin key={t.getCoinName()} data={t} config={config}/>
               </Grid>
             )}
         </Grid>
@@ -101,7 +101,7 @@ export function Assets({config}: { config: Config }) {
             .sort(byProfit)
             .map(t =>
               <Grid item>
-                <Trade key={t.getCoinName()} name={t.getCoinName()} data={t} config={config}/>
+                <Trade noTrade={!coinNames.includes(t.getCoinName())} key={t.getCoinName()} data={t} config={config}/>
               </Grid>
             )}
         </Grid>

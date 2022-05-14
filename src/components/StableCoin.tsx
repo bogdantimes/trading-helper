@@ -10,48 +10,49 @@ import {Config} from "../../apps-script/Store";
 import {Stack} from "@mui/material";
 import {f2} from "./Common";
 
-export default function StableCoin(props) {
+export default function StableCoin(props: {data: TradeMemo, config: Config}) {
   const tm: TradeMemo = props.data;
   const config: Config = props.config;
+  const coinName = tm.getCoinName();
 
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${props.name}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
+    if (confirm(`Are you sure you want to sell ${coinName}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
         setIsSelling(false);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).sellCoin(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).sellCoin(coinName);
     }
   }
 
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy ${props.name}?`)) {
+    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());
         setIsBuying(false);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(coinName);
     }
   }
 
   const [actionCanceled, setActionCanceled] = useState(false);
 
   function onCancel() {
-    if (confirm(`Are you sure you want to cancel the action on ${props.name}?`)) {
+    if (confirm(`Are you sure you want to cancel the action on ${coinName}?`)) {
       const handle = resp => {
         alert(resp.toString());
         setActionCanceled(true);
       };
       // @ts-ignore
-      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(props.name);
+      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(coinName);
     }
   }
 
@@ -59,7 +60,7 @@ export default function StableCoin(props) {
   const [removed, setRemoved] = useState(false);
 
   function onRemove() {
-    if (confirm(`Are you sure you want to remove ${props.name}?`)) {
+    if (confirm(`Are you sure you want to remove ${coinName}?`)) {
       setIsRemoving(true);
       // @ts-ignore
       google.script.run
@@ -71,7 +72,7 @@ export default function StableCoin(props) {
           alert(resp.toString());
           setIsRemoving(false);
         })
-        .dropCoin(props.name);
+        .dropCoin(coinName);
     }
   }
 
@@ -81,7 +82,7 @@ export default function StableCoin(props) {
       {!removed &&
         <Card sx={{width: 332}}>
           <CardContent sx={{paddingBottom: 0}}>
-            <Typography variant="h5">{props.name}</Typography>
+            <Typography variant="h5">{coinName}</Typography>
             <Typography variant="h6">{f2(tm.tradeResult.quantity)}</Typography>
           </CardContent>
           <CardActions disableSpacing={true}>
