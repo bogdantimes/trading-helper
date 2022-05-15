@@ -20,12 +20,12 @@ export function Survivors() {
   return (
     <Box sx={{justifyContent: 'center', display: 'flex'}}>
       <Stack spacing={2}>
-        <Alert sx={{width: 300}} severity={"info"}>
+        <Alert sx={{width: 332}} severity={"info"}>
           Score represents how many times a currency showed a price growth within
           last {CoinScore.PRICES_MAX_CAP} measures, while 99% of the market was not moving up.
         </Alert>
         {!!survivors.length &&
-          <List sx={{padding: 0, width: 300}}>
+          <List sx={{padding: 0, width: 332}}>
             {survivors.map((rJson, i) => {
               const r = CoinScore.fromObject(rJson);
               return (
