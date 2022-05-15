@@ -9,7 +9,7 @@ import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
 import {ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
-import {circularProgress, f2} from "./Common";
+import {circularProgress, confirmBuy, confirmSell, f2} from "./Common";
 
 export default function Trade(props: {data: TradeMemo, config: Config, noTrade: boolean}) {
   const tm: TradeMemo = props.data;
@@ -109,7 +109,7 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${coinName}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
+    if (confirmSell(coinName, config)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
@@ -123,7 +123,7 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
+    if (confirmBuy(coinName, config)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());

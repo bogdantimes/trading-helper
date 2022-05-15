@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
 import {Stack} from "@mui/material";
-import {f2} from "./Common";
+import {confirmBuy, confirmSell, f2} from "./Common";
 
 export default function StableCoin(props: {noTrade: boolean, data: TradeMemo, config: Config}) {
   const tm: TradeMemo = props.data;
@@ -19,7 +19,7 @@ export default function StableCoin(props: {noTrade: boolean, data: TradeMemo, co
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${coinName}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
+    if (confirmSell(coinName, config)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
@@ -33,7 +33,7 @@ export default function StableCoin(props: {noTrade: boolean, data: TradeMemo, co
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
+    if (confirmBuy(coinName, config)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());

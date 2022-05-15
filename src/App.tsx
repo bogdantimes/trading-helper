@@ -95,7 +95,7 @@ export default function App() {
           <TabPanel value={value} index={0}><Assets config={config}/></TabPanel>
           <TabPanel value={value} index={1}><Settings/></TabPanel>
           <TabPanel value={value} index={2}><Info/></TabPanel>
-          <TabPanel value={value} index={3}><Survivors/></TabPanel>
+          <TabPanel value={value} index={3}><Survivors config={config}/></TabPanel>
         </Box>
       }
     </ThemeProvider>

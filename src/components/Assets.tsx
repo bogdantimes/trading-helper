@@ -6,6 +6,7 @@ import {Config} from "../../apps-script/Store";
 import {useEffect} from "react";
 import StableCoin from "./StableCoin";
 import {Coin} from "../../apps-script/shared-lib/types";
+import {confirmBuy} from "./Common";
 
 const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.profit() < t2.profit() ? 1 : -1;
 
@@ -43,7 +44,7 @@ export function Assets({config}: { config: Config }) {
   const [coinName, setCoinName] = React.useState("BTC");
 
   function buy() {
-    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
+    if (confirmBuy(coinName, config)) {
       google.script.run.withSuccessHandler(alert).buyCoin(coinName);
     }
   }
