@@ -119,7 +119,6 @@ export class V2Trader {
       this.processBuyFee(tradeResult);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
-      memo.hodl = memo.hodl || Coin.isStable(symbol.quantityAsset);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
     } else {
@@ -216,6 +215,7 @@ export class V2Trader {
       tm.tradeResult = new TradeResult(symbol, "Stable coin");
       tm.tradeResult.quantity = balance;
       tm.tradeResult.fromExchange = true;
+      tm.hodl = true;
       this.store.setTrade(tm);
     });
   }

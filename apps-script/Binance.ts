@@ -59,7 +59,7 @@ export class Binance implements IExchange, IPriceProvider {
       const query = "";
       try {
         accountData = this.fetch(() => `${resource}?${this.addSignature(query)}`, this.defaultReqOpts);
-        CacheProxy.put("AccountData", JSON.stringify(accountData), 10); // 10 seconds
+        CacheProxy.put("AccountData", JSON.stringify(accountData), 1); // 1 second
       } catch (e) {
         throw new Error(`Failed to get available ${assetName}: ${e.message}`);
       }
