@@ -8,10 +8,10 @@ import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
 import {ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
-import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
+import {Box, LinearProgress, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress, confirmBuy, confirmSell, f2} from "./Common";
 
-export default function Trade(props: {data: TradeMemo, config: Config, noTrade: boolean}) {
+export default function Trade(props: { data: TradeMemo, config: Config, noTrade: boolean }) {
   const tm: TradeMemo = props.data;
   const config: Config = props.config;
   const noTrade = props.noTrade;
@@ -182,12 +182,17 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
     }
   }
 
+  let buyProgress = +(tm.prices[tm.prices.length - 1] > tm.prices[tm.prices.length - 2])
+  buyProgress && (buyProgress += +(tm.prices[tm.prices.length - 2] > tm.prices[tm.prices.length - 3]))
+  buyProgress && (buyProgress += +(tm.prices[tm.prices.length - 3] > tm.prices[tm.prices.length - 4]))
+
   return (
     <>
       {!removed &&
         <Card>
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">{coinName}</Typography>
+            <Box width={chartOpts.width}><LinearProgress variant="determinate" value={33.3*buyProgress}/></Box>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
           {!!tm.tradeResult.quantity ?
@@ -204,7 +209,8 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
           <CardActions>
             <Stack direction={"row"} spacing={1}>
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Button size="small" disabled={isSelling || noTrade} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
+                <Button size="small" disabled={isSelling || noTrade}
+                        onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
                 <Button size="small" disabled={isBuying || noTrade} onClick={onBuy}>
