@@ -89,7 +89,7 @@ export function Assets({config}: { config: Config }) {
             .filter(t => Coin.isStable(t.getCoinName()))
             .map(t =>
               <Grid item>
-                <StableCoin key={t.getCoinName()} data={t} config={config}/>
+                <StableCoin key={t.getCoinName()} noTrade={!coinNames.includes(t.getCoinName())} data={t} config={config}/>
               </Grid>
             )}
         </Grid>
