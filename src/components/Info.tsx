@@ -1,19 +1,15 @@
 import * as React from "react";
 import {useEffect} from "react";
-import {DataGrid, GridColDef} from '@mui/x-data-grid';
 import {Stats} from "../../apps-script/Statistics";
+import {Box, ListItem, ListItemAvatar, ListItemText} from "@mui/material";
+import {FixedSizeList} from 'react-window';
 
 export function Info() {
   const [stats, setStats] = React.useState<Stats>({DailyProfit: {}, TotalProfit: NaN});
+
   useEffect(() => {
     google.script.run.withSuccessHandler(setStats).getStatistics();
   }, [])
-
-  const columns: GridColDef[] = [
-    {field: 'id', headerName: 'ID', maxWidth: 35},
-    {field: 'timeFrame', headerName: 'Time-Frame', flex: 0.5},
-    {field: 'profit', headerName: 'Profit', flex: 0.5},
-  ];
 
   const rows = [];
 
@@ -25,11 +21,21 @@ export function Info() {
     });
 
   return (
-    <div style={{height: `${window.visualViewport.height - 97}px`, width: '100%'}}>
-      <DataGrid
-        rows={rows}
-        columns={columns}
-      />
-    </div>
+    <Box sx={{justifyContent: 'center', display: 'flex'}}>
+      <FixedSizeList
+        width={300}
+        height={400}
+        itemSize={46}
+        itemCount={rows.length}
+        overscanCount={5}
+      >
+        {({index, style}) =>
+          <ListItem style={style} key={index} component="div" disablePadding>
+            <ListItemAvatar>#{rows[index].id}</ListItemAvatar>
+            <ListItemText primary={rows[index].profit} secondary={rows[index].timeFrame}/>
+          </ListItem>
+        }
+      </FixedSizeList>
+    </Box>
   );
 }
