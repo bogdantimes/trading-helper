@@ -65,7 +65,6 @@ export class Binance implements IExchange, IPriceProvider {
       }
     }
     const assetVal = accountData.balances.find((balance) => balance.asset == assetName);
-    Log.debug(assetVal)
     return assetVal ? +assetVal.free : 0
   }
 
