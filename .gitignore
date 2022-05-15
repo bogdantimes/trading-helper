@@ -1,5 +1,6 @@
 # Project exclude paths
 /node_modules/
+parcel-bundle-reports
 .parcel-cache
 apps-script/index.html
 .clasp.json

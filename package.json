@@ -12,13 +12,15 @@
     "gstart": "clasp push -P ./apps-script -w -f",
     "gdeploy": "clasp deploy -P ./apps-script",
     "start": "parcel src/index.html --dist-dir ./apps-script",
+    "report": "parcel build src/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
     "build": "parcel build src/index.html --dist-dir ./apps-script"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.1",
-    "@types/google-apps-script": "^1.0.45",
+    "@parcel/reporter-bundle-analyzer": "^2.5.0",
+    "@types/google-apps-script": "^1.0.47",
     "@types/google.script.client-side": "^0.1.1",
-    "parcel": "^2.4.0"
+    "parcel": "^2.5.0"
   },
   "author": "Bohdan Kovalov",
   "license": "MIT",
