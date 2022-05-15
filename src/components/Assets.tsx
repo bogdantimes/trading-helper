@@ -29,7 +29,7 @@ export function Assets({config}: { config: Config }) {
 
   useEffect(() => {
     google.script.run.withSuccessHandler(setTrades).getTrades();
-    const interval = setInterval(google.script.run.withSuccessHandler(setTrades).getTrades, 30000); // 30 seconds
+    const interval = setInterval(google.script.run.withSuccessHandler(setTrades).getTrades, 15000); // 15 seconds
     return () => clearInterval(interval);
   }, []);
 

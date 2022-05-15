@@ -68,7 +68,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    const interval = setInterval(reFetchData, 30000); // 30 seconds
+    const interval = setInterval(reFetchData, 10000); // 10 seconds
     return () => clearInterval(interval);
   }, [initialSetup]);
 
