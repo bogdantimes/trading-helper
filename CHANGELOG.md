@@ -1,3 +1,10 @@
+# v2.4.0
+
+* Add visual indication on Assets cards when price goes up.
+* Change right price scale to be logarithmic.
+* Decrease data re-fetch interval for better responsiveness.
+* Other minor fixes and improvements under the hood.
+
 # v2.3.4
 
 * Display current balances for top 3 stable coins on the assets page: USDT, USDC, BUSD.
