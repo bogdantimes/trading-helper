@@ -44,7 +44,7 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 ### Setup latest build
 
 There are ready to use builds published in the Google Apps Script and made available to everyone via a link.
-Link are attached to each release: [trading-helper (latest)](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
+Links are attached to each release: [trading-helper (latest)](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
 
 You will need to clone the Google Apps Script project to your account and set it up.
 See the [Tutorials playlist on YouTube](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox). The setup was simplified as much as possible for this kind of project.
