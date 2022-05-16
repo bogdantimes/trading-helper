@@ -121,7 +121,6 @@ export class V2Trader {
       this.processBuyFee(tradeResult);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
-      memo.hodl = memo.hodl || Coin.isStable(symbol.quantityAsset);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
     } else {
