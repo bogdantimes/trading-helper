@@ -45,18 +45,26 @@ function Ticker() {
     throw e;
   }
 
-  store.getTradesList().forEach(tradeMemo => {
-    try {
-      // get the trade to ensure it is up-to-date,
-      // as operations with other trades may have changed it
-      const trade = store.getTrade(tradeMemo.tradeResult.symbol);
-      if (trade) {
-        trader.tickerCheck(trade);
+  store.getTradesList()
+    .filter(t => !Coin.isStable(t.getCoinName()))
+    .forEach(tradeMemo => {
+      try {
+        // get the trade to ensure it is up-to-date,
+        // as operations with other trades may have changed it
+        const trade = store.getTrade(tradeMemo.tradeResult.symbol);
+        if (trade) {
+          trader.tickerCheck(trade);
+        }
+      } catch (e) {
+        Log.error(e)
       }
-    } catch (e) {
-      Log.error(e)
-    }
-  })
+    })
+
+  try {
+    trader.updateStableCoinsBalance();
+  } catch (e) {
+    Log.error(new Error(`Failed to read stable coins balance: ${e.message}`))
+  }
 
   try {
     trader.updateStableCoinsBalance();
