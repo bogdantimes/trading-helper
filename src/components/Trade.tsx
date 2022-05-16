@@ -7,9 +7,18 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
-import {ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
-import {Box, LinearProgress, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
+import {
+  ChartOptions,
+  createChart,
+  DeepPartial,
+  IChartApi,
+  ISeriesApi,
+  LineStyle,
+  PriceScaleMode
+} from 'lightweight-charts';
+import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress, confirmBuy, confirmSell, f2} from "./Common";
+import {KeyboardArrowUp, KeyboardDoubleArrowUp} from '@mui/icons-material';
 
 export default function Trade(props: { data: TradeMemo, config: Config, noTrade: boolean }) {
   const tm: TradeMemo = props.data;
@@ -36,7 +45,10 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
     height: 200,
     timeScale: {visible: false},
     handleScroll: false,
-    handleScale: false
+    handleScale: false,
+    rightPriceScale: {
+      mode: PriceScaleMode.Logarithmic
+    }
   };
 
   // In dark more 'lightblue' color price line looks better
@@ -182,17 +194,21 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
     }
   }
 
-  let buyProgress = +(tm.prices[tm.prices.length - 1] > tm.prices[tm.prices.length - 2])
-  buyProgress && (buyProgress += +(tm.prices[tm.prices.length - 2] > tm.prices[tm.prices.length - 3]))
-  buyProgress && (buyProgress += +(tm.prices[tm.prices.length - 3] > tm.prices[tm.prices.length - 4]))
+  let progressIcon = null;
+  const tailGrowthIndex = tm.getConsecutiveGrowthIndex(tm.prices.slice(-3));
+  if (tailGrowthIndex === 1) {
+    progressIcon = <KeyboardArrowUp htmlColor={"green"}/>
+  } else if (tailGrowthIndex === 2) {
+    progressIcon = <KeyboardDoubleArrowUp htmlColor={"green"}/>
+  }
 
   return (
     <>
       {!removed &&
         <Card>
           <CardContent>
-            <Typography gutterBottom variant="h5" component="div">{coinName}</Typography>
-            <Box width={chartOpts.width}><LinearProgress variant="determinate" value={33.3*buyProgress}/></Box>
+            <Typography sx={{display: 'flex', alignItems: 'center'}} gutterBottom variant="h5"
+                        component="div">{coinName} {progressIcon}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
           {!!tm.tradeResult.quantity ?
