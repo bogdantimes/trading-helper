@@ -8,17 +8,18 @@ import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
 import {Stack} from "@mui/material";
-import {f2} from "./Common";
+import {confirmBuy, confirmSell, f2} from "./Common";
 
-export default function StableCoin(props: {data: TradeMemo, config: Config}) {
+export default function StableCoin(props: {noTrade: boolean, data: TradeMemo, config: Config}) {
   const tm: TradeMemo = props.data;
   const config: Config = props.config;
+  const noTrade: boolean = props.noTrade;
   const coinName = tm.getCoinName();
 
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${coinName}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
+    if (confirmSell(coinName, config)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
@@ -32,7 +33,7 @@ export default function StableCoin(props: {data: TradeMemo, config: Config}) {
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
+    if (confirmBuy(coinName, config)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());
@@ -76,7 +77,6 @@ export default function StableCoin(props: {data: TradeMemo, config: Config}) {
     }
   }
 
-  const isCurrentStable = tm.getCoinName() === config.StableCoin;
   return (
     <>
       {!removed &&
@@ -88,11 +88,11 @@ export default function StableCoin(props: {data: TradeMemo, config: Config}) {
           <CardActions disableSpacing={true}>
             <Stack direction={"row"} spacing={1}>
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Button size="small" disabled={isSelling || isCurrentStable}
+                <Button size="small" disabled={isSelling || noTrade}
                         onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
-                <Button size="small" disabled={isBuying || isCurrentStable} onClick={onBuy}>
+                <Button size="small" disabled={isBuying || noTrade} onClick={onBuy}>
                   {isBuying ? '...' : `Buy ${tm.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
               }
               {tm.stateIs(TradeState.SOLD) &&

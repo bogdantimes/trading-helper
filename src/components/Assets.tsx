@@ -6,6 +6,7 @@ import {Config} from "../../apps-script/Store";
 import {useEffect} from "react";
 import StableCoin from "./StableCoin";
 import {Coin} from "../../apps-script/shared-lib/types";
+import {confirmBuy} from "./Common";
 
 const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.profit() < t2.profit() ? 1 : -1;
 
@@ -29,7 +30,7 @@ export function Assets({config}: { config: Config }) {
 
   useEffect(() => {
     google.script.run.withSuccessHandler(setTrades).getTrades();
-    const interval = setInterval(google.script.run.withSuccessHandler(setTrades).getTrades, 30000); // 30 seconds
+    const interval = setInterval(google.script.run.withSuccessHandler(setTrades).getTrades, 15000); // 15 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -43,7 +44,7 @@ export function Assets({config}: { config: Config }) {
   const [coinName, setCoinName] = React.useState("BTC");
 
   function buy() {
-    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
+    if (confirmBuy(coinName, config)) {
       google.script.run.withSuccessHandler(alert).buyCoin(coinName);
     }
   }
@@ -89,7 +90,7 @@ export function Assets({config}: { config: Config }) {
             .filter(t => Coin.isStable(t.getCoinName()))
             .map(t =>
               <Grid item>
-                <StableCoin key={t.getCoinName()} data={t} config={config}/>
+                <StableCoin key={t.getCoinName()} noTrade={!coinNames.includes(t.getCoinName())} data={t} config={config}/>
               </Grid>
             )}
         </Grid>

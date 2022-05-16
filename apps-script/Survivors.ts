@@ -1,6 +1,6 @@
 import {IStore} from "./Store";
 import {CacheProxy} from "./CacheProxy";
-import {CoinScore} from "./shared-lib/types";
+import {CoinScore, StableUSDCoin} from "./shared-lib/types";
 import {IExchange} from "./Exchange";
 
 export interface ScoresManager {
@@ -31,14 +31,11 @@ export class Survivors implements ScoresManager {
   getScores(): CoinScore[] {
     const scoresJson = CacheProxy.get("RecommenderMemos");
     const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : {};
-    const stableCoin = this.store.getConfig().StableCoin;
     const recommended: CoinScore[] = []
     Object.keys(scores).forEach(k => {
-      if (k.endsWith(stableCoin)) {
-        const r = CoinScore.fromObject(scores[k]);
-        if (r.getScore() > 0) {
-          recommended.push(r);
-        }
+      const r = CoinScore.fromObject(scores[k]);
+      if (r.getScore() > 0) {
+        recommended.push(r);
       }
     })
     return recommended.sort((a, b) => b.getScore() - a.getScore()).slice(0, 10);
@@ -47,11 +44,10 @@ export class Survivors implements ScoresManager {
   updateScores(): void {
     const scoresJson = CacheProxy.get("RecommenderMemos");
     const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : this.store.get("SurvivorScores") || {};
-    const stableCoin = this.store.getConfig().StableCoin;
     const coinsRaisedAmidMarkedDown: CoinScoreMap = {};
     const prices = this.exchange.getPrices();
     Object.keys(prices).forEach(s => {
-      const coinName = s.endsWith(stableCoin) ? s.split(stableCoin)[0] : null;
+      const coinName = s.endsWith(StableUSDCoin.USDT) ? s.split(StableUSDCoin.USDT)[0] : null;
       if (coinName) {
         const price = prices[s];
         const score = CoinScore.new(coinName, scores[s]);

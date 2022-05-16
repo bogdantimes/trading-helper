@@ -126,10 +126,22 @@ export class TradeMemo {
   }
 
   priceGoesUp(lastN: number = 3): boolean {
-    const lastPrices = this.prices.slice(-lastN);
-    if (lastPrices[0] == 0 || lastPrices.length < lastN) {
-      return false
-    }
-    return lastPrices.every((p, i) => i == 0 ? true : p > lastPrices[i - 1])
+    const tail = this.prices.slice(-lastN);
+    if (tail.length < lastN) return false;
+    // returns true if all prices in the tail are increasing
+    return this.getConsecutiveGrowthIndex(tail) === tail.length - 1;
+  }
+
+  /**
+   * Returns the number of consecutive prices that are increasing.
+   * Looks back from the last price.
+   * @param prices
+   */
+  getConsecutiveGrowthIndex(prices: number[]): number {
+    let i = 1;
+    const l = prices.slice().reverse();
+    const previousIsGreaterThanNext = () => i < l.length && l[i - 1] > l[i];
+    while (previousIsGreaterThanNext()) i++;
+    return i - 1;
   }
 }

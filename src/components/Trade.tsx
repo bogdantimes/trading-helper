@@ -7,11 +7,20 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Config} from "../../apps-script/Store";
-import {ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle} from 'lightweight-charts';
+import {
+  ChartOptions,
+  createChart,
+  DeepPartial,
+  IChartApi,
+  ISeriesApi,
+  LineStyle,
+  PriceScaleMode
+} from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
-import {circularProgress, f2} from "./Common";
+import {circularProgress, confirmBuy, confirmSell, f2} from "./Common";
+import {KeyboardArrowUp, KeyboardDoubleArrowUp} from '@mui/icons-material';
 
-export default function Trade(props: {data: TradeMemo, config: Config, noTrade: boolean}) {
+export default function Trade(props: { data: TradeMemo, config: Config, noTrade: boolean }) {
   const tm: TradeMemo = props.data;
   const config: Config = props.config;
   const noTrade = props.noTrade;
@@ -36,7 +45,10 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
     height: 200,
     timeScale: {visible: false},
     handleScroll: false,
-    handleScale: false
+    handleScale: false,
+    rightPriceScale: {
+      mode: PriceScaleMode.Logarithmic
+    }
   };
 
   // In dark more 'lightblue' color price line looks better
@@ -109,7 +121,7 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
   const [isSelling, setIsSelling] = useState(false);
 
   function onSell() {
-    if (confirm(`Are you sure you want to sell ${coinName}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested to the most unprofitable coin." : ""}`)) {
+    if (confirmSell(coinName, config)) {
       setIsSelling(true);
       const handle = resp => {
         alert(resp.toString());
@@ -123,7 +135,7 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
   const [isBuying, setIsBuying] = useState(false);
 
   function onBuy() {
-    if (confirm(`Are you sure you want to buy ${coinName}?`)) {
+    if (confirmBuy(coinName, config)) {
       setIsBuying(true);
       const handle = resp => {
         alert(resp.toString());
@@ -182,12 +194,21 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
     }
   }
 
+  let progressIcon = null;
+  const tailGrowthIndex = tm.getConsecutiveGrowthIndex(tm.prices.slice(-3));
+  if (tailGrowthIndex === 1) {
+    progressIcon = <KeyboardArrowUp htmlColor={"green"}/>
+  } else if (tailGrowthIndex === 2) {
+    progressIcon = <KeyboardDoubleArrowUp htmlColor={"green"}/>
+  }
+
   return (
     <>
       {!removed &&
         <Card>
           <CardContent>
-            <Typography gutterBottom variant="h5" component="div">{coinName}</Typography>
+            <Typography sx={{display: 'flex', alignItems: 'center'}} gutterBottom variant="h5"
+                        component="div">{coinName} {progressIcon}</Typography>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
           {!!tm.tradeResult.quantity ?
@@ -204,7 +225,8 @@ export default function Trade(props: {data: TradeMemo, config: Config, noTrade: 
           <CardActions>
             <Stack direction={"row"} spacing={1}>
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Button size="small" disabled={isSelling || noTrade} onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
+                <Button size="small" disabled={isSelling || noTrade}
+                        onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
                 <Button size="small" disabled={isBuying || noTrade} onClick={onBuy}>
