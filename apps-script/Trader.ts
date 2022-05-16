@@ -22,7 +22,9 @@ export class V2Trader {
   }
 
   tickerCheck(tm: TradeMemo): void {
-    this.pushNewPrice(tm);
+    if (!Coin.isStable(tm.getCoinName())) {
+      this.pushNewPrice(tm);
+    }
 
     if (tm.stateIs(TradeState.BOUGHT)) {
       this.processBoughtState(tm);
@@ -119,7 +121,6 @@ export class V2Trader {
       this.processBuyFee(tradeResult);
       memo.joinWithNewTrade(tradeResult);
       memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
-      memo.hodl = memo.hodl || Coin.isStable(symbol.quantityAsset);
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
     } else {
@@ -212,11 +213,16 @@ export class V2Trader {
       const symbol = new ExchangeSymbol(coin, this.config.StableCoin);
       const tm = this.store.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));
       const balance = this.exchange.getFreeAsset(symbol.quantityAsset);
-      tm.setState(tm.getState() || TradeState.BOUGHT);
-      tm.tradeResult = new TradeResult(symbol, "Stable coin");
-      tm.tradeResult.quantity = balance;
-      tm.tradeResult.fromExchange = true;
-      this.store.setTrade(tm);
+      if (balance) {
+        tm.setState(tm.getState() || TradeState.BOUGHT);
+        tm.tradeResult = new TradeResult(symbol, "Stable coin");
+        tm.tradeResult.quantity = balance;
+        tm.tradeResult.fromExchange = true;
+        tm.hodl = true;
+        this.store.setTrade(tm);
+      } else {
+        this.store.deleteTrade(tm);
+      }
     });
   }
 }

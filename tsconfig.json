@@ -1,13 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
-    "lib": [
-      "esnext",
-      "dom"
-    ],
-    "experimentalDecorators": true,
+    "lib": ["esnext", "dom"],
     "jsx": "react",
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node"
   }
 }
