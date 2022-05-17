@@ -19,7 +19,9 @@ function doPost(e) {
 
 function catchError<T>(fn: () => T): T {
   try {
-    return fn();
+    const res = fn();
+    Log.ifUsefulDumpAsEmail();
+    return res;
   } catch (e) {
     Log.error(e);
     Log.ifUsefulDumpAsEmail();
@@ -151,4 +153,15 @@ function getCoinNames(): string[] {
     const exchange = new Exchange(DefaultStore.getConfig());
     return exchange.getCoinNames();
   })
+}
+
+function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
+  return catchError(() => {
+    if (coinName) {
+      Log.info("Edit trade called for " + coinName);
+      TradesQueue.replace(coinName, newTradeMemo);
+      return "Requested to edit trade for " + coinName;
+    }
+    return "No coinName specified";
+  });
 }

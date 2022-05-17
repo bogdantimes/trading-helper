@@ -1,9 +1,9 @@
 import {Config} from "./Store";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
 import {IExchange, IPriceProvider} from "./Exchange";
-import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 import {PriceMap} from "./shared-lib/types";
 import {CacheProxy} from "./CacheProxy";
+import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
 export class Binance implements IExchange, IPriceProvider {
 
@@ -75,11 +75,18 @@ export class Binance implements IExchange, IPriceProvider {
     }
     Log.alert(`Buying ${symbol} for ${cost} ${symbol.priceAsset}`)
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
-    const tradeResult = this.marketTrade(symbol, query);
-    tradeResult.symbol = symbol
-    tradeResult.paid = tradeResult.cost
-    tradeResult.msg = "Bought."
-    return tradeResult;
+    try {
+
+      const tradeResult = this.marketTrade(symbol, query);
+      tradeResult.symbol = symbol
+      tradeResult.paid = tradeResult.cost
+      tradeResult.msg = "Bought."
+      return tradeResult;
+    } catch (e) {
+      if (e.message.includes("Market is closed")) {
+        return new TradeResult(symbol, `Market is closed for ${symbol}.`)
+      }
+    }
   }
 
   /**
@@ -97,7 +104,13 @@ export class Binance implements IExchange, IPriceProvider {
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Account has insufficient balance")) {
-        return new TradeResult(symbol, `Account has insufficient balance for ${symbol.quantityAsset}`)
+        return new TradeResult(symbol, `Account has no ${quantity} of ${symbol.quantityAsset}`)
+      }
+      if (e.message.includes("Market is closed")) {
+        return new TradeResult(symbol, `Market is closed for ${symbol}.`)
+      }
+      if (e.message.includes("MIN_NOTIONAL")) {
+        return new TradeResult(symbol, `The cost of ${symbol.quantityAsset} is less than minimal needed to sell it.`)
       }
       throw e
     }
@@ -108,10 +121,9 @@ export class Binance implements IExchange, IPriceProvider {
       const order = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
       Log.debug(order)
       const tradeResult = new TradeResult(symbol);
-      const [price, commission] = this.reducePriceAndCommission(order.fills)
+      const commission = this.getCommission(order.fills)
       tradeResult.quantity = +order.origQty
       tradeResult.cost = +order.cummulativeQuoteQty
-      tradeResult.price = price
       tradeResult.fromExchange = true
       tradeResult.commission = commission
       return tradeResult;
@@ -120,8 +132,7 @@ export class Binance implements IExchange, IPriceProvider {
     }
   }
 
-  private reducePriceAndCommission(fills = []): [number, number] {
-    let price = 0;
+  private getCommission(fills = []): number {
     let commission = 0
     fills.forEach(f => {
       if (f.commissionAsset != "BNB") {
@@ -129,9 +140,8 @@ export class Binance implements IExchange, IPriceProvider {
       } else {
         commission += +f.commission
       }
-      price = price ? (+f.price + price) / 2 : +f.price;
     })
-    return [price, commission]
+    return commission
   }
 
   private addSignature(data: string) {

@@ -16,9 +16,10 @@ import {
   LineStyle,
   PriceScaleMode
 } from 'lightweight-charts';
-import {Box, IconButton, Link, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
+import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress, confirmBuy, confirmSell, f2} from "./Common";
-import {Edit, KeyboardArrowUp, KeyboardDoubleArrowUp} from '@mui/icons-material';
+import {TradeEditDialog} from "./TradeEditDialog";
+import {TradeTitle} from "./TradeTitle";
 
 export default function Trade(props: { data: TradeMemo, config: Config, noTrade: boolean }) {
   const tm: TradeMemo = props.data;
@@ -194,39 +195,19 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
     }
   }
 
-  let progressIcon = null;
-  const tailGrowthIndex = tm.getConsecutiveGrowthIndex(tm.prices.slice(-3));
-  if (tailGrowthIndex === 1) {
-    progressIcon = <KeyboardArrowUp htmlColor={"green"}/>
-  } else if (tailGrowthIndex === 2) {
-    progressIcon = <KeyboardDoubleArrowUp htmlColor={"green"}/>
-  }
-
-  // Edit icon switches the card to edit mode,
-  // which allows to change name, quantity, paid amount or remove the coin.
-  // Icon becomes brighter on hover.
   const [editMode, setEditMode] = useState(false);
-  const [editHover, setEditHover] = useState(false);
-  const editIcon = <IconButton onClick={() => setEditMode(true)}
-                               onMouseEnter={() => setEditHover(true)}
-                               onMouseLeave={() => setEditHover(false)}
-                               style={{
-                                 color: editHover ? theme.palette.text.primary : theme.palette.text.disabled,
-                                 marginLeft: "auto",
-                               }}><Edit/></IconButton>;
 
   return (
     <>
       {!removed &&
-        <Card>
+        <Card elevation={2}>
           <CardContent>
-            <Typography sx={{display: 'flex', alignItems: 'center'}} gutterBottom variant="h5"
-                        component="div">{coinName} {progressIcon}{editIcon}</Typography>
+            <TradeTitle tradeMemo={tm} onEdit={() => setEditMode(true)} onDelete={onRemove}/>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
           {!!tm.tradeResult.quantity ?
             <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
-              <div>Qty: {editMode ? <Link>{tm.tradeResult.quantity}</Link> : tm.tradeResult.quantity} Paid: {tm.tradeResult.paid.toFixed(2)}</div>
+              <div>Qty: {tm.tradeResult.quantity} Paid: {f2(tm.tradeResult.paid)}</div>
               <div>{tm.profit() >= 0 ? "Profit" : "Loss"}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
               <div>Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}%)</div>
             </Typography>
@@ -236,7 +217,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
             </Typography>
           }
           <CardActions>
-            <Stack direction={"row"} spacing={1}>
+            <Stack direction={"row"} spacing={1} sx={{marginLeft: 'auto'}}>
               {tm.stateIs(TradeState.BOUGHT) &&
                 <Button size="small" disabled={isSelling || noTrade}
                         onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
@@ -262,6 +243,23 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
           </CardActions>
         </Card>
       }
+      {editMode && <TradeEditDialog
+        tradeMemo={tm}
+        onClose={() => setEditMode(false)}
+        onCancel={() => setEditMode(false)}
+        onSave={newTm => new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((resp) => {
+              alert(resp);
+              resolve(resp);
+            })
+            .withFailureHandler((err) => {
+              reject(err);
+            })
+            // @ts-ignore
+            .editTrade(tm.getCoinName(), newTm);
+        })}
+      />}
     </>
   );
 }

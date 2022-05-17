@@ -33,7 +33,7 @@ export class TradeResult {
   cost: number = 0;
   paid: number = 0;
   gained: number = 0;
-  price: number = 0
+  soldPrice: number;
   profit: number = 0
   commission: number = 0
   msg: string = ""
@@ -44,8 +44,11 @@ export class TradeResult {
     this.msg = msg
   }
 
-  static averagePrice(a: TradeResult, b: TradeResult): number {
-    return (a.price * a.quantity + b.price * b.quantity) / (a.quantity + b.quantity);
+  get price(): number {
+    return this.paid / this.quantity;
+  }
+
+  set price(value: number) {
   }
 
   toString(): string {
@@ -60,7 +63,6 @@ export class TradeResult {
       throw Error(`Cannot join trades where 'quantityAsset' is not equal: current=${this.symbol.quantityAsset} next=${next.symbol.quantityAsset}`)
     }
     const result = new TradeResult(next.symbol, next.msg);
-    result.price = TradeResult.averagePrice(this, next)
     result.commission = this.commission + next.commission
     result.fromExchange = next.fromExchange
     result.addQuantity(this.quantity, this.cost)

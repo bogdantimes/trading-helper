@@ -38,6 +38,10 @@ export class TradeMemo {
     this.tradeResult = tradeResult;
   }
 
+  static copy(obj: TradeMemo): TradeMemo {
+    return Object.assign(new TradeMemo(null), JSON.parse(JSON.stringify(obj)))
+  }
+
   static fromObject(obj: object): TradeMemo {
     const tradeMemo: TradeMemo = Object.assign(new TradeMemo(null), obj);
     tradeMemo.tradeResult = Object.assign(new TradeResult(null), tradeMemo.tradeResult)
@@ -71,7 +75,7 @@ export class TradeMemo {
       // Assign an empty trade result for SOLD state.
       // Keep the last trade price and the current prices.
       const newTradeResult = new TradeResult(this.tradeResult.symbol, "Asset sold");
-      newTradeResult.price = this.tradeResult.price;
+      newTradeResult.soldPrice = this.tradeResult.price;
       Object.assign(this, new TradeMemo(newTradeResult), {prices: this.prices});
     }
     this.state = state
