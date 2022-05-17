@@ -12,19 +12,19 @@ export class TradesQueue {
 
   static buy(coinName: string): void {
     const queue = this.getQueue();
-    queue[coinName] = {type: QueueActionType.BUY};
+    queue[coinName.toUpperCase()] = {type: QueueActionType.BUY};
     CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
   static sell(coinName: string): void {
     const queue = this.getQueue();
-    queue[coinName] = {type: QueueActionType.SELL};
+    queue[coinName.toUpperCase()] = {type: QueueActionType.SELL};
     CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
   static setHold(coinName: string, value: boolean): void {
     const queue = this.getQueue();
-    queue[coinName] = {type: QueueActionType.HOLD, value};
+    queue[coinName.toUpperCase()] = {type: QueueActionType.HOLD, value};
     CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
@@ -100,19 +100,19 @@ export class TradesQueue {
 
   static dropCoin(coinName: string) {
     const queue = this.getQueue();
-    queue[coinName] = {type: QueueActionType.DROP};
+    queue[coinName.toUpperCase()] = {type: QueueActionType.DROP};
     CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
   static cancelAction(coinName: string) {
     const queue = this.getQueue();
-    queue[coinName] = {type: QueueActionType.CANCEL};
+    queue[coinName.toUpperCase()] = {type: QueueActionType.CANCEL};
     CacheProxy.put('Queue', JSON.stringify(queue));
   }
 
   static replace(coinName: string, value: TradeMemo) {
     const queue = this.getQueue();
-    queue[coinName] = {type: QueueActionType.REPLACE, value};
+    queue[coinName.toUpperCase()] = {type: QueueActionType.REPLACE, value};
     CacheProxy.put('Queue', JSON.stringify(queue));
   }
 }
