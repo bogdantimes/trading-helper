@@ -41,11 +41,14 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 1. Google account.
 2. Binance account and Binance API token and key for spot trading.
 
-### Setup
+### Setup latest build
 
-The setup is shown in the Youtube video and was simplified as much as possible for this kind of project.
+There are ready to use builds published in the Google Apps Script and made available to everyone via a link.
+Links are attached to each release. See [latest release](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
 
-See the [YouTube playlist](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox) on how to set up and use the tool.
+You will need to clone the Google Apps Script project to your account and set it up.
+See the [Tutorials playlist on YouTube](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox). The setup was simplified as much as possible for this kind of project.
 
-Links:
-* Get the latest published version: [trading-helper (latest)](https://github.com/bogdan-kovalev/trading-helper/releases/latest)
+### Setup from sources
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) to set up the tool from sources.
