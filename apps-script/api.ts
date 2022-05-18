@@ -1,10 +1,11 @@
 import {Config, DefaultStore} from "./Store";
-import {TradesQueue} from "./TradesQueue";
+import {TradeActions} from "./TradeActions";
 import {Statistics, Stats} from "./Statistics";
 import {Exchange} from "./Exchange";
 import {Survivors} from "./Survivors";
 import {CoinScore} from "./shared-lib/types";
 import {TradeMemo} from "./TradeMemo";
+import {CacheProxy} from "./CacheProxy";
 
 function doGet() {
   return HtmlService
@@ -58,58 +59,57 @@ export type InitialSetupParams = {
   binanceSecretKey: string
 }
 
+function waitTradeUnlock(coinName: string): void {
+  while (CacheProxy.get(TradeLocked(coinName))) {
+    Utilities.sleep(200);
+  }
+}
+
 function buyCoin(coinName: string): string {
+  waitTradeUnlock(coinName);
   return catchError(() => {
-    if (coinName) {
-      Log.info("Lazy buying called for " + coinName);
-      TradesQueue.buy(coinName);
-      return "Requested to buy " + coinName;
-    }
-    return "No coinName specified";
+    TradeActions.buy(coinName);
+    return "Requested to buy " + coinName;
   });
 }
 
 function cancelAction(coinName: string): string {
+  waitTradeUnlock(coinName);
   return catchError(() => {
-    if (coinName) {
-      Log.info("Cancelling the action on " + coinName);
-      TradesQueue.cancelAction(coinName);
-      return "Requested to cancel an action on " + coinName;
-    }
-    return "No coinName specified";
-  });
+    TradeActions.cancel(coinName);
+    return "Requested to cancel an action on " + coinName;
+  })
 }
 
 function sellCoin(coinName: string): string {
+  waitTradeUnlock(coinName);
   return catchError(() => {
-    if (coinName) {
-      Log.info("Lazy selling called for " + coinName);
-      TradesQueue.sell(coinName);
-      return "Requested to sell " + coinName;
-    }
-    return "No coinName specified";
+    TradeActions.sell(coinName);
+    return "Requested to sell " + coinName;
   });
 }
 
 function setHold(coinName: string, value: boolean): string {
+  waitTradeUnlock(coinName);
   return catchError(() => {
-    if (coinName) {
-      Log.info("Flip hold called for " + coinName + " to " + value);
-      TradesQueue.setHold(coinName, value);
-      return "Requested to flip hold for " + coinName + " to " + value;
-    }
-    return "No coinName specified";
+    TradeActions.setHold(coinName, value);
+    return "Requested to set hold for " + coinName + " to " + value;
   });
 }
 
 function dropCoin(coinName: string): string {
+  waitTradeUnlock(coinName);
   return catchError(() => {
-    if (coinName) {
-      Log.info("Drop called for " + coinName);
-      TradesQueue.dropCoin(coinName);
-      return "Requested to drop " + coinName;
-    }
-    return "No coinName specified";
+    TradeActions.drop(coinName);
+    return "Requested to drop " + coinName;
+  });
+}
+
+function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
+  waitTradeUnlock(coinName);
+  return catchError(() => {
+    TradeActions.replace(coinName, newTradeMemo);
+    return "Requested to edit trade for " + coinName;
   });
 }
 
@@ -153,15 +153,4 @@ function getCoinNames(): string[] {
     const exchange = new Exchange(DefaultStore.getConfig());
     return exchange.getCoinNames();
   })
-}
-
-function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
-  return catchError(() => {
-    if (coinName) {
-      Log.info("Edit trade called for " + coinName);
-      TradesQueue.replace(coinName, newTradeMemo);
-      return "Requested to edit trade for " + coinName;
-    }
-    return "No coinName specified";
-  });
 }

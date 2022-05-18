@@ -8,10 +8,6 @@ function byteCount(s: string): number {
 
 export class CacheProxy {
 
-  static getAll(keys: string[]): { [key: string]: any } {
-    return CacheService.getScriptCache().getAll(keys);
-  }
-
   static get(key: string): string | null {
     return CacheService.getScriptCache().get(key);
   }

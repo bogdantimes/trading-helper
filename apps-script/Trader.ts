@@ -1,7 +1,6 @@
 import {TradeMemo, TradeState} from "./TradeMemo";
 import {Statistics} from "./Statistics";
 import {Config, IStore} from "./Store";
-import {TradesQueue} from "./TradesQueue";
 import {IExchange} from "./Exchange";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
 import {Coin, PriceMap, StableUSDCoin} from "./shared-lib/types";
@@ -124,8 +123,20 @@ export class V2Trader {
       this.store.setTrade(memo)
       Log.alert(memo.tradeResult.toString())
     } else {
-      Log.alert(tradeResult.toString())
-      TradesQueue.cancelAction(symbol.quantityAsset);
+      Log.alert(`${symbol} could not be bought: ${tradeResult}`)
+      this.cancelTrade(memo);
+    }
+  }
+
+  private cancelTrade(memo: TradeMemo): void {
+    if (memo.tradeResult.quantity) {
+      memo.setState(TradeState.BOUGHT);
+      this.store.setTrade(memo);
+    } else if (memo.tradeResult.soldPrice) {
+      memo.setState(TradeState.SOLD);
+      this.store.setTrade(memo);
+    } else {
+      this.store.deleteTrade(memo);
     }
   }
 

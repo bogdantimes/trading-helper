@@ -2,9 +2,8 @@ import {V2Trader} from "./Trader";
 import {Exchange} from "./Exchange";
 import {Statistics} from "./Statistics";
 import {DefaultStore} from "./Store";
-import {TradesQueue} from "./TradesQueue";
 import {Survivors} from "./Survivors";
-import {Coin} from "./shared-lib/types";
+import {CacheProxy} from "./CacheProxy";
 
 class Watcher {
   static start() {
@@ -30,8 +29,6 @@ class Watcher {
 }
 
 function Ticker() {
-  TradesQueue.flush();
-
   const store = DefaultStore;
   let exchange: Exchange;
   let trader: V2Trader;
@@ -47,6 +44,7 @@ function Ticker() {
 
   store.getTradesList().forEach(tradeMemo => {
     try {
+      CacheProxy.put(TradeLocked(tradeMemo.getCoinName()), "true", 30)
       // get the trade to ensure it is up-to-date,
       // as operations with other trades may have changed it
       const trade = store.getTrade(tradeMemo.tradeResult.symbol);
@@ -55,6 +53,8 @@ function Ticker() {
       }
     } catch (e) {
       Log.error(e)
+    } finally {
+      CacheProxy.remove(TradeLocked(tradeMemo.getCoinName()))
     }
   })
 
