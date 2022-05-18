@@ -44,7 +44,7 @@ export function TradeEditDialog(props: {
     <Dialog open={true} onClose={onCancel}>
       <DialogTitle>Edit {tradeMemo.getCoinName()}</DialogTitle>
       <DialogContent>
-        <TextField autoFocus margin="dense" id="name" label="Coin Name" type="text" fullWidth
+        <TextField margin="dense" label="Coin Name" fullWidth
                    value={coinName} onChange={e => setCoinName(e.target.value)}/>
         <Autocomplete
           disableClearable
@@ -52,13 +52,13 @@ export function TradeEditDialog(props: {
           defaultValue={StableUSDCoin.USDT}
           options={Object.values(StableUSDCoin)}
           onChange={(e, val) => setStableName(val)}
-          renderInput={(params) => <TextField {...params} fullWidth margin="dense" id="stable" label={"Stable Coin"}/>}
+          renderInput={(params) => <TextField {...params} fullWidth margin="dense" label={"Stable Coin"}/>}
         />
-        <TextField margin="dense" id="quantity" label="Quantity" type="number" fullWidth
+        <TextField margin="dense" label="Quantity" type="number" fullWidth
                    value={quantity} onChange={e => setQuantity(parseFloat(e.target.value))}/>
-        <TextField margin="dense" id="paid" label="Paid" type="number" fullWidth
+        <TextField margin="dense" label="Paid" type="number" fullWidth
                    value={paid} onChange={e => setPaid(parseFloat(e.target.value))}/>
-        <TextField margin="dense" id="stop" label="Stop Limit Price" type="number" fullWidth
+        <TextField margin="dense" label="Stop Limit Price" type="number" fullWidth
                    value={stopLimit} onChange={e => setStopLimit(parseFloat(e.target.value))}/>
       </DialogContent>
       <DialogActions>
