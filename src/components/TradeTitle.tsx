@@ -1,6 +1,7 @@
 import {TradeMemo} from "../../apps-script/TradeMemo";
-import {IconButton} from "@mui/material";
+import {IconButton, useTheme} from "@mui/material";
 import * as React from "react";
+import {useState} from "react";
 import {
   Delete,
   Edit,
@@ -11,11 +12,11 @@ import {
 } from "@mui/icons-material";
 import Typography from "@mui/material/Typography";
 
-const progressMap = new Map<number, JSX.Element>();
-progressMap.set(-2, <KeyboardDoubleArrowDown htmlColor={"red"}/>);
-progressMap.set(-1, <KeyboardArrowDown htmlColor={"red"}/>);
-progressMap.set(1, <KeyboardArrowUp htmlColor={"green"}/>);
-progressMap.set(2, <KeyboardDoubleArrowUp htmlColor={"green"}/>);
+const growthIconMap = new Map<number, JSX.Element>();
+growthIconMap.set(-2, <KeyboardDoubleArrowDown htmlColor={"red"}/>);
+growthIconMap.set(-1, <KeyboardArrowDown htmlColor={"red"}/>);
+growthIconMap.set(1, <KeyboardArrowUp htmlColor={"green"}/>);
+growthIconMap.set(2, <KeyboardDoubleArrowUp htmlColor={"green"}/>);
 
 export function TradeTitle({tradeMemo, onEdit, onDelete}: {
   tradeMemo: TradeMemo,
@@ -23,11 +24,21 @@ export function TradeTitle({tradeMemo, onEdit, onDelete}: {
   onDelete: () => void,
 }) {
 
-  const growthIndex = tradeMemo.getGrowthIndex(tradeMemo.prices.slice(-3));
-  const growthIcon = progressMap.get(growthIndex);
+  const theme = useTheme();
+  const [editHover, setEditHover] = useState(false);
+  const [deleteHover, setDeleteHover] = useState(false);
 
-  const editIcon = <IconButton onClick={onEdit} sx={{marginLeft: 'auto'}}><Edit sx={{fontSize: "18px"}}/></IconButton>;
-  const deleteIcon = <IconButton onClick={onDelete}><Delete sx={{fontSize: "18px"}}/></IconButton>;
+  const growthIndex = tradeMemo.getGrowthIndex(tradeMemo.prices.slice(-3));
+  const growthIcon = growthIconMap.get(growthIndex);
+
+  const editColor = editHover ? theme.palette.action.active : theme.palette.action.disabled;
+  const editIcon = <IconButton onClick={onEdit} sx={{marginLeft: 'auto', color: editColor}}
+                               onMouseEnter={() => setEditHover(true)}
+                               onMouseLeave={() => setEditHover(false)}><Edit/></IconButton>;
+  const deleteColor = deleteHover ? theme.palette.action.active : theme.palette.action.disabled
+  const deleteIcon = <IconButton onClick={onDelete} sx={{color: deleteColor}}
+                                 onMouseEnter={() => setDeleteHover(true)}
+                                 onMouseLeave={() => setDeleteHover(false)}><Delete/></IconButton>;
 
   return (
     <Typography sx={{display: 'flex', alignItems: 'center'}} gutterBottom variant="h5"
