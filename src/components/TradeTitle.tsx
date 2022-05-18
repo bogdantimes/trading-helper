@@ -23,7 +23,7 @@ export function TradeTitle({tradeMemo, onEdit, onDelete}: {
   onDelete: () => void,
 }) {
 
-  const growthIndex = tradeMemo.getConsecutiveGrowthIndex(tradeMemo.prices.slice(-3));
+  const growthIndex = tradeMemo.getGrowthIndex(tradeMemo.prices.slice(-3));
   const growthIcon = progressMap.get(growthIndex);
 
   const editIcon = <IconButton onClick={onEdit} sx={{marginLeft: 'auto'}}><Edit sx={{fontSize: "18px"}}/></IconButton>;

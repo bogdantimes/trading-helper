@@ -133,19 +133,29 @@ export class TradeMemo {
     const tail = this.prices.slice(-lastN);
     if (tail.length < lastN) return false;
     // returns true if all prices in the tail are increasing
-    return this.getConsecutiveGrowthIndex(tail) === tail.length - 1;
+    return this.getGrowthIndex(tail) === tail.length - 1;
   }
 
   /**
    * Returns the number of consecutive prices that are increasing.
    * Looks back from the last price.
+   * The result is negative if prices are decreasing.
+   * @example [3, 2, 1] => -2
+   * @example [2, 2, 1] => -1
+   * @example [1, 2, 2] => 0
+   * @example [2, 2, 3] => 1
+   * @example [1, 2, 3] => 2
    * @param prices
    */
-  getConsecutiveGrowthIndex(prices: number[]): number {
-    let i = 1;
-    const l = prices.slice().reverse();
-    const previousIsGreaterThanNext = () => i < l.length && l[i - 1] > l[i];
-    while (previousIsGreaterThanNext()) i++;
-    return i - 1;
+  getGrowthIndex(prices: number[]): number {
+    let result = 0;
+    for (let j = prices.length - 1; j > 0; j--) {
+      if (prices[j] > prices[j - 1]) {
+        result++;
+      } else if (prices[j] < prices[j - 1]) {
+        result--;
+      }
+    }
+    return result;
   }
 }
