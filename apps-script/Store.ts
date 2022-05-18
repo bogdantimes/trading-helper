@@ -1,5 +1,5 @@
 import {TradeMemo} from "./TradeMemo";
-import {ExchangeSymbol, PriceProvider} from "./TradeResult";
+import {ExchangeSymbol, PriceProvider, TradeResult} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
 import {StableUSDCoin} from "./shared-lib/types";
 
@@ -22,9 +22,7 @@ export interface IStore {
 
   getTrade(symbol: ExchangeSymbol): TradeMemo
 
-  setTrade(tradeMemo: TradeMemo): void
-
-  deleteTrade(tradeMemo: TradeMemo): void
+  changeTrade(coinName: string, mutateFn: (tm: TradeMemo) => TradeMemo): void
 
   dumpChanges(): void
 
@@ -160,13 +158,32 @@ export class FirebaseStore implements IStore {
     return this.getTrades()[symbol.quantityAsset]
   }
 
-  setTrade(tradeMemo: TradeMemo) {
+  changeTrade(coinName: string, mutateFn: (tm: TradeMemo) => TradeMemo): void {
+    const key = `TradeLocker_${coinName}`;
+    try {
+      while (CacheProxy.get(key)) Utilities.sleep(200);
+      CacheProxy.put(key, "true", 30); // Lock for 30 seconds
+
+      const symbol = new ExchangeSymbol(coinName, this.getConfig().StableCoin);
+      const existingOrNewTrade = this.getTrades()[coinName] || new TradeMemo(new TradeResult(symbol));
+      const changedTrade = mutateFn(existingOrNewTrade);
+
+      changedTrade.deleted ?
+        this.deleteTrade(changedTrade) :
+        this.setTrade(changedTrade);
+
+    } finally {
+      CacheProxy.remove(key)
+    }
+  }
+
+  private setTrade(tradeMemo: TradeMemo) {
     const trades = this.getTrades();
     trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
     CacheProxy.put("Trades", JSON.stringify(trades))
   }
 
-  deleteTrade(tradeMemo: TradeMemo) {
+  private deleteTrade(tradeMemo: TradeMemo) {
     const trades = this.getTrades()
     delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
     CacheProxy.put("Trades", JSON.stringify(trades))

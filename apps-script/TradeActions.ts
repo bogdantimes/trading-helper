@@ -1,76 +1,63 @@
 import {DefaultStore} from "./Store";
 import {TradeMemo, TradeState} from "./TradeMemo";
-import {ExchangeSymbol, TradeResult} from "./TradeResult";
+import {ExchangeSymbol} from "./TradeResult";
 
 export class TradeActions {
 
   static buy(coinName: string): void {
-    const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin);
-    const trade = DefaultStore.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));
-    trade.setState(TradeState.BUY);
-    trade.tradeResult.symbol = symbol;
-    DefaultStore.setTrade(trade);
+    DefaultStore.changeTrade(coinName, trade => {
+      const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin);
+      trade.setState(TradeState.BUY);
+      trade.tradeResult.symbol = symbol;
+      return trade;
+    })
   }
 
   static sell(coinName: string): void {
-    const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin);
-    const trade = DefaultStore.getTrade(symbol);
-    if (trade) {
+    DefaultStore.changeTrade(coinName, trade => {
       trade.setState(TradeState.SELL);
-      DefaultStore.setTrade(trade);
-    }
+      return trade;
+    });
   }
 
   static setHold(coinName: string, value: boolean): void {
-    const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin);
-    const trade = DefaultStore.getTrade(symbol);
-    if (trade) {
+    DefaultStore.changeTrade(coinName, trade => {
       trade.hodl = !!value;
-      DefaultStore.setTrade(trade);
-    }
+      return trade;
+    });
   }
 
   static drop(coinName: string): void {
-    const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin);
-    const trade = DefaultStore.getTrade(symbol);
-    if (trade) {
+    DefaultStore.changeTrade(coinName, trade => {
       if (trade.stateIs(TradeState.SOLD) || trade.stateIs(TradeState.BUY)) {
-        DefaultStore.deleteTrade(trade);
+        trade.deleted = true;
       } else {
         Log.error(new Error(`Cannot drop ${coinName} as it is not sold`));
       }
-    }
+      return trade;
+    });
   }
 
   static cancel(coinName: string): void {
-    const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin);
-    const trade = DefaultStore.getTrade(symbol);
-    if (trade) {
-      if (trade.tradeResult.quantity) {
-        trade.setState(TradeState.BOUGHT);
-        DefaultStore.setTrade(trade);
-      } else if (trade.tradeResult.soldPrice) {
-        trade.setState(TradeState.SOLD);
-        DefaultStore.setTrade(trade);
-      } else {
-        DefaultStore.deleteTrade(trade);
-      }
-    }
+    DefaultStore.changeTrade(coinName, trade => {
+      trade.resetState();
+      return trade;
+    });
   }
 
-  static replace(coinName: string, value: TradeMemo): void {
-    const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin);
-    const trade = DefaultStore.getTrade(symbol);
-    if (trade) {
-      const updatedTrade = TradeMemo.copy(value);
-      if (trade.getCoinName() != updatedTrade.getCoinName()) {
+  static replace(coinName: string, newTrade: TradeMemo): void {
+    DefaultStore.changeTrade(coinName, trade => {
+      if (trade.getCoinName() != newTrade.getCoinName()) {
         // if symbol changed, delete the old one
         // and reset prices in the new one
-        updatedTrade.prices = [0, 0, 0];
-        updatedTrade.stopLimitPrice = 0;
-        DefaultStore.deleteTrade(trade);
+        newTrade.prices = [0, 0, 0];
+        newTrade.stopLimitPrice = 0;
+        DefaultStore.changeTrade(trade.getCoinName(), trade => {
+          trade.deleted = true;
+          return trade;
+        });
       }
-      DefaultStore.setTrade(updatedTrade);
-    }
+      return newTrade;
+    });
   }
 }

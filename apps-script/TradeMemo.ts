@@ -30,6 +30,10 @@ export class TradeMemo {
    */
   maxObservedPrice: number = 0;
   /**
+   * Marks the memo as one which has to be deleted.
+   */
+  deleted: boolean;
+  /**
    * The current state of the asset.
    */
   private state: TradeState;
@@ -50,12 +54,22 @@ export class TradeMemo {
     return tradeMemo
   }
 
+  get currentPrice(): number {
+    return this.prices[this.prices.length - 1]
+  }
+
   getCoinName(): string {
     return this.tradeResult.symbol.quantityAsset
   }
 
-  get currentPrice(): number {
-    return this.prices[this.prices.length - 1]
+  resetState(): void {
+    if (this.tradeResult.quantity) {
+      this.setState(TradeState.BOUGHT);
+    } else if (this.tradeResult.soldPrice) {
+      this.setState(TradeState.SOLD);
+    } else {
+      this.deleted = true;
+    }
   }
 
   pushPrice(price: number): void {

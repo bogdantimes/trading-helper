@@ -3,7 +3,6 @@ import {Exchange} from "./Exchange";
 import {Statistics} from "./Statistics";
 import {DefaultStore} from "./Store";
 import {Survivors} from "./Survivors";
-import {CacheProxy} from "./CacheProxy";
 
 class Watcher {
   static start() {
@@ -42,19 +41,11 @@ function Ticker() {
     throw e;
   }
 
-  store.getTradesList().forEach(tradeMemo => {
+  store.getTradesList().forEach(tm => {
     try {
-      CacheProxy.put(TradeLocked(tradeMemo.getCoinName()), "true", 30)
-      // get the trade to ensure it is up-to-date,
-      // as operations with other trades may have changed it
-      const trade = store.getTrade(tradeMemo.tradeResult.symbol);
-      if (trade) {
-        trader.tickerCheck(trade);
-      }
+      DefaultStore.changeTrade(tm.getCoinName(), tm => trader.tickerCheck(tm))
     } catch (e) {
       Log.error(e)
-    } finally {
-      CacheProxy.remove(TradeLocked(tradeMemo.getCoinName()))
     }
   })
 

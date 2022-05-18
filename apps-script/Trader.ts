@@ -1,6 +1,6 @@
 import {TradeMemo, TradeState} from "./TradeMemo";
 import {Statistics} from "./Statistics";
-import {Config, IStore} from "./Store";
+import {Config, DefaultStore, IStore} from "./Store";
 import {IExchange} from "./Exchange";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
 import {Coin, PriceMap, StableUSDCoin} from "./shared-lib/types";
@@ -20,7 +20,7 @@ export class V2Trader {
     this.prices = exchange.getPrices()
   }
 
-  tickerCheck(tm: TradeMemo): void {
+  tickerCheck(tm: TradeMemo): TradeMemo {
     if (!Coin.isStable(tm.getCoinName())) {
       this.pushNewPrice(tm);
     }
@@ -31,9 +31,6 @@ export class V2Trader {
       this.processSoldState(tm);
     }
 
-    // save new pushed price and any intermediate state changes
-    this.store.setTrade(tm)
-
     const priceGoesUp = tm.priceGoesUp()
     priceGoesUp && Log.info(`${tm.tradeResult.symbol} price goes up`)
 
@@ -41,13 +38,13 @@ export class V2Trader {
     if (tm.stateIs(TradeState.SELL) && !priceGoesUp) {
       // sell if price not goes up anymore
       // this allows to wait if price continues to go up
-      this.sell(tm)
+      return this.sell(tm)
     } else if (tm.stateIs(TradeState.BUY)) {
       // buy only if price started to go up
       // this allows to wait if price continues to fall
       // or buy if it is a stable coin
       if (priceGoesUp || Coin.isStable(tm.getCoinName())) {
-        this.buy(tm, this.config.BuyQuantity)
+        return this.buy(tm, this.config.BuyQuantity)
       }
     }
   }
@@ -112,35 +109,23 @@ export class V2Trader {
     }
   }
 
-  private buy(memo: TradeMemo, cost: number): void {
-    const symbol = memo.tradeResult.symbol;
+  private buy(tm: TradeMemo, cost: number): TradeMemo {
+    const symbol = tm.tradeResult.symbol;
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
-      Log.debug(memo);
+      Log.debug(tm);
       this.processBuyFee(tradeResult);
-      memo.joinWithNewTrade(tradeResult);
-      memo.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
-      this.store.setTrade(memo)
-      Log.alert(memo.tradeResult.toString())
+      tm.joinWithNewTrade(tradeResult);
+      tm.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
+      Log.alert(tm.tradeResult.toString())
     } else {
       Log.alert(`${symbol} could not be bought: ${tradeResult}`)
-      this.cancelTrade(memo);
+      tm.resetState();
     }
+    return tm;
   }
 
-  private cancelTrade(memo: TradeMemo): void {
-    if (memo.tradeResult.quantity) {
-      memo.setState(TradeState.BOUGHT);
-      this.store.setTrade(memo);
-    } else if (memo.tradeResult.soldPrice) {
-      memo.setState(TradeState.SOLD);
-      this.store.setTrade(memo);
-    } else {
-      this.store.deleteTrade(memo);
-    }
-  }
-
-  private sell(memo: TradeMemo): void {
+  private sell(memo: TradeMemo): TradeMemo {
     const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
     if (tradeResult.fromExchange) {
@@ -157,7 +142,6 @@ export class V2Trader {
       Log.alert(`An issue happened while selling ${symbol}. The asset is marked HODL. Please, resolve it manually.`)
     }
 
-    this.store.setTrade(memo)
     Log.alert(tradeResult.toString());
 
     if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
@@ -170,9 +154,10 @@ export class V2Trader {
       if (lowestProfitTrade) {
         Log.alert('Averaging down is enabled')
         Log.alert(`All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
-        this.buy(lowestProfitTrade, tradeResult.gained);
+        DefaultStore.changeTrade(lowestProfitTrade.getCoinName(), tm => this.buy(tm, tradeResult.gained));
       }
     }
+    return memo;
   }
 
   private updatePLStatistics(gainedCoin: string, profit: number): void {
@@ -207,33 +192,33 @@ export class V2Trader {
   }
 
   private updateBNBBalance(quantity: number): boolean {
-    const tm = this.store.getTrade(new ExchangeSymbol("BNB", this.config.StableCoin));
-    if (tm) {
-      // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
-      // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
-      tm.tradeResult.addQuantity(quantity, 0);
-      this.store.setTrade(tm);
-      Log.alert(`BNB balance updated by ${quantity}`);
-      return true
-    }
-    return false
+    let updated = false;
+    DefaultStore.changeTrade("BNB", tm => {
+      if (tm.tradeResult.fromExchange) {
+        // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
+        // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
+        tm.tradeResult.addQuantity(quantity, 0);
+        Log.alert(`BNB balance updated by ${quantity}`);
+        updated = true;
+        return tm;
+      }
+    });
+    return updated;
   }
 
   updateStableCoinsBalance() {
-    Object.keys(StableUSDCoin).forEach(coin => {
-      const symbol = new ExchangeSymbol(coin, this.config.StableCoin);
-      const tm = this.store.getTrade(symbol) || new TradeMemo(new TradeResult(symbol));
-      const balance = this.exchange.getFreeAsset(symbol.quantityAsset);
+    Object.keys(StableUSDCoin).forEach(coin => DefaultStore.changeTrade(coin, tm => {
+      const balance = this.exchange.getFreeAsset(tm.getCoinName());
       if (balance) {
         tm.setState(tm.getState() || TradeState.BOUGHT);
-        tm.tradeResult = new TradeResult(symbol, "Stable coin");
+        tm.tradeResult = new TradeResult(tm.tradeResult.symbol, "Stable coin");
         tm.tradeResult.quantity = balance;
         tm.tradeResult.fromExchange = true;
         tm.hodl = true;
-        this.store.setTrade(tm);
       } else {
-        this.store.deleteTrade(tm);
+        tm.deleted = true;
       }
-    });
+      return tm;
+    }));
   }
 }

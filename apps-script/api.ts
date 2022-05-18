@@ -5,7 +5,6 @@ import {Exchange} from "./Exchange";
 import {Survivors} from "./Survivors";
 import {CoinScore} from "./shared-lib/types";
 import {TradeMemo} from "./TradeMemo";
-import {CacheProxy} from "./CacheProxy";
 
 function doGet() {
   return HtmlService
@@ -59,14 +58,7 @@ export type InitialSetupParams = {
   binanceSecretKey: string
 }
 
-function waitTradeUnlock(coinName: string): void {
-  while (CacheProxy.get(TradeLocked(coinName))) {
-    Utilities.sleep(200);
-  }
-}
-
 function buyCoin(coinName: string): string {
-  waitTradeUnlock(coinName);
   return catchError(() => {
     TradeActions.buy(coinName);
     return "Requested to buy " + coinName;
@@ -74,7 +66,6 @@ function buyCoin(coinName: string): string {
 }
 
 function cancelAction(coinName: string): string {
-  waitTradeUnlock(coinName);
   return catchError(() => {
     TradeActions.cancel(coinName);
     return "Requested to cancel an action on " + coinName;
@@ -82,7 +73,6 @@ function cancelAction(coinName: string): string {
 }
 
 function sellCoin(coinName: string): string {
-  waitTradeUnlock(coinName);
   return catchError(() => {
     TradeActions.sell(coinName);
     return "Requested to sell " + coinName;
@@ -90,7 +80,6 @@ function sellCoin(coinName: string): string {
 }
 
 function setHold(coinName: string, value: boolean): string {
-  waitTradeUnlock(coinName);
   return catchError(() => {
     TradeActions.setHold(coinName, value);
     return "Requested to set hold for " + coinName + " to " + value;
@@ -98,7 +87,6 @@ function setHold(coinName: string, value: boolean): string {
 }
 
 function dropCoin(coinName: string): string {
-  waitTradeUnlock(coinName);
   return catchError(() => {
     TradeActions.drop(coinName);
     return "Requested to drop " + coinName;
@@ -106,7 +94,6 @@ function dropCoin(coinName: string): string {
 }
 
 function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
-  waitTradeUnlock(coinName);
   return catchError(() => {
     TradeActions.replace(coinName, newTradeMemo);
     return "Requested to edit trade for " + coinName;
