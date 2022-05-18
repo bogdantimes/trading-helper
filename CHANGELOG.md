@@ -1,3 +1,9 @@
+# v2.5.0
+
+* Added "Edit" mode and "Delete" action for Assets cards.
+* Added visual indication on Assets cards when price goes down.
+* Significantly improved the lag between UI request and the backend side state change.
+
 # v2.4.0
 
 * Add visual indication on Assets cards when price goes up.
