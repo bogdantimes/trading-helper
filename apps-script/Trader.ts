@@ -47,6 +47,7 @@ export class V2Trader {
         return this.buy(tm, this.config.BuyQuantity)
       }
     }
+    return tm;
   }
 
   private processSoldState(tm: TradeMemo): void {
