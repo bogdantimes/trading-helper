@@ -114,7 +114,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
 
     if (soldPriceLine) {
       soldPriceLine.applyOptions({visible: tm.stateIs(TradeState.SOLD)});
-      soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.price))
+      soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice))
     }
 
   }, [theme, tm, config, priceLine, profitLine, limitLine, orderLine]);
