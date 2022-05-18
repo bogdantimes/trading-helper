@@ -10,10 +10,10 @@ import {Config} from "../../apps-script/Store";
 import {Stack} from "@mui/material";
 import {confirmBuy, confirmSell, f2} from "./Common";
 
-export default function StableCoin(props: {noTrade: boolean, data: TradeMemo, config: Config}) {
+export default function StableCoin(props: { tradeNotAllowed: boolean, data: TradeMemo, config: Config }) {
   const tm: TradeMemo = props.data;
   const config: Config = props.config;
-  const noTrade: boolean = props.noTrade;
+  const tradeNotAllowed: boolean = props.tradeNotAllowed;
   const coinName = tm.getCoinName();
 
   const [isSelling, setIsSelling] = useState(false);
@@ -25,7 +25,6 @@ export default function StableCoin(props: {noTrade: boolean, data: TradeMemo, co
         alert(resp.toString());
         setIsSelling(false);
       };
-      // @ts-ignore
       google.script.run.withSuccessHandler(handle).withFailureHandler(handle).sellCoin(coinName);
     }
   }
@@ -39,7 +38,6 @@ export default function StableCoin(props: {noTrade: boolean, data: TradeMemo, co
         alert(resp.toString());
         setIsBuying(false);
       };
-      // @ts-ignore
       google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(coinName);
     }
   }
@@ -52,59 +50,33 @@ export default function StableCoin(props: {noTrade: boolean, data: TradeMemo, co
         alert(resp.toString());
         setActionCanceled(true);
       };
-      // @ts-ignore
       google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(coinName);
-    }
-  }
-
-  const [isRemoving, setIsRemoving] = useState(false);
-  const [removed, setRemoved] = useState(false);
-
-  function onRemove() {
-    if (confirm(`Are you sure you want to remove ${coinName}?`)) {
-      setIsRemoving(true);
-      // @ts-ignore
-      google.script.run
-        .withSuccessHandler(() => {
-          setIsRemoving(false);
-          setRemoved(true);
-        })
-        .withFailureHandler(resp => {
-          alert(resp.toString());
-          setIsRemoving(false);
-        })
-        .dropCoin(coinName);
     }
   }
 
   return (
     <>
-      {!removed &&
-        <Card sx={{width: 332}}>
-          <CardContent sx={{paddingBottom: 0}}>
-            <Typography variant="h5">{coinName}</Typography>
-            <Typography variant="h6">{f2(tm.tradeResult.quantity)}</Typography>
-          </CardContent>
-          <CardActions disableSpacing={true}>
-            <Stack direction={"row"} spacing={1}>
-              {tm.stateIs(TradeState.BOUGHT) &&
-                <Button size="small" disabled={isSelling || noTrade}
-                        onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
-              }
-              {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
-                <Button size="small" disabled={isBuying || noTrade} onClick={onBuy}>
-                  {isBuying ? '...' : `Buy ${tm.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
-              }
-              {tm.stateIs(TradeState.SOLD) &&
-                <Button size="small" disabled={isRemoving} onClick={onRemove}>{isRemoving ? '...' : 'Remove'}</Button>
-              }
-              {[TradeState.BUY, TradeState.SELL].includes(tm.getState()) &&
-                <Button size="small" disabled={actionCanceled} onClick={onCancel}>Cancel</Button>
-              }
-            </Stack>
-          </CardActions>
-        </Card>
-      }
+      <Card sx={{width: 332}}>
+        <CardContent sx={{paddingBottom: 0}}>
+          <Typography variant="h5">{coinName}</Typography>
+          <Typography variant="h6">{f2(tm.tradeResult.quantity)}</Typography>
+        </CardContent>
+        <CardActions disableSpacing={true}>
+          <Stack direction={"row"} spacing={1}>
+            {tm.stateIs(TradeState.BOUGHT) &&
+              <Button size="small" disabled={isSelling || tradeNotAllowed}
+                      onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
+            }
+            {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
+              <Button size="small" disabled={isBuying || tradeNotAllowed} onClick={onBuy}>
+                {isBuying ? '...' : `Buy ${tm.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
+            }
+            {[TradeState.BUY, TradeState.SELL].includes(tm.getState()) &&
+              <Button size="small" disabled={actionCanceled} onClick={onCancel}>Cancel</Button>
+            }
+          </Stack>
+        </CardActions>
+      </Card>
     </>
   );
 }

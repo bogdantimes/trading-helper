@@ -21,10 +21,10 @@ import {circularProgress, confirmBuy, confirmSell, f2} from "./Common";
 import {TradeEditDialog} from "./TradeEditDialog";
 import {TradeTitle} from "./TradeTitle";
 
-export default function Trade(props: { data: TradeMemo, config: Config, noTrade: boolean }) {
+export default function Trade(props: { data: TradeMemo, config: Config, tradeNotAllowed: boolean }) {
   const tm: TradeMemo = props.data;
   const config: Config = props.config;
-  const noTrade = props.noTrade;
+  const tradeNotAllowed = props.tradeNotAllowed;
   const coinName = tm.getCoinName();
 
   const chartContainerRef = useRef();
@@ -128,7 +128,6 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
         alert(resp.toString());
         setIsSelling(false);
       };
-      // @ts-ignore
       google.script.run.withSuccessHandler(handle).withFailureHandler(handle).sellCoin(coinName);
     }
   }
@@ -142,7 +141,6 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
         alert(resp.toString());
         setIsBuying(false);
       };
-      // @ts-ignore
       google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(coinName);
     }
   }
@@ -155,7 +153,6 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
         alert(resp.toString());
         setActionCanceled(true);
       };
-      // @ts-ignore
       google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(coinName);
     }
   }
@@ -165,7 +162,6 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
 
   function flipHodl() {
     setIsHodlSwitching(true);
-    // @ts-ignore
     google.script.run.withSuccessHandler(() => {
       setIsHodl(!isHodl);
       setIsHodlSwitching(false);
@@ -175,22 +171,13 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
     }).setHold(coinName, !isHodl);
   }
 
-  const [isRemoving, setIsRemoving] = useState(false);
   const [removed, setRemoved] = useState(false);
 
-  function onRemove() {
+  function onDelete() {
     if (confirm(`Are you sure you want to remove ${coinName}?`)) {
-      setIsRemoving(true);
-      // @ts-ignore
       google.script.run
-        .withSuccessHandler(() => {
-          setIsRemoving(false);
-          setRemoved(true);
-        })
-        .withFailureHandler(resp => {
-          alert(resp.toString());
-          setIsRemoving(false);
-        })
+        .withSuccessHandler(() => setRemoved(true))
+        .withFailureHandler(alert)
         .dropCoin(coinName);
     }
   }
@@ -202,7 +189,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
       {!removed &&
         <Card elevation={2}>
           <CardContent>
-            <TradeTitle tradeMemo={tm} onEdit={() => setEditMode(true)} onDelete={onRemove}/>
+            <TradeTitle tradeMemo={tm} onEdit={() => setEditMode(true)} onDelete={onDelete}/>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
           {!!tm.tradeResult.quantity ?
@@ -219,11 +206,11 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
           <CardActions>
             <Stack direction={"row"} spacing={1} sx={{marginLeft: 'auto'}}>
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Button size="small" disabled={isSelling || noTrade}
+                <Button size="small" disabled={isSelling || tradeNotAllowed}
                         onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
-                <Button size="small" disabled={isBuying || noTrade} onClick={onBuy}>
+                <Button size="small" disabled={isBuying || tradeNotAllowed} onClick={onBuy}>
                   {isBuying ? '...' : `Buy ${tm.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
               }
               {tm.stateIs(TradeState.BOUGHT) &&
@@ -232,9 +219,6 @@ export default function Trade(props: { data: TradeMemo, config: Config, noTrade:
                                 disabled={isHodlSwitching}>HODL</ToggleButton>
                   {isHodlSwitching && circularProgress}
                 </Box>
-              }
-              {tm.stateIs(TradeState.SOLD) &&
-                <Button size="small" disabled={isRemoving} onClick={onRemove}>{isRemoving ? '...' : 'Remove'}</Button>
               }
               {[TradeState.BUY, TradeState.SELL].includes(tm.getState()) &&
                 <Button size="small" disabled={actionCanceled} onClick={onCancel}>Cancel</Button>

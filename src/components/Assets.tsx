@@ -1,9 +1,9 @@
 import * as React from "react";
+import {useEffect} from "react";
 import Trade from "./Trade";
 import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {Autocomplete, Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {Config} from "../../apps-script/Store";
-import {useEffect} from "react";
 import StableCoin from "./StableCoin";
 import {Coin} from "../../apps-script/shared-lib/types";
 import {confirmBuy} from "./Common";
@@ -90,7 +90,8 @@ export function Assets({config}: { config: Config }) {
             .filter(t => Coin.isStable(t.getCoinName()))
             .map(t =>
               <Grid item>
-                <StableCoin key={t.getCoinName()} noTrade={!coinNames.includes(t.getCoinName())} data={t} config={config}/>
+                <StableCoin key={t.getCoinName()} tradeNotAllowed={!coinNames.includes(t.getCoinName())} data={t}
+                            config={config}/>
               </Grid>
             )}
         </Grid>
@@ -102,7 +103,8 @@ export function Assets({config}: { config: Config }) {
             .sort(byProfit)
             .map(t =>
               <Grid item>
-                <Trade noTrade={!coinNames.includes(t.getCoinName())} key={t.getCoinName()} data={t} config={config}/>
+                <Trade tradeNotAllowed={!coinNames.includes(t.getCoinName())} key={t.getCoinName()} data={t}
+                       config={config}/>
               </Grid>
             )}
         </Grid>
