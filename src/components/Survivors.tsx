@@ -44,7 +44,9 @@ export function Survivors({config}: { config: Config }) {
         <Stack alignSelf={"center"} spacing={2} direction={'row'}>
           {!!survivors.length &&
             <Button onClick={() => {
-              google.script.run.withSuccessHandler(() => setSurvivors([])).resetSurvivors();
+              if (confirm("Are you sure you want to clear the statistics?")) {
+                google.script.run.withSuccessHandler(() => setSurvivors([])).resetSurvivors();
+              }
             }}>Reset</Button>
           }
           <IconButton onClick={() => {
