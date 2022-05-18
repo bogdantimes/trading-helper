@@ -158,7 +158,7 @@ export class FirebaseStore implements IStore {
     return this.getTrades()[symbol.quantityAsset]
   }
 
-  changeTrade(coinName: string, mutateFn: (tm: TradeMemo) => TradeMemo): void {
+  changeTrade(coinName: string, mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
     const key = `TradeLocker_${coinName}`;
     try {
       while (CacheProxy.get(key)) Utilities.sleep(200);
@@ -168,9 +168,11 @@ export class FirebaseStore implements IStore {
       const existingOrNewTrade = this.getTrades()[coinName] || new TradeMemo(new TradeResult(symbol));
       const changedTrade = mutateFn(existingOrNewTrade);
 
-      changedTrade.deleted ?
-        this.deleteTrade(changedTrade) :
-        this.setTrade(changedTrade);
+      if (changedTrade) {
+        changedTrade.deleted ?
+          this.deleteTrade(changedTrade) :
+          this.setTrade(changedTrade);
+      }
 
     } finally {
       CacheProxy.remove(key)
