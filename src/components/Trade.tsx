@@ -206,7 +206,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
           <CardActions>
             <Stack direction={"row"} spacing={1} sx={{marginLeft: 'auto', marginRight: 'auto'}}>
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Button size="small" disabled={isSelling || tradeNotAllowed}
+                <Button sx={{minWidth: 20}} size="small" disabled={isSelling || tradeNotAllowed}
                         onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
