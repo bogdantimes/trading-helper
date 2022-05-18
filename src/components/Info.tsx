@@ -1,7 +1,7 @@
 import * as React from "react";
 import {useEffect} from "react";
 import {Stats} from "../../apps-script/Statistics";
-import {Box, ListItem, ListItemAvatar, ListItemText} from "@mui/material";
+import {Alert, Box, ListItem, ListItemAvatar, ListItemText, Stack} from "@mui/material";
 import {FixedSizeList} from 'react-window';
 import {ArrowDropDown, ArrowDropUp} from "@mui/icons-material";
 
@@ -25,24 +25,29 @@ export function Info() {
 
   return (
     <Box sx={{justifyContent: 'center', display: 'flex'}}>
-      <FixedSizeList
-        width={332}
-        height={400}
-        itemSize={55}
-        itemCount={rows.length}
-        overscanCount={5}
-      >
-        {
-          ({index, style}) => {
-            const up = rows[index].profit >= 0;
-            const icon = up ? <ArrowDropUp color={"success"}/> : <ArrowDropDown color={"error"}/>;
-            return <ListItem style={style} key={index} component="div">
-              <ListItemAvatar>{icon}</ListItemAvatar>
-              <ListItemText primary={rows[index].profit} secondary={rows[index].timeFrame}/>
-            </ListItem>;
+      <Stack spacing={2}>
+        <Alert sx={{width: 332}} severity={"info"}>
+          The summary of realised profits and losses for each day and the total P/L since the beginning.
+        </Alert>
+        <FixedSizeList
+          width={332}
+          height={400}
+          itemSize={55}
+          itemCount={rows.length}
+          overscanCount={5}
+        >
+          {
+            ({index, style}) => {
+              const up = rows[index].profit >= 0;
+              const icon = up ? <ArrowDropUp color={"success"}/> : <ArrowDropDown color={"error"}/>;
+              return <ListItem style={style} key={index} component="div">
+                <ListItemAvatar>{icon}</ListItemAvatar>
+                <ListItemText primary={'$' + rows[index].profit} secondary={rows[index].timeFrame}/>
+              </ListItem>;
+            }
           }
-        }
-      </FixedSizeList>
+        </FixedSizeList>
+      </Stack>
     </Box>
   );
 }
