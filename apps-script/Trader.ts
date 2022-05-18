@@ -38,13 +38,13 @@ export class V2Trader {
     if (tm.stateIs(TradeState.SELL) && !priceGoesUp) {
       // sell if price not goes up anymore
       // this allows to wait if price continues to go up
-      return this.sell(tm)
+      this.sell(tm)
     } else if (tm.stateIs(TradeState.BUY)) {
       // buy only if price started to go up
       // this allows to wait if price continues to fall
       // or buy if it is a stable coin
       if (priceGoesUp || Coin.isStable(tm.getCoinName())) {
-        return this.buy(tm, this.config.BuyQuantity)
+        this.buy(tm, this.config.BuyQuantity)
       }
     }
     return tm;
@@ -110,7 +110,7 @@ export class V2Trader {
     }
   }
 
-  private buy(tm: TradeMemo, cost: number): TradeMemo {
+  private buy(tm: TradeMemo, cost: number): void {
     const symbol = tm.tradeResult.symbol;
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
@@ -123,10 +123,9 @@ export class V2Trader {
       Log.alert(`${symbol} could not be bought: ${tradeResult}`)
       tm.resetState();
     }
-    return tm;
   }
 
-  private sell(memo: TradeMemo): TradeMemo {
+  private sell(memo: TradeMemo): void {
     const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
     if (tradeResult.fromExchange) {
@@ -155,10 +154,12 @@ export class V2Trader {
       if (lowestProfitTrade) {
         Log.alert('Averaging down is enabled')
         Log.alert(`All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`);
-        DefaultStore.changeTrade(lowestProfitTrade.getCoinName(), tm => this.buy(tm, tradeResult.gained));
+        DefaultStore.changeTrade(lowestProfitTrade.getCoinName(), tm => {
+          this.buy(tm, tradeResult.gained);
+          return tm;
+        });
       }
     }
-    return memo;
   }
 
   private updatePLStatistics(gainedCoin: string, profit: number): void {
