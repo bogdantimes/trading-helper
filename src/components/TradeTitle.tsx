@@ -33,7 +33,7 @@ export function TradeTitle({tradeMemo, onEdit, onDelete}: {
 
   const editColor = editHover ? theme.palette.action.active : theme.palette.action.disabled;
   const editIcon = tradeMemo.stateIs(TradeState.BOUGHT) &&
-    <IconButton onClick={onEdit} sx={{marginLeft: 'auto', color: editColor}}
+    <IconButton onClick={onEdit} sx={{color: editColor}}
                 onMouseEnter={() => setEditHover(true)}
                 onMouseLeave={() => setEditHover(false)}><Edit/></IconButton>;
   const deleteColor = deleteHover ? theme.palette.action.active : theme.palette.action.disabled
@@ -42,7 +42,10 @@ export function TradeTitle({tradeMemo, onEdit, onDelete}: {
                                  onMouseLeave={() => setDeleteHover(false)}><Delete/></IconButton>;
 
   return (
-    <Typography sx={{display: 'flex', alignItems: 'center'}} gutterBottom variant="h5"
-                component="div">{tradeMemo.getCoinName()} {growthIcon}{editIcon}{deleteIcon}</Typography>
+    <Typography sx={{display: 'flex', alignItems: 'center'}} gutterBottom variant="h5" component="div">
+      {tradeMemo.getCoinName()}
+      {growthIcon}
+      <span style={{marginLeft: 'auto'}}>{editIcon}{deleteIcon}</span>
+    </Typography>
   )
 }

@@ -45,7 +45,7 @@ export class TradeResult {
   }
 
   get price(): number {
-    return this.paid / this.quantity;
+    return this.cost / this.quantity;
   }
 
   set price(value: number) {

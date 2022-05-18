@@ -99,6 +99,7 @@ export class Binance implements IExchange, IPriceProvider {
     try {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost
+      tradeResult.soldPrice = tradeResult.price
       tradeResult.msg = "Sold."
       return tradeResult;
     } catch (e) {
