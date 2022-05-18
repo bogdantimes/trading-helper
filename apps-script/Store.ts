@@ -174,6 +174,7 @@ export class FirebaseStore implements IStore {
    * @param mutateFn
    */
   changeTrade(coinName: string, mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
+    coinName = coinName.toUpperCase();
     const key = `TradeLocker_${coinName}`;
     try {
       while (CacheProxy.get(key)) Utilities.sleep(200);

@@ -1,4 +1,4 @@
-import {TradeMemo} from "../../apps-script/TradeMemo";
+import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
 import {IconButton, useTheme} from "@mui/material";
 import * as React from "react";
 import {useState} from "react";
@@ -32,9 +32,10 @@ export function TradeTitle({tradeMemo, onEdit, onDelete}: {
   const growthIcon = growthIconMap.get(growthIndex);
 
   const editColor = editHover ? theme.palette.action.active : theme.palette.action.disabled;
-  const editIcon = <IconButton onClick={onEdit} sx={{marginLeft: 'auto', color: editColor}}
-                               onMouseEnter={() => setEditHover(true)}
-                               onMouseLeave={() => setEditHover(false)}><Edit/></IconButton>;
+  const editIcon = tradeMemo.stateIs(TradeState.BOUGHT) &&
+    <IconButton onClick={onEdit} sx={{marginLeft: 'auto', color: editColor}}
+                onMouseEnter={() => setEditHover(true)}
+                onMouseLeave={() => setEditHover(false)}><Edit/></IconButton>;
   const deleteColor = deleteHover ? theme.palette.action.active : theme.palette.action.disabled
   const deleteIcon = <IconButton onClick={onDelete} sx={{color: deleteColor}}
                                  onMouseEnter={() => setDeleteHover(true)}
