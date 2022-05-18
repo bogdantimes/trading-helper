@@ -158,6 +158,21 @@ export class FirebaseStore implements IStore {
     return this.getTrades()[symbol.quantityAsset]
   }
 
+  /**
+   * changeTrade function provides a way to update the trade memo object.
+   *
+   * It locks the trade memo object for the duration of the mutation function but no more than 30 seconds.
+   *
+   * It expects a coinName and a mutate function. The mutate function receives either an existing trade memo object
+   * from a store or a new empty trade memo.
+   *
+   * Mutation function can return an updated trade memo object or undefined/null value.
+   * If returned trade memo object has deleted flag set to true, this trade memo will be deleted.
+   * If undefined/null value is returned, the trade memo will not be updated.
+   *
+   * @param coinName
+   * @param mutateFn
+   */
   changeTrade(coinName: string, mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
     const key = `TradeLocker_${coinName}`;
     try {

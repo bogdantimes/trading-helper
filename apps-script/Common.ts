@@ -7,10 +7,6 @@ interface ExecParams {
 
 const INTERRUPT = 'INTERRUPT';
 
-function TradeLocked(coinName) {
-  return "TradeLocked_" + coinName;
-}
-
 function execute({context, runnable, interval = 500, attempts = 5}: ExecParams) {
   let err: Error;
   do {

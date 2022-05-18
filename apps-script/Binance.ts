@@ -76,7 +76,6 @@ export class Binance implements IExchange, IPriceProvider {
     Log.alert(`Buying ${symbol} for ${cost} ${symbol.priceAsset}`)
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     try {
-
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.symbol = symbol
       tradeResult.paid = tradeResult.cost

@@ -3,6 +3,7 @@
 * Added "Edit" mode and "Delete" action for Assets cards.
 * Added visual indication on Assets cards when price goes down.
 * Significantly improved the lag between UI request and the backend side state change.
+* Improved Binance errors handling.
 
 # v2.4.0
 
