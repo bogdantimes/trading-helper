@@ -95,7 +95,7 @@ function dropCoin(coinName: string): string {
 
 function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
   return catchError(() => {
-    TradeActions.replace(coinName, newTradeMemo);
+    TradeActions.replace(coinName, TradeMemo.copy(newTradeMemo));
     return "Requested to edit trade for " + coinName;
   });
 }
