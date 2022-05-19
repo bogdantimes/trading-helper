@@ -114,13 +114,13 @@ export class V2Trader {
     const symbol = tm.tradeResult.symbol;
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
-      Log.debug(tm);
       this.processBuyFee(tradeResult);
       tm.joinWithNewTrade(tradeResult);
       tm.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
-      Log.alert(tm.tradeResult.toString())
+      Log.alert(tradeResult.toString())
+      Log.debug(tm);
     } else {
-      Log.alert(`${symbol} could not be bought: ${tradeResult}`)
+      Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`)
       tm.resetState();
     }
   }
@@ -129,13 +129,16 @@ export class V2Trader {
     const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin);
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity);
     if (tradeResult.fromExchange) {
-      Log.debug(memo);
       const fee = this.processSellFee(memo, tradeResult);
-      const profit = tradeResult.gained - memo.tradeResult.paid - fee;
-      tradeResult.profit = +profit.toFixed(2);
+      const profit = +(tradeResult.gained - memo.tradeResult.paid - fee).toFixed(2);
+      const profitPercentage = (100 * (profit / memo.tradeResult.paid));
+
+      Log.alert(`${profit >= 0 ? 'Profit' : 'Loss'}: ${profit} (${profitPercentage}%)`)
+
+      tradeResult.profit = profit;
       memo.tradeResult = tradeResult;
       memo.setState(TradeState.SOLD)
-      this.updatePLStatistics(symbol.priceAsset, tradeResult.profit);
+      this.updatePLStatistics(symbol.priceAsset, profit);
     } else {
       memo.hodl = true;
       memo.setState(TradeState.BOUGHT);
@@ -143,6 +146,7 @@ export class V2Trader {
     }
 
     Log.alert(tradeResult.toString());
+    Log.debug(memo);
 
     if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
       // all gains are reinvested to most unprofitable asset
@@ -183,9 +187,7 @@ export class V2Trader {
     }
     const buyFee = this.getBNBCommissionCost(tm.tradeResult.commission);
     const sellFee = this.getBNBCommissionCost(sellResult.commission);
-    const fee = buyFee + sellFee;
-    fee && Log.info(`Fee: ~${buyFee + sellFee}`)
-    return fee;
+    return buyFee + sellFee;
   }
 
   private getBNBCommissionCost(commission: number): number {

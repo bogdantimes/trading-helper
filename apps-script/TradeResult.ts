@@ -52,7 +52,7 @@ export class TradeResult {
   }
 
   toString(): string {
-    return `${this.symbol}: ${this.msg} => ${this.quantity ? `qty=${this.quantity}` : ''} ${this.price ? `price=${this.price}` : ''} ${this.paid ? `paid=${this.paid}` : ''} ${this.gained ? `gained=${this.gained}` : ''} ${this.profit ? `profit=${this.profit}` : ''}`
+    return `${this.symbol} => Qty: ${this.quantity}, Av. price: ${this.price}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${this.gained}, Commission BNB: ${this.commission}, Profit: ${this.profit}, Msg: ${this.msg}`
   }
 
   join(next: TradeResult): TradeResult {

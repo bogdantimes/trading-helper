@@ -73,18 +73,19 @@ export class Binance implements IExchange, IPriceProvider {
     if (moneyAvailable < cost) {
       return new TradeResult(symbol, `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`)
     }
-    Log.alert(`Buying ${symbol} for ${cost} ${symbol.priceAsset}`)
+    Log.alert(`Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`)
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     try {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.symbol = symbol
       tradeResult.paid = tradeResult.cost
-      tradeResult.msg = "Bought."
+      Log.alert(`Bought ${tradeResult.quantity} of ${symbol.quantityAsset}. Paid: ${tradeResult.cost} ${symbol.priceAsset}. Average price: ${tradeResult.price}`)
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Market is closed")) {
         return new TradeResult(symbol, `Market is closed for ${symbol}.`)
       }
+      throw e;
     }
   }
 
@@ -100,7 +101,7 @@ export class Binance implements IExchange, IPriceProvider {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost
       tradeResult.soldPrice = tradeResult.price
-      tradeResult.msg = "Sold."
+      Log.alert(`Sold ${tradeResult.quantity} of ${symbol.quantityAsset}. Gained: ${tradeResult.cost} ${symbol.priceAsset}. Average price: ${tradeResult.price}`)
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Account has insufficient balance")) {
