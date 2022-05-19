@@ -12,12 +12,26 @@ export class V2Trader {
   private readonly stats: Statistics;
   private readonly prices: PriceMap;
 
+  /**
+   * Used when {@link Config.ProfitBasedStopLimit} is enabled.
+   */
+  private readonly totalProfit: number;
+  /**
+   * Used when {@link Config.ProfitBasedStopLimit} is enabled.
+   */
+  private readonly numberOfBoughtAssets: number;
+
   constructor(store: IStore, exchange: IExchange, stats: Statistics) {
     this.store = store;
     this.config = store.getConfig();
     this.exchange = exchange
     this.stats = stats
     this.prices = exchange.getPrices()
+
+    if (this.config.ProfitBasedStopLimit) {
+      this.totalProfit = stats.getAll().TotalProfit;
+      this.numberOfBoughtAssets = store.getTradesList(TradeState.BOUGHT).length;
+    }
   }
 
   tickerCheck(tm: TradeMemo): TradeMemo {
@@ -69,7 +83,6 @@ export class V2Trader {
 
   private processBoughtState(tm: TradeMemo): void {
     const symbol = tm.tradeResult.symbol;
-    const priceGoesUp = tm.priceGoesUp()
 
     if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
       Log.alert(`${symbol} crossed profit limit at ${tm.currentPrice}`)
@@ -88,7 +101,10 @@ export class V2Trader {
       canSell && tm.setState(TradeState.SELL)
     }
 
-    if (priceGoesUp) {
+    if (this.config.ProfitBasedStopLimit) {
+      const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets;
+      tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity;
+    } else if (tm.priceGoesUp()) {
       // Using the previous price a few measures back to calculate new stop limit
       const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.StopLimit);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);

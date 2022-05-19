@@ -9,7 +9,6 @@ import {
   Button,
   FormControlLabel,
   InputAdornment,
-  Snackbar,
   Stack,
   Switch,
   TextField,
@@ -32,7 +31,9 @@ export function Settings() {
     SwingTradeEnabled: false,
     PriceProvider: PriceProvider.Binance,
     AveragingDown: false,
+    ProfitBasedStopLimit: false
   });
+  const [configLoaded, setConfigLoaded] = useState(false);
 
   const [stopLimit, setLossLimit] = useState('');
   const [profitLimit, setProfitLimit] = useState('');
@@ -43,6 +44,7 @@ export function Settings() {
     setProfitLimit((+(config.ProfitLimit * 100).toFixed(2)).toString());
     setBuyQuantity(config.BuyQuantity.toString());
     setConfig(config);
+    setConfigLoaded(true);
   }).getConfig(), [])
 
   const onSave = () => {
@@ -71,62 +73,69 @@ export function Settings() {
 
   return (
     <Box sx={{justifyContent: 'center', display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
-      <Stack spacing={2}>
-        <Autocomplete
-          disableClearable={true}
-          value={config.StableCoin}
-          options={Object.values(StableUSDCoin)}
-          onChange={(e, val) => val && setConfig({...config, StableCoin: val as StableUSDCoin})}
-          renderInput={(params) => <TextField {...params} label={"Stable Coin"}/>}
-        />
-        <TextField value={buyQuantity} label={"Buy Quantity"} onChange={e => setBuyQuantity(e.target.value)}
-                   InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
-        />
-        <Stack direction="row" spacing={2}>
-          <TextField value={profitLimit} label={"Profit Limit"} onChange={e => setProfitLimit(e.target.value)}
-                     InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+      {!configLoaded && circularProgress}
+      {configLoaded &&
+        <Stack spacing={2}>
+          <Autocomplete
+            disableClearable={true}
+            value={config.StableCoin}
+            options={Object.values(StableUSDCoin)}
+            onChange={(e, val) => val && setConfig({...config, StableCoin: val as StableUSDCoin})}
+            renderInput={(params) => <TextField {...params} label={"Stable Coin"}/>}
+          />
+          <TextField value={buyQuantity} label={"Buy Quantity"} onChange={e => setBuyQuantity(e.target.value)}
+                     InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
+          />
+          <Stack direction="row" spacing={2}>
+            <TextField value={profitLimit} label={"Profit Limit"} onChange={e => setProfitLimit(e.target.value)}
+                       InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+            />
+            <FormControlLabel
+              control={
+                <Switch checked={config.SellAtProfitLimit}
+                        onChange={e => setConfig({...config, SellAtProfitLimit: e.target.checked})}/>
+              } label="Auto-sell"
+            />
+          </Stack>
+          <Stack direction="row" spacing={2}>
+            <TextField disabled={config.ProfitBasedStopLimit} value={stopLimit} label={"Stop Limit"}
+                       onChange={e => setLossLimit(e.target.value)}
+                       InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+            />
+            <FormControlLabel
+              control={
+                <Switch checked={config.SellAtStopLimit}
+                        onChange={e => setConfig({...config, SellAtStopLimit: e.target.checked})}/>
+              } label="Auto-sell"
+            />
+          </Stack>
+          <FormControlLabel
+            sx={{margin: 0}}
+            control={
+              <Switch checked={config.ProfitBasedStopLimit}
+                      onChange={e => setConfig({...config, ProfitBasedStopLimit: e.target.checked})}/>
+            } label="P/L based Stop Limit"
           />
           <FormControlLabel
             control={
-              <Switch checked={config.SellAtProfitLimit}
-                      onChange={e => setConfig({...config, SellAtProfitLimit: e.target.checked})}/>
-            }
-            label="Auto-sell"
-          />
-        </Stack>
-        <Stack direction="row" spacing={2}>
-          <TextField value={stopLimit} label={"Stop Limit"} onChange={e => setLossLimit(e.target.value)}
-                     InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+              <Switch checked={config.SwingTradeEnabled}
+                      onChange={e => setConfig({...config, SwingTradeEnabled: e.target.checked})}/>
+            } label="Swing trading"
           />
           <FormControlLabel
             control={
-              <Switch checked={config.SellAtStopLimit}
-                      onChange={e => setConfig({...config, SellAtStopLimit: e.target.checked})}/>
-            }
-            label="Auto-sell"
+              <Switch checked={config.AveragingDown}
+                      onChange={e => setConfig({...config, AveragingDown: e.target.checked})}/>
+            } label="Averaging down"
           />
+          <Box alignSelf={"center"} sx={{position: 'relative'}}>
+            <Button variant="contained" color="primary" startIcon={<SaveIcon/>}
+                    onClick={onSave} disabled={isSaving}>Save</Button>
+            {isSaving && circularProgress}
+          </Box>
+          {error && <Alert severity="error">{error}</Alert>}
         </Stack>
-        <FormControlLabel
-          control={
-            <Switch checked={config.SwingTradeEnabled}
-                    onChange={e => setConfig({...config, SwingTradeEnabled: e.target.checked})}/>
-          }
-          label="Swing trading"
-        />
-        <FormControlLabel
-          control={
-            <Switch checked={config.AveragingDown}
-                    onChange={e => setConfig({...config, AveragingDown: e.target.checked})}/>
-          }
-          label="Averaging down"
-        />
-        <Box alignSelf={"center"} sx={{position: 'relative'}}>
-          <Button variant="contained" color="primary" startIcon={<SaveIcon/>}
-                  onClick={onSave} disabled={isSaving}>Save</Button>
-          {isSaving && circularProgress}
-        </Box>
-        {error && <Alert severity="error">{error}</Alert>}
-      </Stack>
+      }
     </Box>
   );
 }
