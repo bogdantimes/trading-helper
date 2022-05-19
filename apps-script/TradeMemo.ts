@@ -129,7 +129,7 @@ export class TradeMemo {
   }
 
   soldPriceChangePercent(): number {
-    return (this.currentPrice - this.tradeResult.price) / this.tradeResult.price * 100
+    return (this.currentPrice - this.tradeResult.soldPrice) / this.tradeResult.soldPrice * 100
   }
 
   lossLimitCrossedDown(): boolean {
