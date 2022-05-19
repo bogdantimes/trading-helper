@@ -104,7 +104,7 @@ export class V2Trader {
     if (this.config.ProfitBasedStopLimit) {
       const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets;
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity;
-    } else if (tm.priceGoesUp()) {
+    } else if (!tm.stopLimitPrice || tm.priceGoesUp()) {
       // Using the previous price a few measures back to calculate new stop limit
       const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.StopLimit);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
@@ -132,7 +132,6 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       this.processBuyFee(tradeResult);
       tm.joinWithNewTrade(tradeResult);
-      tm.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
       Log.debug(tm);
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`)
