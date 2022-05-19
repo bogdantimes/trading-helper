@@ -13,11 +13,6 @@ export type PriceMemo = [number, number, number]
 export class TradeMemo {
   tradeResult: TradeResult
   /**
-   * The price at which the asset should be sold automatically if {@link Config.SellAtStopLimit}
-   * is true, and {@link TradeMemo.hodl} is false.
-   */
-  stopLimitPrice: number = 0
-  /**
    * Keeps the latest measures of the asset price.
    */
   prices: PriceMemo = [0, 0, 0];
@@ -26,13 +21,18 @@ export class TradeMemo {
    */
   hodl: boolean = false;
   /**
-   * Maximum price ever observed for this asset.
-   */
-  maxObservedPrice: number = 0;
-  /**
    * Marks the memo as one which has to be deleted.
    */
   deleted: boolean;
+  /**
+   * The price at which the asset should be sold automatically if {@link Config.SellAtStopLimit}
+   * is true, and {@link TradeMemo.hodl} is false.
+   */
+  private stopLimit: number = 0
+  /**
+   * Maximum price ever observed for this asset.
+   */
+  private maxPrice: number = 0;
   /**
    * The current state of the asset.
    */
@@ -56,6 +56,22 @@ export class TradeMemo {
 
   get currentPrice(): number {
     return this.prices[this.prices.length - 1]
+  }
+
+  get maxObservedPrice(): number {
+    return this.maxPrice
+  }
+
+  set maxObservedPrice(price: number) {
+    this.maxPrice = Math.max(0, price)
+  }
+
+  get stopLimitPrice(): number {
+    return this.stopLimit
+  }
+
+  set stopLimitPrice(price: number) {
+    this.stopLimit = Math.max(0, price)
   }
 
   getCoinName(): string {
