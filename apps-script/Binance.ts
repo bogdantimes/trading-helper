@@ -77,9 +77,8 @@ export class Binance implements IExchange, IPriceProvider {
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     try {
       const tradeResult = this.marketTrade(symbol, query);
-      tradeResult.symbol = symbol
       tradeResult.paid = tradeResult.cost
-      Log.alert(`Bought ${tradeResult.quantity} ${symbol.quantityAsset}. Paid: ${tradeResult.cost} ${symbol.priceAsset}. Average price: ${tradeResult.price}`)
+      Log.alert(tradeResult.toTradeString())
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Market is closed")) {
@@ -101,7 +100,7 @@ export class Binance implements IExchange, IPriceProvider {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost
       tradeResult.soldPrice = tradeResult.price
-      Log.alert(`Sold ${tradeResult.quantity} ${symbol.quantityAsset} for ${tradeResult.cost} ${symbol.priceAsset}. Average price: ${tradeResult.price}`)
+      Log.alert(tradeResult.toTradeString())
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Account has insufficient balance")) {

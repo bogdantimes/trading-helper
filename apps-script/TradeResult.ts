@@ -55,6 +55,13 @@ export class TradeResult {
     return `${this.symbol} => Qty: ${this.quantity}, Av. price: ${this.price}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${this.gained}, Commission BNB: ${this.commission}, Profit: ${this.profit}, Msg: ${this.msg}`
   }
 
+  /**
+   * @example "Bought 21 DAR for 9.81183 BUSD. Average price: 0.46723"
+   */
+  toTradeString(): string {
+    return `${this.soldPrice ? 'Sold' : 'Bought'} ${this.quantity} ${this.symbol.quantityAsset} for ${this.cost} ${this.symbol.priceAsset}. Average price: ${this.price}`
+  }
+
   join(next: TradeResult): TradeResult {
     if (this.fromExchange != next.fromExchange) {
       throw Error(`Cannot join trades where 'fromExchange' is not equal: ${next.toString()}`)
