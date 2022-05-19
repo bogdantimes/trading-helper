@@ -1,4 +1,4 @@
-import {TradeMemo} from "./TradeMemo";
+import {TradeMemo, TradeState} from "./TradeMemo";
 import {ExchangeSymbol, PriceProvider, TradeResult} from "./TradeResult";
 import {CacheProxy} from "./CacheProxy";
 import {StableUSDCoin} from "./shared-lib/types";
@@ -18,7 +18,7 @@ export interface IStore {
 
   getTrades(): { [key: string]: TradeMemo }
 
-  getTradesList(): TradeMemo[]
+  getTradesList(state?: TradeState): TradeMemo[]
 
   getTrade(symbol: ExchangeSymbol): TradeMemo
 
@@ -59,8 +59,6 @@ export class FirebaseStore implements IStore {
     let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
     if (!configCache) {
       const defaultConfig: Config = {
-        KEY: '',
-        SECRET: '',
         BuyQuantity: 10,
         StableCoin: StableUSDCoin.USDT,
         StopLimit: 0.05,
@@ -70,6 +68,7 @@ export class FirebaseStore implements IStore {
         SwingTradeEnabled: false,
         PriceProvider: PriceProvider.Binance,
         AveragingDown: false,
+        ProfitBasedStopLimit: false
       }
       configCache = this.getOrSet("Config", defaultConfig)
     }
@@ -150,8 +149,9 @@ export class FirebaseStore implements IStore {
     }, {});
   }
 
-  getTradesList(): TradeMemo[] {
-    return Object.values(this.getTrades())
+  getTradesList(state?: TradeState): TradeMemo[] {
+    const values = Object.values(this.getTrades());
+    return state ? values.filter(trade => trade.stateIs(state)) : values;
   }
 
   getTrade(symbol: ExchangeSymbol): TradeMemo {
@@ -219,6 +219,13 @@ export type Config = {
   StableCoin: StableUSDCoin
   BuyQuantity: number
   StopLimit: number
+  /**
+   * When ProfitBasedStopLimit is true - a stop limit for each asset is calculated based on the total profit of the tool.
+   * All profit is divided equally between all assets and this amount is how much loss is allowed for each asset.
+   * Such stop limits are always recalculated when the total profit or number of assets changes.
+   * Overrides {@link StopLimit}.
+   */
+  ProfitBasedStopLimit: boolean
   ProfitLimit: number
   SellAtStopLimit: boolean
   SellAtProfitLimit: boolean
