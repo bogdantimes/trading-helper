@@ -89,7 +89,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
 
     if (limitLine) {
       limitLine.applyOptions({
-        visible: !!tm.tradeResult.quantity,
+        visible: !!tm.stopLimitPrice,
         // make dashed if config SellAtStopLimit is false or HODLing
         lineStyle: !config.SellAtStopLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
       });
