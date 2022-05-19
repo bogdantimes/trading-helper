@@ -79,7 +79,7 @@ export class Binance implements IExchange, IPriceProvider {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.symbol = symbol
       tradeResult.paid = tradeResult.cost
-      Log.alert(`Bought ${tradeResult.quantity} of ${symbol.quantityAsset}. Paid: ${tradeResult.cost} ${symbol.priceAsset}. Average price: ${tradeResult.price}`)
+      Log.alert(`Bought ${tradeResult.quantity} ${symbol.quantityAsset}. Paid: ${tradeResult.cost} ${symbol.priceAsset}. Average price: ${tradeResult.price}`)
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Market is closed")) {
