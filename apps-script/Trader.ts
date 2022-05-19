@@ -117,10 +117,10 @@ export class V2Trader {
       this.processBuyFee(tradeResult);
       tm.joinWithNewTrade(tradeResult);
       tm.stopLimitPrice = tradeResult.price * (1 - this.config.StopLimit);
-      Log.alert(tradeResult.toString())
       Log.debug(tm);
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`)
+      Log.debug(tm);
       tm.resetState();
     }
   }
@@ -131,22 +131,22 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       const fee = this.processSellFee(memo, tradeResult);
       const profit = +(tradeResult.gained - memo.tradeResult.paid - fee).toFixed(2);
-      const profitPercentage = (100 * (profit / memo.tradeResult.paid));
+      const profitPercentage = (100 * (profit / memo.tradeResult.paid)).toFixed(2);
 
       Log.alert(`${profit >= 0 ? 'Profit' : 'Loss'}: ${profit} (${profitPercentage}%)`)
 
       tradeResult.profit = profit;
       memo.tradeResult = tradeResult;
+      Log.debug(memo);
       memo.setState(TradeState.SOLD)
       this.updatePLStatistics(symbol.priceAsset, profit);
     } else {
+      Log.debug(memo);
       memo.hodl = true;
       memo.setState(TradeState.BOUGHT);
       Log.alert(`An issue happened while selling ${symbol}. The asset is marked HODL. Please, resolve it manually.`)
+      Log.alert(tradeResult.toString());
     }
-
-    Log.alert(tradeResult.toString());
-    Log.debug(memo);
 
     if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
       // all gains are reinvested to most unprofitable asset

@@ -96,12 +96,12 @@ export class Binance implements IExchange, IPriceProvider {
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`;
-    Log.alert(`Selling ${quantity} of ${symbol}`);
+    Log.alert(`Selling ${quantity} ${symbol.quantityAsset} for ${symbol.priceAsset}`)
     try {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost
       tradeResult.soldPrice = tradeResult.price
-      Log.alert(`Sold ${tradeResult.quantity} of ${symbol.quantityAsset}. Gained: ${tradeResult.cost} ${symbol.priceAsset}. Average price: ${tradeResult.price}`)
+      Log.alert(`Sold ${tradeResult.quantity} ${symbol.quantityAsset} for ${tradeResult.cost} ${symbol.priceAsset}. Average price: ${tradeResult.price}`)
       return tradeResult;
     } catch (e) {
       if (e.message.includes("Account has insufficient balance")) {

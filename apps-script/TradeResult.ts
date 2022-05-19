@@ -36,16 +36,16 @@ export class TradeResult {
   soldPrice: number;
   profit: number = 0
   commission: number = 0
-  msg: string = ""
+  msg: string
   fromExchange: boolean = false;
 
-  constructor(symbol: ExchangeSymbol, msg?: string) {
+  constructor(symbol: ExchangeSymbol, msg: string = '') {
     this.symbol = symbol
     this.msg = msg
   }
 
   get price(): number {
-    return this.cost / this.quantity;
+    return +(this.cost / this.quantity).toFixed(8);
   }
 
   set price(value: number) {
