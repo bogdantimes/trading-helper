@@ -42,7 +42,7 @@ export function Info() {
               const icon = up ? <ArrowDropUp color={"success"}/> : <ArrowDropDown color={"error"}/>;
               return <ListItem style={style} key={index} component="div">
                 <ListItemAvatar>{icon}</ListItemAvatar>
-                <ListItemText primary={'$' + rows[index].profit} secondary={rows[index].timeFrame}/>
+                <ListItemText primary={rows[index].profit} secondary={rows[index].timeFrame}/>
               </ListItem>;
             }
           }
