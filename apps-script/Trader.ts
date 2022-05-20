@@ -257,7 +257,7 @@ export class V2Trader {
     const growthIndex = tm.getGrowthIndex(tm.prices.slice(-TradeMemo.PriceMemoMaxCapacity));
     const dipStartPrice = CacheProxy.get(key);
 
-    if (growthIndex + TradeMemo.PriceMemoMaxCapacity <= 2) {
+    if (growthIndex + TradeMemo.PriceMemoMaxCapacity <= 3) {
       CacheProxy.put(key, dipStartPrice || tm.prices[0].toString(), 120); // 2 minutes
     } else if (dipStartPrice) {
       const dipPercent = 100 * (1 - tm.currentPrice / +dipStartPrice)
