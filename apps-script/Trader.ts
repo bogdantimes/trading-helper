@@ -4,6 +4,7 @@ import {Config, DefaultStore, IStore} from "./Store";
 import {IExchange} from "./Exchange";
 import {ExchangeSymbol, TradeResult} from "./TradeResult";
 import {Coin, PriceMap, StableUSDCoin} from "./shared-lib/types";
+import {CacheProxy} from "./CacheProxy";
 
 export class V2Trader {
   private readonly store: IStore;
@@ -37,6 +38,7 @@ export class V2Trader {
   tickerCheck(tm: TradeMemo): TradeMemo {
     if (!Coin.isStable(tm.getCoinName())) {
       this.pushNewPrice(tm);
+      this.checkDip(tm);
     }
 
     if (tm.stateIs(TradeState.BOUGHT)) {
@@ -239,5 +241,21 @@ export class V2Trader {
       }
       return tm;
     }));
+  }
+
+  private checkDip(tm: TradeMemo) {
+    if (tm.prices.length < TradeMemo.PriceMemoMaxCapacity) return false;
+
+    const key = `${tm.getCoinName()}-dip-start`;
+    const growthIndex = tm.getGrowthIndex(tm.prices.slice(-TradeMemo.PriceMemoMaxCapacity));
+    const dipStartPrice = CacheProxy.get(key);
+
+    if (growthIndex + TradeMemo.PriceMemoMaxCapacity <= 2) {
+      CacheProxy.put(key, dipStartPrice || tm.prices[0].toString(), 120); // 2 minutes
+    } else if (dipStartPrice) {
+      const percentage = 100 * (tm.currentPrice / +dipStartPrice)
+      Log.alert(`${percentage.toFixed(2)} dip in ${tm.getCoinName()} price: ${dipStartPrice} -> ${tm.currentPrice}`);
+      CacheProxy.remove(key);
+    }
   }
 }

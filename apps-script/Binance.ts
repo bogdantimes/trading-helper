@@ -25,7 +25,7 @@ export class Binance implements IExchange, IPriceProvider {
   }
 
   getPrices(): PriceMap {
-    Log.info("Fetching prices from Binance")
+    Log.debug("Fetching prices from Binance")
     try {
       const prices: { symbol: string, price: string }[] = this.fetch(() => "ticker/price", this.defaultReqOpts);
       Log.debug(`Got ${prices.length} prices`)

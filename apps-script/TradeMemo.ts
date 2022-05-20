@@ -7,10 +7,11 @@ export enum TradeState {
   SOLD = 'sold'
 }
 
-const PriceMemoMaxCapacity = 10;
 export type PriceMemo = [number, number, number]
 
 export class TradeMemo {
+  static readonly PriceMemoMaxCapacity = 10;
+
   tradeResult: TradeResult
   /**
    * Keeps the latest measures of the asset price.
@@ -95,7 +96,7 @@ export class TradeMemo {
     } else {
       this.prices.push(price)
       // remove old prices and keep only the last PriceMemoMaxCapacity
-      this.prices.splice(0, this.prices.length - PriceMemoMaxCapacity)
+      this.prices.splice(0, this.prices.length - TradeMemo.PriceMemoMaxCapacity)
     }
     this.maxObservedPrice = Math.max(this.maxObservedPrice, ...this.prices)
   }
