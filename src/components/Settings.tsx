@@ -98,14 +98,14 @@ export function Settings() {
             />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <TextField value={config.DipAlertPercentage} label={"Price Drop Alert"}
-                       onChange={e => setConfig({...config, DipAlertPercentage: +e.target.value})}
+            <TextField value={config.DumpAlertPercentage} label={"Dump Alert"}
+                       onChange={e => setConfig({...config, DumpAlertPercentage: +e.target.value})}
                        InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
             />
             <FormControlLabel
               control={
-                <Switch checked={config.BuyDips}
-                        onChange={e => setConfig({...config, BuyDips: e.target.checked})}/>
+                <Switch checked={config.BuyDumps}
+                        onChange={e => setConfig({...config, BuyDumps: e.target.checked})}/>
               } label="Auto-buy"
             />
           </Stack>

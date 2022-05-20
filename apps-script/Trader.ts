@@ -39,11 +39,11 @@ export class V2Trader {
     if (!Coin.isStable(tm.getCoinName())) {
       this.pushNewPrice(tm);
 
-      if (this.isPriceDip(tm) && this.config.BuyDips) {
-        Log.alert(`Buying dips is enabled.`)
+      if (this.isPriceDump(tm) && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
+        Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
         tm.setState(TradeState.BUY);
         // todo: temporary measure to buy once
-        this.config.BuyDips = false;
+        this.config.BuyDumps = false;
         this.store.setConfig(this.config);
       }
     }
@@ -257,22 +257,22 @@ export class V2Trader {
     }));
   }
 
-  private isPriceDip(tm: TradeMemo): boolean {
+  private isPriceDump(tm: TradeMemo): boolean {
     if (tm.prices.length < TradeMemo.PriceMemoMaxCapacity) return false;
 
-    const key = `${tm.getCoinName()}-dip-start`;
+    const key = `${tm.getCoinName()}-dump-start`;
     const growthIndex = tm.getGrowthIndex(tm.prices.slice(-TradeMemo.PriceMemoMaxCapacity));
-    const dipStartPrice = CacheProxy.get(key);
+    const dumpStartPrice = CacheProxy.get(key);
 
     if (growthIndex + TradeMemo.PriceMemoMaxCapacity <= 3) {
-      CacheProxy.put(key, dipStartPrice || tm.prices[0].toString(), 120); // 2 minutes
-    } else if (dipStartPrice) {
-      const dipPercent = 100 * (1 - tm.currentPrice / +dipStartPrice)
-      if (dipPercent >= this.config.DipAlertPercentage) {
-        Log.alert(`-${dipPercent.toFixed(2)}% ${tm.getCoinName()} price dip: ${dipStartPrice} -> ${tm.currentPrice}`);
+      CacheProxy.put(key, dumpStartPrice || tm.prices[0].toString(), 120); // 2 minutes
+    } else if (dumpStartPrice) {
+      const dumpPercent = 100 * (1 - tm.currentPrice / +dumpStartPrice)
+      if (dumpPercent >= this.config.DumpAlertPercentage) {
+        Log.alert(`${tm.getCoinName()} price dumped ${dumpPercent.toFixed(2)}%: ${dumpStartPrice} -> ${tm.currentPrice}`);
+        return true;
       }
       CacheProxy.remove(key);
-      return true;
     }
     return false;
   }
