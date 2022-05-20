@@ -189,7 +189,8 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
         <Card elevation={2}>
           <CardContent>
             <TradeTitle tradeMemo={tm} onEdit={() => setEditMode(true)} onDelete={onDelete}/>
-            <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
+            <Box sx={chartStyle(theme)} width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef}
+                 className="chart-container"/>
           </CardContent>
           {!!tm.tradeResult.quantity ?
             <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
@@ -246,6 +247,13 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
     </>
   );
 }
+
+const chartStyle = theme => ({
+  '& .tv-lightweight-charts': {
+    borderRadius: '4px',
+    border: `1px solid ${theme.palette.text.disabled}`
+  }
+})
 
 function changeChartTheme(chart: IChartApi, theme: Theme) {
   chart && chart.applyOptions({
