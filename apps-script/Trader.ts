@@ -148,6 +148,7 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       this.processBuyFee(tradeResult);
       tm.joinWithNewTrade(tradeResult);
+      Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
       Log.debug(tm);
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`)

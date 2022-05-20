@@ -59,7 +59,7 @@ export class TradeResult {
    * @example "Bought 21 DAR for 9.81183 BUSD. Average price: 0.46723"
    */
   toTradeString(): string {
-    return `${this.soldPrice ? 'Sold' : 'Bought'} ${this.quantity} ${this.symbol.quantityAsset} for ${this.cost} ${this.symbol.priceAsset}. Average price: ${this.price}`
+    return `${this.soldPrice ? 'Sold' : 'Bought'} ${this.quantity} ${this.symbol.quantityAsset} for ${this.cost} ${this.symbol.priceAsset}. Price: ${this.price}`
   }
 
   join(next: TradeResult): TradeResult {
