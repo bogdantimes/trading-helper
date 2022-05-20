@@ -261,7 +261,9 @@ export class V2Trader {
       CacheProxy.put(key, dipStartPrice || tm.prices[0].toString(), 120); // 2 minutes
     } else if (dipStartPrice) {
       const dipPercent = 100 * (1 - tm.currentPrice / +dipStartPrice)
-      Log.alert(`-${dipPercent.toFixed(2)}% ${tm.getCoinName()} price dip: ${dipStartPrice} -> ${tm.currentPrice}`);
+      if (dipPercent >= this.config.DipAlertPercentage) {
+        Log.alert(`-${dipPercent.toFixed(2)}% ${tm.getCoinName()} price dip: ${dipStartPrice} -> ${tm.currentPrice}`);
+      }
       CacheProxy.remove(key);
     }
   }
