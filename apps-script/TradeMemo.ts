@@ -90,9 +90,9 @@ export class TradeMemo {
   }
 
   pushPrice(price: number): void {
-    if (this.prices[0] === 0) {
-      // initial state, filling it with price
-      this.prices = [price, price, price];
+    if (!this.prices || !this.prices.length || this.prices[0] === 0) {
+      // initial state, filling PriceMemoMaxCapacity with price
+      this.prices = new Array(TradeMemo.PriceMemoMaxCapacity).fill(price) as PriceMemo
     } else {
       this.prices.push(price)
       // remove old prices and keep only the last PriceMemoMaxCapacity

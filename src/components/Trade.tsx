@@ -151,10 +151,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
 
   function onCancel() {
     if (confirm(`Are you sure you want to cancel the action on ${coinName}?`)) {
-      const handle = resp => {
-        alert(resp.toString());
-        setActionCanceled(true);
-      };
+      const handle = () => setActionCanceled(true);
       google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(coinName);
     }
   }

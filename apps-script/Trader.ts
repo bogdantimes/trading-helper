@@ -260,8 +260,8 @@ export class V2Trader {
     if (growthIndex + TradeMemo.PriceMemoMaxCapacity <= 2) {
       CacheProxy.put(key, dipStartPrice || tm.prices[0].toString(), 120); // 2 minutes
     } else if (dipStartPrice) {
-      const percentage = 100 * (tm.currentPrice / +dipStartPrice)
-      Log.alert(`${percentage.toFixed(2)} dip in ${tm.getCoinName()} price: ${dipStartPrice} -> ${tm.currentPrice}`);
+      const dipPercent = 100 * (1 - tm.currentPrice / +dipStartPrice)
+      Log.alert(`${dipPercent.toFixed(2)}% ${tm.getCoinName()} price dip: ${dipStartPrice} -> ${tm.currentPrice}`);
       CacheProxy.remove(key);
     }
   }
