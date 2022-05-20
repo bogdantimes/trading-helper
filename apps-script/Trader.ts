@@ -38,7 +38,14 @@ export class V2Trader {
   tickerCheck(tm: TradeMemo): TradeMemo {
     if (!Coin.isStable(tm.getCoinName())) {
       this.pushNewPrice(tm);
-      this.checkDip(tm);
+
+      if (this.isPriceDip(tm) && this.config.BuyDips) {
+        Log.alert(`Buying dips is enabled.`)
+        tm.setState(TradeState.BUY);
+        // todo: temporary measure to buy once
+        this.config.BuyDips = false;
+        this.store.setConfig(this.config);
+      }
     }
 
     if (tm.stateIs(TradeState.BOUGHT)) {
@@ -250,7 +257,7 @@ export class V2Trader {
     }));
   }
 
-  private checkDip(tm: TradeMemo) {
+  private isPriceDip(tm: TradeMemo): boolean {
     if (tm.prices.length < TradeMemo.PriceMemoMaxCapacity) return false;
 
     const key = `${tm.getCoinName()}-dip-start`;
@@ -265,6 +272,8 @@ export class V2Trader {
         Log.alert(`-${dipPercent.toFixed(2)}% ${tm.getCoinName()} price dip: ${dipStartPrice} -> ${tm.currentPrice}`);
       }
       CacheProxy.remove(key);
+      return true;
     }
+    return false;
   }
 }

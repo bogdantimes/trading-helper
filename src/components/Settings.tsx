@@ -14,25 +14,13 @@ import {
   TextField,
 } from "@mui/material";
 import {circularProgress} from "./Common";
-import {PriceProvider} from "../../apps-script/TradeResult";
 import {StableUSDCoin} from "../../apps-script/shared-lib/types";
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const [config, setConfig] = useState<Config>({
-    BuyQuantity: 0,
-    StopLimit: 0,
-    StableCoin: '' as StableUSDCoin,
-    SellAtStopLimit: false,
-    SellAtProfitLimit: false,
-    ProfitLimit: 0,
-    SwingTradeEnabled: false,
-    PriceProvider: PriceProvider.Binance,
-    AveragingDown: false,
-    ProfitBasedStopLimit: false
-  });
+  const [config, setConfig] = useState<Config>(null);
   const [configLoaded, setConfigLoaded] = useState(false);
 
   const [stopLimit, setLossLimit] = useState('');
@@ -107,6 +95,18 @@ export function Settings() {
                 <Switch checked={config.SellAtStopLimit}
                         onChange={e => setConfig({...config, SellAtStopLimit: e.target.checked})}/>
               } label="Auto-sell"
+            />
+          </Stack>
+          <Stack direction="row" spacing={2}>
+            <TextField value={config.DipAlertPercentage} label={"Price Drop Alert"}
+                       onChange={e => setConfig({...config, DipAlertPercentage: +e.target.value})}
+                       InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+            />
+            <FormControlLabel
+              control={
+                <Switch checked={config.BuyDips}
+                        onChange={e => setConfig({...config, BuyDips: e.target.checked})}/>
+              } label="Auto-buy"
             />
           </Stack>
           <FormControlLabel

@@ -248,6 +248,10 @@ export type Config = {
    * When price suddenly drops for more than or equal percentage - an alert is sent.
    */
   DipAlertPercentage?: number;
+  /**
+   * If true - buy the dip automatically when {@link DipAlertPercentage} alert happens.
+   */
+  BuyDips?: boolean;
 
   /**
    * @deprecated
