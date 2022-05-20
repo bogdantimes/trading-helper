@@ -84,15 +84,7 @@ export class V2Trader {
   }
 
   private processBoughtState(tm: TradeMemo): void {
-    const symbol = tm.tradeResult.symbol;
-
-    if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
-      Log.alert(`${symbol} profit limit crossed up at ${tm.currentPrice}`)
-    } else if (tm.lossLimitCrossedDown()) {
-      Log.alert(`${symbol} stop limit crossed down at ${tm.currentPrice}`)
-    } else if (tm.entryPriceCrossedUp()) {
-      Log.alert(`${symbol} entry price crossed up at ${tm.currentPrice}`)
-    }
+    this.sendLevelsCrossingAlerts(tm);
 
     if (tm.currentPrice < tm.stopLimitPrice) {
       const canSell = !tm.hodl && this.store.getConfig().SellAtStopLimit;
@@ -112,6 +104,19 @@ export class V2Trader {
       // Using the previous price a few measures back to calculate new stop limit
       const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.StopLimit);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+    }
+  }
+
+  private sendLevelsCrossingAlerts(tm: TradeMemo) {
+    const symbol = tm.tradeResult.symbol;
+    if (!tm.hodl) {
+      if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
+        Log.alert(`${symbol} profit limit crossed up at ${tm.currentPrice}`)
+      } else if (tm.lossLimitCrossedDown()) {
+        Log.alert(`${symbol} stop limit crossed down at ${tm.currentPrice}`)
+      } else if (tm.entryPriceCrossedUp()) {
+        Log.alert(`${symbol} entry price crossed up at ${tm.currentPrice}`)
+      }
     }
   }
 
