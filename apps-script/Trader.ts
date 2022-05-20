@@ -87,9 +87,11 @@ export class V2Trader {
     const symbol = tm.tradeResult.symbol;
 
     if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
-      Log.alert(`${symbol} crossed profit limit at ${tm.currentPrice}`)
+      Log.alert(`${symbol} profit limit crossed up at ${tm.currentPrice}`)
     } else if (tm.lossLimitCrossedDown()) {
-      Log.alert(`${symbol}: crossed stop limit at ${tm.currentPrice}`)
+      Log.alert(`${symbol} stop limit crossed down at ${tm.currentPrice}`)
+    } else if (tm.entryPriceCrossedUp()) {
+      Log.alert(`${symbol} entry price crossed up at ${tm.currentPrice}`)
     }
 
     if (tm.currentPrice < tm.stopLimitPrice) {
