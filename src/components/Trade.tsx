@@ -18,8 +18,8 @@ import {
 } from 'lightweight-charts';
 import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
 import {circularProgress, confirmBuy, confirmSell, f2} from "./Common";
-import {TradeEditDialog} from "./TradeEditDialog";
 import {TradeTitle} from "./TradeTitle";
+import {TradeEditDialog} from "./TradeEditDialog";
 
 export default function Trade(props: { data: TradeMemo, config: Config, tradeNotAllowed: boolean }) {
   const tm: TradeMemo = props.data;
@@ -28,7 +28,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
   const coinName = tm.getCoinName();
 
   const chartContainerRef = useRef();
-  const chart = useRef(null);
+  const chart = useRef<IChartApi>(null);
   const theme = useTheme();
 
   const [priceLine, setPriceLine] = useState<ISeriesApi<"Line">>(null);
@@ -89,9 +89,10 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
 
     if (limitLine) {
       limitLine.applyOptions({
-        visible: !!tm.stopLimitPrice,
-        // make dashed if config SellAtStopLimit is false or HODLing
-        lineStyle: !config.SellAtStopLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
+        // hide if HODLing or no stop limit price
+        visible: !!tm.stopLimitPrice && !tm.hodl,
+        // make dashed if config SellAtStopLimit is false
+        lineStyle: !config.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid
       });
       limitLine.setData(map(tm.prices, () => tm.stopLimitPrice))
     }
@@ -103,10 +104,11 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
 
     if (profitLine) {
       profitLine.applyOptions({
-        visible: !!tm.tradeResult.quantity,
         color: profitLineColor,
-        // make dashed if config SellAtProfitLimit is false or HODLing
-        lineStyle: !config.SellAtProfitLimit || tm.hodl ? LineStyle.Dashed : LineStyle.Solid
+        // hide if HODLing or no quantity
+        visible: !!tm.tradeResult.quantity && !tm.hodl,
+        // make dashed if config SellAtProfitLimit is false
+        lineStyle: !config.SellAtProfitLimit ? LineStyle.Dashed : LineStyle.Solid
       });
       const profitPrice = tm.tradeResult.price * (1 + config.ProfitLimit);
       profitLine.setData(map(tm.prices, () => profitPrice))
