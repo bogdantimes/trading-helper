@@ -16,7 +16,8 @@
     "build": "parcel build src/index.html --dist-dir ./apps-script --no-cache",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx,json}\"",
     "lint:fix": "eslint --fix \"src/**/*.{js,jsx,ts,tsx,json}\"",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md,json}\" --config ./.prettierrc"
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md,json}\" --config ./.prettierrc",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.1",
@@ -33,7 +34,8 @@
     "eslint-plugin-react": "^7.30.0",
     "eslint-plugin-react-hooks": "^4.5.0",
     "parcel": "^2.5.0",
-    "prettier": "^2.6.2"
+    "prettier": "^2.6.2",
+    "husky": "^8.0.0"
   },
   "author": "Bohdan Kovalov",
   "license": "MIT",

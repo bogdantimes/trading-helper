@@ -42,11 +42,11 @@ export function Settings() {
   useEffect(
     () =>
       google.script.run
-        .withSuccessHandler((config) => {
-          setLossLimit((+(config.StopLimit * 100).toFixed(2)).toString())
-          setProfitLimit((+(config.ProfitLimit * 100).toFixed(2)).toString())
-          setBuyQuantity(config.BuyQuantity.toString())
-          setConfig(config)
+        .withSuccessHandler((cnfg) => {
+          setLossLimit((+(cnfg.StopLimit * 100).toFixed(2)).toString())
+          setProfitLimit((+(cnfg.ProfitLimit * 100).toFixed(2)).toString())
+          setBuyQuantity(cnfg.BuyQuantity.toString())
+          setConfig(cnfg)
           setConfigLoaded(true)
         })
         .getConfig(),

@@ -20,8 +20,9 @@
   },
   "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
   "rules": {
+    "@typescript-eslint/ban-ts-comment": ["warn"],
     "@typescript-eslint/no-shadow": ["error"],
-    "@typescript-eslint/no-unused-vars": 1,
+    "@typescript-eslint/no-unused-vars": ["warn"],
     "array-bracket-spacing": ["error", "never"],
     "camelcase": "error",
     "curly": ["error", "multi-line"],

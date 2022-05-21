@@ -42,6 +42,7 @@ export function Survivors({ config }: { config: Config }) {
               const r = CoinScore.fromObject(rJson)
               return (
                 <ListItem
+                  key={r.getCoinName()}
                   disablePadding={true}
                   secondaryAction={
                     <Button size={'small'} onClick={() => buy(r.getCoinName())}>

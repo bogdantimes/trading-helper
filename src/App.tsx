@@ -46,10 +46,10 @@ export default function App() {
   function initialFetch() {
     setFetchingData(true)
     google.script.run
-      .withSuccessHandler((config: Config) => {
+      .withSuccessHandler((cnfg: Config) => {
         setFetchingData(false)
-        setConfig(config)
-        if (!config || !config.KEY || !config.SECRET) {
+        setConfig(cnfg)
+        if (!cnfg || !cnfg.KEY || !cnfg.SECRET) {
           setInitialSetup(true)
         } else {
           setInitialSetup(false)
