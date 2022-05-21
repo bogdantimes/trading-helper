@@ -51,13 +51,13 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
     >
       <img
         width={200}
-        src='https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png'
-        alt='Trading Helper logo'
+        src="https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png"
+        alt="Trading Helper logo"
       />
-      <Typography variant='h5' component='h3'>
+      <Typography variant="h5" component="h3">
         {!config ? welcomeMsg : step2Header}
       </Typography>
-      <Typography variant='body1' component='p'>
+      <Typography variant="body1" component="p">
         {!config ? welcomeDescr : step2descr}
       </Typography>
       {!config && (
@@ -65,7 +65,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           value={params.dbURL}
           label={'Firebase Database URL'}
           onChange={onChange}
-          name='dbURL'
+          name="dbURL"
         />
       )}
       {config && (
@@ -74,7 +74,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           value={params.binanceAPIKey}
           label={'Binance API Key'}
           onChange={onChange}
-          name='binanceAPIKey'
+          name="binanceAPIKey"
         />
       )}
       {config && (
@@ -83,14 +83,14 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           value={params.binanceSecretKey}
           label={'Binance Secret Key'}
           onChange={onChange}
-          name='binanceSecretKey'
+          name="binanceSecretKey"
         />
       )}
       <Stack direction={'row'}>
         <Box sx={{ position: 'relative' }}>
           <Button
-            variant='contained'
-            color='primary'
+            variant="contained"
+            color="primary"
             onClick={onClickConnect}
             disabled={isConnecting}
           >
@@ -99,7 +99,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           {isConnecting && circularProgress}
         </Box>
       </Stack>
-      {error && <Alert severity='error'>{error}</Alert>}
+      {error && <Alert severity="error">{error}</Alert>}
     </Stack>
   )
 }

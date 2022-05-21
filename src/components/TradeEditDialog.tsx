@@ -54,8 +54,8 @@ export function TradeEditDialog(props: {
       <DialogTitle>Edit {tradeMemo.getCoinName()}</DialogTitle>
       <DialogContent>
         <TextField
-          margin='dense'
-          label='Coin Name'
+          margin="dense"
+          label="Coin Name"
           fullWidth
           value={coinName}
           onChange={(e) => setCoinName(e.target.value)}
@@ -67,29 +67,29 @@ export function TradeEditDialog(props: {
           options={Object.values(StableUSDCoin)}
           onChange={(e, val) => setStableName(val)}
           renderInput={(params) => (
-            <TextField {...params} fullWidth margin='dense' label={'Stable Coin'} />
+            <TextField {...params} fullWidth margin="dense" label={'Stable Coin'} />
           )}
         />
         <TextField
-          margin='dense'
-          label='Quantity'
-          type='number'
+          margin="dense"
+          label="Quantity"
+          type="number"
           fullWidth
           value={quantity}
           onChange={(e) => setQuantity(parseFloat(e.target.value))}
         />
         <TextField
-          margin='dense'
-          label='Paid'
-          type='number'
+          margin="dense"
+          label="Paid"
+          type="number"
           fullWidth
           value={paid}
           onChange={(e) => setPaid(parseFloat(e.target.value))}
         />
         <TextField
-          margin='dense'
-          label='Stop Limit Price'
-          type='number'
+          margin="dense"
+          label="Stop Limit Price"
+          type="number"
           fullWidth
           value={stopLimit}
           onChange={(e) => setStopLimit(parseFloat(e.target.value))}
@@ -97,13 +97,13 @@ export function TradeEditDialog(props: {
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
-        <Button onClick={onSaveClick} color='primary' disabled={isSaving}>
+        <Button onClick={onSaveClick} color="primary" disabled={isSaving}>
           {isSaving ? 'Saving...' : 'Save'}
         </Button>
       </DialogActions>
       {error && (
         <DialogContent>
-          <Typography color='error'>{error}</Typography>
+          <Typography color="error">{error}</Typography>
         </DialogContent>
       )}
     </Dialog>

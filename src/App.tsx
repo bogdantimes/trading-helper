@@ -85,9 +85,9 @@ export default function App() {
         </Box>
       )}
       {fetchDataError && (
-        <Alert severity='error'>
-          <Typography variant='caption'>{fetchDataError}</Typography>
-          <Typography variant='caption'>
+        <Alert severity="error">
+          <Typography variant="caption">{fetchDataError}</Typography>
+          <Typography variant="caption">
             Please check your network connection and that Google Apps Script application is deployed
             and try again.
           </Typography>
@@ -98,10 +98,10 @@ export default function App() {
         <Box sx={{ width: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={value} onChange={handleChange} centered>
-              <Tab label='Assets' {...a11yProps(0)} />
-              <Tab label='Settings' {...a11yProps(1)} />
-              <Tab label='Info' {...a11yProps(2)} />
-              <Tab label='Survivors' {...a11yProps(3)} />
+              <Tab label="Assets" {...a11yProps(0)} />
+              <Tab label="Settings" {...a11yProps(1)} />
+              <Tab label="Info" {...a11yProps(2)} />
+              <Tab label="Survivors" {...a11yProps(3)} />
             </Tabs>
           </Box>
           <TabPanel value={value} index={0}>

@@ -41,7 +41,7 @@ export function Info() {
             const up = rows[index].profit >= 0
             const icon = up ? <ArrowDropUp color={'success'} /> : <ArrowDropDown color={'error'} />
             return (
-              <ListItem style={style} key={index} component='div'>
+              <ListItem style={style} key={index} component="div">
                 <ListItemAvatar>{icon}</ListItemAvatar>
                 <ListItemText primary={rows[index].profit} secondary={rows[index].timeFrame} />
               </ListItem>

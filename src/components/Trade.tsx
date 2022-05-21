@@ -198,11 +198,11 @@ export default function Trade(props: {
               width={chartOpts.width}
               height={chartOpts.height}
               ref={chartContainerRef}
-              className='chart-container'
+              className="chart-container"
             />
           </CardContent>
           {tm.tradeResult.quantity ? (
-            <Typography marginLeft={'16px'} variant='body2' color='text.secondary'>
+            <Typography marginLeft={'16px'} variant="body2" color="text.secondary">
               <div>
                 Qty: {tm.tradeResult.quantity} Paid: {f2(tm.tradeResult.paid)}
               </div>
@@ -215,7 +215,7 @@ export default function Trade(props: {
               </div>
             </Typography>
           ) : (
-            <Typography marginLeft={'16px'} variant='body2' color='text.secondary'>
+            <Typography marginLeft={'16px'} variant="body2" color="text.secondary">
               <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
             </Typography>
           )}
@@ -224,7 +224,7 @@ export default function Trade(props: {
               {tm.stateIs(TradeState.BOUGHT) && (
                 <Button
                   sx={{ minWidth: 20 }}
-                  size='small'
+                  size="small"
                   disabled={isSelling || tradeNotAllowed}
                   onClick={onSell}
                 >
@@ -232,17 +232,17 @@ export default function Trade(props: {
                 </Button>
               )}
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) && (
-                <Button size='small' disabled={isBuying || tradeNotAllowed} onClick={onBuy}>
+                <Button size="small" disabled={isBuying || tradeNotAllowed} onClick={onBuy}>
                   {isBuying ? '...' : `Buy ${tm.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}
                 </Button>
               )}
               {tm.stateIs(TradeState.BOUGHT) && (
                 <Box sx={{ position: 'relative' }}>
                   <ToggleButton
-                    size='small'
-                    value='check'
+                    size="small"
+                    value="check"
                     selected={isHodl}
-                    color='primary'
+                    color="primary"
                     onChange={flipHodl}
                     disabled={isHodlSwitching}
                   >
@@ -252,7 +252,7 @@ export default function Trade(props: {
                 </Box>
               )}
               {[TradeState.BUY, TradeState.SELL].includes(tm.getState()) && (
-                <Button size='small' disabled={actionCanceled} onClick={onCancel}>
+                <Button size="small" disabled={actionCanceled} onClick={onCancel}>
                   Cancel
                 </Button>
               )}

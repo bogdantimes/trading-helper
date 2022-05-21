@@ -63,12 +63,12 @@ export function Assets({ config }: { config: Config }) {
   return (
     <Grid sx={{ flexGrow: 1 }} container spacing={2}>
       <Grid item xs={12}>
-        <Grid container justifyContent='center' spacing={2}>
+        <Grid container justifyContent="center" spacing={2}>
           <Grid item>
             <ToggleButtonGroup
               sx={{ ...sx, height: '56px' }}
               fullWidth={true}
-              color='primary'
+              color="primary"
               value={state}
               exclusive
               onChange={changeState}
@@ -97,7 +97,7 @@ export function Assets({ config }: { config: Config }) {
                 disableClearable={true}
                 renderInput={(params) => <TextField {...params} label={'Coin Name'} />}
               />
-              <Button variant='contained' onClick={buy}>
+              <Button variant="contained" onClick={buy}>
                 Buy
               </Button>
             </Stack>
@@ -105,7 +105,7 @@ export function Assets({ config }: { config: Config }) {
         </Grid>
       </Grid>
       <Grid item xs={12}>
-        <Grid container justifyContent='center' spacing={2}>
+        <Grid container justifyContent="center" spacing={2}>
           {tradesMap.has(state) &&
             tradesMap
               .get(state)
@@ -122,7 +122,7 @@ export function Assets({ config }: { config: Config }) {
         </Grid>
       </Grid>
       <Grid item xs={12}>
-        <Grid container justifyContent='center' spacing={2}>
+        <Grid container justifyContent="center" spacing={2}>
           {tradesMap.has(state) &&
             tradesMap
               .get(state)

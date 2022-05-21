@@ -61,8 +61,8 @@ export function TradeTitle({
     <Typography
       sx={{ display: 'flex', alignItems: 'center' }}
       gutterBottom
-      variant='h5'
-      component='div'
+      variant="h5"
+      component="div"
     >
       {tradeMemo.getCoinName()}
       {growthIcon}

@@ -95,14 +95,14 @@ export function Settings() {
             value={buyQuantity}
             label={'Buy Quantity'}
             onChange={(e) => setBuyQuantity(e.target.value)}
-            InputProps={{ startAdornment: <InputAdornment position='start'>$</InputAdornment> }}
+            InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
           />
-          <Stack direction='row' spacing={2}>
+          <Stack direction="row" spacing={2}>
             <TextField
               value={profitLimit}
               label={'Profit Limit'}
               onChange={(e) => setProfitLimit(e.target.value)}
-              InputProps={{ startAdornment: <InputAdornment position='start'>%</InputAdornment> }}
+              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
             />
             <FormControlLabel
               control={
@@ -111,16 +111,16 @@ export function Settings() {
                   onChange={(e) => setConfig({ ...config, SellAtProfitLimit: e.target.checked })}
                 />
               }
-              label='Auto-sell'
+              label="Auto-sell"
             />
           </Stack>
-          <Stack direction='row' spacing={2}>
+          <Stack direction="row" spacing={2}>
             <TextField
               disabled={config.ProfitBasedStopLimit}
               value={stopLimit}
               label={'Stop Limit'}
               onChange={(e) => setLossLimit(e.target.value)}
-              InputProps={{ startAdornment: <InputAdornment position='start'>%</InputAdornment> }}
+              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
             />
             <FormControlLabel
               control={
@@ -129,7 +129,7 @@ export function Settings() {
                   onChange={(e) => setConfig({ ...config, SellAtStopLimit: e.target.checked })}
                 />
               }
-              label='Auto-sell'
+              label="Auto-sell"
             />
           </Stack>
           <FormControlLabel
@@ -140,7 +140,7 @@ export function Settings() {
                 onChange={(e) => setConfig({ ...config, ProfitBasedStopLimit: e.target.checked })}
               />
             }
-            label='P/L based Stop Limit'
+            label="P/L based Stop Limit"
           />
           <FormControlLabel
             control={
@@ -149,7 +149,7 @@ export function Settings() {
                 onChange={(e) => setConfig({ ...config, SwingTradeEnabled: e.target.checked })}
               />
             }
-            label='Swing trading'
+            label="Swing trading"
           />
           <FormControlLabel
             control={
@@ -158,12 +158,12 @@ export function Settings() {
                 onChange={(e) => setConfig({ ...config, AveragingDown: e.target.checked })}
               />
             }
-            label='Averaging down'
+            label="Averaging down"
           />
           <Box alignSelf={'center'} sx={{ position: 'relative' }}>
             <Button
-              variant='contained'
-              color='primary'
+              variant="contained"
+              color="primary"
               startIcon={<SaveIcon />}
               onClick={onSave}
               disabled={isSaving}
@@ -172,7 +172,7 @@ export function Settings() {
             </Button>
             {isSaving && circularProgress}
           </Box>
-          {error && <Alert severity='error'>{error}</Alert>}
+          {error && <Alert severity="error">{error}</Alert>}
         </Stack>
       )}
     </Box>
