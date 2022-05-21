@@ -1,12 +1,12 @@
-import * as React from "react";
-import {useEffect} from "react";
-import Trade from "./Trade";
-import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
-import {Autocomplete, Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup} from "@mui/material";
-import {Config} from "../../apps-script/Store";
-import StableCoin from "./StableCoin";
-import {Coin} from "../../apps-script/shared-lib/types";
-import {confirmBuy} from "./Common";
+import * as React from 'react';
+import { useEffect } from 'react';
+import Trade from './Trade';
+import { TradeMemo, TradeState } from '../../apps-script/TradeMemo';
+import { Autocomplete, Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Config } from '../../apps-script/Store';
+import StableCoin from './StableCoin';
+import { Coin } from '../../apps-script/shared-lib/types';
+import { confirmBuy } from './Common';
 
 const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.profit() < t2.profit() ? 1 : -1;
 
@@ -24,7 +24,7 @@ const groupByState = (trades: { [key: string]: TradeMemo }): Map<TradeState, Tra
   return groupsMap;
 }
 
-export function Assets({config}: { config: Config }) {
+export function Assets({ config }: { config: Config }) {
   const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({});
   const [coinNames, setCoinNames] = React.useState([] as string[]);
 
@@ -41,7 +41,7 @@ export function Assets({config}: { config: Config }) {
   const [state, setState] = React.useState<TradeState>(TradeState.BOUGHT);
   const changeState = (e, newState) => setState(newState);
 
-  const [coinName, setCoinName] = React.useState("BTC");
+  const [coinName, setCoinName] = React.useState('BTC');
 
   function buy() {
     if (confirmBuy(coinName, config)) {
@@ -50,13 +50,13 @@ export function Assets({config}: { config: Config }) {
   }
 
   const tradesMap = groupByState(trades);
-  const sx = {width: "332px"};
+  const sx = { width: '332px' };
   return (
-    <Grid sx={{flexGrow: 1}} container spacing={2}>
+    <Grid sx={{ flexGrow: 1 }} container spacing={2}>
       <Grid item xs={12}>
         <Grid container justifyContent="center" spacing={2}>
           <Grid item>
-            <ToggleButtonGroup sx={{...sx, height: '56px'}} fullWidth={true} color="primary" value={state} exclusive
+            <ToggleButtonGroup sx={{ ...sx, height: '56px' }} fullWidth={true} color="primary" value={state} exclusive
                                onChange={changeState}>
               <ToggleButton value={TradeState.BOUGHT}>
                 <Badge badgeContent={tradesMap.get(TradeState.BOUGHT).length}>Bought</Badge>
@@ -73,11 +73,11 @@ export function Assets({config}: { config: Config }) {
             </ToggleButtonGroup>
           </Grid>
           <Grid item>
-            <Stack sx={sx} direction={"row"} spacing={2}>
+            <Stack sx={sx} direction={'row'} spacing={2}>
               <Autocomplete value={coinName} fullWidth={true} options={coinNames}
                             onChange={(e, val) => setCoinName(val)}
                             disableClearable={true}
-                            renderInput={(params) => <TextField {...params} label={"Coin Name"}/>}
+                            renderInput={(params) => <TextField {...params} label={'Coin Name'}/>}
               />
               <Button variant="contained" onClick={buy}>Buy</Button>
             </Stack>

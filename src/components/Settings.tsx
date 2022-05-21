@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import SaveIcon from '@mui/icons-material/Save';
-import {Config} from "../../apps-script/Store";
+import { Config } from '../../apps-script/Store';
 import {
   Alert,
   Autocomplete,
@@ -12,10 +12,10 @@ import {
   Stack,
   Switch,
   TextField,
-} from "@mui/material";
-import {circularProgress} from "./Common";
-import {PriceProvider} from "../../apps-script/TradeResult";
-import {StableUSDCoin} from "../../apps-script/shared-lib/types";
+} from '@mui/material';
+import { circularProgress } from './Common';
+import { PriceProvider } from '../../apps-script/TradeResult';
+import { StableUSDCoin } from '../../apps-script/shared-lib/types';
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false);
@@ -72,7 +72,7 @@ export function Settings() {
   }
 
   return (
-    <Box sx={{justifyContent: 'center', display: 'flex', '& .MuiTextField-root': {width: '25ch'}}}>
+    <Box sx={{ justifyContent: 'center', display: 'flex', '& .MuiTextField-root': { width: '25ch' } }}>
       {!configLoaded && circularProgress}
       {configLoaded &&
         <Stack spacing={2}>
@@ -80,55 +80,55 @@ export function Settings() {
             disableClearable={true}
             value={config.StableCoin}
             options={Object.values(StableUSDCoin)}
-            onChange={(e, val) => val && setConfig({...config, StableCoin: val as StableUSDCoin})}
-            renderInput={(params) => <TextField {...params} label={"Stable Coin"}/>}
+            onChange={(e, val) => val && setConfig({ ...config, StableCoin: val as StableUSDCoin })}
+            renderInput={(params) => <TextField {...params} label={'Stable Coin'}/>}
           />
-          <TextField value={buyQuantity} label={"Buy Quantity"} onChange={e => setBuyQuantity(e.target.value)}
-                     InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>}}
+          <TextField value={buyQuantity} label={'Buy Quantity'} onChange={e => setBuyQuantity(e.target.value)}
+                     InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
           />
           <Stack direction="row" spacing={2}>
-            <TextField value={profitLimit} label={"Profit Limit"} onChange={e => setProfitLimit(e.target.value)}
-                       InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+            <TextField value={profitLimit} label={'Profit Limit'} onChange={e => setProfitLimit(e.target.value)}
+                       InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
             />
             <FormControlLabel
               control={
                 <Switch checked={config.SellAtProfitLimit}
-                        onChange={e => setConfig({...config, SellAtProfitLimit: e.target.checked})}/>
+                        onChange={e => setConfig({ ...config, SellAtProfitLimit: e.target.checked })}/>
               } label="Auto-sell"
             />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <TextField disabled={config.ProfitBasedStopLimit} value={stopLimit} label={"Stop Limit"}
+            <TextField disabled={config.ProfitBasedStopLimit} value={stopLimit} label={'Stop Limit'}
                        onChange={e => setLossLimit(e.target.value)}
-                       InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
+                       InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
             />
             <FormControlLabel
               control={
                 <Switch checked={config.SellAtStopLimit}
-                        onChange={e => setConfig({...config, SellAtStopLimit: e.target.checked})}/>
+                        onChange={e => setConfig({ ...config, SellAtStopLimit: e.target.checked })}/>
               } label="Auto-sell"
             />
           </Stack>
           <FormControlLabel
-            sx={{margin: 0}}
+            sx={{ margin: 0 }}
             control={
               <Switch checked={config.ProfitBasedStopLimit}
-                      onChange={e => setConfig({...config, ProfitBasedStopLimit: e.target.checked})}/>
+                      onChange={e => setConfig({ ...config, ProfitBasedStopLimit: e.target.checked })}/>
             } label="P/L based Stop Limit"
           />
           <FormControlLabel
             control={
               <Switch checked={config.SwingTradeEnabled}
-                      onChange={e => setConfig({...config, SwingTradeEnabled: e.target.checked})}/>
+                      onChange={e => setConfig({ ...config, SwingTradeEnabled: e.target.checked })}/>
             } label="Swing trading"
           />
           <FormControlLabel
             control={
               <Switch checked={config.AveragingDown}
-                      onChange={e => setConfig({...config, AveragingDown: e.target.checked})}/>
+                      onChange={e => setConfig({ ...config, AveragingDown: e.target.checked })}/>
             } label="Averaging down"
           />
-          <Box alignSelf={"center"} sx={{position: 'relative'}}>
+          <Box alignSelf={'center'} sx={{ position: 'relative' }}>
             <Button variant="contained" color="primary" startIcon={<SaveIcon/>}
                     onClick={onSave} disabled={isSaving}>Save</Button>
             {isSaving && circularProgress}

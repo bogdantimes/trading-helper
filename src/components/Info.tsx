@@ -1,9 +1,9 @@
-import * as React from "react";
-import {useEffect} from "react";
-import {Stats} from "../../apps-script/Statistics";
-import {Alert, Box, ListItem, ListItemAvatar, ListItemText, Stack} from "@mui/material";
-import {FixedSizeList} from 'react-window';
-import {ArrowDropDown, ArrowDropUp} from "@mui/icons-material";
+import * as React from 'react';
+import { useEffect } from 'react';
+import { Stats } from '../../apps-script/Statistics';
+import { Alert, Box, ListItem, ListItemAvatar, ListItemText, Stack } from '@mui/material';
+import { FixedSizeList } from 'react-window';
+import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
 
 export function Info() {
   const [stats, setStats] = React.useState<Stats>(null);
@@ -15,18 +15,18 @@ export function Info() {
   const rows = [];
 
   if (stats) {
-    rows.push({id: 1, timeFrame: 'Total', profit: stats.TotalProfit});
+    rows.push({ id: 1, timeFrame: 'Total', profit: stats.TotalProfit });
     Object.keys(stats.DailyProfit)
       .sort((a, b) => new Date(a) < new Date(b) ? 1 : -1)
       .forEach((d, i) => {
-        rows.push({id: i + 2, timeFrame: d, profit: stats.DailyProfit[d]});
+        rows.push({ id: i + 2, timeFrame: d, profit: stats.DailyProfit[d] });
       });
   }
 
   return (
-    <Box sx={{justifyContent: 'center', display: 'flex'}}>
+    <Box sx={{ justifyContent: 'center', display: 'flex' }}>
       <Stack spacing={2}>
-        <Alert sx={{width: 332}} severity={"info"}>
+        <Alert sx={{ width: 332 }} severity={'info'}>
           The summary of realised profits and losses for each day and the total P/L since the beginning.
         </Alert>
         <FixedSizeList
@@ -37,9 +37,9 @@ export function Info() {
           overscanCount={5}
         >
           {
-            ({index, style}) => {
+            ({ index, style }) => {
               const up = rows[index].profit >= 0;
-              const icon = up ? <ArrowDropUp color={"success"}/> : <ArrowDropDown color={"error"}/>;
+              const icon = up ? <ArrowDropUp color={'success'}/> : <ArrowDropDown color={'error'}/>;
               return <ListItem style={style} key={index} component="div">
                 <ListItemAvatar>{icon}</ListItemAvatar>
                 <ListItemText primary={rows[index].profit} secondary={rows[index].timeFrame}/>

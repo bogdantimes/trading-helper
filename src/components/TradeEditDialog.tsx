@@ -1,12 +1,12 @@
 // GitHub Copilot rules.
-import {TradeMemo} from "../../apps-script/TradeMemo";
-import * as React from "react";
-import {useState} from "react";
-import {ExchangeSymbol} from "../../apps-script/TradeResult";
-import {Autocomplete, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import {StableUSDCoin} from "../../apps-script/shared-lib/types";
+import { TradeMemo } from '../../apps-script/TradeMemo';
+import * as React from 'react';
+import { useState } from 'react';
+import { ExchangeSymbol } from '../../apps-script/TradeResult';
+import { Autocomplete, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import { StableUSDCoin } from '../../apps-script/shared-lib/types';
 
 export function TradeEditDialog(props: {
   tradeMemo: TradeMemo,
@@ -14,7 +14,7 @@ export function TradeEditDialog(props: {
   onCancel: () => void,
   onSave: (tradeMemo: TradeMemo) => Promise<Error | string>,
 }) {
-  const {tradeMemo, onClose, onCancel, onSave} = props;
+  const { tradeMemo, onClose, onCancel, onSave } = props;
   const [quantity, setQuantity] = useState(tradeMemo.tradeResult.quantity);
   const [paid, setPaid] = useState(tradeMemo.tradeResult.paid);
   const [coinName, setCoinName] = useState(tradeMemo.getCoinName());
@@ -52,7 +52,7 @@ export function TradeEditDialog(props: {
           defaultValue={StableUSDCoin.USDT}
           options={Object.values(StableUSDCoin)}
           onChange={(e, val) => setStableName(val)}
-          renderInput={(params) => <TextField {...params} fullWidth margin="dense" label={"Stable Coin"}/>}
+          renderInput={(params) => <TextField {...params} fullWidth margin="dense" label={'Stable Coin'}/>}
         />
         <TextField margin="dense" label="Quantity" type="number" fullWidth
                    value={quantity} onChange={e => setQuantity(parseFloat(e.target.value))}/>

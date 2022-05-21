@@ -1,6 +1,6 @@
-import {CircularProgress} from "@mui/material";
-import * as React from "react";
-import {Config} from "../../apps-script/Store";
+import { CircularProgress } from '@mui/material';
+import * as React from 'react';
+import { Config } from '../../apps-script/Store';
 
 export const circularProgress = <><CircularProgress size={24} sx={{
   position: 'absolute',
@@ -18,4 +18,4 @@ export const confirmBuy = (coinName: string, config: Config) =>
   confirm(`Are you sure you want to buy ${coinName} for ${config.StableCoin}?`);
 
 export const confirmSell = (coinName: string, config: Config) =>
-  confirm(`Are you sure you want to sell ${coinName} and get ${config.StableCoin}? ${config.AveragingDown ? "Averaging down is enabled. All gained money will be re-invested into the most unprofitable coin." : ""}`);
+  confirm(`Are you sure you want to sell ${coinName} and get ${config.StableCoin}? ${config.AveragingDown ? 'Averaging down is enabled. All gained money will be re-invested into the most unprofitable coin.' : ''}`);

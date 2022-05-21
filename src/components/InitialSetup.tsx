@@ -1,19 +1,19 @@
 import * as React from 'react';
-import {useState} from "react";
+import { useState } from 'react';
 import StartIcon from '@mui/icons-material/Start';
-import {Config} from "../../apps-script/Store";
+import { Config } from '../../apps-script/Store';
 import {
   Alert,
   Box,
   Button,
   Stack,
   TextField,
-} from "@mui/material";
-import {circularProgress} from "./Common";
-import Typography from "@mui/material/Typography";
-import {InitialSetupParams} from "../../apps-script/api";
+} from '@mui/material';
+import { circularProgress } from './Common';
+import Typography from '@mui/material/Typography';
+import { InitialSetupParams } from '../../apps-script/api';
 
-export function InitialSetup({config, onConnect}: { config: Config, onConnect: () => void }) {
+export function InitialSetup({ config, onConnect }: { config: Config, onConnect: () => void }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,7 +24,7 @@ export function InitialSetup({config, onConnect}: { config: Config, onConnect: (
   });
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setParams({...params, [e.target.name]: e.target.value});
+    setParams({ ...params, [e.target.name]: e.target.value });
   }
 
   function onClickConnect() {
@@ -47,7 +47,7 @@ export function InitialSetup({config, onConnect}: { config: Config, onConnect: (
       margin: '10px',
       alignItems: 'center',
       justifyContent: 'center',
-      '& .MuiTextField-root': {width: '70ch'}
+      '& .MuiTextField-root': { width: '70ch' }
     }}>
       <img width={200} src="https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png" alt="Trading Helper logo" />
       <Typography variant="h5" component="h3">
@@ -56,14 +56,14 @@ export function InitialSetup({config, onConnect}: { config: Config, onConnect: (
       <Typography variant="body1" component="p">
         {!config ? welcomeDescr : step2descr}
       </Typography>
-      {!config && <TextField value={params.dbURL} label={"Firebase Database URL"}
+      {!config && <TextField value={params.dbURL} label={'Firebase Database URL'}
                              onChange={onChange} name="dbURL"/>}
-      {config && <TextField type={"password"} value={params.binanceAPIKey} label={"Binance API Key"}
+      {config && <TextField type={'password'} value={params.binanceAPIKey} label={'Binance API Key'}
                             onChange={onChange} name="binanceAPIKey"/>}
-      {config && <TextField type={"password"} value={params.binanceSecretKey} label={"Binance Secret Key"}
+      {config && <TextField type={'password'} value={params.binanceSecretKey} label={'Binance Secret Key'}
                             onChange={onChange} name="binanceSecretKey"/>}
-      <Stack direction={"row"}>
-        <Box sx={{position: 'relative'}}>
+      <Stack direction={'row'}>
+        <Box sx={{ position: 'relative' }}>
           <Button variant="contained" color="primary" onClick={onClickConnect} disabled={isConnecting}>Connect</Button>
           {isConnecting && circularProgress}
         </Box>

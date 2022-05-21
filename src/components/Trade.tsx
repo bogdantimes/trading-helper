@@ -1,12 +1,12 @@
 import * as React from 'react';
-import {useEffect, useRef, useState} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import {TradeMemo, TradeState} from "../../apps-script/TradeMemo";
-import {Config} from "../../apps-script/Store";
+import { TradeMemo, TradeState } from '../../apps-script/TradeMemo';
+import { Config } from '../../apps-script/Store';
 import {
   ChartOptions,
   createChart,
@@ -16,10 +16,10 @@ import {
   LineStyle,
   PriceScaleMode
 } from 'lightweight-charts';
-import {Box, Stack, Theme, ToggleButton, useTheme} from "@mui/material";
-import {circularProgress, confirmBuy, confirmSell, f2} from "./Common";
-import {TradeEditDialog} from "./TradeEditDialog";
-import {TradeTitle} from "./TradeTitle";
+import { Box, Stack, Theme, ToggleButton, useTheme } from '@mui/material';
+import { circularProgress, confirmBuy, confirmSell, f2 } from './Common';
+import { TradeEditDialog } from './TradeEditDialog';
+import { TradeTitle } from './TradeTitle';
 
 export default function Trade(props: { data: TradeMemo, config: Config, tradeNotAllowed: boolean }) {
   const tm: TradeMemo = props.data;
@@ -31,20 +31,20 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
   const chart = useRef(null);
   const theme = useTheme();
 
-  const [priceLine, setPriceLine] = useState<ISeriesApi<"Line">>(null);
-  const [profitLine, setProfitLine] = useState<ISeriesApi<"Line">>(null);
-  const [limitLine, setLimitLine] = useState<ISeriesApi<"Line">>(null);
-  const [orderLine, setOrderLine] = useState<ISeriesApi<"Line">>(null);
-  const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<"Line">>(null);
+  const [priceLine, setPriceLine] = useState<ISeriesApi<'Line'>>(null);
+  const [profitLine, setProfitLine] = useState<ISeriesApi<'Line'>>(null);
+  const [limitLine, setLimitLine] = useState<ISeriesApi<'Line'>>(null);
+  const [orderLine, setOrderLine] = useState<ISeriesApi<'Line'>>(null);
+  const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<'Line'>>(null);
 
   const map = (prices: number[], mapFn: (v: number) => number) => {
-    return prices.map((v, i) => ({time: `${2000 + i}-01-01`, value: mapFn(v)}));
+    return prices.map((v, i) => ({ time: `${2000 + i}-01-01`, value: mapFn(v) }));
   };
 
   const chartOpts: DeepPartial<ChartOptions> = {
     width: 300,
     height: 200,
-    timeScale: {visible: false},
+    timeScale: { visible: false },
     handleScroll: false,
     handleScale: false,
     rightPriceScale: {
@@ -53,22 +53,22 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
   };
 
   // In dark more 'lightblue' color price line looks better
-  const priceLineColor = theme.palette.mode === "light" ? "blue" : "lightblue";
-  const profitLineColor = theme.palette.mode === "light" ? "green" : "lightgreen";
+  const priceLineColor = theme.palette.mode === 'light' ? 'blue' : 'lightblue';
+  const profitLineColor = theme.palette.mode === 'light' ? 'green' : 'lightgreen';
 
   useEffect(() => {
 
     if (!chart.current) {
       chart.current = createChart(chartContainerRef.current, chartOpts);
 
-      setPriceLine(chart.current.addLineSeries({color: priceLineColor, lineWidth: 1}));
-      setLimitLine(chart.current.addLineSeries({color: "red", lineWidth: 1}));
-      setProfitLine(chart.current.addLineSeries({color: profitLineColor, lineWidth: 1}))
-      setOrderLine(chart.current.addLineSeries({color: "gold", lineWidth: 1}))
-      setSoldPriceLine(chart.current.addLineSeries({color: "cyan", lineWidth: 1}))
+      setPriceLine(chart.current.addLineSeries({ color: priceLineColor, lineWidth: 1 }));
+      setLimitLine(chart.current.addLineSeries({ color: 'red', lineWidth: 1 }));
+      setProfitLine(chart.current.addLineSeries({ color: profitLineColor, lineWidth: 1 }))
+      setOrderLine(chart.current.addLineSeries({ color: 'gold', lineWidth: 1 }))
+      setSoldPriceLine(chart.current.addLineSeries({ color: 'cyan', lineWidth: 1 }))
     }
 
-    chart.current.timeScale().setVisibleLogicalRange({from: 0.5, to: tm.prices.length - 1.5});
+    chart.current.timeScale().setVisibleLogicalRange({ from: 0.5, to: tm.prices.length - 1.5 });
 
     return () => {
       chart.current.remove();
@@ -84,7 +84,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
 
     if (priceLine) {
       priceLine.setData(map(tm.prices, v => v));
-      priceLine.applyOptions({color: priceLineColor});
+      priceLine.applyOptions({ color: priceLineColor });
     }
 
     if (limitLine) {
@@ -97,7 +97,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
     }
 
     if (orderLine) {
-      orderLine.applyOptions({visible: !!tm.tradeResult.quantity});
+      orderLine.applyOptions({ visible: !!tm.tradeResult.quantity });
       orderLine.setData(map(tm.prices, () => tm.tradeResult.price))
     }
 
@@ -113,7 +113,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
     }
 
     if (soldPriceLine) {
-      soldPriceLine.applyOptions({visible: tm.stateIs(TradeState.SOLD)});
+      soldPriceLine.applyOptions({ visible: tm.stateIs(TradeState.SOLD) });
       soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice))
     }
 
@@ -192,21 +192,21 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
             <TradeTitle tradeMemo={tm} onEdit={() => setEditMode(true)} onDelete={onDelete}/>
             <Box width={chartOpts.width} height={chartOpts.height} ref={chartContainerRef} className="chart-container"/>
           </CardContent>
-          {!!tm.tradeResult.quantity ?
-            <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
+          {tm.tradeResult.quantity ?
+            <Typography marginLeft={'16px'} variant="body2" color="text.secondary">
               <div>Qty: {tm.tradeResult.quantity} Paid: {f2(tm.tradeResult.paid)}</div>
-              <div>{tm.profit() >= 0 ? "Profit" : "Loss"}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
+              <div>{tm.profit() >= 0 ? 'Profit' : 'Loss'}: {f2(tm.profit())} ({f2(tm.profitPercent())}%)</div>
               <div>Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}%)</div>
             </Typography>
             :
-            <Typography marginLeft={"16px"} variant="body2" color="text.secondary">
+            <Typography marginLeft={'16px'} variant="body2" color="text.secondary">
               <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
             </Typography>
           }
           <CardActions>
-            <Stack direction={"row"} spacing={1} sx={{marginLeft: 'auto', marginRight: 'auto'}}>
+            <Stack direction={'row'} spacing={1} sx={{ marginLeft: 'auto', marginRight: 'auto' }}>
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Button sx={{minWidth: 20}} size="small" disabled={isSelling || tradeNotAllowed}
+                <Button sx={{ minWidth: 20 }} size="small" disabled={isSelling || tradeNotAllowed}
                         onClick={onSell}>{isSelling ? '...' : 'Sell'}</Button>
               }
               {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) &&
@@ -214,7 +214,7 @@ export default function Trade(props: { data: TradeMemo, config: Config, tradeNot
                   {isBuying ? '...' : `Buy ${tm.stateIs(TradeState.BOUGHT) ? 'More' : 'Again'}`}</Button>
               }
               {tm.stateIs(TradeState.BOUGHT) &&
-                <Box sx={{position: 'relative'}}>
+                <Box sx={{ position: 'relative' }}>
                   <ToggleButton size="small" value="check" selected={isHodl} color="primary" onChange={flipHodl}
                                 disabled={isHodlSwitching}>HODL</ToggleButton>
                   {isHodlSwitching && circularProgress}
@@ -255,8 +255,8 @@ function changeChartTheme(chart: IChartApi, theme: Theme) {
       textColor: theme.palette.text.primary,
     },
     grid: {
-      vertLines: {color: theme.palette.divider},
-      horzLines: {color: theme.palette.divider},
+      vertLines: { color: theme.palette.divider },
+      horzLines: { color: theme.palette.divider },
     },
   });
 }
