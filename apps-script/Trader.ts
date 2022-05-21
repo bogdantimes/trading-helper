@@ -1,17 +1,17 @@
-import {TradeMemo, TradeState} from "./TradeMemo";
-import {Statistics} from "./Statistics";
-import {Config, DefaultStore, IStore} from "./Store";
-import {IExchange} from "./Exchange";
-import {ExchangeSymbol, TradeResult} from "./TradeResult";
-import {Coin, PriceMap, StableUSDCoin} from "./shared-lib/types";
-import {CacheProxy} from "./CacheProxy";
+import { TradeMemo, TradeState } from './TradeMemo'
+import { Statistics } from './Statistics'
+import { Config, DefaultStore, IStore } from './Store'
+import { IExchange } from './Exchange'
+import { ExchangeSymbol, TradeResult } from './TradeResult'
+import { Coin, PriceMap, StableUSDCoin } from './shared-lib/types'
+import { CacheProxy } from './CacheProxy'
 
 export class V2Trader {
-  private readonly store: IStore;
-  private readonly config: Config;
-  private readonly exchange: IExchange;
-  private readonly stats: Statistics;
-  private readonly prices: PriceMap;
+  private readonly store: IStore
+  private readonly config: Config
+  private readonly exchange: IExchange
+  private readonly stats: Statistics
+  private readonly prices: PriceMap
 
   /**
    * Used when {@link Config.ProfitBasedStopLimit} is enabled.
@@ -42,9 +42,6 @@ export class V2Trader {
       if (this.isPriceDump(tm) && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
         Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
         tm.setState(TradeState.BUY);
-        // todo: temporary measure to buy once
-        this.config.BuyDumps = false;
-        this.store.setConfig(this.config);
       }
     }
 
