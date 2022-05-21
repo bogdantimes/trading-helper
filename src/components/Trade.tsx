@@ -20,6 +20,7 @@ import { Box, Stack, Theme, ToggleButton, useTheme } from '@mui/material'
 import { circularProgress, confirmBuy, confirmSell, f2 } from './Common'
 import { TradeEditDialog } from './TradeEditDialog'
 import { TradeTitle } from './TradeTitle'
+import Parameter = google.script.Parameter
 
 export default function Trade(props: {
   data: TradeMemo
@@ -275,8 +276,7 @@ export default function Trade(props: {
                 .withFailureHandler((err) => {
                   reject(err)
                 })
-                // @ts-ignore
-                .editTrade(tm.getCoinName(), newTm)
+                .editTrade(tm.getCoinName(), newTm as unknown as Parameter)
             })
           }
         />

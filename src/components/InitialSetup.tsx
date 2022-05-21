@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { useState } from 'react'
-import StartIcon from '@mui/icons-material/Start'
 import { Config } from '../../apps-script/Store'
 import { Alert, Box, Button, Stack, TextField } from '@mui/material'
 import { circularProgress } from './Common'
