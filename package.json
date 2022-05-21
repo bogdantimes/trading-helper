@@ -13,14 +13,27 @@
     "gdeploy": "clasp deploy -P ./apps-script",
     "start": "parcel src/index.html --dist-dir ./apps-script",
     "report": "parcel build src/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
-    "build": "parcel build src/index.html --dist-dir ./apps-script --no-cache"
+    "build": "parcel build src/index.html --dist-dir ./apps-script --no-cache",
+    "lint": "eslint \"src/**/*.{js,jsx,ts,tsx,json}\"",
+    "lint:fix": "eslint --fix \"src/**/*.{js,jsx,ts,tsx,json}\"",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md,json}\" --config ./.prettierrc"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.1",
     "@parcel/reporter-bundle-analyzer": "^2.5.0",
     "@types/google-apps-script": "^1.0.47",
     "@types/google.script.client-side": "^0.1.1",
-    "parcel": "^2.5.0"
+    "@typescript-eslint/eslint-plugin": "^5.25.0",
+    "@typescript-eslint/parser": "^5.25.0",
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-import-resolver-typescript": "^2.7.1",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.30.0",
+    "eslint-plugin-react-hooks": "^4.5.0",
+    "parcel": "^2.5.0",
+    "prettier": "^2.6.2"
   },
   "author": "Bohdan Kovalov",
   "license": "MIT",
