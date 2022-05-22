@@ -10,10 +10,10 @@
     "gopen": "clasp open -P ./apps-script --webapp",
     "gpush": "npm run build && clasp push -P ./apps-script -f",
     "gstart": "clasp push -P ./apps-script -w -f",
-    "gdeploy": "clasp deploy -P ./apps-script",
+    "gbuild": "node gas-build.js",
     "start": "parcel src/web/index.html --dist-dir ./apps-script",
     "report": "parcel build src/web/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
-    "build": "node gas-build.js && parcel build src/web/index.html --dist-dir ./apps-script --no-cache"
+    "build": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script --no-cache"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.1",

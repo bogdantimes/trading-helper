@@ -6,6 +6,7 @@ import { Survivors } from './Survivors'
 import { Log } from './Common'
 import { CoinScore, Stats } from '../shared-lib/types'
 import { TradeMemo } from '../shared-lib/TradeMemo'
+import { Process } from './Process'
 
 global.doGet = function doGet() {
   return HtmlService
@@ -16,6 +17,28 @@ global.doGet = function doGet() {
 
 global.doPost = function doPost(e) {
   return '404'
+}
+
+global.tick = function tick() {
+  catchError(Process.tick)
+}
+
+global.start = function start() {
+  catchError(() => {
+    global.stop()
+    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(1).create()
+    Log.info(`Started ${Process.tick.name}`)
+  })
+}
+
+global.stop = function stop() {
+  catchError(() => {
+    const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() == Process.tick.name)
+    if (trigger) {
+      ScriptApp.deleteTrigger(trigger)
+      Log.info(`Stopped ${Process.tick.name}`)
+    }
+  })
 }
 
 function catchError<T>(fn: () => T): T {
