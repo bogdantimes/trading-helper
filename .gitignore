@@ -1,6 +1,13 @@
-# Project exclude paths
-/node_modules/
-parcel-bundle-reports
-.parcel-cache
-apps-script/index.html
+# User configs
 .clasp.json
+
+# Build artefacts
+apps-script
+node_modules
+.parcel-cache
+parcel-bundle-reports
+!apps-script/appsscript.json
+
+# IDE setting
+.idea
+.vscode
