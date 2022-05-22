@@ -1,8 +1,8 @@
-import * as React from 'react'
-import { useEffect } from 'react'
-import Tabs from '@mui/material/Tabs'
-import Tab from '@mui/material/Tab'
-import Box from '@mui/material/Box'
+import * as React from "react"
+import { useEffect } from "react"
+import Tabs from "@mui/material/Tabs"
+import Tab from "@mui/material/Tab"
+import Box from "@mui/material/Box"
 import {
   Alert,
   createTheme,
@@ -11,19 +11,19 @@ import {
   ThemeProvider,
   Typography,
   useMediaQuery,
-} from '@mui/material'
-import { Settings } from './components/Settings'
-import { Info } from './components/Info'
-import { Assets } from './components/Assets'
-import { TabPanel } from './components/TabPanel'
-import { Config } from '../gas/Store'
-import { InitialSetup } from './components/InitialSetup'
-import { Survivors } from './components/Survivors'
+} from "@mui/material"
+import { Settings } from "./components/Settings"
+import { Info } from "./components/Info"
+import { Assets } from "./components/Assets"
+import { TabPanel } from "./components/TabPanel"
+import { Config } from "../gas/Store"
+import { InitialSetup } from "./components/InitialSetup"
+import { Survivors } from "./components/Survivors"
 
 function a11yProps(index: number) {
   return {
     id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
   }
 }
 
@@ -31,8 +31,8 @@ export default function App() {
   const [value, setValue] = React.useState(0)
   const handleChange = (e: React.SyntheticEvent, v: number) => setValue(v);
 
-  const mode = useMediaQuery('(prefers-color-scheme: dark)');
-  const theme = React.useMemo(() => createTheme({palette: {mode: mode ? 'dark' : 'light'}}), [mode]);
+  const mode = useMediaQuery(`(prefers-color-scheme: dark)`);
+  const theme = React.useMemo(() => createTheme({ palette: { mode: mode ? `dark` : `light` } }), [mode]);
 
   const [config, setConfig] = React.useState(null);
 
@@ -43,10 +43,10 @@ export default function App() {
   function initialFetch() {
     setFetchingData(true);
     google.script.run
-      .withSuccessHandler((config: Config) => {
+      .withSuccessHandler((cfg: Config) => {
         setFetchingData(false);
-        setConfig(config);
-        if (!config || !config.KEY || !config.SECRET) {
+        setConfig(cfg);
+        if (!cfg || !cfg.KEY || !cfg.SECRET) {
           setInitialSetup(true);
         } else {
           setInitialSetup(false);
@@ -76,7 +76,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>
-      {fetchingData && <Box sx={{width: '100%'}}><LinearProgress/></Box>}
+      {fetchingData && <Box sx={{ width: `100%` }}><LinearProgress/></Box>}
       {fetchDataError && <Alert severity="error">
         <Typography variant="caption">{fetchDataError}</Typography>
         <Typography variant="caption">Please check your network connection and that Google Apps Script application is
@@ -84,8 +84,8 @@ export default function App() {
       </Alert>}
       {!fetchingData && initialSetup && <InitialSetup config={config} onConnect={initialFetch}/>}
       {!fetchingData && !initialSetup &&
-        <Box sx={{width: '100%'}}>
-          <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+        <Box sx={{ width: `100%` }}>
+          <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
             <Tabs value={value} onChange={handleChange} centered>
               <Tab label="Assets" {...a11yProps(0)} />
               <Tab label="Settings" {...a11yProps(1)} />

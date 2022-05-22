@@ -1,8 +1,8 @@
-import { IStore } from './Store'
-import { CacheProxy } from './CacheProxy'
-import { CoinScore, StableUSDCoin } from '../shared-lib/types'
-import { IExchange } from './Exchange'
-import { Log } from './Common'
+import { IStore } from "./Store"
+import { CacheProxy } from "./CacheProxy"
+import { CoinScore, StableUSDCoin } from "../shared-lib/types"
+import { IExchange } from "./Exchange"
+import { Log } from "./Common"
 
 export interface ScoresManager {
   getScores(): CoinScore[]
@@ -30,7 +30,7 @@ export class Survivors implements ScoresManager {
    * Sorted by recommendation score.
    */
   getScores(): CoinScore[] {
-    const scoresJson = CacheProxy.get("RecommenderMemos");
+    const scoresJson = CacheProxy.get(`RecommenderMemos`);
     const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : {};
     const recommended: CoinScore[] = []
     Object.keys(scores).forEach(k => {
@@ -43,8 +43,8 @@ export class Survivors implements ScoresManager {
   }
 
   updateScores(): void {
-    const scoresJson = CacheProxy.get("RecommenderMemos");
-    const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : this.store.get("SurvivorScores") || {};
+    const scoresJson = CacheProxy.get(`RecommenderMemos`);
+    const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : this.store.get(`SurvivorScores`) || {};
     const coinsRaisedAmidMarkedDown: CoinScoreMap = {};
     const prices = this.exchange.getPrices();
     Object.keys(prices).forEach(s => {
@@ -65,19 +65,19 @@ export class Survivors implements ScoresManager {
       Log.info(`Updated survivors.`);
     }
 
-    CacheProxy.put("RecommenderMemos", JSON.stringify(scores));
+    CacheProxy.put(`RecommenderMemos`, JSON.stringify(scores));
 
     // Sync the scores to store every 6 hours
-    if (!CacheProxy.get("SurvivorScoresSynced")) {
-      this.store.set("SurvivorScores", scores);
-      CacheProxy.put("SurvivorScoresSynced", "true", 6 * 60 * 60); // 6 hours
+    if (!CacheProxy.get(`SurvivorScoresSynced`)) {
+      this.store.set(`SurvivorScores`, scores);
+      CacheProxy.put(`SurvivorScoresSynced`, `true`, 6 * 60 * 60); // 6 hours
     }
   }
 
   resetScores(): void {
     // todo: make concurrent safe
-    CacheProxy.put("RecommenderMemos", JSON.stringify({}));
-    this.store.set("SurvivorScores", {});
-    CacheProxy.put("SurvivorScoresSynced", "true", 6 * 60 * 60); // 6 hours
+    CacheProxy.put(`RecommenderMemos`, JSON.stringify({}));
+    this.store.set(`SurvivorScores`, {});
+    CacheProxy.put(`SurvivorScoresSynced`, `true`, 6 * 60 * 60); // 6 hours
   }
 }

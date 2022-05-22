@@ -1,7 +1,7 @@
 export enum StableUSDCoin {
-  USDT = "USDT",
-  USDC = "USDC",
-  BUSD = "BUSD",
+  USDT = `USDT`,
+  USDC = `USDC`,
+  BUSD = `BUSD`,
 }
 
 export class CoinScore {
@@ -9,7 +9,7 @@ export class CoinScore {
   /**
    * `r` is the number of times this memo was going up when the rest of the market wasn't.
    */
-  private r: number = 0
+  private r = 0
   private p: number[] = []
   private readonly n: string
 
@@ -78,8 +78,8 @@ export type Stats = {
 }
 
 export enum PriceProvider {
-  Binance = 'Binance',
-  CoinStats = 'CoinStats',
+  Binance = `Binance`,
+  CoinStats = `CoinStats`,
 }
 
 export class ExchangeSymbol {
@@ -107,10 +107,10 @@ export class ExchangeSymbol {
 }
 
 export enum TradeState {
-  BUY = 'buy',
-  BOUGHT = 'bought',
-  SELL = 'sell',
-  SOLD = 'sold'
+  BUY = `buy`,
+  BOUGHT = `bought`,
+  SELL = `sell`,
+  SOLD = `sold`
 }
 
 export type PriceMemo = [number, number, number]

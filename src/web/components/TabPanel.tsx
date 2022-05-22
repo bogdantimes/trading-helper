@@ -1,11 +1,11 @@
-import Box from '@mui/material/Box'
-import * as React from 'react'
-import { Container, Grid } from '@mui/material'
+import Box from "@mui/material/Box"
+import * as React from "react"
+import { Container, Grid } from "@mui/material"
 
 interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+  children?: React.ReactNode
+  index: number
+  value: number
 }
 
 export function TabPanel(props: TabPanelProps) {
@@ -22,7 +22,7 @@ export function TabPanel(props: TabPanelProps) {
       {value === index && (
         <Grid container>
           <Grid item xs={12}>
-            <Box sx={{p: 3}}>
+            <Box sx={{ p: 3 }}>
               {children}
             </Box>
           </Grid>

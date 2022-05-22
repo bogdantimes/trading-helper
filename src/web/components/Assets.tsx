@@ -1,14 +1,23 @@
-import * as React from 'react'
-import { useEffect } from 'react'
-import Trade from './Trade'
-import { Autocomplete, Badge, Button, Grid, Stack, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material'
-import { Config } from '../../gas/Store'
-import StableCoin from './StableCoin'
-import { confirmBuy } from './Common'
-import { TradeMemo } from '../../shared-lib/TradeMemo'
-import { Coin, TradeState } from '../../shared-lib/types'
+import * as React from "react"
+import { useEffect } from "react"
+import Trade from "./Trade"
+import {
+  Autocomplete,
+  Badge,
+  Button,
+  Grid,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material"
+import { Config } from "../../gas/Store"
+import StableCoin from "./StableCoin"
+import { confirmBuy } from "./Common"
+import { TradeMemo } from "../../shared-lib/TradeMemo"
+import { Coin, TradeState } from "../../shared-lib/types"
 
-const byProfit = (t1: TradeMemo, t2: TradeMemo): number => t1.profit() < t2.profit() ? 1 : -1
+const byProfit = (t1: TradeMemo, t2: TradeMemo): number => (t1.profit() < t2.profit() ? 1 : -1)
 
 const groupByState = (trades: { [key: string]: TradeMemo }): Map<TradeState, TradeMemo[]> => {
   const groupsMap = Object.keys(TradeState).reduce((map, key) => {
@@ -41,7 +50,7 @@ export function Assets({ config }: { config: Config }) {
   const [state, setState] = React.useState<TradeState>(TradeState.BOUGHT)
   const changeState = (e, newState) => setState(newState)
 
-  const [coinName, setCoinName] = React.useState('BTC')
+  const [coinName, setCoinName] = React.useState(`BTC`)
 
   function buy() {
     if (confirmBuy(coinName, config)) {
@@ -50,13 +59,13 @@ export function Assets({ config }: { config: Config }) {
   }
 
   const tradesMap = groupByState(trades)
-  const sx = { width: '332px' }
+  const sx = { width: `332px` }
   return (
     <Grid sx={{ flexGrow: 1 }} container spacing={2}>
       <Grid item xs={12}>
         <Grid container justifyContent='center' spacing={2}>
           <Grid item>
-            <ToggleButtonGroup sx={{ ...sx, height: '56px' }} fullWidth={true} color='primary' value={state} exclusive
+            <ToggleButtonGroup sx={{ ...sx, height: `56px` }} fullWidth={true} color='primary' value={state} exclusive
                                onChange={changeState}>
               <ToggleButton value={TradeState.BOUGHT}>
                 <Badge badgeContent={tradesMap.get(TradeState.BOUGHT).length}>Bought</Badge>
@@ -73,11 +82,11 @@ export function Assets({ config }: { config: Config }) {
             </ToggleButtonGroup>
           </Grid>
           <Grid item>
-            <Stack sx={sx} direction={'row'} spacing={2}>
+            <Stack sx={sx} direction={`row`} spacing={2}>
               <Autocomplete value={coinName} fullWidth={true} options={coinNames}
                             onChange={(e, val) => setCoinName(val)}
                             disableClearable={true}
-                            renderInput={(params) => <TextField {...params} label={'Coin Name'} />}
+                            renderInput={(params) => <TextField {...params} label={`Coin Name`} />}
               />
               <Button variant='contained' onClick={buy}>Buy</Button>
             </Stack>
@@ -89,8 +98,8 @@ export function Assets({ config }: { config: Config }) {
           {tradesMap.has(state) && tradesMap.get(state)
             .filter(t => Coin.isStable(t.getCoinName()))
             .map(t =>
-              <Grid item>
-                <StableCoin key={t.getCoinName()} tradeNotAllowed={!coinNames.includes(t.getCoinName())} data={t}
+              <Grid key={t.getCoinName()} item>
+                <StableCoin tradeNotAllowed={!coinNames.includes(t.getCoinName())} data={t}
                             config={config} />
               </Grid>,
             )}
@@ -102,8 +111,8 @@ export function Assets({ config }: { config: Config }) {
             .filter(t => !Coin.isStable(t.getCoinName()))
             .sort(byProfit)
             .map(t =>
-              <Grid item>
-                <Trade tradeNotAllowed={!coinNames.includes(t.getCoinName())} key={t.getCoinName()} data={t}
+              <Grid key={t.getCoinName()} item>
+                <Trade tradeNotAllowed={!coinNames.includes(t.getCoinName())} data={t}
                        config={config} />
               </Grid>,
             )}

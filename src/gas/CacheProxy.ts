@@ -1,5 +1,5 @@
 import Integer = GoogleAppsScript.Integer
-import { Log } from './Common'
+import { Log } from "./Common"
 
 const MAX_CACHE_VAL_SIZE_BYTES = 100 * 1024
 

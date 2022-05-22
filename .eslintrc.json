@@ -1,0 +1,32 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
+  "rules": {
+    "@typescript-eslint/ban-ts-comment": ["off"],
+    "@typescript-eslint/no-explicit-any": ["off"],
+    "@typescript-eslint/no-shadow": ["error"],
+    "camelcase": "off",
+    "array-bracket-spacing": ["error", "never"],
+    "curly": ["error", "multi-line"],
+    "no-duplicate-imports": "error",
+    "object-curly-spacing": ["error", "always"],
+    "quotes": ["error", "backtick"],
+    "react/default-props-match-prop-types": ["error"],
+    "react/sort-prop-types": ["error"],
+    "spaced-comment": "error"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {}
+    }
+  }
+}

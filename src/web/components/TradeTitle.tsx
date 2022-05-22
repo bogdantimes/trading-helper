@@ -1,6 +1,6 @@
-import { IconButton, useTheme } from '@mui/material'
-import * as React from 'react'
-import { useState } from 'react'
+import { IconButton, useTheme } from "@mui/material"
+import * as React from "react"
+import { useState } from "react"
 import {
   Delete,
   Edit,
@@ -8,16 +8,16 @@ import {
   KeyboardArrowUp,
   KeyboardDoubleArrowDown,
   KeyboardDoubleArrowUp,
-} from '@mui/icons-material'
-import Typography from '@mui/material/Typography'
-import { TradeMemo } from '../../shared-lib/TradeMemo'
-import { TradeState } from '../../shared-lib/types'
+} from "@mui/icons-material"
+import Typography from "@mui/material/Typography"
+import { TradeMemo } from "../../shared-lib/TradeMemo"
+import { TradeState } from "../../shared-lib/types"
 
 const growthIconMap = new Map<number, JSX.Element>()
-growthIconMap.set(-2, <KeyboardDoubleArrowDown htmlColor={'red'} />)
-growthIconMap.set(-1, <KeyboardArrowDown htmlColor={'red'} />)
-growthIconMap.set(1, <KeyboardArrowUp htmlColor={'green'} />)
-growthIconMap.set(2, <KeyboardDoubleArrowUp htmlColor={'green'} />)
+growthIconMap.set(-2, <KeyboardDoubleArrowDown htmlColor={`red`} />)
+growthIconMap.set(-1, <KeyboardArrowDown htmlColor={`red`} />)
+growthIconMap.set(1, <KeyboardArrowUp htmlColor={`green`} />)
+growthIconMap.set(2, <KeyboardDoubleArrowUp htmlColor={`green`} />)
 
 export function TradeTitle({ tradeMemo, onEdit, onDelete }: {
   tradeMemo: TradeMemo,
@@ -50,10 +50,10 @@ export function TradeTitle({ tradeMemo, onEdit, onDelete }: {
                                  onMouseLeave={() => setDeleteHover(false)}><Delete /></IconButton>
 
   return (
-    <Typography sx={{ display: 'flex', alignItems: 'center' }} gutterBottom variant='h5' component='div'>
+    <Typography sx={{ display: `flex`, alignItems: `center` }} gutterBottom variant='h5' component='div'>
       {tradeMemo.getCoinName()}
       {growthIcon}
-      <span style={{ marginLeft: 'auto' }}>{editIcon}{deleteIcon}</span>
+      <span style={{ marginLeft: `auto` }}>{editIcon}{deleteIcon}</span>
     </Typography>
   )
 }

@@ -1,6 +1,6 @@
 export function sumWithMaxPrecision(a: number, b: number): number {
-  const aSplit = `${a}`.split('.')
-  const bSplit = `${b}`.split('.')
+  const aSplit = `${a}`.split(`.`)
+  const bSplit = `${b}`.split(`.`)
   const precision = Math.max(
     (aSplit[1] || aSplit[0]).length,
     (bSplit[1] || bSplit[0]).length,

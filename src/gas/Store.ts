@@ -1,21 +1,21 @@
-import { CacheProxy } from './CacheProxy'
-import { ExchangeSymbol, PriceProvider, StableUSDCoin, TradeState } from '../shared-lib/types'
-import { Log } from './Common'
-import { TradeMemo } from '../shared-lib/TradeMemo'
-import { TradeResult } from '../shared-lib/TradeResult'
+import { CacheProxy } from "./CacheProxy"
+import { ExchangeSymbol, PriceProvider, StableUSDCoin, TradeState } from "../shared-lib/types"
+import { Log } from "./Common"
+import { TradeMemo } from "../shared-lib/TradeMemo"
+import { TradeResult } from "../shared-lib/TradeResult"
 
 export interface IStore {
-  get(key: String): any
+  get(key: string): any
 
-  set(key: String, value: any): any
+  set(key: string, value: any): any
 
   getConfig(): Config
 
   setConfig(config: Config): void
 
-  getOrSet(key: String, value: any): any
+  getOrSet(key: string, value: any): any
 
-  delete(key: String)
+  delete(key: string)
 
   getTrades(): { [key: string]: TradeMemo }
 
@@ -31,7 +31,7 @@ export interface IStore {
 }
 
 export class FirebaseStore implements IStore {
-  private readonly dbURLKey = "dbURL";
+  private readonly dbURLKey = `dbURL`;
   private source: object
 
   constructor() {
@@ -40,7 +40,7 @@ export class FirebaseStore implements IStore {
       // @ts-ignore
       this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken());
     } else {
-      Log.info("Firebase URL key 'dbURL' is not set.")
+      Log.info(`Firebase URL key 'dbURL' is not set.`)
     }
   }
 
@@ -69,10 +69,10 @@ export class FirebaseStore implements IStore {
       ProfitBasedStopLimit: false,
       PriceAnomalyAlert: 5
     }
-    const configCacheJson = CacheProxy.get("Config");
+    const configCacheJson = CacheProxy.get(`Config`);
     let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
     if (!configCache) {
-      configCache = this.getOrSet("Config", defaultConfig)
+      configCache = this.getOrSet(`Config`, defaultConfig)
     }
     // apply existing config on top of default one
     configCache = Object.assign(defaultConfig, configCache)
@@ -97,42 +97,42 @@ export class FirebaseStore implements IStore {
       delete configCache.PriceAsset
     }
 
-    CacheProxy.put("Config", JSON.stringify(configCache))
+    CacheProxy.put(`Config`, JSON.stringify(configCache))
 
     return configCache;
   }
 
   setConfig(config: Config): void {
-    this.set("Config", config)
-    CacheProxy.put("Config", JSON.stringify(config))
+    this.set(`Config`, config)
+    CacheProxy.put(`Config`, JSON.stringify(config))
   }
 
-  delete(key: String) {
+  delete(key: string) {
     if (!this.isConnected()) {
-      throw new Error("Firebase is not connected.")
+      throw new Error(`Firebase is not connected.`)
     }
     // @ts-ignore
     this.source.removeData(key)
   }
 
-  get(key: String): any {
+  get(key: string): any {
     if (!this.isConnected()) {
-      throw new Error("Firebase is not connected.")
+      throw new Error(`Firebase is not connected.`)
     }
     // @ts-ignore
     return this.source.getData(key);
   }
 
-  getOrSet(key: String, value: any): any {
+  getOrSet(key: string, value: any): any {
     const val = this.get(key) || value;
     // @ts-ignore
     this.source.setData(key, val)
     return val
   }
 
-  set(key: String, value: any): any {
+  set(key: string, value: any): any {
     if (!this.isConnected()) {
-      throw new Error("Firebase is not connected.")
+      throw new Error(`Firebase is not connected.`)
     }
     // @ts-ignore
     this.source.setData(key, value)
@@ -140,11 +140,11 @@ export class FirebaseStore implements IStore {
   }
 
   getTrades(): { [p: string]: TradeMemo } {
-    const tradesCacheJson = CacheProxy.get("Trades");
+    const tradesCacheJson = CacheProxy.get(`Trades`);
     let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null;
     if (!tradesCache) {
-      tradesCache = this.getOrSet("trade", {});
-      CacheProxy.put("Trades", JSON.stringify(tradesCache))
+      tradesCache = this.getOrSet(`trade`, {});
+      CacheProxy.put(`Trades`, JSON.stringify(tradesCache))
     }
     // Convert raw trades to TradeMemo objects
     return Object.keys(tradesCache).reduce((acc, key) => {
@@ -182,7 +182,7 @@ export class FirebaseStore implements IStore {
     const key = `TradeLocker_${coinName}`;
     try {
       while (CacheProxy.get(key)) Utilities.sleep(200);
-      CacheProxy.put(key, "true", 30); // Lock for 30 seconds
+      CacheProxy.put(key, `true`, 30); // Lock for 30 seconds
 
       const symbol = new ExchangeSymbol(coinName, this.getConfig().StableCoin);
       const existingOrNewTrade = this.getTrades()[coinName] || new TradeMemo(new TradeResult(symbol));
@@ -202,17 +202,17 @@ export class FirebaseStore implements IStore {
   private setTrade(tradeMemo: TradeMemo) {
     const trades = this.getTrades();
     trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
-    CacheProxy.put("Trades", JSON.stringify(trades))
+    CacheProxy.put(`Trades`, JSON.stringify(trades))
   }
 
   private deleteTrade(tradeMemo: TradeMemo) {
     const trades = this.getTrades()
     delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
-    CacheProxy.put("Trades", JSON.stringify(trades))
+    CacheProxy.put(`Trades`, JSON.stringify(trades))
   }
 
   dumpChanges() {
-    this.set("trade", this.getTrades())
+    this.set(`trade`, this.getTrades())
   }
 
 }

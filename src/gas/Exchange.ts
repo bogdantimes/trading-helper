@@ -1,10 +1,10 @@
-import { CoinStats } from './CoinStats'
-import { Binance } from './Binance'
-import { Config } from './Store'
-import { TradeResult } from '../shared-lib/TradeResult'
-import { CacheProxy } from './CacheProxy'
-import { ExchangeSymbol, PriceMap, PriceProvider, StableUSDCoin } from '../shared-lib/types'
-import { Log } from './Common'
+import { CoinStats } from "./CoinStats"
+import { Binance } from "./Binance"
+import { Config } from "./Store"
+import { TradeResult } from "../shared-lib/TradeResult"
+import { CacheProxy } from "./CacheProxy"
+import { ExchangeSymbol, PriceMap, PriceProvider, StableUSDCoin } from "../shared-lib/types"
+import { Log } from "./Common"
 
 export interface IExchange {
   getFreeAsset(assetName: string): number
@@ -54,11 +54,11 @@ export class Exchange implements IExchange {
   }
 
   getPrices(): PriceMap {
-    const pricesJson = CacheProxy.get("Prices");
+    const pricesJson = CacheProxy.get(`Prices`);
     let prices = pricesJson ? JSON.parse(pricesJson) : null;
     if (!prices) {
       prices = this.priceProvider.getPrices();
-      CacheProxy.put("Prices", JSON.stringify(prices), 45); // cache for 45 seconds
+      CacheProxy.put(`Prices`, JSON.stringify(prices), 45); // cache for 45 seconds
     }
     return prices;
   }
