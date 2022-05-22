@@ -28,7 +28,7 @@ export function TradeTitle({tradeMemo, onEdit, onDelete}: {
   const [editHover, setEditHover] = useState(false);
   const [deleteHover, setDeleteHover] = useState(false);
 
-  const growthIndex = tradeMemo.getGrowthIndex(tradeMemo.prices);
+  const growthIndex = tradeMemo.getPriceChangeIndex(tradeMemo.prices);
 
   // normalize growth index to be in range -2 ... 2
   const ranges = 4;

@@ -66,7 +66,7 @@ export class FirebaseStore implements IStore {
       PriceProvider: PriceProvider.Binance,
       AveragingDown: false,
       ProfitBasedStopLimit: false,
-      DumpAlertPercentage: 5
+      PriceAnomalyAlert: 5
     }
     const configCacheJson = CacheProxy.get("Config");
     let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
@@ -245,11 +245,11 @@ export type Config = {
    */
   AveragingDown: boolean
   /**
-   * When price suddenly drops for more than or equal percentage - an alert is sent.
+   * When price suddenly pumps or dumps for more than or equal percentage - an alert is sent.
    */
-  DumpAlertPercentage?: number;
+  PriceAnomalyAlert?: number;
   /**
-   * If true - buy the price dump automatically when {@link DumpAlertPercentage} alert happens.
+   * If true - buy the price dump automatically when {@link PriceAnomalyAlert} alert happens.
    */
   BuyDumps?: boolean;
 

@@ -171,7 +171,7 @@ export class TradeMemo {
     const tail = this.prices.slice(-lastN);
     if (tail.length < lastN) return false;
     // returns true if all prices in the tail are increasing
-    return this.getGrowthIndex(tail) === tail.length - 1;
+    return this.getPriceChangeIndex(tail) === tail.length - 1;
   }
 
   /**
@@ -185,7 +185,7 @@ export class TradeMemo {
    * @example [1, 2, 3] => 2
    * @param prices
    */
-  getGrowthIndex(prices: number[]): number {
+  getPriceChangeIndex(prices: number[]): number {
     let result = 0;
     for (let j = prices.length - 1; j > 0; j--) {
       if (prices[j] > prices[j - 1]) {

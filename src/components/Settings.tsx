@@ -98,15 +98,15 @@ export function Settings() {
             />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <TextField value={config.DumpAlertPercentage} label={"Dump Alert"}
-                       onChange={e => setConfig({...config, DumpAlertPercentage: +e.target.value})}
+            <TextField value={config.PriceAnomalyAlert} label={"Price Anomaly Alert"}
+                       onChange={e => setConfig({...config, PriceAnomalyAlert: +e.target.value})}
                        InputProps={{startAdornment: <InputAdornment position="start">%</InputAdornment>}}
             />
             <FormControlLabel
               control={
                 <Switch checked={config.BuyDumps}
                         onChange={e => setConfig({...config, BuyDumps: e.target.checked})}/>
-              } label="Auto-buy"
+              } label="Buy drops"
             />
           </Stack>
           <FormControlLabel

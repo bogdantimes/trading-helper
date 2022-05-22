@@ -4,7 +4,7 @@ import {Config, DefaultStore, IStore} from './Store'
 import {IExchange} from './Exchange'
 import {ExchangeSymbol, TradeResult} from './TradeResult'
 import {Coin, PriceMap, StableUSDCoin} from './shared-lib/types'
-import {CacheProxy} from './CacheProxy'
+import {PriceAnomaly, PriceAnomalyChecker} from "./PriceAnomalyChecker";
 
 export class V2Trader {
   private readonly store: IStore
@@ -39,7 +39,8 @@ export class V2Trader {
     if (!Coin.isStable(tm.getCoinName())) {
       this.pushNewPrice(tm);
 
-      if (this.isPriceDump(tm) && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
+      const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert);
+      if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
         Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
         tm.setState(TradeState.BUY);
       }
@@ -253,25 +254,5 @@ export class V2Trader {
       }
       return tm;
     }));
-  }
-
-  private isPriceDump(tm: TradeMemo): boolean {
-    if (tm.prices.length < TradeMemo.PriceMemoMaxCapacity) return false;
-
-    const key = `${tm.getCoinName()}-dump-start`;
-    const growthIndex = tm.getGrowthIndex(tm.prices.slice(-TradeMemo.PriceMemoMaxCapacity));
-    const dumpStartPrice = CacheProxy.get(key);
-
-    if (growthIndex + TradeMemo.PriceMemoMaxCapacity <= 3) {
-      CacheProxy.put(key, dumpStartPrice || tm.prices[0].toString(), 120); // 2 minutes
-    } else if (dumpStartPrice) {
-      CacheProxy.remove(key);
-      const dumpPercent = 100 * (1 - tm.currentPrice / +dumpStartPrice)
-      if (dumpPercent >= this.config.DumpAlertPercentage) {
-        Log.alert(`${tm.getCoinName()} price dumped ${dumpPercent.toFixed(2)}%: ${dumpStartPrice} -> ${tm.currentPrice}`);
-        return true;
-      }
-    }
-    return false;
   }
 }
