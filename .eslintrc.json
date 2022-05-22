@@ -1,8 +1,7 @@
 {
   "env": {
     "browser": true,
-    "es2021": true,
-    "node": true
+    "es2021": true
   },
   "extends": [
     "eslint:recommended",
@@ -20,11 +19,12 @@
   },
   "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
   "rules": {
-    "@typescript-eslint/ban-ts-comment": ["warn"],
+    "@typescript-eslint/ban-ts-comment": ["off"],
     "@typescript-eslint/no-shadow": ["error"],
     "@typescript-eslint/no-unused-vars": ["warn"],
+    "@typescript-eslint/no-explicit-any": ["off"],
     "array-bracket-spacing": ["error", "never"],
-    "camelcase": "error",
+    "camelcase": "off",
     "curly": ["error", "multi-line"],
     "no-duplicate-imports": "error",
     "no-shadow": "off",
