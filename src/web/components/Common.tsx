@@ -21,10 +21,4 @@ export const confirmBuy = (coinName: string, config: Config) =>
   confirm(`Are you sure you want to buy ${coinName} for ${config.StableCoin}?`)
 
 export const confirmSell = (coinName: string, config: Config) =>
-  confirm(
-    `Are you sure you want to sell ${coinName} and get ${config.StableCoin}? ${
-      config.AveragingDown
-        ? `Averaging down is enabled. All gained money will be re-invested into the most unprofitable coin.`
-        : ``
-    }`,
-  )
+  confirm(`Are you sure you want to sell ${coinName} and get ${config.StableCoin}? ${config.AveragingDown ? `Averaging down is enabled. All gained money will be re-invested into the most unprofitable coin.` : ``}`)

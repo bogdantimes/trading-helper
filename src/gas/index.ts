@@ -32,9 +32,7 @@ global.start = function start() {
 
 global.stop = function stop() {
   catchError(() => {
-    const trigger = ScriptApp.getProjectTriggers().find(
-      (t) => t.getHandlerFunction() == Process.tick.name,
-    )
+    const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() == Process.tick.name)
     if (trigger) {
       ScriptApp.deleteTrigger(trigger)
       Log.info(`Stopped ${Process.tick.name}`)
@@ -78,8 +76,8 @@ global.initialSetup = function initialSetup(params: InitialSetupParams): string 
 }
 
 export type InitialSetupParams = {
-  dbURL: string
-  binanceAPIKey: string
+  dbURL: string,
+  binanceAPIKey: string,
   binanceSecretKey: string
 }
 

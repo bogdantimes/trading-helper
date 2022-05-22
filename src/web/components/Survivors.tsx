@@ -33,7 +33,7 @@ export function Survivors({ config }: { config: Config }) {
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
         <Alert sx={{ width: 332 }} severity={`info`}>
-          Score represents how many times a currency showed a price growth within last{` `}
+          Score represents how many times a currency showed a price growth within last
           {CoinScore.PRICES_MAX_CAP} measures, while 99% of the market was not moving up.
         </Alert>
         {!!survivors.length && (

@@ -1,6 +1,6 @@
 import { IPriceProvider } from "./Exchange"
+import { PriceMap } from "./shared-lib/types"
 import { execute, Log } from "./Common"
-import { PriceMap } from "../shared-lib/types"
 
 export class CoinStats implements IPriceProvider {
   private static readonly API_URL = `https://api.coinstats.app/public/v1`

@@ -169,7 +169,7 @@ export class Binance implements IExchange, IPriceProvider {
     return `${sigData}&signature=${sig}`
   }
 
-  fetch(resource: () => string, options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions) {
+  fetch(resource: () => string, options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions): any {
     return execute({
       interval: this.interval,
       attempts: this.attempts,

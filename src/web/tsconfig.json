@@ -1,10 +1,10 @@
 {
-  'compilerOptions': {
-    'lib': [
-      'esnext',
-      'dom'
+  "compilerOptions": {
+    "lib": [
+      "esnext",
+      "dom"
     ],
-    'jsx': 'react',
-    'esModuleInterop': true
+    "jsx": "react",
+    "esModuleInterop": true
   }
 }

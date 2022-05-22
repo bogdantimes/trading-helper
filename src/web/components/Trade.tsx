@@ -287,23 +287,22 @@ export default function Trade(props: {
   )
 }
 
-const chartStyle = (theme) => ({
-  "& .tv-lightweight-charts": {
+const chartStyle = theme => ({
+  '& .tv-lightweight-charts': {
     borderRadius: `4px`,
-    border: `1px solid ${theme.palette.text.disabled}`,
-  },
+    border: `1px solid ${theme.palette.text.disabled}`
+  }
 })
 
 function changeChartTheme(chart: IChartApi, theme: Theme) {
-  chart &&
-    chart.applyOptions({
-      layout: {
-        backgroundColor: theme.palette.background.default,
-        textColor: theme.palette.text.primary,
-      },
-      grid: {
-        vertLines: { color: theme.palette.divider },
-        horzLines: { color: theme.palette.divider },
-      },
-    })
+  chart && chart.applyOptions({
+    layout: {
+      backgroundColor: theme.palette.background.default,
+      textColor: theme.palette.text.primary,
+    },
+    grid: {
+      vertLines: { color: theme.palette.divider },
+      horzLines: { color: theme.palette.divider },
+    },
+  });
 }

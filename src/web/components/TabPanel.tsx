@@ -22,10 +22,12 @@ export function TabPanel(props: TabPanelProps) {
       {value === index && (
         <Grid container>
           <Grid item xs={12}>
-            <Box sx={{ p: 3 }}>{children}</Box>
+            <Box sx={{ p: 3 }}>
+              {children}
+            </Box>
           </Grid>
         </Grid>
       )}
     </Container>
-  )
+  );
 }

@@ -8,7 +8,6 @@ import { Log } from "./Common"
 export class Process {
   static tick() {
     const store = DefaultStore
-
     const exchange = new Exchange(store.getConfig())
     const trader = new V2Trader(store, exchange, new Statistics(store))
 
