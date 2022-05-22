@@ -1,7 +1,7 @@
-import { TradeMemo } from './shared-lib/TradeMemo'
 import { CacheProxy } from './CacheProxy'
 import { Log } from './Common'
-import { absPercentageChange } from './shared-lib/functions'
+import { TradeMemo } from '../shared-lib/TradeMemo'
+import { absPercentageChange } from '../shared-lib/functions'
 
 export enum PriceAnomaly {
   NONE,
@@ -12,16 +12,16 @@ export enum PriceAnomaly {
 export class PriceAnomalyChecker {
   public static check(tm: TradeMemo, pdAlertPercentage: number): PriceAnomaly {
     if (tm.prices.length < TradeMemo.PriceMemoMaxCapacity) {
-      return PriceAnomaly.NONE;
+      return PriceAnomaly.NONE
     }
 
-    const key = `${tm.getCoinName()}-pump-dump-start`;
-    const changeIndex = tm.getPriceChangeIndex(tm.prices.slice(-TradeMemo.PriceMemoMaxCapacity));
-    const anomalyStartPrice = CacheProxy.get(key);
+    const key = `${tm.getCoinName()}-pump-dump-start`
+    const changeIndex = tm.getPriceChangeIndex(tm.prices.slice(-TradeMemo.PriceMemoMaxCapacity))
+    const anomalyStartPrice = CacheProxy.get(key)
 
-    const strength = 0.8;
-    const dump = changeIndex <= -(TradeMemo.PriceMemoMaxCapacity - 1) * strength;
-    const pump = changeIndex >= (TradeMemo.PriceMemoMaxCapacity - 1) * strength;
+    const strength = 0.8
+    const dump = changeIndex <= -(TradeMemo.PriceMemoMaxCapacity - 1) * strength
+    const pump = changeIndex >= (TradeMemo.PriceMemoMaxCapacity - 1) * strength
 
     if (pump || dump) {
       Log.debug(`${tm.getCoinName()} price anomaly detected`)
@@ -29,10 +29,10 @@ export class PriceAnomalyChecker {
     }
 
     if (!anomalyStartPrice) {
-      return PriceAnomaly.NONE;
+      return PriceAnomaly.NONE
     }
 
-    CacheProxy.remove(key);
+    CacheProxy.remove(key)
     const percent = absPercentageChange(+anomalyStartPrice, tm.currentPrice)
 
     if (percent < pdAlertPercentage) {
@@ -40,12 +40,12 @@ export class PriceAnomalyChecker {
     }
 
     if (+anomalyStartPrice > tm.currentPrice) {
-      Log.alert(`${tm.getCoinName()} price dumped for ${percent}%: ${anomalyStartPrice} -> ${tm.currentPrice}`);
+      Log.alert(`${tm.getCoinName()} price dumped for ${percent}%: ${anomalyStartPrice} -> ${tm.currentPrice}`)
       return PriceAnomaly.DUMP
     }
 
     if (+anomalyStartPrice < tm.currentPrice) {
-      Log.alert(`${tm.getCoinName()} price pumped for ${percent}%: ${anomalyStartPrice} -> ${tm.currentPrice}`);
+      Log.alert(`${tm.getCoinName()} price pumped for ${percent}%: ${anomalyStartPrice} -> ${tm.currentPrice}`)
       return PriceAnomaly.PUMP
     }
 
