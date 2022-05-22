@@ -1,10 +1,10 @@
-import { TradeMemo, TradeState } from './TradeMemo'
-import { Statistics } from './Statistics'
-import { Config, DefaultStore, IStore } from './Store'
-import { IExchange } from './Exchange'
-import { ExchangeSymbol, TradeResult } from './TradeResult'
-import { Coin, PriceMap, StableUSDCoin } from './shared-lib/types'
-import { CacheProxy } from './CacheProxy'
+import {TradeMemo, TradeState} from './TradeMemo'
+import {Statistics} from './Statistics'
+import {Config, DefaultStore, IStore} from './Store'
+import {IExchange} from './Exchange'
+import {ExchangeSymbol, TradeResult} from './TradeResult'
+import {Coin, PriceMap, StableUSDCoin} from './shared-lib/types'
+import {CacheProxy} from './CacheProxy'
 
 export class V2Trader {
   private readonly store: IStore
@@ -265,12 +265,12 @@ export class V2Trader {
     if (growthIndex + TradeMemo.PriceMemoMaxCapacity <= 3) {
       CacheProxy.put(key, dumpStartPrice || tm.prices[0].toString(), 120); // 2 minutes
     } else if (dumpStartPrice) {
+      CacheProxy.remove(key);
       const dumpPercent = 100 * (1 - tm.currentPrice / +dumpStartPrice)
       if (dumpPercent >= this.config.DumpAlertPercentage) {
         Log.alert(`${tm.getCoinName()} price dumped ${dumpPercent.toFixed(2)}%: ${dumpStartPrice} -> ${tm.currentPrice}`);
         return true;
       }
-      CacheProxy.remove(key);
     }
     return false;
   }
