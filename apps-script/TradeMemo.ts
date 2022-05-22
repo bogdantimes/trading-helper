@@ -7,10 +7,11 @@ export enum TradeState {
   SOLD = 'sold'
 }
 
-const PriceMemoMaxCapacity = 10;
 export type PriceMemo = [number, number, number]
 
 export class TradeMemo {
+  static readonly PriceMemoMaxCapacity = 10;
+
   tradeResult: TradeResult
   /**
    * Keeps the latest measures of the asset price.
@@ -89,13 +90,13 @@ export class TradeMemo {
   }
 
   pushPrice(price: number): void {
-    if (this.prices[0] === 0) {
-      // initial state, filling it with price
-      this.prices = [price, price, price];
+    if (!this.prices || !this.prices.length || this.prices[0] === 0) {
+      // initial state, filling PriceMemoMaxCapacity with price
+      this.prices = new Array(TradeMemo.PriceMemoMaxCapacity).fill(price) as PriceMemo
     } else {
       this.prices.push(price)
       // remove old prices and keep only the last PriceMemoMaxCapacity
-      this.prices.splice(0, this.prices.length - PriceMemoMaxCapacity)
+      this.prices.splice(0, this.prices.length - TradeMemo.PriceMemoMaxCapacity)
     }
     this.maxObservedPrice = Math.max(this.maxObservedPrice, ...this.prices)
   }
@@ -151,20 +152,26 @@ export class TradeMemo {
 
   lossLimitCrossedDown(): boolean {
     // all prices except the last one are greater than the stop limit price
-    return this.currentPrice < this.stopLimitPrice && this.prices.slice(0, -1).every(price => price >= this.stopLimitPrice)
+    return this.currentPrice < this.stopLimitPrice && this.prices.slice(0, -1).every(p => p >= this.stopLimitPrice)
   }
 
   profitLimitCrossedUp(profitLimit: number): boolean {
     // all prices except the last one are lower the profit limit price
     const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
-    return this.currentPrice > profitLimitPrice && this.prices.slice(0, -1).every(price => price <= profitLimitPrice)
+    return this.currentPrice > profitLimitPrice && this.prices.slice(0, -1).every(p => p <= profitLimitPrice)
+  }
+
+  entryPriceCrossedUp() {
+    // all prices except the last one are lower the price at which the trade was bought
+    const entryPrice = this.tradeResult.price;
+    return this.currentPrice > entryPrice && this.prices.slice(0, -1).every(p => p <= entryPrice)
   }
 
   priceGoesUp(lastN: number = 3): boolean {
     const tail = this.prices.slice(-lastN);
     if (tail.length < lastN) return false;
     // returns true if all prices in the tail are increasing
-    return this.getGrowthIndex(tail) === tail.length - 1;
+    return this.getPriceChangeIndex(tail) === tail.length - 1;
   }
 
   /**
@@ -178,7 +185,7 @@ export class TradeMemo {
    * @example [1, 2, 3] => 2
    * @param prices
    */
-  getGrowthIndex(prices: number[]): number {
+  getPriceChangeIndex(prices: number[]): number {
     let result = 0;
     for (let j = prices.length - 1; j > 0; j--) {
       if (prices[j] > prices[j - 1]) {

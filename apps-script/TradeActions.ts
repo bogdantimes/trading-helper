@@ -29,11 +29,8 @@ export class TradeActions {
 
   static drop(coinName: string): void {
     DefaultStore.changeTrade(coinName, trade => {
-      if (trade.stateIs(TradeState.SOLD) || trade.stateIs(TradeState.BUY)) {
-        trade.deleted = true;
-        return trade;
-      }
-      Log.error(new Error(`Cannot drop ${coinName} as it is not sold`));
+      trade.deleted = true;
+      return trade;
     });
   }
 

@@ -55,23 +55,26 @@ export class FirebaseStore implements IStore {
   }
 
   getConfig(): Config {
+    const defaultConfig: Config = {
+      BuyQuantity: 10,
+      StableCoin: StableUSDCoin.USDT,
+      StopLimit: 0.05,
+      ProfitLimit: 0.1,
+      SellAtStopLimit: false,
+      SellAtProfitLimit: true,
+      SwingTradeEnabled: false,
+      PriceProvider: PriceProvider.Binance,
+      AveragingDown: false,
+      ProfitBasedStopLimit: false,
+      PriceAnomalyAlert: 5
+    }
     const configCacheJson = CacheProxy.get("Config");
     let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
     if (!configCache) {
-      const defaultConfig: Config = {
-        BuyQuantity: 10,
-        StableCoin: StableUSDCoin.USDT,
-        StopLimit: 0.05,
-        ProfitLimit: 0.1,
-        SellAtStopLimit: false,
-        SellAtProfitLimit: true,
-        SwingTradeEnabled: false,
-        PriceProvider: PriceProvider.Binance,
-        AveragingDown: false,
-        ProfitBasedStopLimit: false
-      }
       configCache = this.getOrSet("Config", defaultConfig)
     }
+    // apply existing config on top of default one
+    configCache = Object.assign(defaultConfig, configCache)
 
     if (configCache.TakeProfit) {
       configCache.ProfitLimit = configCache.TakeProfit
@@ -241,6 +244,14 @@ export type Config = {
    * the tool will gradually sell all assets without loss.
    */
   AveragingDown: boolean
+  /**
+   * When price suddenly pumps or dumps for more than or equal percentage - an alert is sent.
+   */
+  PriceAnomalyAlert?: number;
+  /**
+   * If true - buy the price dump automatically when {@link PriceAnomalyAlert} alert happens.
+   */
+  BuyDumps?: boolean;
 
   /**
    * @deprecated

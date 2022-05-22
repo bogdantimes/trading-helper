@@ -28,8 +28,15 @@ export function TradeTitle({tradeMemo, onEdit, onDelete}: {
   const [editHover, setEditHover] = useState(false);
   const [deleteHover, setDeleteHover] = useState(false);
 
-  const growthIndex = tradeMemo.getGrowthIndex(tradeMemo.prices.slice(-3));
-  const growthIcon = growthIconMap.get(growthIndex);
+  const growthIndex = tradeMemo.getPriceChangeIndex(tradeMemo.prices);
+
+  // normalize growth index to be in range -2 ... 2
+  const ranges = 4;
+  const normalIndex = Math.max(-2, Math.min(2,
+    +((growthIndex / (tradeMemo.prices.length - 1)) * ranges).toFixed(0)
+  ))
+
+  const growthIcon = growthIconMap.get(normalIndex);
 
   const editColor = editHover ? theme.palette.action.active : theme.palette.action.disabled;
   const editIcon = tradeMemo.stateIs(TradeState.BOUGHT) &&

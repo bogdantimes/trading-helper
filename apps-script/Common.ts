@@ -80,3 +80,8 @@ function sumWithMaxPrecision(a: number, b: number): number {
 function getRandomFromList(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
+
+function absPercentageChange(v1: number, v2: number): number {
+  // |100 x (v2 - v1) / |v1||
+  return +Math.abs(100 * (v2 - v1) / Math.abs(v1)).toFixed(2)
+}

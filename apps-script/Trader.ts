@@ -1,16 +1,17 @@
-import {TradeMemo, TradeState} from "./TradeMemo";
-import {Statistics} from "./Statistics";
-import {Config, DefaultStore, IStore} from "./Store";
-import {IExchange} from "./Exchange";
-import {ExchangeSymbol, TradeResult} from "./TradeResult";
-import {Coin, PriceMap, StableUSDCoin} from "./shared-lib/types";
+import {TradeMemo, TradeState} from './TradeMemo'
+import {Statistics} from './Statistics'
+import {Config, DefaultStore, IStore} from './Store'
+import {IExchange} from './Exchange'
+import {ExchangeSymbol, TradeResult} from './TradeResult'
+import {Coin, PriceMap, StableUSDCoin} from './shared-lib/types'
+import {PriceAnomaly, PriceAnomalyChecker} from "./PriceAnomalyChecker";
 
 export class V2Trader {
-  private readonly store: IStore;
-  private readonly config: Config;
-  private readonly exchange: IExchange;
-  private readonly stats: Statistics;
-  private readonly prices: PriceMap;
+  private readonly store: IStore
+  private readonly config: Config
+  private readonly exchange: IExchange
+  private readonly stats: Statistics
+  private readonly prices: PriceMap
 
   /**
    * Used when {@link Config.ProfitBasedStopLimit} is enabled.
@@ -37,6 +38,12 @@ export class V2Trader {
   tickerCheck(tm: TradeMemo): TradeMemo {
     if (!Coin.isStable(tm.getCoinName())) {
       this.pushNewPrice(tm);
+
+      const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert);
+      if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
+        Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
+        tm.setState(TradeState.BUY);
+      }
     }
 
     if (tm.stateIs(TradeState.BOUGHT)) {
@@ -82,13 +89,7 @@ export class V2Trader {
   }
 
   private processBoughtState(tm: TradeMemo): void {
-    const symbol = tm.tradeResult.symbol;
-
-    if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
-      Log.alert(`${symbol} crossed profit limit at ${tm.currentPrice}`)
-    } else if (tm.lossLimitCrossedDown()) {
-      Log.alert(`${symbol}: crossed stop limit at ${tm.currentPrice}`)
-    }
+    this.sendLevelsCrossingAlerts(tm);
 
     if (tm.currentPrice < tm.stopLimitPrice) {
       const canSell = !tm.hodl && this.store.getConfig().SellAtStopLimit;
@@ -108,6 +109,19 @@ export class V2Trader {
       // Using the previous price a few measures back to calculate new stop limit
       const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.StopLimit);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+    }
+  }
+
+  private sendLevelsCrossingAlerts(tm: TradeMemo) {
+    const symbol = tm.tradeResult.symbol;
+    if (!tm.hodl) {
+      if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
+        Log.alert(`${symbol} profit limit crossed up at ${tm.currentPrice}`)
+      } else if (tm.lossLimitCrossedDown()) {
+        Log.alert(`${symbol} stop limit crossed down at ${tm.currentPrice}`)
+      } else if (tm.entryPriceCrossedUp()) {
+        Log.alert(`${symbol} entry price crossed up at ${tm.currentPrice}`)
+      }
     }
   }
 
@@ -132,6 +146,7 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       this.processBuyFee(tradeResult);
       tm.joinWithNewTrade(tradeResult);
+      Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
       Log.debug(tm);
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`)
