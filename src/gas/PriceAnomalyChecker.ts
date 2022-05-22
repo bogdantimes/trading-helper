@@ -7,6 +7,7 @@ export enum PriceAnomaly {
   NONE,
   PUMP,
   DUMP,
+  TRACKING,
 }
 
 export class PriceAnomalyChecker {
@@ -26,6 +27,7 @@ export class PriceAnomalyChecker {
     if (pump || dump) {
       Log.debug(`${tm.getCoinName()} price anomaly detected`)
       CacheProxy.put(key, anomalyStartPrice || tm.prices[0].toString(), 120) // 2 minutes
+      return PriceAnomaly.TRACKING
     }
 
     if (!anomalyStartPrice) {
