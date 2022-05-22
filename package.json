@@ -14,9 +14,9 @@
     "start": "parcel src/web/index.html --dist-dir ./apps-script",
     "report": "parcel build src/web/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
     "build": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
-    "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "eslint --fix \"src/**/*.{js,jsx,ts,tsx}\"",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md}\" --config ./.prettierrc",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\" --config ./.prettierrc",
     "prepare": "husky install"
   },
   "devDependencies": {
