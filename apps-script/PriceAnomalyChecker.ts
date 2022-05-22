@@ -1,5 +1,5 @@
-import {TradeMemo} from "./TradeMemo";
-import {CacheProxy} from "./CacheProxy";
+import { TradeMemo } from './TradeMemo'
+import { CacheProxy } from './CacheProxy'
 
 export enum PriceAnomaly {
   NONE,
@@ -22,8 +22,8 @@ export class PriceAnomalyChecker {
     const pump = changeIndex >= (TradeMemo.PriceMemoMaxCapacity - 1) * strength;
 
     if (pump || dump) {
-      Log.alert(`${tm.getCoinName()} price anomaly detected`)
-      CacheProxy.put(key, anomalyStartPrice || tm.prices[0].toString(), 120); // 2 minutes
+      Log.debug(`${tm.getCoinName()} price anomaly detected`)
+      CacheProxy.put(key, anomalyStartPrice || tm.prices[0].toString(), 120) // 2 minutes
     }
 
     if (!anomalyStartPrice) {
