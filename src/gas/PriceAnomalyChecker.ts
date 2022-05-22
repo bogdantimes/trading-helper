@@ -1,7 +1,7 @@
-import { CacheProxy } from './CacheProxy'
-import { Log } from './Common'
-import { TradeMemo } from '../shared-lib/TradeMemo'
-import { absPercentageChange } from '../shared-lib/functions'
+import { CacheProxy } from "./CacheProxy"
+import { Log } from "./Common"
+import { TradeMemo } from "../shared-lib/TradeMemo"
+import { absPercentageChange } from "../shared-lib/functions"
 
 export enum PriceAnomaly {
   NONE,
@@ -40,12 +40,20 @@ export class PriceAnomalyChecker {
     }
 
     if (+anomalyStartPrice > tm.currentPrice) {
-      Log.alert(`${tm.getCoinName()} price dumped for ${percent}%: ${anomalyStartPrice} -> ${tm.currentPrice}`)
+      Log.alert(
+        `${tm.getCoinName()} price dumped for ${percent}%: ${anomalyStartPrice} -> ${
+          tm.currentPrice
+        }`,
+      )
       return PriceAnomaly.DUMP
     }
 
     if (+anomalyStartPrice < tm.currentPrice) {
-      Log.alert(`${tm.getCoinName()} price pumped for ${percent}%: ${anomalyStartPrice} -> ${tm.currentPrice}`)
+      Log.alert(
+        `${tm.getCoinName()} price pumped for ${percent}%: ${anomalyStartPrice} -> ${
+          tm.currentPrice
+        }`,
+      )
       return PriceAnomaly.PUMP
     }
 

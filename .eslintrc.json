@@ -19,7 +19,7 @@
     "curly": ["error", "multi-line"],
     "no-duplicate-imports": "error",
     "object-curly-spacing": ["error", "always"],
-    "quotes": ["error", "single"],
+    "quotes": ["error", "backtick"],
     "react/default-props-match-prop-types": ["error"],
     "react/sort-prop-types": ["error"],
     "spaced-comment": "error"

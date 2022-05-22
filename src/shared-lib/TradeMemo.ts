@@ -1,5 +1,5 @@
-import { TradeResult } from './TradeResult'
-import { ExchangeSymbol, PriceMemo, TradeState } from './types'
+import { TradeResult } from "./TradeResult"
+import { ExchangeSymbol, PriceMemo, TradeState } from "./types"
 
 export class TradeMemo {
   static readonly PriceMemoMaxCapacity = 10
@@ -12,11 +12,11 @@ export class TradeMemo {
   /**
    * Marks the asset for holding even if price drops.
    */
-  hodl = false;
+  hodl = false
   /**
    * Marks the memo as one which has to be deleted.
    */
-  deleted: boolean;
+  deleted: boolean
   /**
    * The price at which the asset should be sold automatically if {@link Config.SellAtStopLimit}
    * is true, and {@link TradeMemo.hodl} is false.
@@ -25,14 +25,14 @@ export class TradeMemo {
   /**
    * Maximum price ever observed for this asset.
    */
-  private maxPrice = 0;
+  private maxPrice = 0
   /**
    * The current state of the asset.
    */
-  private state: TradeState;
+  private state: TradeState
 
   constructor(tradeResult: TradeResult) {
-    this.tradeResult = tradeResult;
+    this.tradeResult = tradeResult
   }
 
   static copy(obj: TradeMemo): TradeMemo {
@@ -40,7 +40,7 @@ export class TradeMemo {
   }
 
   static fromObject(obj: object): TradeMemo {
-    const tradeMemo: TradeMemo = Object.assign(new TradeMemo(null), obj);
+    const tradeMemo: TradeMemo = Object.assign(new TradeMemo(null), obj)
     tradeMemo.tradeResult = Object.assign(new TradeResult(null), tradeMemo.tradeResult)
     tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
     tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
@@ -73,11 +73,11 @@ export class TradeMemo {
 
   resetState(): void {
     if (this.tradeResult.quantity) {
-      this.setState(TradeState.BOUGHT);
+      this.setState(TradeState.BOUGHT)
     } else if (this.tradeResult.soldPrice) {
-      this.setState(TradeState.SOLD);
+      this.setState(TradeState.SOLD)
     } else {
-      this.deleted = true;
+      this.deleted = true
     }
   }
 
@@ -97,9 +97,9 @@ export class TradeMemo {
     if (state === TradeState.SOLD) {
       // Assign an empty trade result for SOLD state.
       // Keep the last trade price and the current prices.
-      const newTradeResult = new TradeResult(this.tradeResult.symbol, 'Asset sold');
-      newTradeResult.soldPrice = this.tradeResult.soldPrice;
-      Object.assign(this, new TradeMemo(newTradeResult), { prices: this.prices });
+      const newTradeResult = new TradeResult(this.tradeResult.symbol, `Asset sold`)
+      newTradeResult.soldPrice = this.tradeResult.soldPrice
+      Object.assign(this, new TradeMemo(newTradeResult), { prices: this.prices })
     }
     this.state = state
   }
@@ -110,12 +110,12 @@ export class TradeMemo {
 
   joinWithNewTrade(tradeResult: TradeResult): void {
     if (this.tradeResult.fromExchange) {
-      this.tradeResult = this.tradeResult.join(tradeResult);
+      this.tradeResult = this.tradeResult.join(tradeResult)
     } else {
-      this.tradeResult = tradeResult;
+      this.tradeResult = tradeResult
     }
-    this.stopLimitPrice = 0;
-    this.setState(TradeState.BOUGHT);
+    this.stopLimitPrice = 0
+    this.setState(TradeState.BOUGHT)
   }
 
   getState(): TradeState {
@@ -123,7 +123,7 @@ export class TradeMemo {
   }
 
   profit(): number {
-    return (this.currentPrice * this.tradeResult.quantity) - this.tradeResult.paid
+    return this.currentPrice * this.tradeResult.quantity - this.tradeResult.paid
   }
 
   profitPercent(): number {
@@ -139,31 +139,37 @@ export class TradeMemo {
   }
 
   soldPriceChangePercent(): number {
-    return (this.currentPrice - this.tradeResult.soldPrice) / this.tradeResult.soldPrice * 100
+    return ((this.currentPrice - this.tradeResult.soldPrice) / this.tradeResult.soldPrice) * 100
   }
 
   lossLimitCrossedDown(): boolean {
     // all prices except the last one are greater than the stop limit price
-    return this.currentPrice < this.stopLimitPrice && this.prices.slice(0, -1).every(p => p >= this.stopLimitPrice)
+    return (
+      this.currentPrice < this.stopLimitPrice &&
+      this.prices.slice(0, -1).every((p) => p >= this.stopLimitPrice)
+    )
   }
 
   profitLimitCrossedUp(profitLimit: number): boolean {
     // all prices except the last one are lower the profit limit price
-    const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
-    return this.currentPrice > profitLimitPrice && this.prices.slice(0, -1).every(p => p <= profitLimitPrice)
+    const profitLimitPrice = this.tradeResult.price * (1 + profitLimit)
+    return (
+      this.currentPrice > profitLimitPrice &&
+      this.prices.slice(0, -1).every((p) => p <= profitLimitPrice)
+    )
   }
 
   entryPriceCrossedUp() {
     // all prices except the last one are lower the price at which the trade was bought
-    const entryPrice = this.tradeResult.price;
-    return this.currentPrice > entryPrice && this.prices.slice(0, -1).every(p => p <= entryPrice)
+    const entryPrice = this.tradeResult.price
+    return this.currentPrice > entryPrice && this.prices.slice(0, -1).every((p) => p <= entryPrice)
   }
 
   priceGoesUp(lastN = 3): boolean {
-    const tail = this.prices.slice(-lastN);
-    if (tail.length < lastN) return false;
+    const tail = this.prices.slice(-lastN)
+    if (tail.length < lastN) return false
     // returns true if all prices in the tail are increasing
-    return this.getPriceChangeIndex(tail) === tail.length - 1;
+    return this.getPriceChangeIndex(tail) === tail.length - 1
   }
 
   /**
@@ -178,14 +184,14 @@ export class TradeMemo {
    * @param prices
    */
   getPriceChangeIndex(prices: number[]): number {
-    let result = 0;
+    let result = 0
     for (let j = prices.length - 1; j > 0; j--) {
       if (prices[j] > prices[j - 1]) {
-        result++;
+        result++
       } else if (prices[j] < prices[j - 1]) {
-        result--;
+        result--
       }
     }
-    return result;
+    return result
   }
 }

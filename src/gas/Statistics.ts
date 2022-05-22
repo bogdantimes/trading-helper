@@ -1,6 +1,6 @@
-import { IStore } from './Store'
-import { f2 } from '../shared-lib/functions'
-import { Stats } from '../shared-lib/types'
+import { IStore } from "./Store"
+import { f2 } from "../shared-lib/functions"
+import { Stats } from "../shared-lib/types"
 
 export class Statistics {
   private readonly store: IStore
@@ -16,14 +16,14 @@ export class Statistics {
     stats.DailyProfit[date] = f2(dailyProfit)
     stats.TotalProfit = f2(stats.TotalProfit + profit)
 
-    this.store.set('Statistics', stats)
+    this.store.set(`Statistics`, stats)
     return stats.TotalProfit
   }
 
   getAll(): Stats {
-    const statistics = this.store.get('Statistics') || {};
-    statistics.DailyProfit = statistics.DailyProfit || {};
-    statistics.TotalProfit = statistics.TotalProfit || 0;
-    return statistics;
+    const statistics = this.store.get(`Statistics`) || {}
+    statistics.DailyProfit = statistics.DailyProfit || {}
+    statistics.TotalProfit = statistics.TotalProfit || 0
+    return statistics
   }
 }

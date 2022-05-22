@@ -3,6 +3,6 @@
     "target": "ES2019",
     "module": "None",
     "noImplicitUseStrict": true,
-    "experimentalDecorators": true,
+    "experimentalDecorators": true
   }
 }

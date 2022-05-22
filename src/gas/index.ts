@@ -1,22 +1,21 @@
-import { Config, DefaultStore } from './Store'
-import { TradeActions } from './TradeActions'
-import { Statistics } from './Statistics'
-import { Exchange } from './Exchange'
-import { Survivors } from './Survivors'
-import { Log } from './Common'
-import { CoinScore, Stats } from '../shared-lib/types'
-import { TradeMemo } from '../shared-lib/TradeMemo'
-import { Process } from './Process'
+import { Config, DefaultStore } from "./Store"
+import { TradeActions } from "./TradeActions"
+import { Statistics } from "./Statistics"
+import { Exchange } from "./Exchange"
+import { Survivors } from "./Survivors"
+import { Log } from "./Common"
+import { CoinScore, Stats } from "../shared-lib/types"
+import { TradeMemo } from "../shared-lib/TradeMemo"
+import { Process } from "./Process"
 
 global.doGet = function doGet() {
-  return HtmlService
-    .createTemplateFromFile('index')
+  return HtmlService.createTemplateFromFile(`index`)
     .evaluate()
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1')
+    .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
 }
 
 global.doPost = function doPost() {
-  return '404'
+  return `404`
 }
 
 global.tick = function tick() {
@@ -33,7 +32,9 @@ global.start = function start() {
 
 global.stop = function stop() {
   catchError(() => {
-    const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() == Process.tick.name)
+    const trigger = ScriptApp.getProjectTriggers().find(
+      (t) => t.getHandlerFunction() == Process.tick.name,
+    )
     if (trigger) {
       ScriptApp.deleteTrigger(trigger)
       Log.info(`Stopped ${Process.tick.name}`)
@@ -56,71 +57,71 @@ function catchError<T>(fn: () => T): T {
 global.initialSetup = function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
     if (params.dbURL) {
-      Log.alert('Initial setup')
-      Log.alert('Connecting to Firebase with URL: ' + params.dbURL)
+      Log.alert(`Initial setup`)
+      Log.alert(`Connecting to Firebase with URL: ` + params.dbURL)
       DefaultStore.connect(params.dbURL)
-      Log.alert('Connected to Firebase')
+      Log.alert(`Connected to Firebase`)
     }
     const config = DefaultStore.getConfig()
     config.KEY = params.binanceAPIKey || config.KEY
     config.SECRET = params.binanceSecretKey || config.SECRET
     if (config.KEY && config.SECRET) {
-      Log.alert('Checking if Binance is reachable')
+      Log.alert(`Checking if Binance is reachable`)
       new Exchange(config).getFreeAsset(config.StableCoin)
-      Log.alert('Connected to Binance')
+      Log.alert(`Connected to Binance`)
       // @ts-ignore
       Start()
     }
     DefaultStore.setConfig(config)
-    return 'OK'
+    return `OK`
   })
 }
 
 export type InitialSetupParams = {
-  dbURL: string,
-  binanceAPIKey: string,
+  dbURL: string
+  binanceAPIKey: string
   binanceSecretKey: string
 }
 
 global.buyCoin = function buyCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.buy(coinName)
-    return 'Requested to buy ' + coinName
+    return `Requested to buy ` + coinName
   })
 }
 
 global.cancelAction = function cancelAction(coinName: string): string {
   return catchError(() => {
     TradeActions.cancel(coinName)
-    return 'Requested to cancel an action on ' + coinName
+    return `Requested to cancel an action on ` + coinName
   })
 }
 
 global.sellCoin = function sellCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.sell(coinName)
-    return 'Requested to sell ' + coinName
+    return `Requested to sell ` + coinName
   })
 }
 
 global.setHold = function setHold(coinName: string, value: boolean): string {
   return catchError(() => {
     TradeActions.setHold(coinName, value)
-    return 'Requested to set hold for ' + coinName + ' to ' + value
+    return `Requested to set hold for ` + coinName + ` to ` + value
   })
 }
 
 global.dropCoin = function dropCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.drop(coinName)
-    return 'Requested to drop ' + coinName
+    return `Requested to drop ` + coinName
   })
 }
 
 global.editTrade = function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
   return catchError(() => {
     TradeActions.replace(coinName, TradeMemo.copy(newTradeMemo))
-    return 'Requested to edit trade for ' + coinName
+    return `Requested to edit trade for ` + coinName
   })
 }
 
@@ -137,7 +138,7 @@ global.getConfig = function getConfig(): Config {
 global.setConfig = function setConfig(config): string {
   return catchError(() => {
     DefaultStore.setConfig(config)
-    return 'Config updated'
+    return `Config updated`
   })
 }
 

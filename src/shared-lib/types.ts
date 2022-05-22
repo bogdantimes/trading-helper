@@ -1,11 +1,11 @@
 export enum StableUSDCoin {
-  USDT = 'USDT',
-  USDC = 'USDC',
-  BUSD = 'BUSD',
+  USDT = `USDT`,
+  USDC = `USDC`,
+  BUSD = `BUSD`,
 }
 
 export class CoinScore {
-  static readonly PRICES_MAX_CAP = 5;
+  static readonly PRICES_MAX_CAP = 5
   /**
    * `r` is the number of times this memo was going up when the rest of the market wasn't.
    */
@@ -23,7 +23,7 @@ export class CoinScore {
   }
 
   static new(coinName: string, obj?: CoinScore): CoinScore {
-    const score = new CoinScore(coinName);
+    const score = new CoinScore(coinName)
     score.p = obj?.p ?? score.p
     score.r = obj?.r ?? score.r
     return score
@@ -52,7 +52,7 @@ export class CoinScore {
     if (this.p.length < CoinScore.PRICES_MAX_CAP) {
       return false
     }
-    return this.p.every((p, i) => i == 0 ? true : p > this.p[i - 1])
+    return this.p.every((p, i) => (i == 0 ? true : p > this.p[i - 1]))
   }
 
   pushPrice(price: number): void {
@@ -61,10 +61,9 @@ export class CoinScore {
       this.p.splice(0, this.p.length - CoinScore.PRICES_MAX_CAP)
     }
   }
-
 }
 
-export type PriceMap = { [key: string]: number };
+export type PriceMap = { [key: string]: number }
 
 export class Coin {
   static isStable(coinName: string): boolean {
@@ -73,13 +72,13 @@ export class Coin {
 }
 
 export type Stats = {
-  TotalProfit: number;
-  DailyProfit: PriceMap;
+  TotalProfit: number
+  DailyProfit: PriceMap
 }
 
 export enum PriceProvider {
-  Binance = 'Binance',
-  CoinStats = 'CoinStats',
+  Binance = `Binance`,
+  CoinStats = `CoinStats`,
 }
 
 export class ExchangeSymbol {
@@ -97,7 +96,7 @@ export class ExchangeSymbol {
     this.priceAsset = priceAsset.toUpperCase()
   }
 
-  static fromObject(object: { quantityAsset: string, priceAsset: string }): ExchangeSymbol {
+  static fromObject(object: { quantityAsset: string; priceAsset: string }): ExchangeSymbol {
     return new ExchangeSymbol(object.quantityAsset, object.priceAsset)
   }
 
@@ -107,10 +106,10 @@ export class ExchangeSymbol {
 }
 
 export enum TradeState {
-  BUY = 'buy',
-  BOUGHT = 'bought',
-  SELL = 'sell',
-  SOLD = 'sold'
+  BUY = `buy`,
+  BOUGHT = `bought`,
+  SELL = `sell`,
+  SOLD = `sold`,
 }
 
 export type PriceMemo = [number, number, number]

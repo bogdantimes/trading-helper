@@ -1,5 +1,5 @@
-import { sumWithMaxPrecision } from './functions'
-import { ExchangeSymbol } from './types'
+import { sumWithMaxPrecision } from "./functions"
+import { ExchangeSymbol } from "./types"
 
 export class TradeResult {
   symbol: ExchangeSymbol
@@ -11,15 +11,15 @@ export class TradeResult {
   profit = 0
   commission = 0
   msg: string
-  fromExchange = false;
+  fromExchange = false
 
-  constructor(symbol: ExchangeSymbol, msg = '') {
+  constructor(symbol: ExchangeSymbol, msg = ``) {
     this.symbol = symbol
     this.msg = msg
   }
 
   get price(): number {
-    return +(this.cost / this.quantity).toFixed(8);
+    return +(this.cost / this.quantity).toFixed(8)
   }
 
   toString(): string {
@@ -30,7 +30,9 @@ export class TradeResult {
    * @example "Bought 21 DAR for 9.81183 BUSD. Average price: 0.46723"
    */
   toTradeString(): string {
-    return `${this.soldPrice ? 'Sold' : 'Bought'} ${this.quantity} ${this.symbol.quantityAsset} for ${this.cost} ${this.symbol.priceAsset}. Price: ${this.price}`
+    return `${this.soldPrice ? `Sold` : `Bought`} ${this.quantity} ${
+      this.symbol.quantityAsset
+    } for ${this.cost} ${this.symbol.priceAsset}. Price: ${this.price}`
   }
 
   join(next: TradeResult): TradeResult {
@@ -38,9 +40,11 @@ export class TradeResult {
       throw Error(`Cannot join trades where 'fromExchange' is not equal: ${next.toString()}`)
     }
     if (this.symbol.quantityAsset != next.symbol.quantityAsset) {
-      throw Error(`Cannot join trades where 'quantityAsset' is not equal: current=${this.symbol.quantityAsset} next=${next.symbol.quantityAsset}`)
+      throw Error(
+        `Cannot join trades where 'quantityAsset' is not equal: current=${this.symbol.quantityAsset} next=${next.symbol.quantityAsset}`,
+      )
     }
-    const result = new TradeResult(next.symbol, next.msg);
+    const result = new TradeResult(next.symbol, next.msg)
     result.commission = this.commission + next.commission
     result.fromExchange = next.fromExchange
     result.addQuantity(this.quantity, this.cost)
@@ -51,7 +55,7 @@ export class TradeResult {
   addQuantity(quantity: number, cost: number): void {
     // we should maintain the precision returned by Binance for quantity
     this.quantity = sumWithMaxPrecision(this.quantity, quantity)
-    this.cost += cost;
-    this.paid += cost;
+    this.cost += cost
+    this.paid += cost
   }
 }

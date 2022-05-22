@@ -1,11 +1,11 @@
 export interface ExecParams {
-  context?: any;
-  runnable: (any) => any;
-  interval?: number;
-  attempts?: number;
+  context?: any
+  runnable: (any) => any
+  interval?: number
+  attempts?: number
 }
 
-export const INTERRUPT = 'INTERRUPT'
+export const INTERRUPT = `INTERRUPT`
 
 export function execute({ context, runnable, interval = 500, attempts = 5 }: ExecParams) {
   let err: Error
@@ -22,10 +22,10 @@ export function execute({ context, runnable, interval = 500, attempts = 5 }: Exe
     if (attempts > 0) {
       Utilities.sleep(interval)
     }
-  } while (--attempts > 0);
+  } while (--attempts > 0)
 
   if (err) {
-    throw err;
+    throw err
   }
 }
 
@@ -52,18 +52,21 @@ export class Log {
   }
 
   static print(): string {
-    return `${this.alerts.length > 0 ? `${this.alerts.join('\n')}\n` : ''}
-${this.errLog.length > 0 ? `Errors:\n${this.errLog.map(e => `Stack: ${e.stack}`).join('\n')}\n` : ''}
-${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join('\n')}\n` : ''}
-${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join('\n\n')}` : ''}
+    return `${this.alerts.length > 0 ? `${this.alerts.join(`\n`)}\n` : ``}
+${
+  this.errLog.length > 0
+    ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
+    : ``
+}
+${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``}
+${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
 `
   }
 
   static ifUsefulDumpAsEmail() {
-    const email = Session.getEffectiveUser().getEmail();
+    const email = Session.getEffectiveUser().getEmail()
     if (this.alerts.length > 0 || this.errLog.length > 0) {
-      GmailApp.sendEmail(email, 'Trading-helper alert', this.print())
+      GmailApp.sendEmail(email, `Trading-helper alert`, this.print())
     }
   }
 }
-
