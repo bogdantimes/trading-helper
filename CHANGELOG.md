@@ -1,9 +1,12 @@
 # v2.5.0
 
+* Added price anomalies alerts with an option to auto-buy when price drops.
+* Added profit-based stop limit option, which calculates stop limits based on the available total profit.
 * Added "Edit" mode and "Delete" action for Assets cards.
 * Added visual indication on Assets cards when price goes down.
 * Significantly improved the lag between UI request and the backend side state change.
 * Improved Binance errors handling.
+* System refactoring under the hood.
 
 # v2.4.0
 
