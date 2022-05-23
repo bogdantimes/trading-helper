@@ -1,3 +1,9 @@
+# v2.5.1
+
+* Added: "Add" dialog (plus button on the "Assets" page) for entering trades manually.
+* Fixed: "In some cases changing asset name (for example EPS -> EPX) can cause a corrupted state #34".
+* Reduced the frequency of Cache -> Firebase syncing for trades to 5 minutes, to consume less UrlFetch GAS limit.
+
 # v2.5.0
 
 * Added price anomalies alerts with an option to auto-buy when price drops.
