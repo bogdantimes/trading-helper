@@ -2,7 +2,6 @@ import { CacheProxy } from "./CacheProxy"
 import { ExchangeSymbol, PriceProvider, StableUSDCoin, TradeState } from "../shared-lib/types"
 import { Log } from "./Common"
 import { TradeMemo } from "../shared-lib/TradeMemo"
-import { TradeResult } from "../shared-lib/TradeResult"
 
 export interface IStore {
   get(key: string): any
@@ -23,7 +22,11 @@ export interface IStore {
 
   getTrade(symbol: ExchangeSymbol): TradeMemo
 
-  changeTrade(coinName: string, mutateFn: (tm: TradeMemo) => TradeMemo): void
+  changeTrade(
+    coinName: string,
+    mutateFn: (tm: TradeMemo) => TradeMemo,
+    notFoundFn?: () => TradeMemo | undefined,
+  ): void
 
   dumpChanges(): void
 
@@ -168,7 +171,7 @@ export class FirebaseStore implements IStore {
    * It locks the trade memo object for the duration of the mutation function but no more than 30 seconds.
    *
    * It expects a coinName and a mutate function. The mutate function receives either an existing trade memo object
-   * from a store or a new empty trade memo.
+   * from a store or if not found, calls the optional notFoundFn callback.
    *
    * Mutation function can return an updated trade memo object or undefined/null value.
    * If returned trade memo object has deleted flag set to true, this trade memo will be deleted.
@@ -176,22 +179,38 @@ export class FirebaseStore implements IStore {
    *
    * @param coinName
    * @param mutateFn
+   * @param notFoundFn?
    */
-  changeTrade(coinName: string, mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
+  changeTrade(
+    coinName: string,
+    mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
+    notFoundFn?: () => TradeMemo | undefined): void {
     coinName = coinName.toUpperCase();
     const key = `TradeLocker_${coinName}`;
     try {
       while (CacheProxy.get(key)) Utilities.sleep(200);
-      CacheProxy.put(key, `true`, 30); // Lock for 30 seconds
+      const deadline = 30 // Lock for 30 seconds
+      CacheProxy.put(key, `true`, deadline);
 
-      const symbol = new ExchangeSymbol(coinName, this.getConfig().StableCoin);
-      const existingOrNewTrade = this.getTrades()[coinName] || new TradeMemo(new TradeResult(symbol));
-      const changedTrade = mutateFn(existingOrNewTrade);
+      const trade = this.getTrades()[coinName];
+      // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
+      // otherwise changedTrade is null.
+      const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
+
+      if (!CacheProxy.get(key)) {
+        throw new Error(
+          `Couldn't apply ${coinName} change within ${deadline} seconds deadline. Please, try again.`,
+        )
+      }
+
+      if (changedTrade && changedTrade.getCoinName() != coinName) {
+        throw new Error(
+          `Cannot change trade: coin names do not match: ${changedTrade.getCoinName()} != ${coinName}`,
+        )
+      }
 
       if (changedTrade) {
-        changedTrade.deleted ?
-          this.deleteTrade(changedTrade) :
-          this.setTrade(changedTrade);
+        changedTrade.deleted ? this.deleteTrade(changedTrade) : this.setTrade(changedTrade)
       }
 
     } finally {

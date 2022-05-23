@@ -235,33 +235,48 @@ export class V2Trader {
   private updateBNBBalance(quantity: number): boolean {
     let updated = false
     DefaultStore.changeTrade(`BNB`, (tm) => {
-      if (tm.tradeResult.fromExchange) {
-        // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
-        // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
-        tm.tradeResult.addQuantity(quantity, 0)
-        Log.alert(`BNB balance updated by ${quantity}`)
-        updated = true
-        return tm
-      }
+      // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
+      // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
+      tm.tradeResult.addQuantity(quantity, 0)
+      Log.alert(`BNB balance updated by ${quantity}`)
+      updated = true
+      return tm
     })
     return updated
   }
 
   updateStableCoinsBalance() {
-    Object.keys(StableUSDCoin).forEach((coin) =>
-      DefaultStore.changeTrade(coin, (tm) => {
-        const balance = this.exchange.getFreeAsset(tm.getCoinName())
-        if (balance) {
+    Object.keys(StableUSDCoin).forEach((coin) => {
+      const symbol = new ExchangeSymbol(coin, this.config.StableCoin)
+      const balance = this.exchange.getFreeAsset(coin)
+      const tradeResult = new TradeResult(symbol, `Stable coin`)
+      DefaultStore.changeTrade(
+        coin,
+        (tm) => {
+          if (!balance) {
+            tm.deleted = true
+            return tm
+          }
           tm.setState(tm.getState() || TradeState.BOUGHT)
-          tm.tradeResult = new TradeResult(tm.tradeResult.symbol, `Stable coin`)
+          tm.tradeResult = tradeResult
           tm.tradeResult.quantity = balance
           tm.tradeResult.fromExchange = true
           tm.hodl = true
-        } else {
-          tm.deleted = true
-        }
-        return tm
-      }),
-    )
+          return tm
+        },
+        () => {
+          if (balance) {
+            return
+          }
+          const tm = new TradeMemo(tradeResult)
+          tm.setState(TradeState.BOUGHT)
+          tm.tradeResult = tradeResult
+          tm.tradeResult.quantity = balance
+          tm.tradeResult.fromExchange = true
+          tm.hodl = true
+          return tm
+        },
+      )
+    })
   }
 }
