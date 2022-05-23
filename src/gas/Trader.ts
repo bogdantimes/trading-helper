@@ -253,10 +253,7 @@ export class V2Trader {
       DefaultStore.changeTrade(
         coin,
         (tm) => {
-          if (!balance) {
-            tm.deleted = true
-            return tm
-          }
+          tm.deleted = !balance // delete it if no balance
           tm.setState(tm.getState() || TradeState.BOUGHT)
           tm.tradeResult = tradeResult
           tm.tradeResult.quantity = balance
@@ -265,7 +262,7 @@ export class V2Trader {
           return tm
         },
         () => {
-          if (balance) {
+          if (!balance) {
             return
           }
           const tm = new TradeMemo(tradeResult)
