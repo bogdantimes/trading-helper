@@ -94,7 +94,7 @@ export function Assets({ config }: { config: Config }) {
                               renderInput={(params) => <TextField {...params} label={`Coin Name`} />}
                 />
                 <Button variant='contained' onClick={buy}>Buy</Button>
-                <Button variant="contained" onClick={() => setAddCoin(true)}><Add /></Button>
+                <Button variant='outlined' onClick={() => setAddCoin(true)}><Add /></Button>
               </Stack>
             </Grid>
           </Grid>

@@ -84,42 +84,42 @@ export type InitialSetupParams = {
 global.buyCoin = function buyCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.buy(coinName)
-    return `Requested to buy ` + coinName
+    return `Buying ${coinName}`
   })
 }
 
 global.cancelAction = function cancelAction(coinName: string): string {
   return catchError(() => {
     TradeActions.cancel(coinName)
-    return `Requested to cancel an action on ` + coinName
+    return `Cancelling actions on ${coinName}`
   })
 }
 
 global.sellCoin = function sellCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.sell(coinName)
-    return `Requested to sell ` + coinName
+    return `Selling ${coinName}`
   })
 }
 
 global.setHold = function setHold(coinName: string, value: boolean): string {
   return catchError(() => {
     TradeActions.setHold(coinName, value)
-    return `Requested to set hold for ` + coinName + ` to ` + value
+    return `Setting HODL for ${coinName} to ${value}`
   })
 }
 
 global.dropCoin = function dropCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.drop(coinName)
-    return `Requested to drop ` + coinName
+    return `Removing ${coinName}`
   })
 }
 
 global.editTrade = function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
   return catchError(() => {
     TradeActions.replace(coinName, TradeMemo.copy(newTradeMemo))
-    return `Requested to edit trade for ` + coinName
+    return `Making changes for ${coinName}`
   })
 }
 
