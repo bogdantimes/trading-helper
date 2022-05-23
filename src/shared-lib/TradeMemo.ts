@@ -39,6 +39,16 @@ export class TradeMemo {
     return Object.assign(new TradeMemo(null), JSON.parse(JSON.stringify(obj)))
   }
 
+  static newManual(symbol: ExchangeSymbol, quantity = 0, paid = 0): TradeMemo {
+    const tm = new TradeMemo(new TradeResult(symbol))
+    tm.setState(TradeState.BOUGHT)
+    tm.tradeResult.fromExchange = true
+    tm.tradeResult.quantity = quantity
+    tm.tradeResult.paid = paid
+    tm.tradeResult.cost = paid
+    return tm
+  }
+
   static fromObject(obj: object): TradeMemo {
     const tradeMemo: TradeMemo = Object.assign(new TradeMemo(null), obj)
     tradeMemo.tradeResult = Object.assign(new TradeResult(null), tradeMemo.tradeResult)

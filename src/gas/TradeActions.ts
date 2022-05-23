@@ -1,15 +1,24 @@
 import { DefaultStore } from "./Store"
 import { ExchangeSymbol, TradeState } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
+import { TradeResult } from "../shared-lib/TradeResult"
 
 export class TradeActions {
   static buy(coinName: string): void {
-    DefaultStore.changeTrade(coinName, (trade) => {
-      const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin)
-      trade.setState(TradeState.BUY)
-      trade.tradeResult.symbol = symbol
-      return trade
-    })
+    const symbol = new ExchangeSymbol(coinName, DefaultStore.getConfig().StableCoin)
+    DefaultStore.changeTrade(
+      coinName,
+      (tm) => {
+        tm.setState(TradeState.BUY)
+        tm.tradeResult.symbol = symbol
+        return tm
+      },
+      () => {
+        const tm = new TradeMemo(new TradeResult(symbol))
+        tm.setState(TradeState.BUY)
+        return tm
+      },
+    )
   }
 
   static sell(coinName: string): void {
@@ -43,16 +52,15 @@ export class TradeActions {
   static replace(coinName: string, newTrade: TradeMemo): void {
     DefaultStore.changeTrade(coinName, (trade) => {
       if (trade.getCoinName() != newTrade.getCoinName()) {
-        // if symbol changed, delete the old one
-        // and reset prices in the new one
+        // if coin name changed reset prices
         newTrade.prices = [0, 0, 0]
         newTrade.stopLimitPrice = 0
-        DefaultStore.changeTrade(trade.getCoinName(), (tm) => {
-          tm.deleted = true
-          return tm
-        })
       }
       return newTrade
-    })
+    }, () => newTrade)
+    if (coinName != newTrade.getCoinName()) {
+      // if coin name changed delete old one
+      TradeActions.drop(coinName)
+    }
   }
 }

@@ -4,6 +4,7 @@ import { ExchangeSymbol } from "./types"
 export class TradeResult {
   symbol: ExchangeSymbol
   quantity = 0
+  // todo: get rid of either paid or cost field
   cost = 0
   paid = 0
   gained = 0
