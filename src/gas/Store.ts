@@ -231,7 +231,12 @@ export class FirebaseStore implements IStore {
   }
 
   dumpChanges() {
-    this.set(`trade`, this.getTrades())
+    const key = `FirebaseTradesSynced`
+    if (!CacheProxy.get(key)) {
+      this.set(`trade`, this.getTrades())
+      // Sync trades with firebase every 5 minutes
+      CacheProxy.put(key, `true`, 300)
+    }
   }
 
 }
