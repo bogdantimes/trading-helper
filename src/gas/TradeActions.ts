@@ -57,7 +57,7 @@ export class TradeActions {
         newTrade.stopLimitPrice = 0
       }
       return newTrade
-    })
+    }, () => newTrade)
     if (coinName != newTrade.getCoinName()) {
       // if coin name changed delete old one
       TradeActions.drop(coinName)

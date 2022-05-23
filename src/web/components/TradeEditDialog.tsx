@@ -35,6 +35,7 @@ export function TradeEditDialog(props: {
     newTm.tradeResult.symbol = new ExchangeSymbol(coinName, stableName)
     newTm.tradeResult.quantity = quantity
     newTm.tradeResult.paid = paid
+    newTm.tradeResult.cost = paid
     newTm.stopLimitPrice = stopLimit
 
     onSave(newTm)
@@ -50,7 +51,6 @@ export function TradeEditDialog(props: {
 
   return (
     <Dialog open={true} onClose={onCancel}>
-      <DialogTitle>Edit {tradeMemo.getCoinName()}</DialogTitle>
       <DialogContent>
         <TextField
           margin="dense"
