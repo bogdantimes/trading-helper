@@ -3,6 +3,13 @@ import { ExchangeSymbol, PriceProvider, StableUSDCoin, TradeState } from "../sha
 import { Log } from "./Common"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 
+export class DeadlineError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = `DeadlineError`
+  }
+}
+
 export interface IStore {
   get(key: string): any
 
@@ -189,7 +196,7 @@ export class FirebaseStore implements IStore {
     const key = `TradeLocker_${coinName}`;
     try {
       while (CacheProxy.get(key)) Utilities.sleep(200);
-      const deadline = 30 // Lock for 30 seconds
+      const deadline = 10 // Lock for 10 seconds
       CacheProxy.put(key, `true`, deadline);
 
       const trade = this.getTrades()[coinName];
@@ -198,7 +205,7 @@ export class FirebaseStore implements IStore {
       const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
 
       if (!CacheProxy.get(key)) {
-        throw new Error(
+        throw new DeadlineError(
           `Couldn't apply ${coinName} change within ${deadline} seconds deadline. Please, try again.`,
         )
       }
