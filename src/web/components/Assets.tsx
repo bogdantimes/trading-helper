@@ -81,10 +81,9 @@ export function Assets({ config }: { config: Config }) {
           </Grid>
         )}
         {assets && getStableCoinViews(assets.stableCoins)}
-        {tradesMap &&
-          [TradeState.BUY, TradeState.SELL, TradeState.BOUGHT, TradeState.SOLD].map((s) =>
-            getTradeViews(capitalizeWord(s), tradesMap.get(s), config, coinNames),
-          )}
+        {[TradeState.BUY, TradeState.SELL, TradeState.BOUGHT, TradeState.SOLD].map((s) =>
+          getTradeViews(capitalizeWord(s), tradesMap?.get(s), config, coinNames),
+        )}
       </Grid>
       {addCoin && (
         <TradeEditDialog
@@ -112,6 +111,8 @@ export function Assets({ config }: { config: Config }) {
 }
 
 function getStableCoinViews(stableCoins: Coin[]) {
+  const [hide, setHide] = useState(false)
+
   const elements = stableCoins.map((coin) => (
     <Grid key={coin.name} item>
       <StableCoin {...coin} />
@@ -129,7 +130,7 @@ function getStableCoinViews(stableCoins: Coin[]) {
     <>
       <Grid item xs={12}>
         <Divider>
-          <Chip label="Stable Coins" />
+          <Chip onClick={() => setHide(!hide)} label="Stable Coins" />
         </Divider>
       </Grid>
       <Grid item xs={12}>
@@ -142,30 +143,33 @@ function getStableCoinViews(stableCoins: Coin[]) {
 }
 
 function getTradeViews(label: string, elems: TradeMemo[], config: Config, coinNames: string[]) {
+  const [hide, setHide] = useState(false)
   return (
     elems &&
     elems.length && (
       <>
         <Grid item xs={12}>
           <Divider>
-            <Chip label={label} />
+            <Chip onClick={() => setHide(!hide)} label={`${label} (${elems.length})`} />
           </Divider>
         </Grid>
-        <Grid item xs={12}>
-          <Grid container justifyContent="center" spacing={2}>
-            {elems
-              ?.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
-              .map((t) => (
-                <Grid key={t.getCoinName()} item>
-                  <Trade
-                    tradeNotAllowed={!coinNames.includes(t.getCoinName())}
-                    data={t}
-                    config={config}
-                  />
-                </Grid>
-              ))}
+        {!hide && (
+          <Grid item xs={12}>
+            <Grid container justifyContent="center" spacing={2}>
+              {elems
+                ?.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
+                .map((t) => (
+                  <Grid key={t.getCoinName()} item>
+                    <Trade
+                      tradeNotAllowed={!coinNames.includes(t.getCoinName())}
+                      data={t}
+                      config={config}
+                    />
+                  </Grid>
+                ))}
+            </Grid>
           </Grid>
-        </Grid>
+        )}
       </>
     )
   )
