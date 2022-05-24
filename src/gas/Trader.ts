@@ -39,7 +39,7 @@ export class V2Trader {
   }
 
   tickerCheck(tm: TradeMemo): TradeMemo {
-    if (Coin.isStable(tm.getCoinName())) {
+    if (new Coin(tm.getCoinName()).isStable()) {
       // Remove stable coins from the list of coins to check
       tm.deleted = true
       return tm
@@ -206,7 +206,7 @@ export class V2Trader {
   }
 
   private updatePLStatistics(gainedCoin: string, profit: number): void {
-    if (Coin.isStable(gainedCoin)) {
+    if (new Coin(gainedCoin).isStable()) {
       this.stats.addProfit(profit)
       Log.info(`P/L added to statistics: ` + profit)
     }
@@ -248,12 +248,10 @@ export class V2Trader {
   }
 
   updateStableCoinsBalance() {
-    const stableCoins = {}
+    const stableCoins = []
     Object.keys(StableUSDCoin).forEach((coin) => {
       const balance = this.exchange.getFreeAsset(coin)
-      if (balance) {
-        stableCoins[coin] = balance
-      }
+      balance && stableCoins.push(new Coin(coin, balance))
     })
     CacheProxy.put(CacheProxy.StableCoins, JSON.stringify(stableCoins))
   }

@@ -4,10 +4,11 @@ import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { Survivors } from "./Survivors"
 import { Log } from "./Common"
-import { CoinScore, Stats } from "../shared-lib/types"
+import { Coin, CoinScore, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
+import { AssetsResponse } from "../shared-lib/responses"
 
 function doGet() {
   return HtmlService.createTemplateFromFile(`index`)
@@ -33,7 +34,9 @@ function start() {
 
 function stop() {
   catchError(() => {
-    const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() == Process.tick.name)
+    const trigger = ScriptApp.getProjectTriggers().find(
+      (t) => t.getHandlerFunction() == Process.tick.name,
+    )
     if (trigger) {
       ScriptApp.deleteTrigger(trigger)
       Log.info(`Stopped ${Process.tick.name}`)
@@ -76,8 +79,8 @@ function initialSetup(params: InitialSetupParams): string {
 }
 
 export type InitialSetupParams = {
-  dbURL: string,
-  binanceAPIKey: string,
+  dbURL: string
+  binanceAPIKey: string
   binanceSecretKey: string
 }
 
@@ -123,14 +126,23 @@ function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
   })
 }
 
-function getTrades(): { [p: string]: TradeMemo } {
-  return catchError(() => DefaultStore.getTrades())
+function getTrades(): TradeMemo[] {
+  return catchError(() => DefaultStore.getTradesList())
 }
 
-function getStableCoins(): { [p: string]: number } {
+function getStableCoins(): Coin[] {
   return catchError(() => {
     const raw = CacheProxy.get(CacheProxy.StableCoins)
-    return raw ? JSON.parse(raw) : {}
+    return raw ? JSON.parse(raw) : []
+  })
+}
+
+function getAssets(): AssetsResponse {
+  return catchError(() => {
+    return {
+      trades: getTrades(),
+      stableCoins: getStableCoins(),
+    }
   })
 }
 
@@ -185,6 +197,7 @@ global.setHold = setHold
 global.dropCoin = dropCoin
 global.editTrade = editTrade
 global.getTrades = getTrades
+global.getAssets = getAssets
 global.getStableCoins = getStableCoins
 global.getConfig = getConfig
 global.setConfig = setConfig

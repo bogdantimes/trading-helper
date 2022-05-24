@@ -13,9 +13,11 @@ export default function StableCoin({ name, balance }: StableCoinProps) {
   return (
     <>
       <Card sx={{ width: 332 }}>
-        <CardContent sx={{ paddingBottom: 0 }}>
-          <Typography variant="h5">{name}</Typography>
-          <Typography variant="h6">{f2(balance)}</Typography>
+        <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
+          <Typography variant="h5" display={`flex`}>
+            <span>{name}</span>
+            <span style={{ marginLeft: `auto` }}>{f2(balance)}</span>
+          </Typography>
         </CardContent>
       </Card>
     </>

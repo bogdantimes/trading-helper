@@ -35,8 +35,8 @@ npm run gpush
 
 This will re-build and push your local changes.
 
-If the changes are related to the webapp ([src](./src) folder) you will need to reload the browser page.
-If the changes are related to the backend ([apps-script](./apps-script) folder), no need to reload the browser page.
+If changes are related to the [webapp](./src/web) or [shared-lib](./src/shared-lib) folders you will need to reload the browser page.
+If changes are related to the [backend](./src/gas) folder, no need to reload the browser page.
 
 ## Troubleshooting
 
