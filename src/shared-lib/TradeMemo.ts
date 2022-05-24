@@ -205,8 +205,6 @@ export class TradeMemo {
   getPriceMove(): PriceMove {
     const max = TradeMemo.PriceMemoMaxCapacity
     const index = this.getPriceChangeIndex(this.prices)
-    const priceMove = +(((index + max) / (2 * max)) * PriceMove.STRONG_UP).toFixed(0)
-    console.log(`calculating price move: index=${index}, priceMove=${priceMove}`)
-    return priceMove
+    return +(((index + max) / (2 * max)) * PriceMove.STRONG_UP).toFixed(0)
   }
 }
