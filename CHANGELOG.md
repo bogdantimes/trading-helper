@@ -1,8 +1,12 @@
-# v2.5.1
+# v2.6.0
 
+* Improved "Assets" page UI: all tabs collapsed into a single page with clickable dividers #41.
 * Added: "Add" dialog (plus button on the "Assets" page) for entering trades manually.
+* Fixed: "Averaging down tries to invest into stablecoins when there are no other assets #38".
+* Fixed: "Any error that follows a successfully trade can leave the asset in incomplete buy/sell state #40"
 * Fixed: "In some cases changing asset name (for example EPS -> EPX) can cause a corrupted state #34".
 * Reduced the frequency of Cache -> Firebase syncing for trades to 5 minutes, to consume less UrlFetch GAS limit.
+* Swing Trade now waits for x2 Profit Limit percentage price drop, instead of x1, before buying again.
 
 # v2.5.0
 
