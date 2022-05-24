@@ -7,6 +7,7 @@ import { Log } from "./Common"
 import { CoinScore, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { Process } from "./Process"
+import { CacheProxy } from "./CacheProxy"
 
 function doGet() {
   return HtmlService.createTemplateFromFile(`index`)
@@ -126,6 +127,10 @@ function getTrades(): { [p: string]: TradeMemo } {
   return catchError(() => DefaultStore.getTrades())
 }
 
+function getStableCoins(): { [p: string]: number } {
+  return catchError(() => CacheProxy.get(CacheProxy.StableCoins) || {})
+}
+
 function getConfig(): Config {
   return catchError(() => {
     return DefaultStore.isConnected() ? DefaultStore.getConfig() : null
@@ -177,6 +182,7 @@ global.setHold = setHold
 global.dropCoin = dropCoin
 global.editTrade = editTrade
 global.getTrades = getTrades
+global.getStableCoins = getStableCoins
 global.getConfig = getConfig
 global.setConfig = setConfig
 global.getStatistics = getStatistics

@@ -37,11 +37,16 @@ const groupByState = (trades: { [key: string]: TradeMemo }): Map<TradeState, Tra
 
 export function Assets({ config }: { config: Config }) {
   const [trades, setTrades] = React.useState<{ [k: string]: TradeMemo }>({})
+  const [stableCoins, setStableCoins] = React.useState<{[k: string]: number}>({})
   const [coinNames, setCoinNames] = React.useState([] as string[])
 
   useEffect(() => {
     google.script.run.withSuccessHandler(setTrades).getTrades()
-    const interval = setInterval(google.script.run.withSuccessHandler(setTrades).getTrades, 15000) // 15 seconds
+    google.script.run.withSuccessHandler(setStableCoins).getStableCoins()
+    const interval = setInterval(() => {
+      google.script.run.withSuccessHandler(setTrades).getTrades()
+      google.script.run.withSuccessHandler(setStableCoins).getStableCoins()
+    }, 15000) // 15 seconds
     return () => clearInterval(interval)
   }, [])
 
@@ -101,12 +106,9 @@ export function Assets({ config }: { config: Config }) {
         </Grid>
         <Grid item xs={12}>
           <Grid container justifyContent='center' spacing={2}>
-            {tradesMap.has(state) && tradesMap.get(state)
-              .filter(t => Coin.isStable(t.getCoinName()))
-              .map(t =>
-                <Grid key={t.getCoinName()} item>
-                  <StableCoin tradeNotAllowed={!coinNames.includes(t.getCoinName())} data={t}
-                              config={config} />
+            {Object.keys(stableCoins).map(name =>
+                <Grid key={name} item>
+                  <StableCoin name={name} balance={stableCoins[name]} />
                 </Grid>,
               )}
           </Grid>
@@ -114,8 +116,7 @@ export function Assets({ config }: { config: Config }) {
         <Grid item xs={12}>
           <Grid container justifyContent='center' spacing={2}>
             {tradesMap.has(state) && tradesMap.get(state)
-              .filter(t => !Coin.isStable(t.getCoinName()))
-              .sort(byProfit)
+              ?.sort(byProfit)
               .map(t =>
                 <Grid key={t.getCoinName()} item>
                   <Trade tradeNotAllowed={!coinNames.includes(t.getCoinName())} data={t}

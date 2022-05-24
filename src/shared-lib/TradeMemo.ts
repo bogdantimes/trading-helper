@@ -107,9 +107,10 @@ export class TradeMemo {
     if (state === TradeState.SOLD) {
       // Assign an empty trade result for SOLD state.
       // Keep the last trade price and the current prices.
-      const newTradeResult = new TradeResult(this.tradeResult.symbol, `Asset sold`)
-      newTradeResult.soldPrice = this.tradeResult.soldPrice
-      Object.assign(this, new TradeMemo(newTradeResult), { prices: this.prices })
+      const newState = TradeMemo.newManual(this.tradeResult.symbol)
+      newState.tradeResult.soldPrice = this.tradeResult.soldPrice
+      newState.prices = this.prices
+      Object.assign(this, newState)
     }
     this.state = state
   }

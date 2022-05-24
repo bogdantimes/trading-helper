@@ -8,6 +8,7 @@ function byteCount(s: string): number {
 }
 
 export class CacheProxy {
+  static readonly StableCoins = `StableCoins`
 
   static get(key: string): string | null {
     return CacheService.getScriptCache().get(key);

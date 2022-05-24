@@ -7,6 +7,7 @@ import { f2 } from "../shared-lib/functions"
 import { Coin, ExchangeSymbol, PriceMap, StableUSDCoin, TradeState } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { TradeResult } from "../shared-lib/TradeResult"
+import { CacheProxy } from "./CacheProxy"
 
 export class V2Trader {
   private readonly store: IStore
@@ -38,14 +39,18 @@ export class V2Trader {
   }
 
   tickerCheck(tm: TradeMemo): TradeMemo {
-    if (!Coin.isStable(tm.getCoinName())) {
-      this.pushNewPrice(tm)
+    if (Coin.isStable(tm.getCoinName())) {
+      // Remove stable coins from the list of coins to check
+      tm.deleted = true
+      return tm
+    }
 
-      const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
-      if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
-        Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
-        tm.setState(TradeState.BUY)
-      }
+    this.pushNewPrice(tm)
+
+    const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
+    if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
+      Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
+      tm.setState(TradeState.BUY)
     }
 
     if (tm.stateIs(TradeState.BOUGHT)) {
@@ -62,13 +67,10 @@ export class V2Trader {
       // sell if price not goes up anymore
       // this allows to wait if price continues to go up
       this.sell(tm)
-    } else if (tm.stateIs(TradeState.BUY)) {
+    } else if (tm.stateIs(TradeState.BUY) && priceGoesUp) {
       // buy only if price started to go up
       // this allows to wait if price continues to fall
-      // or buy if it is a stable coin
-      if (priceGoesUp || Coin.isStable(tm.getCoinName())) {
-        this.buy(tm, this.config.BuyQuantity)
-      }
+      this.buy(tm, this.config.BuyQuantity)
     }
     return tm
   }
@@ -246,34 +248,13 @@ export class V2Trader {
   }
 
   updateStableCoinsBalance() {
+    const stableCoins = {}
     Object.keys(StableUSDCoin).forEach((coin) => {
-      const symbol = new ExchangeSymbol(coin, this.config.StableCoin)
       const balance = this.exchange.getFreeAsset(coin)
-      const tradeResult = new TradeResult(symbol, `Stable coin`)
-      DefaultStore.changeTrade(
-        coin,
-        (tm) => {
-          tm.deleted = !balance // delete it if no balance
-          tm.setState(tm.getState() || TradeState.BOUGHT)
-          tm.tradeResult = tradeResult
-          tm.tradeResult.quantity = balance
-          tm.tradeResult.fromExchange = true
-          tm.hodl = true
-          return tm
-        },
-        () => {
-          if (!balance) {
-            return
-          }
-          const tm = new TradeMemo(tradeResult)
-          tm.setState(TradeState.BOUGHT)
-          tm.tradeResult = tradeResult
-          tm.tradeResult.quantity = balance
-          tm.tradeResult.fromExchange = true
-          tm.hodl = true
-          return tm
-        },
-      )
+      if (balance) {
+        stableCoins[coin] = balance
+      }
     })
+    CacheProxy.put(CacheProxy.StableCoins, JSON.stringify(stableCoins))
   }
 }
