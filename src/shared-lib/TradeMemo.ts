@@ -125,8 +125,6 @@ export class TradeMemo {
     } else {
       this.tradeResult = tradeResult
     }
-    this.stopLimitPrice = 0
-    this.setState(TradeState.BOUGHT)
   }
 
   getState(): TradeState {

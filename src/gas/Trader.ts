@@ -93,6 +93,7 @@ export class V2Trader {
   }
 
   private processBoughtState(tm: TradeMemo): void {
+    this.updateStopLimit(tm)
     this.sendLevelsCrossingAlerts(tm)
 
     if (tm.currentPrice < tm.stopLimitPrice) {
@@ -105,15 +106,21 @@ export class V2Trader {
       const canSell = !tm.hodl && this.store.getConfig().SellAtProfitLimit
       canSell && tm.setState(TradeState.SELL)
     }
+  }
 
+  private updateStopLimit(tm: TradeMemo) {
     if (this.config.ProfitBasedStopLimit) {
       const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
     } else if (!tm.stopLimitPrice || tm.priceGoesUp()) {
-      // Using the previous price a few measures back to calculate new stop limit
-      const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.StopLimit)
+      const newStopLimit = tm.currentPrice * (1 - this.config.StopLimit)
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit)
     }
+  }
+
+  private forceUpdateStopLimit(tm: TradeMemo) {
+    tm.stopLimitPrice = 0
+    this.updateStopLimit(tm)
   }
 
   private sendLevelsCrossingAlerts(tm: TradeMemo) {
@@ -150,6 +157,8 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       this.processBuyFee(tradeResult)
       tm.joinWithNewTrade(tradeResult)
+      tm.setState(TradeState.BOUGHT)
+      this.forceUpdateStopLimit(tm)
       Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
       Log.debug(tm)
     } else {
