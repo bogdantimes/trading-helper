@@ -155,12 +155,18 @@ export class V2Trader {
     const symbol = tm.tradeResult.symbol
     const tradeResult = this.exchange.marketBuy(symbol, cost)
     if (tradeResult.fromExchange) {
-      this.processBuyFee(tradeResult)
-      tm.joinWithNewTrade(tradeResult)
-      tm.setState(TradeState.BOUGHT)
-      this.forceUpdateStopLimit(tm)
-      Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
-      Log.debug(tm)
+      // any actions should not affect changing the state to BOUGHT in the end
+      try {
+        tm.joinWithNewTrade(tradeResult)
+        this.forceUpdateStopLimit(tm)
+        this.processBuyFee(tradeResult)
+        Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
+        Log.debug(tm)
+      } catch (e) {
+        Log.error(e)
+      } finally {
+        tm.setState(TradeState.BOUGHT)
+      }
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`)
       Log.debug(tm)
@@ -172,17 +178,23 @@ export class V2Trader {
     const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin)
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity)
     if (tradeResult.fromExchange) {
-      const fee = this.processSellFee(memo, tradeResult)
-      const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
-      const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
+      // any actions should not affect changing the state to SOLD in the end
+      try {
+        const fee = this.processSellFee(memo, tradeResult)
+        const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
+        const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
 
-      Log.alert(`${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
+        Log.alert(`${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
 
-      tradeResult.profit = profit
-      memo.tradeResult = tradeResult
-      Log.debug(memo)
-      memo.setState(TradeState.SOLD)
-      this.updatePLStatistics(symbol.priceAsset, profit)
+        tradeResult.profit = profit
+        this.updatePLStatistics(symbol.priceAsset, profit)
+      } catch (e) {
+        Log.error(e)
+      } finally {
+        memo.tradeResult = tradeResult
+        Log.debug(memo)
+        memo.setState(TradeState.SOLD)
+      }
     } else {
       Log.debug(memo)
       memo.hodl = true
@@ -194,23 +206,31 @@ export class V2Trader {
     }
 
     if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
-      // all gains are reinvested to most unprofitable asset
-      // find a trade with the lowest profit percentage
-      const byProfitPercentDesc = (t1, t2) => (t1.profitPercent() < t2.profitPercent() ? -1 : 1)
-      const lowestProfitTrade = this.store
-        .getTradesList()
-        .filter((t) => t.stateIs(TradeState.BOUGHT))
-        .sort(byProfitPercentDesc)[0]
-      if (lowestProfitTrade) {
-        Log.alert(`Averaging down is enabled`)
-        Log.alert(
-          `All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`,
-        )
-        DefaultStore.changeTrade(lowestProfitTrade.getCoinName(), (tm) => {
-          this.buy(tm, tradeResult.gained)
-          return tm
-        })
+      try {
+        this.averageDown(tradeResult)
+      } catch (e) {
+        Log.error(e)
       }
+    }
+  }
+
+  private averageDown(tradeResult: TradeResult) {
+    // all gains are reinvested to most unprofitable asset
+    // find a trade with the lowest profit percentage
+    const byProfitPercentDesc = (t1, t2) => (t1.profitPercent() < t2.profitPercent() ? -1 : 1)
+    const lowestPLTrade = this.store
+      .getTradesList()
+      .filter((t) => t.stateIs(TradeState.BOUGHT))
+      .sort(byProfitPercentDesc)[0]
+    if (lowestPLTrade) {
+      Log.alert(`Averaging down is enabled`)
+      Log.alert(
+        `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
+      )
+      DefaultStore.changeTrade(lowestPLTrade.getCoinName(), (tm) => {
+        this.buy(tm, tradeResult.gained)
+        return tm
+      })
     }
   }
 
