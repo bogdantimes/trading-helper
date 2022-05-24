@@ -219,8 +219,8 @@ export class V2Trader {
     // find a trade with the lowest profit percentage
     const byProfitPercentDesc = (t1, t2) => (t1.profitPercent() < t2.profitPercent() ? -1 : 1)
     const lowestPLTrade = this.store
-      .getTradesList()
-      .filter((t) => t.stateIs(TradeState.BOUGHT))
+      .getTradesList(TradeState.BOUGHT)
+      .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
       .sort(byProfitPercentDesc)[0]
     if (lowestPLTrade) {
       Log.alert(`Averaging down is enabled`)
