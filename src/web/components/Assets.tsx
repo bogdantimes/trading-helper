@@ -80,7 +80,7 @@ export function Assets({ config }: { config: Config }) {
             {circularProgress}
           </Grid>
         )}
-        {assets && getStableCoinViews(assets.stableCoins)}
+        {getStableCoinViews(assets?.stableCoins)}
         {[TradeState.BUY, TradeState.SELL, TradeState.BOUGHT, TradeState.SOLD].map((s) =>
           getTradeViews(capitalizeWord(s), tradesMap?.get(s), config, coinNames),
         )}
@@ -110,10 +110,10 @@ export function Assets({ config }: { config: Config }) {
   )
 }
 
-function getStableCoinViews(stableCoins: Coin[]) {
+function getStableCoinViews(stableCoins?: Coin[]) {
   const [hide, setHide] = useState(false)
 
-  const elements = stableCoins.map((coin) => (
+  const elements = stableCoins?.map((coin) => (
     <Grid key={coin.name} item>
       <StableCoin {...coin} />
     </Grid>
@@ -133,16 +133,18 @@ function getStableCoinViews(stableCoins: Coin[]) {
           <Chip onClick={() => setHide(!hide)} label="Stable Coins" />
         </Divider>
       </Grid>
-      <Grid item xs={12}>
-        <Grid container justifyContent="center" spacing={2}>
-          {elements.length ? elements : noElements}
+      {!hide && elements && (
+        <Grid item xs={12}>
+          <Grid container justifyContent="center" spacing={2}>
+            {elements.length ? elements : noElements}
+          </Grid>
         </Grid>
-      </Grid>
+      )}
     </>
   )
 }
 
-function getTradeViews(label: string, elems: TradeMemo[], config: Config, coinNames: string[]) {
+function getTradeViews(label: string, elems?: TradeMemo[], config?: Config, coinNames?: string[]) {
   const [hide, setHide] = useState(false)
   return (
     elems &&
