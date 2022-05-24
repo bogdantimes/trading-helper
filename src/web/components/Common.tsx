@@ -22,3 +22,5 @@ export const confirmBuy = (coinName: string, config: Config) =>
 
 export const confirmSell = (coinName: string, config: Config) =>
   confirm(`Are you sure you want to sell ${coinName} and get ${config.StableCoin}? ${config.AveragingDown ? `Averaging down is enabled. All gained money will be re-invested into the most unprofitable coin.` : ``}`)
+
+export const capitalizeWord = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()

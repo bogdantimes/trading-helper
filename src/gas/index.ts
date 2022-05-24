@@ -4,35 +4,39 @@ import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { Survivors } from "./Survivors"
 import { Log } from "./Common"
-import { CoinScore, Stats } from "../shared-lib/types"
+import { Coin, CoinScore, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { Process } from "./Process"
+import { CacheProxy } from "./CacheProxy"
+import { AssetsResponse } from "../shared-lib/responses"
 
-global.doGet = function doGet() {
+function doGet() {
   return HtmlService.createTemplateFromFile(`index`)
     .evaluate()
     .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
 }
 
-global.doPost = function doPost() {
+function doPost() {
   return `404`
 }
 
-global.tick = function tick() {
+function tick() {
   catchError(Process.tick)
 }
 
-global.start = function start() {
+function start() {
   catchError(() => {
-    global.stop()
+    stop()
     ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(1).create()
     Log.info(`Started ${Process.tick.name}`)
   })
 }
 
-global.stop = function stop() {
+function stop() {
   catchError(() => {
-    const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() == Process.tick.name)
+    const trigger = ScriptApp.getProjectTriggers().find(
+      (t) => t.getHandlerFunction() == Process.tick.name,
+    )
     if (trigger) {
       ScriptApp.deleteTrigger(trigger)
       Log.info(`Stopped ${Process.tick.name}`)
@@ -52,7 +56,7 @@ function catchError<T>(fn: () => T): T {
   }
 }
 
-global.initialSetup = function initialSetup(params: InitialSetupParams): string {
+function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
     if (params.dbURL) {
       Log.alert(`Initial setup`)
@@ -67,8 +71,7 @@ global.initialSetup = function initialSetup(params: InitialSetupParams): string 
       Log.alert(`Checking if Binance is reachable`)
       new Exchange(config).getFreeAsset(config.StableCoin)
       Log.alert(`Connected to Binance`)
-      // @ts-ignore
-      Start()
+      start()
     }
     DefaultStore.setConfig(config)
     return `OK`
@@ -76,91 +79,129 @@ global.initialSetup = function initialSetup(params: InitialSetupParams): string 
 }
 
 export type InitialSetupParams = {
-  dbURL: string,
-  binanceAPIKey: string,
+  dbURL: string
+  binanceAPIKey: string
   binanceSecretKey: string
 }
 
-global.buyCoin = function buyCoin(coinName: string): string {
+function buyCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.buy(coinName)
     return `Buying ${coinName}`
   })
 }
 
-global.cancelAction = function cancelAction(coinName: string): string {
+function cancelAction(coinName: string): string {
   return catchError(() => {
     TradeActions.cancel(coinName)
     return `Cancelling actions on ${coinName}`
   })
 }
 
-global.sellCoin = function sellCoin(coinName: string): string {
+function sellCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.sell(coinName)
     return `Selling ${coinName}`
   })
 }
 
-global.setHold = function setHold(coinName: string, value: boolean): string {
+function setHold(coinName: string, value: boolean): string {
   return catchError(() => {
     TradeActions.setHold(coinName, value)
     return `Setting HODL for ${coinName} to ${value}`
   })
 }
 
-global.dropCoin = function dropCoin(coinName: string): string {
+function dropCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.drop(coinName)
     return `Removing ${coinName}`
   })
 }
 
-global.editTrade = function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
+function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
   return catchError(() => {
     TradeActions.replace(coinName, TradeMemo.copy(newTradeMemo))
     return `Making changes for ${coinName}`
   })
 }
 
-global.getTrades = function getTrades(): { [p: string]: TradeMemo } {
-  return catchError(() => DefaultStore.getTrades())
+function getTrades(): TradeMemo[] {
+  return catchError(() => DefaultStore.getTradesList())
 }
 
-global.getConfig = function getConfig(): Config {
+function getStableCoins(): Coin[] {
+  return catchError(() => {
+    const raw = CacheProxy.get(CacheProxy.StableCoins)
+    return raw ? JSON.parse(raw) : []
+  })
+}
+
+function getAssets(): AssetsResponse {
+  return catchError(() => {
+    return {
+      trades: getTrades(),
+      stableCoins: getStableCoins(),
+    }
+  })
+}
+
+function getConfig(): Config {
   return catchError(() => {
     return DefaultStore.isConnected() ? DefaultStore.getConfig() : null
   })
 }
 
-global.setConfig = function setConfig(config): string {
+function setConfig(config): string {
   return catchError(() => {
     DefaultStore.setConfig(config)
     return `Config updated`
   })
 }
 
-global.getStatistics = function getStatistics(): Stats {
+function getStatistics(): Stats {
   return catchError(() => new Statistics(DefaultStore).getAll())
 }
 
-global.getSurvivors = function getSurvivors(): CoinScore[] {
+function getSurvivors(): CoinScore[] {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
     return new Survivors(DefaultStore, exchange).getScores()
   })
 }
 
-global.resetSurvivors = function resetSurvivors(): void {
+function resetSurvivors(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
     return new Survivors(DefaultStore, exchange).resetScores()
   })
 }
 
-global.getCoinNames = function getCoinNames(): string[] {
+function getCoinNames(): string[] {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
     return exchange.getCoinNames()
   })
 }
+
+global.doGet = doGet
+global.doPost = doPost
+global.tick = tick
+global.start = start
+global.stop = stop
+global.initialSetup = initialSetup
+global.buyCoin = buyCoin
+global.cancelAction = cancelAction
+global.sellCoin = sellCoin
+global.setHold = setHold
+global.dropCoin = dropCoin
+global.editTrade = editTrade
+global.getTrades = getTrades
+global.getAssets = getAssets
+global.getStableCoins = getStableCoins
+global.getConfig = getConfig
+global.setConfig = setConfig
+global.getStatistics = getStatistics
+global.getSurvivors = getSurvivors
+global.resetSurvivors = resetSurvivors
+global.getCoinNames = getCoinNames

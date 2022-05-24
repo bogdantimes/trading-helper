@@ -23,7 +23,7 @@ export interface IPriceProvider {
 }
 
 export class Exchange implements IExchange {
-  private readonly exchange: IExchange;
+  private readonly exchange: Binance;
   private readonly stableCoin: StableUSDCoin;
   private priceProvider: IPriceProvider;
 
