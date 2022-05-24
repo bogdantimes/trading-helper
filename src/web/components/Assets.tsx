@@ -15,7 +15,7 @@ import { Config } from "../../gas/Store"
 import StableCoin from "./StableCoin"
 import { confirmBuy } from "./Common"
 import { TradeMemo } from "../../shared-lib/TradeMemo"
-import { Coin, ExchangeSymbol, TradeState } from "../../shared-lib/types"
+import { ExchangeSymbol, TradeState } from "../../shared-lib/types"
 import { Add } from "@mui/icons-material"
 import { TradeEditDialog } from "./TradeEditDialog"
 

@@ -128,7 +128,10 @@ function getTrades(): { [p: string]: TradeMemo } {
 }
 
 function getStableCoins(): { [p: string]: number } {
-  return catchError(() => CacheProxy.get(CacheProxy.StableCoins) || {})
+  return catchError(() => {
+    const raw = CacheProxy.get(CacheProxy.StableCoins)
+    return raw ? JSON.parse(raw) : {}
+  })
 }
 
 function getConfig(): Config {
