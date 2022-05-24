@@ -112,15 +112,15 @@ export function Assets({ config }: { config: Config }) {
 }
 
 function getStableCoinViews(stableCoins: Coin[]) {
-  const elements = Object.keys(stableCoins).map((name) => (
-    <Grid key={name} item>
-      <StableCoin name={name} balance={stableCoins[name]} />
+  const elements = stableCoins.map((coin) => (
+    <Grid key={coin.name} item>
+      <StableCoin {...coin} />
     </Grid>
   ))
   const noElements = (
     <Grid item>
       <Typography variant="body1">
-        No Stable Coins. First buy {Object.keys(StableUSDCoin).join(`, or`)} on Binance.
+        No Stable Coins. First buy {Object.keys(StableUSDCoin).join(`, or `)} on Binance.
       </Typography>
     </Grid>
   )
