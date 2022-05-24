@@ -1,7 +1,7 @@
 import { V2Trader } from "./Trader"
 import { Exchange } from "./Exchange"
 import { Statistics } from "./Statistics"
-import { DefaultStore } from "./Store"
+import { DeadlineError, DefaultStore } from "./Store"
 import { Survivors } from "./Survivors"
 import { Log } from "./Common"
 
@@ -15,7 +15,12 @@ export class Process {
       try {
         DefaultStore.changeTrade(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
       } catch (e) {
-        Log.error(e)
+        // send DeadlineError only to debug channel
+        if (e.name === DeadlineError.name) {
+          Log.debug(e)
+        } else {
+          Log.error(e)
+        }
       }
     })
 

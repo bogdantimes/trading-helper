@@ -5,7 +5,7 @@ export enum StableUSDCoin {
 }
 
 export class CoinScore {
-  static readonly PRICES_MAX_CAP = 5;
+  static readonly PRICES_MAX_CAP = 5
   /**
    * `r` is the number of times this memo was going up when the rest of the market wasn't.
    */
@@ -23,7 +23,7 @@ export class CoinScore {
   }
 
   static new(coinName: string, obj?: CoinScore): CoinScore {
-    const score = new CoinScore(coinName);
+    const score = new CoinScore(coinName)
     score.p = obj?.p ?? score.p
     score.r = obj?.r ?? score.r
     return score
@@ -52,7 +52,7 @@ export class CoinScore {
     if (this.p.length < CoinScore.PRICES_MAX_CAP) {
       return false
     }
-    return this.p.every((p, i) => i == 0 ? true : p > this.p[i - 1])
+    return this.p.every((p, i) => (i == 0 ? true : p > this.p[i - 1]))
   }
 
   pushPrice(price: number): void {
@@ -61,20 +61,13 @@ export class CoinScore {
       this.p.splice(0, this.p.length - CoinScore.PRICES_MAX_CAP)
     }
   }
-
 }
 
-export type PriceMap = { [key: string]: number };
-
-export class Coin {
-  static isStable(coinName: string): boolean {
-    return Object.keys(StableUSDCoin).includes(coinName.toUpperCase())
-  }
-}
+export type PriceMap = { [key: string]: number }
 
 export type Stats = {
-  TotalProfit: number;
-  DailyProfit: PriceMap;
+  TotalProfit: number
+  DailyProfit: PriceMap
 }
 
 export enum PriceProvider {
@@ -97,7 +90,7 @@ export class ExchangeSymbol {
     this.priceAsset = priceAsset.toUpperCase()
   }
 
-  static fromObject(object: { quantityAsset: string, priceAsset: string }): ExchangeSymbol {
+  static fromObject(object: { quantityAsset: string; priceAsset: string }): ExchangeSymbol {
     return new ExchangeSymbol(object.quantityAsset, object.priceAsset)
   }
 
@@ -110,7 +103,30 @@ export enum TradeState {
   BUY = `buy`,
   BOUGHT = `bought`,
   SELL = `sell`,
-  SOLD = `sold`
+  SOLD = `sold`,
 }
 
 export type PriceMemo = [number, number, number]
+
+export class Coin {
+  readonly name: string
+  readonly balance: number
+
+  constructor(name: string, balance = 0) {
+    if (!name) throw new Error(`Invalid coin name: "${name}"`)
+    this.name = name.toUpperCase()
+    this.balance = Math.max(balance, 0)
+  }
+
+  isStable(): boolean {
+    return Object.keys(StableUSDCoin).includes(this.name)
+  }
+}
+
+export enum PriceMove {
+  STRONG_DOWN,
+  DOWN,
+  NEUTRAL,
+  UP,
+  STRONG_UP,
+}

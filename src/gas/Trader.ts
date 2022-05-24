@@ -7,6 +7,7 @@ import { f2 } from "../shared-lib/functions"
 import { Coin, ExchangeSymbol, PriceMap, StableUSDCoin, TradeState } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { TradeResult } from "../shared-lib/TradeResult"
+import { CacheProxy } from "./CacheProxy"
 
 export class V2Trader {
   private readonly store: IStore
@@ -38,14 +39,18 @@ export class V2Trader {
   }
 
   tickerCheck(tm: TradeMemo): TradeMemo {
-    if (!Coin.isStable(tm.getCoinName())) {
-      this.pushNewPrice(tm)
+    if (new Coin(tm.getCoinName()).isStable()) {
+      // Remove stable coins from the list of coins to check
+      tm.deleted = true
+      return tm
+    }
 
-      const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
-      if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
-        Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
-        tm.setState(TradeState.BUY)
-      }
+    this.pushNewPrice(tm)
+
+    const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
+    if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
+      Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
+      tm.setState(TradeState.BUY)
     }
 
     if (tm.stateIs(TradeState.BOUGHT)) {
@@ -62,13 +67,10 @@ export class V2Trader {
       // sell if price not goes up anymore
       // this allows to wait if price continues to go up
       this.sell(tm)
-    } else if (tm.stateIs(TradeState.BUY)) {
+    } else if (tm.stateIs(TradeState.BUY) && priceGoesUp) {
       // buy only if price started to go up
       // this allows to wait if price continues to fall
-      // or buy if it is a stable coin
-      if (priceGoesUp || Coin.isStable(tm.getCoinName())) {
-        this.buy(tm, this.config.BuyQuantity)
-      }
+      this.buy(tm, this.config.BuyQuantity)
     }
     return tm
   }
@@ -78,10 +80,10 @@ export class V2Trader {
       return
     }
     // Swing trade enabled.
-    // Checking if price dropped below max observed price minus profit limit percentage,
+    // Checking if price dropped below max observed price minus x2 profit limit percentage,
     // and we can buy again
     const symbol = tm.tradeResult.symbol
-    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit)
+    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit * 2)
     if (priceDropped) {
       Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
@@ -91,6 +93,7 @@ export class V2Trader {
   }
 
   private processBoughtState(tm: TradeMemo): void {
+    this.updateStopLimit(tm)
     this.sendLevelsCrossingAlerts(tm)
 
     if (tm.currentPrice < tm.stopLimitPrice) {
@@ -103,15 +106,21 @@ export class V2Trader {
       const canSell = !tm.hodl && this.store.getConfig().SellAtProfitLimit
       canSell && tm.setState(TradeState.SELL)
     }
+  }
 
+  private updateStopLimit(tm: TradeMemo) {
     if (this.config.ProfitBasedStopLimit) {
       const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
     } else if (!tm.stopLimitPrice || tm.priceGoesUp()) {
-      // Using the previous price a few measures back to calculate new stop limit
-      const newStopLimit = tm.prices[tm.prices.length - 3] * (1 - this.config.StopLimit)
+      const newStopLimit = tm.currentPrice * (1 - this.config.StopLimit)
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit)
     }
+  }
+
+  private forceUpdateStopLimit(tm: TradeMemo) {
+    tm.stopLimitPrice = 0
+    this.updateStopLimit(tm)
   }
 
   private sendLevelsCrossingAlerts(tm: TradeMemo) {
@@ -146,10 +155,18 @@ export class V2Trader {
     const symbol = tm.tradeResult.symbol
     const tradeResult = this.exchange.marketBuy(symbol, cost)
     if (tradeResult.fromExchange) {
-      this.processBuyFee(tradeResult)
-      tm.joinWithNewTrade(tradeResult)
-      Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
-      Log.debug(tm)
+      // any actions should not affect changing the state to BOUGHT in the end
+      try {
+        tm.joinWithNewTrade(tradeResult)
+        this.forceUpdateStopLimit(tm)
+        this.processBuyFee(tradeResult)
+        Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
+        Log.debug(tm)
+      } catch (e) {
+        Log.error(e)
+      } finally {
+        tm.setState(TradeState.BOUGHT)
+      }
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`)
       Log.debug(tm)
@@ -161,17 +178,23 @@ export class V2Trader {
     const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin)
     const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity)
     if (tradeResult.fromExchange) {
-      const fee = this.processSellFee(memo, tradeResult)
-      const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
-      const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
+      // any actions should not affect changing the state to SOLD in the end
+      try {
+        const fee = this.processSellFee(memo, tradeResult)
+        const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
+        const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
 
-      Log.alert(`${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
+        Log.alert(`${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
 
-      tradeResult.profit = profit
-      memo.tradeResult = tradeResult
-      Log.debug(memo)
-      memo.setState(TradeState.SOLD)
-      this.updatePLStatistics(symbol.priceAsset, profit)
+        tradeResult.profit = profit
+        this.updatePLStatistics(symbol.priceAsset, profit)
+      } catch (e) {
+        Log.error(e)
+      } finally {
+        memo.tradeResult = tradeResult
+        Log.debug(memo)
+        memo.setState(TradeState.SOLD)
+      }
     } else {
       Log.debug(memo)
       memo.hodl = true
@@ -183,28 +206,36 @@ export class V2Trader {
     }
 
     if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
-      // all gains are reinvested to most unprofitable asset
-      // find a trade with the lowest profit percentage
-      const byProfitPercentDesc = (t1, t2) => (t1.profitPercent() < t2.profitPercent() ? -1 : 1)
-      const lowestProfitTrade = this.store
-        .getTradesList()
-        .filter((t) => t.stateIs(TradeState.BOUGHT))
-        .sort(byProfitPercentDesc)[0]
-      if (lowestProfitTrade) {
-        Log.alert(`Averaging down is enabled`)
-        Log.alert(
-          `All gains from selling ${symbol} are being invested to ${lowestProfitTrade.tradeResult.symbol}`,
-        )
-        DefaultStore.changeTrade(lowestProfitTrade.getCoinName(), (tm) => {
-          this.buy(tm, tradeResult.gained)
-          return tm
-        })
+      try {
+        this.averageDown(tradeResult)
+      } catch (e) {
+        Log.error(e)
       }
     }
   }
 
+  private averageDown(tradeResult: TradeResult) {
+    // all gains are reinvested to most unprofitable asset
+    // find a trade with the lowest profit percentage
+    const byProfitPercentDesc = (t1, t2) => (t1.profitPercent() < t2.profitPercent() ? -1 : 1)
+    const lowestPLTrade = this.store
+      .getTradesList(TradeState.BOUGHT)
+      .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
+      .sort(byProfitPercentDesc)[0]
+    if (lowestPLTrade) {
+      Log.alert(`Averaging down is enabled`)
+      Log.alert(
+        `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
+      )
+      DefaultStore.changeTrade(lowestPLTrade.getCoinName(), (tm) => {
+        this.buy(tm, tradeResult.gained)
+        return tm
+      })
+    }
+  }
+
   private updatePLStatistics(gainedCoin: string, profit: number): void {
-    if (Coin.isStable(gainedCoin)) {
+    if (new Coin(gainedCoin).isStable()) {
       this.stats.addProfit(profit)
       Log.info(`P/L added to statistics: ` + profit)
     }
@@ -246,34 +277,11 @@ export class V2Trader {
   }
 
   updateStableCoinsBalance() {
+    const stableCoins = []
     Object.keys(StableUSDCoin).forEach((coin) => {
-      const symbol = new ExchangeSymbol(coin, this.config.StableCoin)
       const balance = this.exchange.getFreeAsset(coin)
-      const tradeResult = new TradeResult(symbol, `Stable coin`)
-      DefaultStore.changeTrade(
-        coin,
-        (tm) => {
-          tm.deleted = !balance // delete it if no balance
-          tm.setState(tm.getState() || TradeState.BOUGHT)
-          tm.tradeResult = tradeResult
-          tm.tradeResult.quantity = balance
-          tm.tradeResult.fromExchange = true
-          tm.hodl = true
-          return tm
-        },
-        () => {
-          if (!balance) {
-            return
-          }
-          const tm = new TradeMemo(tradeResult)
-          tm.setState(TradeState.BOUGHT)
-          tm.tradeResult = tradeResult
-          tm.tradeResult.quantity = balance
-          tm.tradeResult.fromExchange = true
-          tm.hodl = true
-          return tm
-        },
-      )
+      balance && stableCoins.push(new Coin(coin, balance))
     })
+    CacheProxy.put(CacheProxy.StableCoins, JSON.stringify(stableCoins))
   }
 }
