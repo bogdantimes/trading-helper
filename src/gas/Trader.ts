@@ -80,10 +80,10 @@ export class V2Trader {
       return
     }
     // Swing trade enabled.
-    // Checking if price dropped below max observed price minus profit limit percentage,
+    // Checking if price dropped below max observed price minus x2 profit limit percentage,
     // and we can buy again
     const symbol = tm.tradeResult.symbol
-    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit)
+    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit * 2)
     if (priceDropped) {
       Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
