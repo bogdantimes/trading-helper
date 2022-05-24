@@ -106,10 +106,10 @@ export class TradeMemo {
   setState(state: TradeState): void {
     if (state === TradeState.SOLD) {
       // Assign an empty trade result for SOLD state.
-      // Keep the last trade price and the current prices.
+      // Keep the last trade price and the current price only.
       const newState = TradeMemo.newManual(this.tradeResult.symbol)
       newState.tradeResult.soldPrice = this.tradeResult.soldPrice
-      newState.prices = this.prices
+      newState.pushPrice(this.currentPrice)
       Object.assign(this, newState)
     }
     this.state = state
