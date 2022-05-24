@@ -11,13 +11,13 @@ import {
 } from "@mui/icons-material"
 import Typography from "@mui/material/Typography"
 import { TradeMemo } from "../../shared-lib/TradeMemo"
-import { TradeState } from "../../shared-lib/types"
+import { PriceMove, TradeState } from "../../shared-lib/types"
 
-const growthIconMap = new Map<number, JSX.Element>()
-growthIconMap.set(-2, <KeyboardDoubleArrowDown htmlColor={`red`} />)
-growthIconMap.set(-1, <KeyboardArrowDown htmlColor={`red`} />)
-growthIconMap.set(1, <KeyboardArrowUp htmlColor={`green`} />)
-growthIconMap.set(2, <KeyboardDoubleArrowUp htmlColor={`green`} />)
+const growthIconMap = new Map<PriceMove, JSX.Element>()
+growthIconMap.set(PriceMove.STRONG_DOWN, <KeyboardDoubleArrowDown htmlColor={`red`} />)
+growthIconMap.set(PriceMove.DOWN, <KeyboardArrowDown htmlColor={`red`} />)
+growthIconMap.set(PriceMove.UP, <KeyboardArrowUp htmlColor={`green`} />)
+growthIconMap.set(PriceMove.STRONG_UP, <KeyboardDoubleArrowUp htmlColor={`green`} />)
 
 export function TradeTitle({ tradeMemo, onEdit, onDelete }: {
   tradeMemo: TradeMemo,
@@ -28,16 +28,6 @@ export function TradeTitle({ tradeMemo, onEdit, onDelete }: {
   const theme = useTheme()
   const [editHover, setEditHover] = useState(false)
   const [deleteHover, setDeleteHover] = useState(false)
-
-  const growthIndex = tradeMemo.getPriceChangeIndex(tradeMemo.prices)
-
-  // normalize growth index to be in range -2 ... 2
-  const ranges = 4
-  const normalIndex = Math.max(-2, Math.min(2,
-    +((growthIndex / (tradeMemo.prices.length - 1)) * ranges).toFixed(0),
-  ))
-
-  const growthIcon = growthIconMap.get(normalIndex)
 
   const editColor = editHover ? theme.palette.action.active : theme.palette.action.disabled
   const editIcon = tradeMemo.stateIs(TradeState.BOUGHT) &&
@@ -52,7 +42,7 @@ export function TradeTitle({ tradeMemo, onEdit, onDelete }: {
   return (
     <Typography sx={{ display: `flex`, alignItems: `center` }} gutterBottom variant='h5' component='div'>
       {tradeMemo.getCoinName()}
-      {growthIcon}
+      {growthIconMap.get(tradeMemo.getPriceMove())}
       <span style={{ marginLeft: `auto` }}>{editIcon}{deleteIcon}</span>
     </Typography>
   )

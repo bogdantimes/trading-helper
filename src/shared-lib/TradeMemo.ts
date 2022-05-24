@@ -1,5 +1,5 @@
 import { TradeResult } from "./TradeResult"
-import { ExchangeSymbol, PriceMemo, TradeState } from "./types"
+import { ExchangeSymbol, PriceMemo, PriceMove, TradeState } from "./types"
 
 export class TradeMemo {
   static readonly PriceMemoMaxCapacity = 10
@@ -174,16 +174,12 @@ export class TradeMemo {
     return this.currentPrice > entryPrice && this.prices.slice(0, -1).every((p) => p <= entryPrice)
   }
 
-  priceGoesUp(lastN = 3): boolean {
-    const tail = this.prices.slice(-lastN)
-    if (tail.length < lastN) return false
-    // returns true if all prices in the tail are increasing
-    return this.getPriceChangeIndex(tail) === tail.length - 1
+  priceGoesUp(): boolean {
+    return this.getPriceMove() === PriceMove.UP
   }
 
   /**
    * Returns the number of consecutive prices that are increasing.
-   * Looks back from the last price.
    * The result is negative if prices are decreasing.
    * @example [3, 2, 1] => -2
    * @example [2, 2, 1] => -1
@@ -194,13 +190,23 @@ export class TradeMemo {
    */
   getPriceChangeIndex(prices: number[]): number {
     let result = 0
-    for (let j = prices.length - 1; j > 0; j--) {
-      if (prices[j] > prices[j - 1]) {
+    // if next price greater than current price, increase result
+    // otherwise decrease result
+    for (let i = 1; i < prices.length; i++) {
+      if (prices[i] > prices[i - 1]) {
         result++
-      } else if (prices[j] < prices[j - 1]) {
+      } else {
         result--
       }
     }
     return result
+  }
+
+  getPriceMove(): PriceMove {
+    const max = TradeMemo.PriceMemoMaxCapacity
+    const index = this.getPriceChangeIndex(this.prices)
+    const priceMove = +(((index + max) / (2 * max)) * PriceMove.STRONG_UP).toFixed(0)
+    console.log(`calculating price move: index=${index}, priceMove=${priceMove}`)
+    return priceMove
   }
 }

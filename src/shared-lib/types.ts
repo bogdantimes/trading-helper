@@ -122,3 +122,11 @@ export class Coin {
     return Object.keys(StableUSDCoin).includes(this.name)
   }
 }
+
+export enum PriceMove {
+  STRONG_DOWN,
+  DOWN,
+  NEUTRAL,
+  UP,
+  STRONG_UP,
+}
