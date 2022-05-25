@@ -178,6 +178,10 @@ export class TradeMemo {
     return this.getPriceMove() === PriceMove.UP
   }
 
+  priceGoesUpStrong(): boolean {
+    return this.getPriceMove() === PriceMove.STRONG_UP
+  }
+
   /**
    * Returns the number of consecutive prices that are increasing.
    * The result is negative if prices are decreasing.

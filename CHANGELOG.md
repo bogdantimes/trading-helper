@@ -1,3 +1,8 @@
+# v2.6.1
+
+* Start the background process if it is not running (fix for the upgrade from v2.5.0 to v2.6.0+)
+* Update stop limit when price movement up is strong (should improve/reduce sensitivity).
+
 # v2.6.0
 
 * Improved "Assets" page UI: all tabs collapsed into a single page with clickable dividers #41.
