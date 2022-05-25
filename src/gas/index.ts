@@ -39,8 +39,12 @@ function start() {
 
 function stop() {
   catchError(() => {
-    ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-    Log.alert(`All background processes stopped.`)
+    let deleted = false;
+    ScriptApp.getProjectTriggers().forEach((t) => {
+      ScriptApp.deleteTrigger(t)
+      deleted = true
+    })
+    deleted && Log.alert(`Background processes stopped.`)
   })
 }
 
