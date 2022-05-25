@@ -11,6 +11,10 @@ import { CacheProxy } from "./CacheProxy"
 import { AssetsResponse } from "../shared-lib/responses"
 
 function doGet() {
+  if (!ScriptApp.getProjectTriggers().find((t) => t.getHandlerFunction() == Process.tick.name)) {
+    // Start app if not running
+    start()
+  }
   return HtmlService.createTemplateFromFile(`index`)
     .evaluate()
     .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
@@ -27,20 +31,16 @@ function tick() {
 function start() {
   catchError(() => {
     stop()
-    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(1).create()
-    Log.info(`Started ${Process.tick.name}`)
+    const interval = 1
+    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(interval).create()
+    Log.alert(`Background process started. State synchronization interval is ${interval} minute.`)
   })
 }
 
 function stop() {
   catchError(() => {
-    const trigger = ScriptApp.getProjectTriggers().find(
-      (t) => t.getHandlerFunction() == Process.tick.name,
-    )
-    if (trigger) {
-      ScriptApp.deleteTrigger(trigger)
-      Log.info(`Stopped ${Process.tick.name}`)
-    }
+    ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
+    Log.alert(`All background processes stopped.`)
   })
 }
 
