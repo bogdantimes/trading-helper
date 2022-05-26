@@ -2,7 +2,7 @@ import { getPriceMove } from "./functions"
 import { PriceMove } from "./types"
 
 export class PricesHolder {
-  protected static readonly PRICES_MAX_CAP = 10
+  static readonly PRICES_MAX_CAP = 10
   protected p: number[] = []
 
   /**
