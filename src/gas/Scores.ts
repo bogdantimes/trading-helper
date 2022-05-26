@@ -34,7 +34,11 @@ export class Scores implements ScoresManager {
     const scoresJson = CacheProxy.get(`RecommenderMemos`)
     const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : {}
     return Object.values(scores)
-      .map(CoinScore.fromObject)
+      .reduce((acc, v) => {
+        const cs = CoinScore.fromObject(v)
+        if (cs.score > 0) acc.push(cs)
+        return acc
+      }, [] as CoinScore[])
       .sort((a, b) => b.score - a.score)
       .slice(0, 10)
   }
@@ -55,52 +59,45 @@ export class Scores implements ScoresManager {
     const scores: CoinScoreMap = scoresJson
       ? JSON.parse(scoresJson)
       : this.store.get(`SurvivorScores`) || {}
-    const gainers: CoinScoreMap = {}
-    const losers: CoinScoreMap = {}
-    const prices = this.exchange.getPrices()
+
     let notGainers = 0
     let notLosers = 0
+    const strongGainers: CoinScoreMap = {}
+    const strongLosers: CoinScoreMap = {}
+    const prices = this.exchange.getPrices()
+
     Object.keys(prices).forEach((s) => {
-      const coinName = s.endsWith(StableUSDCoin.USDT) ? s.split(StableUSDCoin.USDT)[0] : null
-      if (coinName) {
-        const price = prices[s]
-        const cs = new CoinScore(coinName, scores[s])
-        cs.pushPrice(price)
+      if (!s.endsWith(StableUSDCoin.USDT)) return
 
-        const priceMove = cs.getPriceMove()
-        if (priceMove <= PriceMove.NEUTRAL) {
-          notGainers++
-          cs.priceGoesStrongDown() && (losers[s] = cs)
-        }
-        if (priceMove >= PriceMove.NEUTRAL) {
-          notLosers++
-          cs.priceGoesStrongUp() && (gainers[s] = cs)
-        }
+      const coinName = s.split(StableUSDCoin.USDT)[0]
+      const cs = new CoinScore(coinName, scores[s])
+      cs.pushPrice(prices[s])
 
-        scores[s] = cs
-      }
+      const priceMove = cs.getPriceMove()
+      if (priceMove >= PriceMove.NEUTRAL) notLosers++
+      if (priceMove <= PriceMove.NEUTRAL) notGainers++
+      if (priceMove === PriceMove.STRONG_UP) strongGainers[s] = cs
+      if (priceMove === PriceMove.STRONG_DOWN) strongLosers[s] = cs
+      scores[s] = cs
     })
 
     // Update scores only if there is a small percentage of coins that are gainers or losers
     // while prevailing is the opposite.
-    const allMarket = Object.keys(prices).length
-    const isTinyFraction = (n) => n > 0 && n <= this.TINY_FRACTION * allMarket
-    const isPrevailingFraction = (n) => n <= allMarket && n > (1 - this.TINY_FRACTION) * allMarket
+    const totalCoins = Object.keys(scores).length
+    const isTinyFraction = (n) => n > 0 && n <= this.TINY_FRACTION * totalCoins
+    const isPrevailingFraction = (n) => n <= totalCoins && n > (1 - this.TINY_FRACTION) * totalCoins
     // Updating gainers
-    if (isTinyFraction(Object.keys(gainers).length) && isPrevailingFraction(notGainers)) {
-      Object.values(gainers).forEach((r) => r.scoreUp())
+    if (isTinyFraction(Object.keys(strongGainers).length) && isPrevailingFraction(notGainers)) {
+      Object.values(strongGainers).forEach((r) => r.scoreUp())
       Log.alert(`Strong gainers found. Updated scores.`)
-      Log.debug(`Strong gainers: ${Object.keys(gainers)}`)
+      Log.debug(`Strong gainers: ${Object.keys(strongGainers)}`)
     }
     // Updating losers
-    if (isTinyFraction(Object.keys(losers).length) && isPrevailingFraction(notLosers)) {
-      Object.values(losers).forEach((r) => r.scoreDown())
+    if (isTinyFraction(Object.keys(strongLosers).length) && isPrevailingFraction(notLosers)) {
+      Object.values(strongLosers).forEach((r) => r.scoreDown())
       Log.alert(`Strong losers found. Updated scores.`)
-      Log.debug(`Strong losers: ${Object.keys(losers)}`)
+      Log.debug(`Strong losers: ${Object.keys(strongLosers)}`)
     }
-
-    // delete zero scores from scores
-    Object.keys(scores).forEach((k) => !scores[k].score && delete scores[k])
 
     CacheProxy.put(`RecommenderMemos`, JSON.stringify(scores))
 
