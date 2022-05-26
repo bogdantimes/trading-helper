@@ -33,14 +33,10 @@ export class Survivors implements ScoresManager {
   getScores(): CoinScore[] {
     const scoresJson = CacheProxy.get(`RecommenderMemos`)
     const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : {}
-    const recommended: CoinScore[] = []
-    Object.keys(scores).forEach((k) => {
-      const cs = CoinScore.fromObject(scores[k])
-      if (cs.score > 0) {
-        recommended.push(cs)
-      }
-    })
-    return recommended.sort((a, b) => b.score - a.score).slice(0, 10)
+    return Object.values(scores)
+      .map(CoinScore.fromObject)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
   }
 
   updateScores(): void {
