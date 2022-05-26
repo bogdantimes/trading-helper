@@ -4,11 +4,12 @@ import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { Survivors } from "./Survivors"
 import { Log } from "./Common"
-import { Coin, CoinScore, Stats } from "../shared-lib/types"
+import { Coin, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { AssetsResponse } from "../shared-lib/responses"
+import { CoinScore } from "../shared-lib/CoinScore"
 
 function doGet() {
   if (!ScriptApp.getProjectTriggers().find((t) => t.getHandlerFunction() == Process.tick.name)) {

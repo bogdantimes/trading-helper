@@ -2,7 +2,6 @@ import { CacheProxy } from "./CacheProxy"
 import { Log } from "./Common"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { absPercentageChange } from "../shared-lib/functions"
-import { PriceMove } from "../shared-lib/types"
 
 export enum PriceAnomaly {
   NONE,
@@ -13,17 +12,10 @@ export enum PriceAnomaly {
 
 export class PriceAnomalyChecker {
   public static check(tm: TradeMemo, pdAlertPercentage: number): PriceAnomaly {
-    if (tm.prices.length < TradeMemo.PriceMemoMaxCapacity) {
-      return PriceAnomaly.NONE
-    }
-
     const key = `${tm.getCoinName()}-pump-dump-start`
     const anomalyStartPrice = CacheProxy.get(key)
 
-    const dump = tm.getPriceMove() === PriceMove.STRONG_DOWN
-    const pump = tm.getPriceMove() === PriceMove.STRONG_UP
-
-    if (pump || dump) {
+    if (tm.priceGoesUpStrong() || tm.priceGoesDownStrong()) {
       Log.debug(`${tm.getCoinName()} price anomaly detected`)
       CacheProxy.put(key, anomalyStartPrice || tm.prices[0].toString(), 120) // 2 minutes
       return PriceAnomaly.TRACKING
