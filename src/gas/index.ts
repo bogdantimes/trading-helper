@@ -2,7 +2,7 @@ import { Config, DefaultStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
-import { Survivors } from "./Survivors"
+import { Scores } from "./Scores"
 import { Log } from "./Common"
 import { Coin, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
@@ -168,17 +168,17 @@ function getStatistics(): Stats {
   return catchError(() => new Statistics(DefaultStore).getAll())
 }
 
-function getSurvivors(): CoinScore[] {
+function getScores(): CoinScore[] {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return new Survivors(DefaultStore, exchange).getScores()
+    return new Scores(DefaultStore, exchange).getScores()
   })
 }
 
-function resetSurvivors(): void {
+function resetScores(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return new Survivors(DefaultStore, exchange).resetScores()
+    return new Scores(DefaultStore, exchange).resetScores()
   })
 }
 
@@ -207,6 +207,6 @@ global.getStableCoins = getStableCoins
 global.getConfig = getConfig
 global.setConfig = setConfig
 global.getStatistics = getStatistics
-global.getSurvivors = getSurvivors
-global.resetSurvivors = resetSurvivors
+global.getScores = getScores
+global.resetScores = resetScores
 global.getCoinNames = getCoinNames

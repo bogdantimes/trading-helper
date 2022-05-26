@@ -25,7 +25,7 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 * Swing trading: automatically buy low and sell high during the rally.
 * Averaging down: automatically re-invest gains into most unprofitable coins to buy them at discount prices.
 * Your statistics: see how much you have made and how much you have lost on a daily basis.
-* Survivors: currencies that show movement up when 99% of the market goes down or not moves.
+* Scores: currencies that statistically show movement up when 99% of the market goes down or not moves.
 
 ### Assets
 ![assets.png](img/assets.png)
@@ -33,8 +33,8 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 ![settings.png](img/settings.png)
 ### Info
 ![info.png](img/info.png)
-### Survivors
-![survivors.png](img/survivors.png)
+### Scores
+![survivors.png](img/scores.png)
 
 ## How to
 

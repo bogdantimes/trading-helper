@@ -18,7 +18,7 @@ import { Assets } from "./components/Assets"
 import { TabPanel } from "./components/TabPanel"
 import { Config } from "../gas/Store"
 import { InitialSetup } from "./components/InitialSetup"
-import { Survivors } from "./components/Survivors"
+import { Scores } from "./components/Scores"
 
 function a11yProps(index: number) {
   return {
@@ -90,13 +90,13 @@ export default function App() {
               <Tab label="Assets" {...a11yProps(0)} />
               <Tab label="Settings" {...a11yProps(1)} />
               <Tab label="Info" {...a11yProps(2)} />
-              <Tab label="Survivors" {...a11yProps(3)} />
+              <Tab label="Scores" {...a11yProps(3)} />
             </Tabs>
           </Box>
           <TabPanel value={value} index={0}><Assets config={config}/></TabPanel>
           <TabPanel value={value} index={1}><Settings/></TabPanel>
           <TabPanel value={value} index={2}><Info/></TabPanel>
-          <TabPanel value={value} index={3}><Survivors config={config}/></TabPanel>
+          <TabPanel value={value} index={3}><Scores config={config}/></TabPanel>
         </Box>
       }
     </ThemeProvider>

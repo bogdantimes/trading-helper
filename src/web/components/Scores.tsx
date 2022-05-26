@@ -16,11 +16,11 @@ import { Config } from "../../gas/Store"
 import { confirmBuy } from "./Common"
 import { CoinScore } from "../../shared-lib/CoinScore"
 
-export function Survivors({ config }: { config: Config }) {
-  const [survivors, setSurvivors] = React.useState<CoinScore[]>([])
+export function Scores({ config }: { config: Config }) {
+  const [scores, setScores] = React.useState<CoinScore[]>([])
 
   useEffect(() => {
-    google.script.run.withSuccessHandler(setSurvivors).getSurvivors()
+    google.script.run.withSuccessHandler(setScores).getScores()
   }, [])
 
   function buy(coinName: string) {
@@ -36,9 +36,9 @@ export function Survivors({ config }: { config: Config }) {
           Score represents how many times a currency showed a price growth within last{` `}
           {CoinScore.PRICES_MAX_CAP} measures, while 99% of the market was not moving up.
         </Alert>
-        {!!survivors.length && (
+        {!!scores.length && (
           <List sx={{ padding: 0, width: 332 }}>
-            {survivors.map((rJson, i) => {
+            {scores.map((rJson, i) => {
               const cs = CoinScore.fromObject(rJson)
               return (
                 <ListItem
@@ -62,11 +62,11 @@ export function Survivors({ config }: { config: Config }) {
           </List>
         )}
         <Stack alignSelf={`center`} spacing={2} direction={`row`}>
-          {!!survivors.length && (
+          {!!scores.length && (
             <Button
               onClick={() => {
                 if (confirm(`Are you sure you want to clear the statistics?`)) {
-                  google.script.run.withSuccessHandler(() => setSurvivors([])).resetSurvivors()
+                  google.script.run.withSuccessHandler(() => setScores([])).resetScores()
                 }
               }}
             >
@@ -75,7 +75,7 @@ export function Survivors({ config }: { config: Config }) {
           )}
           <IconButton
             onClick={() => {
-              google.script.run.withSuccessHandler(setSurvivors).getSurvivors()
+              google.script.run.withSuccessHandler(setScores).getScores()
             }}
           >
             <Refresh />

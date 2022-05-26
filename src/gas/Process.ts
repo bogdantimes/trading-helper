@@ -2,7 +2,7 @@ import { V2Trader } from "./Trader"
 import { Exchange } from "./Exchange"
 import { Statistics } from "./Statistics"
 import { DeadlineError, DefaultStore } from "./Store"
-import { Survivors } from "./Survivors"
+import { Scores } from "./Scores"
 import { Log } from "./Common"
 
 export class Process {
@@ -33,7 +33,7 @@ export class Process {
     store.dumpChanges()
 
     try {
-      new Survivors(store, exchange).updateScores()
+      new Scores(store, exchange).updateScores()
     } catch (e) {
       Log.info(e)
     }

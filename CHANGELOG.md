@@ -39,25 +39,25 @@
 
 * Fixed "Old stable coin is used when buying more of existing asset even after stable was changed" #21.
 * Implemented "If BNB is present in the assets and fee was paid using BNB - update it's balance" #22.
-* Added "Info" msg on the "Survivors" tab.
+* Added "Info" msg on the "Scores" tab.
 * Improvements in errors handling.
 
 # v2.3.2
 
-* Changing "Stable Coin" will not reset collected "Survivors" statistics for this stable coin if you switch back.
+* Changing "Stable Coin" will not reset collected "Scores" statistics for this stable coin if you switch back.
 * Added autocompletion for "Coin Name" on the "Assets" tab.
 * Added suggestions for "Stable Coin" on the "Settings" tab.
-* Adjusted "Survivors" scores update logic to be less sensitive.
+* Adjusted "Scores" scores update logic to be less sensitive.
 
 # v2.3.1
 
-* Fixed Reset button on Survivors tab crashes the UI #16
+* Fixed Reset button on Scores tab crashes the UI #16
 * Adjusted scores update logic to be less sensitive
 * Minor code clean up and fixes under the hood
 
 # v2.3.0
 
-* Added "Survivors" feature, which tracks currencies that keep the price when 99% of the market goes down.
+* Added "Scores" feature, which tracks currencies that keep the price when 99% of the market goes down.
 * Visual improvements.
 * Improved Binance connection stability.
 * Trading state machine minor improvements.

@@ -15,7 +15,7 @@ export interface ScoresManager {
 
 type CoinScoreMap = { [key: string]: CoinScore }
 
-export class Survivors implements ScoresManager {
+export class Scores implements ScoresManager {
   private readonly MARKET_THRESHOLD = 0.01 // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
   private store: IStore
   private exchange: IExchange
@@ -64,7 +64,7 @@ export class Survivors implements ScoresManager {
     if (withinRange(Object.keys(gainers).length) || withinRange(Object.keys(losers).length)) {
       Object.values(gainers).forEach((r) => r.scoreUp())
       Object.values(losers).forEach((r) => r.scoreDown())
-      Log.info(`Updated survivors.`)
+      Log.info(`Updated scores.`)
     }
 
     // delete zero scores from scores
@@ -73,9 +73,9 @@ export class Survivors implements ScoresManager {
     CacheProxy.put(`RecommenderMemos`, JSON.stringify(scores))
 
     // Sync the scores to store every 6 hours
-    if (!CacheProxy.get(`SurvivorScoresSynced`)) {
+    if (!CacheProxy.get(`ScoresSynced`)) {
       this.store.set(`SurvivorScores`, scores)
-      CacheProxy.put(`SurvivorScoresSynced`, `true`, 6 * 60 * 60) // 6 hours
+      CacheProxy.put(`ScoresSynced`, `true`, 3 * 60 * 60) // 3 hours
     }
   }
 
@@ -83,6 +83,6 @@ export class Survivors implements ScoresManager {
     // todo: make concurrent safe
     CacheProxy.put(`RecommenderMemos`, JSON.stringify({}))
     this.store.set(`SurvivorScores`, {})
-    CacheProxy.put(`SurvivorScoresSynced`, `true`, 6 * 60 * 60) // 6 hours
+    CacheProxy.put(`ScoresSynced`, `true`, 6 * 60 * 60) // 6 hours
   }
 }
