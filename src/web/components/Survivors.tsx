@@ -14,7 +14,7 @@ import {
 import { Refresh } from "@mui/icons-material"
 import { Config } from "../../gas/Store"
 import { confirmBuy } from "./Common"
-import { CoinScore } from "../../shared-lib/types"
+import { CoinScore } from "../../shared-lib/CoinScore"
 
 export function Survivors({ config }: { config: Config }) {
   const [survivors, setSurvivors] = React.useState<CoinScore[]>([])
@@ -39,13 +39,13 @@ export function Survivors({ config }: { config: Config }) {
         {!!survivors.length && (
           <List sx={{ padding: 0, width: 332 }}>
             {survivors.map((rJson, i) => {
-              const r = CoinScore.fromObject(rJson)
+              const cs = CoinScore.fromObject(rJson)
               return (
                 <ListItem
-                  key={r.getCoinName()}
+                  key={cs.coinName}
                   disablePadding={true}
                   secondaryAction={
-                    <Button size={`small`} onClick={() => buy(r.getCoinName())}>
+                    <Button size={`small`} onClick={() => buy(cs.coinName)}>
                       Buy
                     </Button>
                   }
@@ -53,8 +53,8 @@ export function Survivors({ config }: { config: Config }) {
                   <ListItemAvatar>#{i + 1}</ListItemAvatar>
                   <ListItemText
                     sx={{ marginBottom: 0 }}
-                    primary={r.getCoinName()}
-                    secondary={`Score: ${r.getScore()}`}
+                    primary={cs.coinName}
+                    secondary={`Score: ${cs.score}`}
                   />
                 </ListItem>
               )

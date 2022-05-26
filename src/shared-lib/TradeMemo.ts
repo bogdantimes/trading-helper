@@ -1,14 +1,9 @@
 import { TradeResult } from "./TradeResult"
-import { ExchangeSymbol, PriceMemo, PriceMove, TradeState } from "./types"
+import { ExchangeSymbol, TradeState } from "./types"
+import { PricesHolder } from "./PricesHolder"
 
-export class TradeMemo {
-  static readonly PriceMemoMaxCapacity = 10
-
+export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult
-  /**
-   * Keeps the latest measures of the asset price.
-   */
-  prices: PriceMemo = [0, 0, 0]
   /**
    * Marks the asset for holding even if price drops.
    */
@@ -32,6 +27,7 @@ export class TradeMemo {
   private state: TradeState
 
   constructor(tradeResult: TradeResult) {
+    super()
     this.tradeResult = tradeResult
   }
 
@@ -53,12 +49,8 @@ export class TradeMemo {
     const tradeMemo: TradeMemo = Object.assign(new TradeMemo(null), obj)
     tradeMemo.tradeResult = Object.assign(new TradeResult(null), tradeMemo.tradeResult)
     tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
-    tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
+    tradeMemo.prices = tradeMemo.prices || []
     return tradeMemo
-  }
-
-  get currentPrice(): number {
-    return this.prices[this.prices.length - 1]
   }
 
   get maxObservedPrice(): number {
@@ -92,14 +84,7 @@ export class TradeMemo {
   }
 
   pushPrice(price: number): void {
-    if (!this.prices || !this.prices.length || this.prices[0] === 0) {
-      // initial state, filling PriceMemoMaxCapacity with price
-      this.prices = new Array(TradeMemo.PriceMemoMaxCapacity).fill(price) as PriceMemo
-    } else {
-      this.prices.push(price)
-      // remove old prices and keep only the last PriceMemoMaxCapacity
-      this.prices.splice(0, this.prices.length - TradeMemo.PriceMemoMaxCapacity)
-    }
+    super.pushPrice(price)
     this.maxObservedPrice = Math.max(this.maxObservedPrice, ...this.prices)
   }
 
@@ -172,43 +157,5 @@ export class TradeMemo {
     // all prices except the last one are lower the price at which the trade was bought
     const entryPrice = this.tradeResult.price
     return this.currentPrice > entryPrice && this.prices.slice(0, -1).every((p) => p <= entryPrice)
-  }
-
-  priceGoesUp(): boolean {
-    return this.getPriceMove() === PriceMove.UP
-  }
-
-  priceGoesUpStrong(): boolean {
-    return this.getPriceMove() === PriceMove.STRONG_UP
-  }
-
-  /**
-   * Returns the number of consecutive prices that are increasing.
-   * The result is negative if prices are decreasing.
-   * @example [3, 2, 1] => -2
-   * @example [2, 2, 1] => -1
-   * @example [1, 2, 2] => 0
-   * @example [2, 2, 3] => 1
-   * @example [1, 2, 3] => 2
-   * @param prices
-   */
-  getPriceChangeIndex(prices: number[]): number {
-    let result = 0
-    // if next price greater than current price, increase result
-    // otherwise decrease result
-    for (let i = 1; i < prices.length; i++) {
-      if (prices[i] > prices[i - 1]) {
-        result++
-      } else {
-        result--
-      }
-    }
-    return result
-  }
-
-  getPriceMove(): PriceMove {
-    const max = TradeMemo.PriceMemoMaxCapacity
-    const index = this.getPriceChangeIndex(this.prices)
-    return +(((index + max) / (2 * max)) * PriceMove.STRONG_UP).toFixed(0)
   }
 }
