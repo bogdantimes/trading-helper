@@ -3,7 +3,11 @@ import { PriceMove } from "./types"
 
 export class PricesHolder {
   static readonly PRICES_MAX_CAP = 10
-  protected p: number[] = []
+  protected p: number[]
+
+  constructor() {
+    this.p = new Array(PricesHolder.PRICES_MAX_CAP).fill(0)
+  }
 
   /**
    * Keeps the latest measures of the price.
