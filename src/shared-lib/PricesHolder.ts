@@ -2,7 +2,7 @@ import { getPriceMove } from "./functions"
 import { PriceMove } from "./types"
 
 export class PricesHolder {
-  protected readonly PRICES_MAX_CAP = 10
+  protected static readonly PRICES_MAX_CAP = 10
   protected p: number[] = []
 
   /**
@@ -23,11 +23,11 @@ export class PricesHolder {
   pushPrice(price: number): void {
     if (!this.prices.length || this.prices[0] === 0) {
       // initial state, filling PriceMemoMaxCapacity with price
-      this.prices = new Array(this.PRICES_MAX_CAP).fill(price)
+      this.prices = new Array(PricesHolder.PRICES_MAX_CAP).fill(price)
     } else {
       this.prices.push(price)
       // remove old prices and keep only the last PriceMemoMaxCapacity
-      this.prices.splice(0, this.prices.length - this.PRICES_MAX_CAP)
+      this.prices.splice(0, this.prices.length - PricesHolder.PRICES_MAX_CAP)
     }
   }
 
@@ -48,6 +48,6 @@ export class PricesHolder {
   }
 
   getPriceMove(): PriceMove {
-    return getPriceMove(this.PRICES_MAX_CAP, this.prices)
+    return getPriceMove(PricesHolder.PRICES_MAX_CAP, this.prices)
   }
 }
