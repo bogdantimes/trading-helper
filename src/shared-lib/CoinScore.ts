@@ -34,7 +34,11 @@ export class CoinScore extends PricesHolder {
     return this.n
   }
 
-  incrementScore() {
+  scoreUp() {
     this.r++
+  }
+
+  scoreDown() {
+    this.r > 0 && this.r--
   }
 }

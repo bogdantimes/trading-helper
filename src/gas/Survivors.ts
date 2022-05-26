@@ -16,7 +16,7 @@ export interface ScoresManager {
 type CoinScoreMap = { [key: string]: CoinScore }
 
 export class Survivors implements ScoresManager {
-  private readonly MARKET_UP_FRACTION = 0.01 // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
+  private readonly MARKET_THRESHOLD = 0.01 // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
   private store: IStore
   private exchange: IExchange
 
@@ -44,7 +44,8 @@ export class Survivors implements ScoresManager {
     const scores: CoinScoreMap = scoresJson
       ? JSON.parse(scoresJson)
       : this.store.get(`SurvivorScores`) || {}
-    const coinsRaisedAmidMarkedDown: CoinScoreMap = {}
+    const gainers: CoinScoreMap = {}
+    const losers: CoinScoreMap = {}
     const prices = this.exchange.getPrices()
     Object.keys(prices).forEach((s) => {
       const coinName = s.endsWith(StableUSDCoin.USDT) ? s.split(StableUSDCoin.USDT)[0] : null
@@ -52,17 +53,17 @@ export class Survivors implements ScoresManager {
         const price = prices[s]
         const cs = new CoinScore(coinName, scores[s])
         cs.pushPrice(price)
-        cs.priceGoesUpStrong() && (coinsRaisedAmidMarkedDown[s] = cs)
+        cs.priceGoesUpStrong() && (gainers[s] = cs)
+        cs.priceGoesDownStrong() && (losers[s] = cs)
         scores[s] = cs
       }
     })
 
-    // if only MARKET_UP_FRACTION% of coins go up, we update their recommendation score
-    const fractionMet =
-      Object.keys(coinsRaisedAmidMarkedDown).length <=
-      this.MARKET_UP_FRACTION * Object.keys(prices).length
-    if (fractionMet && Object.keys(coinsRaisedAmidMarkedDown).length > 0) {
-      Object.values(coinsRaisedAmidMarkedDown).forEach((r) => r.incrementScore())
+    // Update scores only if there is a small percentage of coins that are gainers or losers
+    const withinRange = (n) => n > 0 && n <= this.MARKET_THRESHOLD * Object.keys(prices).length
+    if (withinRange(Object.keys(gainers).length) || withinRange(Object.keys(losers).length)) {
+      Object.values(gainers).forEach((r) => r.scoreUp())
+      Object.values(losers).forEach((r) => r.scoreDown())
       Log.info(`Updated survivors.`)
     }
 
