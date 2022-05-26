@@ -88,15 +88,15 @@ export default function App() {
           <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
             <Tabs value={value} onChange={handleChange} centered>
               <Tab label="Assets" {...a11yProps(0)} />
-              <Tab label="Settings" {...a11yProps(1)} />
-              <Tab label="Info" {...a11yProps(2)} />
-              <Tab label="Scores" {...a11yProps(3)} />
+              <Tab label="Info" {...a11yProps(1)} />
+              <Tab label="Scores" {...a11yProps(2)} />
+              <Tab label="Settings" {...a11yProps(3)} />
             </Tabs>
           </Box>
           <TabPanel value={value} index={0}><Assets config={config}/></TabPanel>
-          <TabPanel value={value} index={1}><Settings/></TabPanel>
-          <TabPanel value={value} index={2}><Info/></TabPanel>
-          <TabPanel value={value} index={3}><Scores config={config}/></TabPanel>
+          <TabPanel value={value} index={1}><Info/></TabPanel>
+          <TabPanel value={value} index={2}><Scores config={config}/></TabPanel>
+          <TabPanel value={value} index={3}><Settings/></TabPanel>
         </Box>
       }
     </ThemeProvider>
