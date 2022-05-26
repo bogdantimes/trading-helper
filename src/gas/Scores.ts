@@ -69,10 +69,12 @@ export class Scores implements ScoresManager {
 
         const priceMove = cs.getPriceMove()
         if (priceMove <= PriceMove.NEUTRAL) {
-          cs.priceGoesStrongDown() ? (losers[s] = cs) : notGainers++
+          notGainers++
+          cs.priceGoesStrongDown() && (losers[s] = cs)
         }
         if (priceMove >= PriceMove.NEUTRAL) {
-          cs.priceGoesStrongUp() ? (gainers[s] = cs) : notLosers++
+          notLosers++
+          cs.priceGoesStrongUp() && (gainers[s] = cs)
         }
 
         scores[s] = cs
