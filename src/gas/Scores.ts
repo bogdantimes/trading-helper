@@ -89,14 +89,12 @@ export class Scores implements ScoresManager {
     // Updating gainers
     if (isTinyFraction(Object.keys(strongGainers).length) && isPrevailingFraction(notGainers)) {
       Object.values(strongGainers).forEach((r) => r.scoreUp())
-      Log.alert(`Strong gainers found. Updated scores.`)
-      Log.debug(`Strong gainers: ${Object.keys(strongGainers)}`)
+      Log.alert(`Score incremented for ${Object.keys(strongGainers).join(`, `)}.`)
     }
     // Updating losers
     if (isTinyFraction(Object.keys(strongLosers).length) && isPrevailingFraction(notLosers)) {
       Object.values(strongLosers).forEach((r) => r.scoreDown())
-      Log.alert(`Strong losers found. Updated scores.`)
-      Log.debug(`Strong losers: ${Object.keys(strongLosers)}`)
+      Log.alert(`Score decremented for ${Object.keys(strongLosers).join(`, `)}.`)
     }
 
     CacheProxy.put(`RecommenderMemos`, JSON.stringify(scores))
