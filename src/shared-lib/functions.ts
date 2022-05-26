@@ -37,7 +37,7 @@ export function getPriceChangeIndex(prices: number[]): number {
   for (let i = 1; i < prices.length; i++) {
     if (prices[i] > prices[i - 1]) {
       result++
-    } else {
+    } else if (prices[i] < prices[i - 1]) {
       result--
     }
   }
