@@ -35,7 +35,7 @@ export class Process {
     try {
       new Scores(store, exchange).updateScores()
     } catch (e) {
-      Log.info(e)
+      Log.error(e)
     }
   }
 }

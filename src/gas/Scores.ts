@@ -85,18 +85,23 @@ export class Scores implements ScoresManager {
     // Update scores only if there is a small percentage of coins that are gainers or losers
     // while prevailing is the opposite.
     const totalCoins = Object.keys(scores).length
-    const isTinyFraction = (n) => n > 0 && n <= this.DETECTION_THRESHOLD * totalCoins
-    const isPrevailingFraction = (n) => n <= totalCoins && n > (1 - this.DETECTION_THRESHOLD) * totalCoins
+    const isRare = (n) => n > 0 && n <= this.DETECTION_THRESHOLD * totalCoins
+    const isPrevailing = (n) => n <= totalCoins && n > (1 - this.DETECTION_THRESHOLD) * totalCoins
     // Updating gainers
-    if (isTinyFraction(Object.keys(strongGainers).length) && isPrevailingFraction(notGainers)) {
+    if (isRare(Object.keys(strongGainers).length) && isPrevailing(notGainers)) {
       Object.values(strongGainers).forEach((r) => r.scoreUp())
       Log.alert(`Score incremented for ${Object.keys(strongGainers).join(`, `)}.`)
     }
     // Updating losers
-    if (isTinyFraction(Object.keys(strongLosers).length) && isPrevailingFraction(notLosers)) {
+    if (isRare(Object.keys(strongLosers).length) && isPrevailing(notLosers)) {
       Object.values(strongLosers).forEach((r) => r.scoreDown())
       Log.alert(`Score decremented for ${Object.keys(strongLosers).join(`, `)}.`)
     }
+
+    Log.debug(`Strong gainers %: ${(Object.keys(strongGainers).length / totalCoins) * 100}`)
+    Log.debug(`Strong losers %: ${(Object.keys(strongLosers).length / totalCoins) * 100}`)
+    Log.debug(`Not gainers %: ${(notGainers / totalCoins) * 100}`)
+    Log.debug(`Not losers %: ${(notLosers / totalCoins) * 100}`)
 
     CacheProxy.put(`RecommenderMemos`, JSON.stringify(scores))
 
