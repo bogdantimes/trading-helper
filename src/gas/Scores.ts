@@ -16,7 +16,8 @@ export interface ScoresManager {
 type CoinScoreMap = { [key: string]: CoinScore }
 
 export class Scores implements ScoresManager {
-  private readonly TINY_FRACTION = 0.01 // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
+  private readonly DETECTION_THRESHOLD = 0.01 // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
+  private readonly CACHE_SYNC_INTERVAL = 3 * 60 * 60 // 3 hours
   private store: IStore
   private exchange: IExchange
 
@@ -84,8 +85,8 @@ export class Scores implements ScoresManager {
     // Update scores only if there is a small percentage of coins that are gainers or losers
     // while prevailing is the opposite.
     const totalCoins = Object.keys(scores).length
-    const isTinyFraction = (n) => n > 0 && n <= this.TINY_FRACTION * totalCoins
-    const isPrevailingFraction = (n) => n <= totalCoins && n > (1 - this.TINY_FRACTION) * totalCoins
+    const isTinyFraction = (n) => n > 0 && n <= this.DETECTION_THRESHOLD * totalCoins
+    const isPrevailingFraction = (n) => n <= totalCoins && n > (1 - this.DETECTION_THRESHOLD) * totalCoins
     // Updating gainers
     if (isTinyFraction(Object.keys(strongGainers).length) && isPrevailingFraction(notGainers)) {
       Object.values(strongGainers).forEach((r) => r.scoreUp())
@@ -99,10 +100,10 @@ export class Scores implements ScoresManager {
 
     CacheProxy.put(`RecommenderMemos`, JSON.stringify(scores))
 
-    // Sync the scores to store every 6 hours
+    // Sync the scores to store periodically.
     if (!CacheProxy.get(`ScoresSynced`)) {
       this.store.set(`SurvivorScores`, scores)
-      CacheProxy.put(`ScoresSynced`, `true`, 3 * 60 * 60) // 3 hours
+      CacheProxy.put(`ScoresSynced`, `true`, this.CACHE_SYNC_INTERVAL)
     }
   }
 
@@ -110,6 +111,6 @@ export class Scores implements ScoresManager {
     // todo: make concurrent safe
     CacheProxy.put(`RecommenderMemos`, JSON.stringify({}))
     this.store.set(`SurvivorScores`, {})
-    CacheProxy.put(`ScoresSynced`, `true`, 6 * 60 * 60) // 6 hours
+    CacheProxy.put(`ScoresSynced`, `true`, this.CACHE_SYNC_INTERVAL)
   }
 }
