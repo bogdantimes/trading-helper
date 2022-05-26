@@ -49,7 +49,7 @@ export class TradeMemo extends PricesHolder {
     const tradeMemo: TradeMemo = Object.assign(new TradeMemo(null), obj)
     tradeMemo.tradeResult = Object.assign(new TradeResult(null), tradeMemo.tradeResult)
     tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(tradeMemo.tradeResult.symbol)
-    tradeMemo.prices = tradeMemo.prices || [0, 0, 0]
+    tradeMemo.prices = tradeMemo.prices || []
     return tradeMemo
   }
 

@@ -16,22 +16,24 @@ export class PricesHolder {
     return this.p
   }
 
-  set prices(p: number[]) {
-    this.p = p
+  set prices(prices: number[]) {
+    const tempHolder = new PricesHolder()
+    // Using a temporary PricesHolder to ensure that prices array is of exact length
+    prices?.forEach((p) => tempHolder.pushPrice(p))
+    this.p = tempHolder.p
   }
 
   get currentPrice(): number {
-    return this.prices[this.prices.length - 1]
+    return this.p[this.p.length - 1]
   }
 
   pushPrice(price: number): void {
-    if (!this.prices.length || this.prices[0] === 0) {
-      // initial state, filling PriceMemoMaxCapacity with price
-      this.prices = new Array(PricesHolder.PRICES_MAX_CAP).fill(price)
+    if (!this.p.length || this.p[0] === 0) {
+      this.p = new Array(PricesHolder.PRICES_MAX_CAP).fill(price)
     } else {
-      this.prices.push(price)
+      this.p.push(price)
       // remove old prices and keep only the last PriceMemoMaxCapacity
-      this.prices.splice(0, this.prices.length - PricesHolder.PRICES_MAX_CAP)
+      this.p.splice(0, this.p.length - PricesHolder.PRICES_MAX_CAP)
     }
   }
 
@@ -52,6 +54,6 @@ export class PricesHolder {
   }
 
   getPriceMove(): PriceMove {
-    return getPriceMove(PricesHolder.PRICES_MAX_CAP, this.prices)
+    return getPriceMove(PricesHolder.PRICES_MAX_CAP, this.p)
   }
 }

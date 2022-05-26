@@ -50,14 +50,18 @@ export class TradeActions {
   }
 
   static replace(coinName: string, newTrade: TradeMemo): void {
-    DefaultStore.changeTrade(coinName, (trade) => {
-      if (trade.getCoinName() != newTrade.getCoinName()) {
-        // if coin name changed reset prices
-        newTrade.prices = [0, 0, 0]
-        newTrade.stopLimitPrice = 0
-      }
-      return newTrade
-    }, () => newTrade)
+    DefaultStore.changeTrade(
+      coinName,
+      (trade) => {
+        if (trade.getCoinName() != newTrade.getCoinName()) {
+          // if coin name changed reset prices
+          newTrade.prices = []
+          newTrade.stopLimitPrice = 0
+        }
+        return newTrade
+      },
+      () => newTrade,
+    )
     if (coinName != newTrade.getCoinName()) {
       // if coin name changed delete old one
       TradeActions.drop(coinName)
