@@ -16,8 +16,10 @@ export interface ScoresManager {
 type CoinScoreMap = { [key: string]: CoinScore }
 
 export class Scores implements ScoresManager {
+  private readonly STABLE_COIN = StableUSDCoin.BUSD // Using Binance USD as best for Binance
   private readonly DETECTION_THRESHOLD = 0.01 // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
   private readonly CACHE_SYNC_INTERVAL = 3 * 60 * 60 // 3 hours
+
   private store: IStore
   private exchange: IExchange
 
@@ -68,18 +70,20 @@ export class Scores implements ScoresManager {
     const prices = this.exchange.getPrices()
 
     Object.keys(prices).forEach((s) => {
-      if (!s.endsWith(StableUSDCoin.USDT)) return
+      if (!s.endsWith(this.STABLE_COIN)) return
 
-      const coinName = s.split(StableUSDCoin.USDT)[0]
-      const cs = new CoinScore(coinName, scores[s])
+      const coinName = s.split(this.STABLE_COIN)[0]
+      const cs = new CoinScore(coinName, scores[coinName] || scores[s])
       cs.pushPrice(prices[s])
 
       const priceMove = cs.getPriceMove()
       if (priceMove >= PriceMove.NEUTRAL) notLosers++
       if (priceMove <= PriceMove.NEUTRAL) notGainers++
-      if (priceMove === PriceMove.STRONG_UP) strongGainers[s] = cs
-      if (priceMove === PriceMove.STRONG_DOWN) strongLosers[s] = cs
-      scores[s] = cs
+      if (priceMove === PriceMove.STRONG_UP) strongGainers[coinName] = cs
+      if (priceMove === PriceMove.STRONG_DOWN) strongLosers[coinName] = cs
+
+      scores[coinName] = cs
+      delete scores[s] // Clean old key. Key fmt changed from BTCUSDT to BTC.
     })
 
     // Update scores only if there is a small percentage of coins that are gainers or losers
@@ -97,11 +101,6 @@ export class Scores implements ScoresManager {
       Object.values(strongLosers).forEach((r) => r.scoreDown())
       Log.alert(`Score decremented for ${Object.keys(strongLosers).join(`, `)}.`)
     }
-
-    Log.debug(`Strong gainers %: ${(Object.keys(strongGainers).length / totalCoins) * 100}`)
-    Log.debug(`Strong losers %: ${(Object.keys(strongLosers).length / totalCoins) * 100}`)
-    Log.debug(`Not gainers %: ${(notGainers / totalCoins) * 100}`)
-    Log.debug(`Not losers %: ${(notLosers / totalCoins) * 100}`)
 
     CacheProxy.put(`RecommenderMemos`, JSON.stringify(scores))
 
