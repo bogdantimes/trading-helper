@@ -41,24 +41,23 @@ export interface IStore {
 }
 
 export class FirebaseStore implements IStore {
-  private readonly dbURLKey = `dbURL`;
+  private readonly dbURLKey = `dbURL`
   private source: object
 
   constructor() {
     const url = PropertiesService.getScriptProperties().getProperty(this.dbURLKey)
     if (url) {
       // @ts-ignore
-      this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken());
+      this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken())
     } else {
       Log.info(`Firebase URL key 'dbURL' is not set.`)
     }
   }
 
-
   connect(dbURL: string) {
     // @ts-ignore
-    this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken());
-    PropertiesService.getScriptProperties().setProperty(this.dbURLKey, dbURL);
+    this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken())
+    PropertiesService.getScriptProperties().setProperty(this.dbURLKey, dbURL)
   }
 
   isConnected(): boolean {
@@ -77,10 +76,11 @@ export class FirebaseStore implements IStore {
       PriceProvider: PriceProvider.Binance,
       AveragingDown: false,
       ProfitBasedStopLimit: false,
-      PriceAnomalyAlert: 5
+      PriceAnomalyAlert: 5,
+      ScoreGainersThreshold: 0.01,
     }
-    const configCacheJson = CacheProxy.get(`Config`);
-    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
+    const configCacheJson = CacheProxy.get(`Config`)
+    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null
     if (!configCache) {
       configCache = this.getOrSet(`Config`, defaultConfig)
     }
@@ -109,7 +109,7 @@ export class FirebaseStore implements IStore {
 
     CacheProxy.put(`Config`, JSON.stringify(configCache))
 
-    return configCache;
+    return configCache
   }
 
   setConfig(config: Config): void {
@@ -130,11 +130,11 @@ export class FirebaseStore implements IStore {
       throw new Error(`Firebase is not connected.`)
     }
     // @ts-ignore
-    return this.source.getData(key);
+    return this.source.getData(key)
   }
 
   getOrSet(key: string, value: any): any {
-    const val = this.get(key) || value;
+    const val = this.get(key) || value
     // @ts-ignore
     this.source.setData(key, val)
     return val
@@ -150,22 +150,22 @@ export class FirebaseStore implements IStore {
   }
 
   getTrades(): { [p: string]: TradeMemo } {
-    const tradesCacheJson = CacheProxy.get(`Trades`);
-    let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null;
+    const tradesCacheJson = CacheProxy.get(`Trades`)
+    let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null
     if (!tradesCache) {
-      tradesCache = this.getOrSet(`trade`, {});
+      tradesCache = this.getOrSet(`trade`, {})
       CacheProxy.put(`Trades`, JSON.stringify(tradesCache))
     }
     // Convert raw trades to TradeMemo objects
     return Object.keys(tradesCache).reduce((acc, key) => {
       acc[key] = TradeMemo.fromObject(tradesCache[key])
       return acc
-    }, {});
+    }, {})
   }
 
   getTradesList(state?: TradeState): TradeMemo[] {
-    const values = Object.values(this.getTrades());
-    return state ? values.filter(trade => trade.stateIs(state)) : values;
+    const values = Object.values(this.getTrades())
+    return state ? values.filter((trade) => trade.stateIs(state)) : values
   }
 
   getTrade(symbol: ExchangeSymbol): TradeMemo {
@@ -191,15 +191,16 @@ export class FirebaseStore implements IStore {
   changeTrade(
     coinName: string,
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined): void {
-    coinName = coinName.toUpperCase();
-    const key = `TradeLocker_${coinName}`;
+    notFoundFn?: () => TradeMemo | undefined,
+  ): void {
+    coinName = coinName.toUpperCase()
+    const key = `TradeLocker_${coinName}`
     try {
-      while (CacheProxy.get(key)) Utilities.sleep(200);
+      while (CacheProxy.get(key)) Utilities.sleep(200)
       const deadline = 30 // Lock for 30 seconds to give a function enough time for com w/ Binance
-      CacheProxy.put(key, `true`, deadline);
+      CacheProxy.put(key, `true`, deadline)
 
-      const trade = this.getTrades()[coinName];
+      const trade = this.getTrades()[coinName]
       // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
       // otherwise changedTrade is null.
       const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
@@ -219,14 +220,13 @@ export class FirebaseStore implements IStore {
       if (changedTrade) {
         changedTrade.deleted ? this.deleteTrade(changedTrade) : this.setTrade(changedTrade)
       }
-
     } finally {
       CacheProxy.remove(key)
     }
   }
 
   private setTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades();
+    const trades = this.getTrades()
     trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
     CacheProxy.put(`Trades`, JSON.stringify(trades))
   }
@@ -245,7 +245,6 @@ export class FirebaseStore implements IStore {
       CacheProxy.put(key, `true`, 300)
     }
   }
-
 }
 
 export type Config = {
@@ -279,11 +278,19 @@ export type Config = {
   /**
    * When price suddenly pumps or dumps for more than or equal percentage - an alert is sent.
    */
-  PriceAnomalyAlert?: number;
+  PriceAnomalyAlert?: number
   /**
    * If true - buy the price dump automatically when {@link PriceAnomalyAlert} alert happens.
    */
-  BuyDumps?: boolean;
+  BuyDumps?: boolean
+  /**
+   * Sets the maximum percentage of all market currencies that should gain or lose price, to be
+   * considered as those which scores have to be recalculated. For example:
+   * if the value is 0.01, this means, that if 1% percent of all market currencies gain or lose price,
+   * while 99% of all market currencies do not change or go in the opposite direction,
+   * the scores will be recalculated for that 1%.
+   */
+  ScoreGainersThreshold?: number
 
   /**
    * @deprecated

@@ -29,12 +29,15 @@ export function Scores({ config }: { config: Config }) {
     }
   }
 
+  const infoMsg = `Score represents how many times a currency showed price growth, while ${
+    (1 - config.ScoreGainersThreshold) * 100
+  }% of the market was going in the opposite direction.`
+
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
         <Alert sx={{ width: 332 }} severity={`info`}>
-          Score represents how many times a currency showed a price growth within last{` `}
-          {CoinScore.PRICES_MAX_CAP} measures, while 99% of the market was not moving up.
+          {infoMsg}
         </Alert>
         {!!scores.length && (
           <List sx={{ padding: 0, width: 332 }}>

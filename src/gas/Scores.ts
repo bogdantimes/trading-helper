@@ -17,7 +17,6 @@ type CoinScoreMap = { [key: string]: CoinScore }
 
 export class Scores implements ScoresManager {
   private readonly STABLE_COIN = StableUSDCoin.BUSD // Using Binance USD as best for Binance
-  private readonly DETECTION_THRESHOLD = 0.01 // 1% (Binance has 2030 prices right now, 1% is ~20 coins)
   private readonly CACHE_SYNC_INTERVAL = 3 * 60 * 60 // 3 hours
 
   private store: IStore
@@ -88,9 +87,10 @@ export class Scores implements ScoresManager {
 
     // Update scores only if there is a small percentage of coins that are gainers or losers
     // while prevailing is the opposite.
+    const threshold = this.store.getConfig().ScoreGainersThreshold
     const totalCoins = Object.keys(scores).length
-    const isRare = (n) => n > 0 && n <= this.DETECTION_THRESHOLD * totalCoins
-    const isPrevailing = (n) => n <= totalCoins && n > (1 - this.DETECTION_THRESHOLD) * totalCoins
+    const isRare = (n) => n > 0 && n <= threshold * totalCoins
+    const isPrevailing = (n) => n <= totalCoins && n > (1 - threshold) * totalCoins
     // Updating gainers
     if (isRare(Object.keys(strongGainers).length) && isPrevailing(notGainers)) {
       Object.values(strongGainers).forEach((r) => r.scoreUp())

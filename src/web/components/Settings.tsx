@@ -7,6 +7,8 @@ import {
   Autocomplete,
   Box,
   Button,
+  Chip,
+  Divider,
   FormControlLabel,
   InputAdornment,
   Stack,
@@ -27,6 +29,7 @@ export function Settings() {
   const [stopLimit, setLossLimit] = useState(``)
   const [profitLimit, setProfitLimit] = useState(``)
   const [buyQuantity, setBuyQuantity] = useState(``)
+  const [hideAdvanced, setHideAdvanced] = useState(true)
 
   useEffect(
     () =>
@@ -166,6 +169,7 @@ export function Settings() {
             }
             label="Averaging down"
           />
+          {advancedSettings(hideAdvanced, setHideAdvanced, config, setConfig)}
           <Box alignSelf={`center`} sx={{ position: `relative` }}>
             <Button
               variant="contained"
@@ -182,5 +186,40 @@ export function Settings() {
         </Stack>
       )}
     </Box>
+  )
+}
+
+function advancedSettings(
+  hide: boolean,
+  setHide,
+  config: Config,
+  setConfig: (config: Config) => void,
+) {
+  return (
+    <>
+      <Divider>
+        <Chip onClick={() => setHide(!hide)} label="Advanced" />
+      </Divider>
+      {!hide && (
+        <Stack spacing={2}>
+          <Autocomplete<number>
+            value={config.ScoreGainersThreshold}
+            options={[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]}
+            onChange={(e, val: number) =>
+              val && setConfig({ ...config, ScoreGainersThreshold: val })
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                helperText={`Current: ${
+                  config.ScoreGainersThreshold * 100
+                }%. Maximum percentage of market currencies that should gain or lose value for "Scores" to be updated.`}
+                label={`Score Gainers Threshold`}
+              />
+            )}
+          />
+        </Stack>
+      )}
+    </>
   )
 }
