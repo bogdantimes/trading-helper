@@ -1,21 +1,12 @@
 import { IStore } from "./Store"
 import { CacheProxy } from "./CacheProxy"
-import { PriceMove, StableUSDCoin } from "../shared-lib/types"
+import { MarketMove, PriceMove, StableUSDCoin } from "../shared-lib/types"
 import { IExchange } from "./Exchange"
-import { Log } from "./Common"
 import { CoinScore } from "../shared-lib/CoinScore"
-
-export interface ScoresManager {
-  getScores(): CoinScore[]
-
-  updateScores(): void
-
-  resetScores(): void
-}
 
 type CoinScoreMap = { [key: string]: CoinScore }
 
-export class Scores implements ScoresManager {
+export class ScoresManager {
   private readonly STABLE_COIN = StableUSDCoin.BUSD // Using Binance USD as best for Binance
   private readonly CACHE_SYNC_INTERVAL = 3 * 60 * 60 // 3 hours
 
@@ -45,6 +36,11 @@ export class Scores implements ScoresManager {
       .slice(0, 10)
   }
 
+  getMarketMove(): MarketMove {
+    const json = CacheProxy.get(`MarketMove`)
+    return json ? JSON.parse(json) : {}
+  }
+
   /**
    * Algorithm:
    *  1. get all coins prices
@@ -62,10 +58,15 @@ export class Scores implements ScoresManager {
       ? JSON.parse(scoresJson)
       : this.store.get(`SurvivorScores`) || {}
 
-    let notGainers = 0
-    let notLosers = 0
-    const strongGainers: CoinScoreMap = {}
-    const strongLosers: CoinScoreMap = {}
+    let strongLosersCount = 0
+    let losersCount = 0
+    let neutralCount = 0
+    let gainersCount = 0
+    let strongGainersCount = 0
+    let totalCount = 0
+
+    const gainers: CoinScoreMap = {}
+    const losers: CoinScoreMap = {}
     const prices = this.exchange.getPrices()
 
     Object.keys(prices).forEach((s) => {
@@ -76,11 +77,17 @@ export class Scores implements ScoresManager {
       cs.pushPrice(prices[s])
 
       const priceMove = cs.getPriceMove()
-      if (priceMove >= PriceMove.NEUTRAL) notLosers++
-      if (priceMove <= PriceMove.NEUTRAL) notGainers++
-      if (priceMove === PriceMove.STRONG_UP) strongGainers[coinName] = cs
-      if (priceMove === PriceMove.STRONG_DOWN) strongLosers[coinName] = cs
 
+      if (priceMove === PriceMove.STRONG_DOWN) strongLosersCount++
+      if (priceMove === PriceMove.DOWN) losersCount++
+      if (priceMove === PriceMove.NEUTRAL) neutralCount++
+      if (priceMove === PriceMove.UP) gainersCount++
+      if (priceMove === PriceMove.STRONG_UP) strongGainersCount++
+
+      if (priceMove >= PriceMove.UP) gainers[coinName] = cs
+      if (priceMove <= PriceMove.DOWN) losers[coinName] = cs
+
+      totalCount++
       scores[coinName] = cs
       delete scores[s] // Clean old key. Key fmt changed from BTCUSDT to BTC.
     })
@@ -88,20 +95,27 @@ export class Scores implements ScoresManager {
     // Update scores only if there is a small percentage of coins that are gainers or losers
     // while prevailing is the opposite.
     const threshold = this.store.getConfig().ScoreGainersThreshold
-    const totalCoins = Object.keys(scores).length
-    const isRare = (n) => n > 0 && n <= threshold * totalCoins
-    const isPrevailing = (n) => n <= totalCoins && n > (1 - threshold) * totalCoins
+    const isRare = (n) => n > 0 && n <= threshold * totalCount
+    const isPrevailing = (n) => n <= totalCount && n > (1 - threshold) * totalCount
     // Updating gainers
-    if (isRare(Object.keys(strongGainers).length) && isPrevailing(notGainers)) {
-      Object.values(strongGainers).forEach((r) => r.scoreUp())
-      Log.alert(`Score incremented for ${Object.keys(strongGainers).join(`, `)}.`)
+    const gainersOpposite = strongLosersCount + losersCount + neutralCount
+    if (isRare(Object.keys(gainers).length) && isPrevailing(gainersOpposite)) {
+      Object.values(gainers).forEach((r) => r.scoreUp())
     }
     // Updating losers
-    if (isRare(Object.keys(strongLosers).length) && isPrevailing(notLosers)) {
-      Object.values(strongLosers).forEach((r) => r.scoreDown())
-      Log.alert(`Score decremented for ${Object.keys(strongLosers).join(`, `)}.`)
+    const losersOpposite = strongGainersCount + gainersCount + neutralCount
+    if (isRare(Object.keys(losers).length) && isPrevailing(losersOpposite)) {
+      Object.values(losers).forEach((r) => r.scoreDown())
     }
 
+    const marketMove: MarketMove = {
+      [PriceMove.STRONG_DOWN]: (100 * strongLosersCount) / totalCount,
+      [PriceMove.DOWN]: (100 * losersCount) / totalCount,
+      [PriceMove.NEUTRAL]: (100 * neutralCount) / totalCount,
+      [PriceMove.UP]: (100 * gainersCount) / totalCount,
+      [PriceMove.STRONG_UP]: (100 * strongGainersCount) / totalCount,
+    }
+    CacheProxy.put(`MarketMove`, JSON.stringify(marketMove))
     CacheProxy.put(`RecommenderMemos`, JSON.stringify(scores))
 
     // Sync the scores to store periodically.

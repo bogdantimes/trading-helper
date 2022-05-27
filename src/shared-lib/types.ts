@@ -69,3 +69,11 @@ export enum PriceMove {
   UP,
   STRONG_UP,
 }
+
+export type MarketMove = {
+  [PriceMove.STRONG_DOWN]: number
+  [PriceMove.DOWN]: number
+  [PriceMove.NEUTRAL]: number
+  [PriceMove.UP]: number
+  [PriceMove.STRONG_UP]: number
+}

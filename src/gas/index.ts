@@ -2,14 +2,13 @@ import { Config, DefaultStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
-import { Scores } from "./Scores"
+import { ScoresManager } from "./ScoresManager"
 import { Log } from "./Common"
 import { Coin, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
-import { AssetsResponse } from "../shared-lib/responses"
-import { CoinScore } from "../shared-lib/CoinScore"
+import { AssetsResponse, ScoresResponse } from "../shared-lib/responses"
 
 function doGet() {
   if (!ScriptApp.getProjectTriggers().find((t) => t.getHandlerFunction() == Process.tick.name)) {
@@ -168,17 +167,21 @@ function getStatistics(): Stats {
   return catchError(() => new Statistics(DefaultStore).getAll())
 }
 
-function getScores(): CoinScore[] {
+function getScores(): ScoresResponse {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return new Scores(DefaultStore, exchange).getScores()
+    const scoresManager = new ScoresManager(DefaultStore, exchange)
+    return {
+      coins: scoresManager.getScores(),
+      marketMove: scoresManager.getMarketMove(),
+    }
   })
 }
 
 function resetScores(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return new Scores(DefaultStore, exchange).resetScores()
+    return new ScoresManager(DefaultStore, exchange).resetScores()
   })
 }
 
