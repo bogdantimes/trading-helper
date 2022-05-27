@@ -8,7 +8,6 @@ import {
   Box,
   Button,
   Chip,
-  Divider,
   FormControlLabel,
   InputAdornment,
   Stack,
@@ -197,9 +196,7 @@ function advancedSettings(
 ) {
   return (
     <>
-      <Divider>
-        <Chip onClick={() => setHide(!hide)} label="Advanced" />
-      </Divider>
+      <Chip onClick={() => setHide(!hide)} label="Advanced" />
       {!hide && (
         <Stack spacing={2}>
           <Autocomplete<number>
