@@ -136,7 +136,7 @@ export class TradeMemo extends PricesHolder {
     return ((this.currentPrice - this.tradeResult.soldPrice) / this.tradeResult.soldPrice) * 100
   }
 
-  lossLimitCrossedDown(): boolean {
+  stopLimitCrossedDown(): boolean {
     // all prices except the last one are greater than the stop limit price
     return (
       this.currentPrice < this.stopLimitPrice &&

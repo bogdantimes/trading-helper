@@ -94,17 +94,17 @@ export class V2Trader {
 
   private processBoughtState(tm: TradeMemo): void {
     this.updateStopLimit(tm)
-    this.sendLevelsCrossingAlerts(tm)
 
-    if (tm.currentPrice < tm.stopLimitPrice) {
-      const canSell = !tm.hodl && this.store.getConfig().SellAtStopLimit
-      canSell && tm.setState(TradeState.SELL)
-    }
+    if (tm.hodl) return
 
-    const profitLimitPrice = tm.tradeResult.price * (1 + this.config.ProfitLimit)
-    if (tm.currentPrice > profitLimitPrice) {
-      const canSell = !tm.hodl && this.store.getConfig().SellAtProfitLimit
-      canSell && tm.setState(TradeState.SELL)
+    if (tm.stopLimitCrossedDown()) {
+      Log.alert(`${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
+      this.config.SellAtStopLimit && tm.setState(TradeState.SELL)
+    } else if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
+      Log.alert(`${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
+      this.config.SellAtProfitLimit && tm.setState(TradeState.SELL)
+    } else if (tm.entryPriceCrossedUp()) {
+      Log.alert(`${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
     }
   }
 
@@ -121,19 +121,6 @@ export class V2Trader {
   private forceUpdateStopLimit(tm: TradeMemo) {
     tm.stopLimitPrice = 0
     this.updateStopLimit(tm)
-  }
-
-  private sendLevelsCrossingAlerts(tm: TradeMemo) {
-    const symbol = tm.tradeResult.symbol
-    if (!tm.hodl) {
-      if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
-        Log.alert(`${symbol} profit limit crossed up at ${tm.currentPrice}`)
-      } else if (tm.lossLimitCrossedDown()) {
-        Log.alert(`${symbol} stop limit crossed down at ${tm.currentPrice}`)
-      } else if (tm.entryPriceCrossedUp()) {
-        Log.alert(`${symbol} entry price crossed up at ${tm.currentPrice}`)
-      }
-    }
   }
 
   private pushNewPrice(tm: TradeMemo): void {
