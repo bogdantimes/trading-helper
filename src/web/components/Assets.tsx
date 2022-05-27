@@ -58,6 +58,7 @@ export function Assets({ config }: { config: Config }) {
             <Grid item>
               <Stack sx={{ width: `332px` }} direction={`row`} spacing={2}>
                 <Autocomplete
+                  selectOnFocus={false}
                   value={coinName}
                   fullWidth={true}
                   options={coinNames}
@@ -87,6 +88,7 @@ export function Assets({ config }: { config: Config }) {
       </Grid>
       {addCoin && (
         <TradeEditDialog
+          coinNames={coinNames}
           tradeMemo={TradeMemo.newManual(new ExchangeSymbol(coinName, config.StableCoin))}
           onClose={() => setAddCoin(false)}
           onCancel={() => setAddCoin(false)}
@@ -171,11 +173,7 @@ function getTradeViews(
                 ?.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
                 .map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <Trade
-                      tradeNotAllowed={!coinNames.includes(t.getCoinName())}
-                      data={t}
-                      config={config}
-                    />
+                    <Trade coinNames={coinNames} data={t} config={config} />
                   </Grid>
                 ))}
             </Grid>

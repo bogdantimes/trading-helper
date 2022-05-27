@@ -76,6 +76,7 @@ export function Settings() {
       {configLoaded && (
         <Stack spacing={2}>
           <Autocomplete
+            selectOnFocus={false}
             disableClearable={true}
             value={config.StableCoin}
             options={Object.values(StableUSDCoin)}
@@ -200,6 +201,7 @@ function advancedSettings(
       {!hide && (
         <Stack spacing={2}>
           <Autocomplete<number>
+            selectOnFocus={false}
             value={config.ScoreGainersThreshold}
             options={[0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]}
             onChange={(e, val: number) =>

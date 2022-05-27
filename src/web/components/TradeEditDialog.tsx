@@ -1,14 +1,7 @@
 // GitHub Copilot rules.
 import * as React from "react"
 import { useState } from "react"
-import {
-  Autocomplete,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from "@mui/material"
+import { Autocomplete, Dialog, DialogActions, DialogContent, TextField } from "@mui/material"
 import Button from "@mui/material/Button"
 import Typography from "@mui/material/Typography"
 import { TradeMemo } from "../../shared-lib/TradeMemo"
@@ -19,8 +12,9 @@ export function TradeEditDialog(props: {
   onClose: () => void
   onCancel: () => void
   onSave: (tradeMemo: TradeMemo) => Promise<Error | string>
+  coinNames: string[]
 }) {
-  const { tradeMemo, onClose, onCancel, onSave } = props
+  const { tradeMemo, onClose, onCancel, onSave, coinNames } = props
   const [quantity, setQuantity] = useState(tradeMemo.tradeResult.quantity)
   const [paid, setPaid] = useState(tradeMemo.tradeResult.paid)
   const [coinName, setCoinName] = useState(tradeMemo.getCoinName())
@@ -52,14 +46,17 @@ export function TradeEditDialog(props: {
   return (
     <Dialog open={true} onClose={onCancel}>
       <DialogContent>
-        <TextField
-          margin="dense"
-          label="Coin Name"
-          fullWidth
+        <Autocomplete
+          selectOnFocus={false}
           value={coinName}
-          onChange={(e) => setCoinName(e.target.value)}
+          fullWidth
+          options={coinNames}
+          onChange={(e, val) => setCoinName(val)}
+          disableClearable={true}
+          renderInput={(params) => <TextField {...params} margin="dense" label={`Coin Name`} />}
         />
         <Autocomplete
+          selectOnFocus={false}
           disableClearable
           value={stableName}
           defaultValue={StableUSDCoin.USDT}
