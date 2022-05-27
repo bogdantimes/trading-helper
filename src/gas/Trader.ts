@@ -222,7 +222,7 @@ export class V2Trader {
       .getTradesList(TradeState.BOUGHT)
       .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
       .sort(byProfitPercentDesc)[0]
-    if (lowestPLTrade) {
+    if (lowestPLTrade && lowestPLTrade.profit() < 0) {
       Log.alert(`Averaging down is enabled`)
       Log.alert(
         `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
