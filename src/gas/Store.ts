@@ -196,7 +196,7 @@ export class FirebaseStore implements IStore {
     const key = `TradeLocker_${coinName}`;
     try {
       while (CacheProxy.get(key)) Utilities.sleep(200);
-      const deadline = 10 // Lock for 10 seconds
+      const deadline = 30 // Lock for 30 seconds to give a function enough time for com w/ Binance
       CacheProxy.put(key, `true`, deadline);
 
       const trade = this.getTrades()[coinName];
