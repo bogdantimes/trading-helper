@@ -36,7 +36,7 @@ function start() {
     ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
     ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL).create()
     Log.alert(
-      `Background process restarted. State synchronization interval is ${TICK_INTERVAL} minute.`,
+      `ℹ️ Background process restarted. State synchronization interval is ${TICK_INTERVAL} minute.`,
     )
   })
 }
@@ -48,7 +48,7 @@ function stop() {
       ScriptApp.deleteTrigger(t)
       deleted = true
     })
-    deleted && Log.alert(`Background processes stopped.`)
+    deleted && Log.alert(`⛔ Background processes stopped.`)
   })
 }
 
@@ -73,10 +73,10 @@ function catchError<T>(fn: () => T): T {
       // If limit already handled, just throw the error without logging
       if (CacheProxy.get(`TickSlowedDown`)) throw e
       // Handle limit gracefully
-      Log.alert(`Google API daily rate limit exceeded.`)
+      Log.alert(`🚫 Google API daily rate limit exceeded.`)
       slowDownTemporarily(SECONDS_IN_HOUR)
       CacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_HOUR)
-      Log.alert(`Background process interval slowed down for the next hour.`)
+      Log.alert(`ℹ️ Background process interval slowed down for the next hour.`)
     }
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
@@ -87,7 +87,7 @@ function catchError<T>(fn: () => T): T {
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
     if (params.dbURL) {
-      Log.alert(`Initial setup`)
+      Log.alert(`✨ Initial setup`)
       Log.alert(`Connecting to Firebase with URL: ` + params.dbURL)
       DefaultStore.connect(params.dbURL)
       Log.alert(`Connected to Firebase`)

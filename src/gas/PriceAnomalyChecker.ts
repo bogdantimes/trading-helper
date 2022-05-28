@@ -33,12 +33,20 @@ export class PriceAnomalyChecker {
     }
 
     if (+anomalyStartPrice > tm.currentPrice) {
-      Log.alert(`${tm.getCoinName()} price dumped for ${percent}%: ${anomalyStartPrice} -> ${tm.currentPrice}`)
+      Log.alert(
+        `📉 ${tm.getCoinName()} price dumped for ${percent}%: ${anomalyStartPrice} -> ${
+          tm.currentPrice
+        }`,
+      )
       return PriceAnomaly.DUMP
     }
 
     if (+anomalyStartPrice < tm.currentPrice) {
-      Log.alert(`${tm.getCoinName()} price pumped for ${percent}%: ${anomalyStartPrice} -> ${tm.currentPrice}`)
+      Log.alert(
+        `📈 ${tm.getCoinName()} price pumped for ${percent}%: ${anomalyStartPrice} -> ${
+          tm.currentPrice
+        }`,
+      )
       return PriceAnomaly.PUMP
     }
 

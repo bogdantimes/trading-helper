@@ -49,7 +49,7 @@ export class V2Trader {
 
     const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
     if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
-      Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
+      Log.alert(`ℹ️ Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
       tm.setState(TradeState.BUY)
     }
 
@@ -85,7 +85,7 @@ export class V2Trader {
     const symbol = tm.tradeResult.symbol
     const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit * 2)
     if (priceDropped) {
-      Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
+      Log.alert(`ℹ️ ${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
     } else {
       Log.info(`${symbol} price has not dropped sufficiently, skipping swing trade`)
@@ -98,13 +98,13 @@ export class V2Trader {
     if (tm.hodl) return
 
     if (tm.stopLimitCrossedDown()) {
-      Log.alert(`${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
+      Log.alert(`📉 ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
       this.config.SellAtStopLimit && tm.setState(TradeState.SELL)
     } else if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
-      Log.alert(`${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
+      Log.alert(`📈 ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
       this.config.SellAtProfitLimit && tm.setState(TradeState.SELL)
     } else if (tm.entryPriceCrossedUp()) {
-      Log.alert(`${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
+      Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
     }
   }
 
@@ -171,7 +171,7 @@ export class V2Trader {
         const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
 
-        Log.alert(`${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
+        Log.alert(`ℹ️ ${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
 
         tradeResult.profit = profit
         this.updatePLStatistics(symbol.priceAsset, profit)
@@ -210,7 +210,7 @@ export class V2Trader {
       .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
       .sort(byProfitPercentDesc)[0]
     if (lowestPLTrade && lowestPLTrade.profit() < 0) {
-      Log.alert(`Averaging down is enabled`)
+      Log.alert(`ℹ️ Averaging down is enabled`)
       Log.alert(
         `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
       )
