@@ -77,7 +77,7 @@ export class FirebaseStore implements IStore {
       AveragingDown: false,
       ProfitBasedStopLimit: false,
       PriceAnomalyAlert: 5,
-      ScoreGainersThreshold: 0.01,
+      ScoreUpdateThreshold: 0.01,
     }
     const configCacheJson = CacheProxy.get(`Config`)
     let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null
@@ -290,7 +290,7 @@ export type Config = {
    * while 99% of all market currencies do not change or go in the opposite direction,
    * the scores will be recalculated for that 1%.
    */
-  ScoreGainersThreshold?: number
+  ScoreUpdateThreshold?: number
 
   /**
    * @deprecated
