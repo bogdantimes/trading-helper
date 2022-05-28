@@ -10,7 +10,9 @@ import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { AssetsResponse, ScoresResponse } from "../shared-lib/responses"
 
-const TICK_INTERVAL_MIN = 1
+const TICK_INTERVAL = 1
+const SLOW_TICK_INTERVAL = 5
+const SECONDS_IN_HOUR = 60 * 60
 
 function doGet() {
   if (!ScriptApp.getProjectTriggers().find((t) => t.getHandlerFunction() == Process.tick.name)) {
@@ -33,9 +35,9 @@ function tick() {
 function start() {
   catchError(() => {
     ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL_MIN).create()
+    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL).create()
     Log.alert(
-      `Background process restarted. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
+      `Background process restarted. State synchronization interval is ${TICK_INTERVAL} minute.`,
     )
   })
 }
@@ -51,15 +53,12 @@ function stop() {
   })
 }
 
-function slowDownTemporarily() {
+function slowDownTemporarily(durationSec: number) {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-  ScriptApp.newTrigger(Process.tick.name)
-    .timeBased()
-    .everyMinutes(TICK_INTERVAL_MIN * 2)
-    .create()
+  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL).create()
   ScriptApp.newTrigger(start.name)
     .timeBased()
-    .after(1000 * 60 * 60) // 1 hour
+    .after(durationSec * 1000)
     .create()
 }
 
@@ -70,8 +69,10 @@ function catchError<T>(fn: () => T): T {
     return res
   } catch (e) {
     if (e.message.includes(`Service invoked too many times`)) {
+      if (CacheProxy.get(`TickSlowedDown`)) return
       Log.alert(`Google API daily rate limit exceeded.`)
-      slowDownTemporarily()
+      slowDownTemporarily(SECONDS_IN_HOUR)
+      CacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_HOUR)
       Log.alert(`Background process interval slowed down for the next hour.`)
     }
     Log.error(e)
