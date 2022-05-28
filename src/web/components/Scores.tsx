@@ -22,15 +22,24 @@ import { PriceMove } from "../../shared-lib/types"
 export function Scores({ config }: { config: Config }) {
   const [scores, setScores] = React.useState<ScoresResponse>(null)
 
-  useEffect(() => {
+  const updateScores = () => {
     google.script.run.withSuccessHandler(setScores).getScores()
-  }, [])
+  }
 
   function buy(coinName: string) {
     if (confirmBuy(coinName, config)) {
       google.script.run.withSuccessHandler(alert).buyCoin(coinName)
     }
   }
+
+  useEffect(() => {
+    updateScores()
+    const interval = setInterval(updateScores, 1000 * 60)
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [])
 
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
@@ -60,11 +69,7 @@ export function Scores({ config }: { config: Config }) {
                 Reset
               </Button>
             )}
-            <IconButton
-              onClick={() => {
-                google.script.run.withSuccessHandler(setScores).getScores()
-              }}
-            >
+            <IconButton onClick={updateScores}>
               <Refresh />
             </IconButton>
           </Stack>
