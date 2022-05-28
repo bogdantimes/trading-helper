@@ -3,7 +3,6 @@ import { useEffect } from "react"
 import {
   Box,
   Button,
-  IconButton,
   List,
   ListItem,
   ListItemAvatar,
@@ -11,7 +10,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material"
-import { Refresh } from "@mui/icons-material"
 import { Config } from "../../gas/Store"
 import { circularProgress, confirmBuy, growthIconMap } from "./Common"
 import { CoinScore } from "../../shared-lib/CoinScore"
@@ -69,9 +67,6 @@ export function Scores({ config }: { config: Config }) {
                 Reset
               </Button>
             )}
-            <IconButton onClick={updateScores}>
-              <Refresh />
-            </IconButton>
           </Stack>
         </Stack>
       )}
