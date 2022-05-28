@@ -10,6 +10,8 @@ import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { AssetsResponse, ScoresResponse } from "../shared-lib/responses"
 
+const TICK_INTERVAL_MIN = 1
+
 function doGet() {
   if (!ScriptApp.getProjectTriggers().find((t) => t.getHandlerFunction() == Process.tick.name)) {
     // Start app if not running
@@ -30,16 +32,17 @@ function tick() {
 
 function start() {
   catchError(() => {
-    stop()
-    const interval = 1
-    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(interval).create()
-    Log.alert(`Background process started. State synchronization interval is ${interval} minute.`)
+    ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
+    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL_MIN).create()
+    Log.alert(
+      `Background process restarted. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
+    )
   })
 }
 
 function stop() {
   catchError(() => {
-    let deleted = false;
+    let deleted = false
     ScriptApp.getProjectTriggers().forEach((t) => {
       ScriptApp.deleteTrigger(t)
       deleted = true
@@ -48,12 +51,29 @@ function stop() {
   })
 }
 
+function slowDownTemporarily() {
+  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
+  ScriptApp.newTrigger(Process.tick.name)
+    .timeBased()
+    .everyMinutes(TICK_INTERVAL_MIN * 2)
+    .create()
+  ScriptApp.newTrigger(start.name)
+    .timeBased()
+    .after(1000 * 60 * 60) // 1 hour
+    .create()
+}
+
 function catchError<T>(fn: () => T): T {
   try {
     const res = fn()
     Log.ifUsefulDumpAsEmail()
     return res
   } catch (e) {
+    if (e.message.includes(`Service invoked too many times`)) {
+      Log.alert(`Google API daily rate limit exceeded.`)
+      slowDownTemporarily()
+      Log.alert(`Background process interval slowed down for the next hour.`)
+    }
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
     throw e
