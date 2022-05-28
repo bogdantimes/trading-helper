@@ -2,7 +2,7 @@ import { Config, DefaultStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
-import { ScoresManager } from "./ScoresManager"
+import { Scores } from "./Scores"
 import { Log } from "./Common"
 import { Coin, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
@@ -170,9 +170,9 @@ function getStatistics(): Stats {
 function getScores(): ScoresResponse {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    const scoresManager = new ScoresManager(DefaultStore, exchange)
+    const scoresManager = new Scores(DefaultStore, exchange)
     return {
-      coins: scoresManager.getScores(),
+      recommended: scoresManager.getRecommended(),
       marketMove: scoresManager.getMarketMove(),
     }
   })
@@ -181,7 +181,7 @@ function getScores(): ScoresResponse {
 function resetScores(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return new ScoresManager(DefaultStore, exchange).resetScores()
+    return new Scores(DefaultStore, exchange).reset()
   })
 }
 

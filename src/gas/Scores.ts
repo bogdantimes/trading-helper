@@ -6,7 +6,7 @@ import { CoinScore } from "../shared-lib/CoinScore"
 
 type CoinScoreMap = { [key: string]: CoinScore }
 
-export class ScoresManager {
+export class Scores {
   private readonly STABLE_COIN = StableUSDCoin.BUSD // Using Binance USD as best for Binance
   private readonly CACHE_SYNC_INTERVAL = 3 * 60 * 60 // 3 hours
 
@@ -19,11 +19,10 @@ export class ScoresManager {
   }
 
   /**
-   * Returns symbols that raised in price when most of the marked was going down.
-   * Returns first ten recommended symbols if there are more than ten.
-   * Sorted by recommendation score.
+   * Returns coins that raised in price when most of the marked was going down.
+   * Returns first ten recommended coins sorted by the recommendation score.
    */
-  getScores(): CoinScore[] {
+  getRecommended(): CoinScore[] {
     const scoresJson = CacheProxy.get(`RecommenderMemos`)
     const scores: CoinScoreMap = scoresJson ? JSON.parse(scoresJson) : {}
     return Object.values(scores)
@@ -38,7 +37,15 @@ export class ScoresManager {
 
   getMarketMove(): MarketMove {
     const json = CacheProxy.get(`MarketMove`)
-    return json ? JSON.parse(json) : {}
+    return json
+      ? JSON.parse(json)
+      : {
+          [PriceMove.STRONG_DOWN]: 0,
+          [PriceMove.DOWN]: 0,
+          [PriceMove.NEUTRAL]: 0,
+          [PriceMove.UP]: 0,
+          [PriceMove.STRONG_UP]: 0,
+        }
   }
 
   /**
@@ -52,7 +59,7 @@ export class ScoresManager {
    *  6. delete zero scores from scores
    *  7. save
    */
-  updateScores(): void {
+  update(): void {
     const scoresJson = CacheProxy.get(`RecommenderMemos`)
     const scores: CoinScoreMap = scoresJson
       ? JSON.parse(scoresJson)
@@ -125,7 +132,7 @@ export class ScoresManager {
     }
   }
 
-  resetScores(): void {
+  reset(): void {
     // todo: make concurrent safe
     CacheProxy.put(`RecommenderMemos`, JSON.stringify({}))
     this.store.set(`SurvivorScores`, {})

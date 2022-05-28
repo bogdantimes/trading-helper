@@ -1,7 +1,6 @@
 import * as React from "react"
 import { useEffect } from "react"
 import {
-  Alert,
   Box,
   Button,
   IconButton,
@@ -33,22 +32,15 @@ export function Scores({ config }: { config: Config }) {
     }
   }
 
-  const infoMsg = `Score represents how many times a currency showed price growth, while ${
-    (1 - config.ScoreGainersThreshold) * 100
-  }% of the market was going in the opposite direction.`
-
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       {!scores && circularProgress}
       {scores && (
         <Stack spacing={2}>
-          <Alert sx={{ width: 332 }} severity={`info`}>
-            {infoMsg}
-          </Alert>
           {marketMoveBlock(scores)}
-          {coinsList(scores, buy)}
+          {recommendedList(scores, buy)}
           <Stack alignSelf={`center`} spacing={2} direction={`row`}>
-            {!!scores.coins.length && (
+            {!!scores.recommended.length && (
               <Button
                 onClick={() => {
                   if (confirm(`Are you sure you want to clear the scores?`)) {
@@ -57,7 +49,7 @@ export function Scores({ config }: { config: Config }) {
                         setScores((prevState) => {
                           return {
                             ...prevState,
-                            coins: [],
+                            recommended: [],
                           }
                         }),
                       )
@@ -82,20 +74,20 @@ export function Scores({ config }: { config: Config }) {
   )
 }
 
-function coinsList(scores: ScoresResponse, buy: (coinName: string) => void) {
+function recommendedList(scores: ScoresResponse, buy: (coinName: string) => void) {
   return (
     <>
       <Typography alignSelf={`center`} variant={`subtitle1`}>
-        Scores
+        Recommended
       </Typography>
-      {!scores.coins.length && (
+      {!scores.recommended.length && (
         <Typography alignSelf={`center`} variant={`caption`}>
           Nothing to show yet.
         </Typography>
       )}
-      {!!scores.coins.length && (
+      {!!scores.recommended.length && (
         <List sx={{ padding: 0, width: 332 }}>
-          {scores.coins.map((rJson, i) => {
+          {scores.recommended.map((rJson, i) => {
             const cs = CoinScore.fromObject(rJson)
             return (
               <ListItem

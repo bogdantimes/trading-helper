@@ -8,6 +8,6 @@ export type AssetsResponse = {
 }
 
 export type ScoresResponse = {
-  coins: CoinScore[]
+  recommended: CoinScore[]
   marketMove: MarketMove
 }
