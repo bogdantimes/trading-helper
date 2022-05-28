@@ -70,7 +70,9 @@ function catchError<T>(fn: () => T): T {
     const limitMsg1 = `Service invoked too many times`
     const limitMsg2 = `Please wait a bit and try again`
     if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
-      if (CacheProxy.get(`TickSlowedDown`)) return
+      // If limit already handled, just throw the error without logging
+      if (CacheProxy.get(`TickSlowedDown`)) throw e
+      // Handle limit gracefully
       Log.alert(`Google API daily rate limit exceeded.`)
       slowDownTemporarily(SECONDS_IN_HOUR)
       CacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_HOUR)
