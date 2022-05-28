@@ -3,7 +3,7 @@ import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { Scores } from "./Scores"
-import { Log } from "./Common"
+import { Log, SECONDS_IN_HOUR } from "./Common"
 import { Coin, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { Process } from "./Process"
@@ -12,7 +12,6 @@ import { AssetsResponse, ScoresResponse } from "../shared-lib/responses"
 
 const TICK_INTERVAL = 1
 const SLOW_TICK_INTERVAL = 5
-const SECONDS_IN_HOUR = 60 * 60
 
 function doGet() {
   if (!ScriptApp.getProjectTriggers().find((t) => t.getHandlerFunction() == Process.tick.name)) {
