@@ -67,7 +67,9 @@ function catchError<T>(fn: () => T): T {
     Log.ifUsefulDumpAsEmail()
     return res
   } catch (e) {
-    if (e.message.includes(`Service invoked too many times`)) {
+    const limitMsg1 = `Service invoked too many times`
+    const limitMsg2 = `Please wait a bit and try again`
+    if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
       if (CacheProxy.get(`TickSlowedDown`)) return
       Log.alert(`Google API daily rate limit exceeded.`)
       slowDownTemporarily(SECONDS_IN_HOUR)
