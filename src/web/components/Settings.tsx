@@ -203,7 +203,7 @@ function advancedSettings(
           <Autocomplete<number>
             selectOnFocus={false}
             value={config.ScoreGainersThreshold}
-            options={[0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]}
+            options={[0.005, 0.01, 0.05, 0.1]}
             onChange={(e, val: number) =>
               val && setConfig({ ...config, ScoreGainersThreshold: val })
             }

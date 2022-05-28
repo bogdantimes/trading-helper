@@ -39,7 +39,7 @@ export function Scores({ config }: { config: Config }) {
         <Stack spacing={2}>
           {marketMoveBlock(scores)}
           {recommendedList(scores, buy)}
-          <Stack alignSelf={`center`} spacing={2} direction={`row`}>
+          <Stack alignSelf={`center`} direction={`row`}>
             {!!scores.recommended.length && (
               <Button
                 onClick={() => {
@@ -91,6 +91,7 @@ function recommendedList(scores: ScoresResponse, buy: (coinName: string) => void
             const cs = CoinScore.fromObject(rJson)
             return (
               <ListItem
+                sx={{ paddingLeft: `40px` }}
                 key={cs.coinName}
                 disablePadding={true}
                 secondaryAction={
@@ -99,7 +100,7 @@ function recommendedList(scores: ScoresResponse, buy: (coinName: string) => void
                   </Button>
                 }
               >
-                <ListItemAvatar>#{i + 1}</ListItemAvatar>
+                <ListItemAvatar sx={{ minWidth: `100px` }}>#{i + 1}</ListItemAvatar>
                 <ListItemText
                   sx={{ marginBottom: 0 }}
                   primary={cs.coinName}
