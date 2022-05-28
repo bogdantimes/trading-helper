@@ -3,7 +3,6 @@ import { useEffect } from "react"
 import {
   Box,
   Button,
-  IconButton,
   List,
   ListItem,
   ListItemAvatar,
@@ -11,7 +10,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material"
-import { Refresh } from "@mui/icons-material"
 import { Config } from "../../gas/Store"
 import { circularProgress, confirmBuy, growthIconMap } from "./Common"
 import { CoinScore } from "../../shared-lib/CoinScore"
@@ -22,15 +20,24 @@ import { PriceMove } from "../../shared-lib/types"
 export function Scores({ config }: { config: Config }) {
   const [scores, setScores] = React.useState<ScoresResponse>(null)
 
-  useEffect(() => {
+  const updateScores = () => {
     google.script.run.withSuccessHandler(setScores).getScores()
-  }, [])
+  }
 
   function buy(coinName: string) {
     if (confirmBuy(coinName, config)) {
       google.script.run.withSuccessHandler(alert).buyCoin(coinName)
     }
   }
+
+  useEffect(() => {
+    updateScores()
+    const interval = setInterval(updateScores, 1000 * 60)
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [])
 
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
@@ -60,13 +67,6 @@ export function Scores({ config }: { config: Config }) {
                 Reset
               </Button>
             )}
-            <IconButton
-              onClick={() => {
-                google.script.run.withSuccessHandler(setScores).getScores()
-              }}
-            >
-              <Refresh />
-            </IconButton>
           </Stack>
         </Stack>
       )}
