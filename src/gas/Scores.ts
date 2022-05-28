@@ -101,7 +101,7 @@ export class Scores {
 
     // Update scores only if there is a small percentage of coins that are gainers or losers
     // while prevailing is the opposite.
-    const threshold = this.store.getConfig().ScoreGainersThreshold
+    const threshold = this.store.getConfig().ScoreUpdateThreshold
     const isRare = (n) => n > 0 && n <= threshold * totalCount
     const isPrevailing = (n) => n <= totalCount && n > (1 - threshold) * totalCount
     // Updating gainers

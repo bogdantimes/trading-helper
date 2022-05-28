@@ -4,12 +4,16 @@ import SaveIcon from "@mui/icons-material/Save"
 import { Config } from "../../gas/Store"
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
   Chip,
+  Divider,
+  FormControl,
   FormControlLabel,
+  FormLabel,
   InputAdornment,
+  Radio,
+  RadioGroup,
   Stack,
   Switch,
   TextField,
@@ -75,14 +79,18 @@ export function Settings() {
       {!configLoaded && circularProgress}
       {configLoaded && (
         <Stack spacing={2}>
-          <Autocomplete
-            selectOnFocus={false}
-            disableClearable={true}
-            value={config.StableCoin}
-            options={Object.values(StableUSDCoin)}
-            onChange={(e, val) => val && setConfig({ ...config, StableCoin: val as StableUSDCoin })}
-            renderInput={(params) => <TextField {...params} label={`Stable Coin`} />}
-          />
+          <FormControl>
+            <FormLabel>Stable Coin</FormLabel>
+            <RadioGroup
+              row
+              value={config.StableCoin}
+              onChange={(e, val) => setConfig({ ...config, StableCoin: val as StableUSDCoin })}
+            >
+              {Object.values(StableUSDCoin).map((coin) => (
+                <FormControlLabel key={coin} value={coin} control={<Radio />} label={coin} />
+              ))}
+            </RadioGroup>
+          </FormControl>
           <TextField
             value={buyQuantity}
             label={`Buy Quantity`}
@@ -124,23 +132,6 @@ export function Settings() {
               label="Auto-sell"
             />
           </Stack>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              value={config.PriceAnomalyAlert}
-              label={`Price Anomaly Alert`}
-              onChange={(e) => setConfig({ ...config, PriceAnomalyAlert: +e.target.value })}
-              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.BuyDumps}
-                  onChange={(e) => setConfig({ ...config, BuyDumps: e.target.checked })}
-                />
-              }
-              label="Buy drops"
-            />
-          </Stack>
           <FormControlLabel
             sx={{ margin: 0 }}
             control={
@@ -170,7 +161,7 @@ export function Settings() {
             label="Averaging down"
           />
           {advancedSettings(hideAdvanced, setHideAdvanced, config, setConfig)}
-          <Box alignSelf={`center`} sx={{ position: `relative` }}>
+          <Box marginTop={`24px`} alignSelf={`center`} sx={{ position: `relative` }}>
             <Button
               variant="contained"
               color="primary"
@@ -197,28 +188,59 @@ function advancedSettings(
 ) {
   return (
     <>
-      <Chip onClick={() => setHide(!hide)} label="Advanced" />
+      <Divider sx={{ "::before, ::after": { top: 0 } }}>
+        <Chip onClick={() => setHide(!hide)} label="Advanced" />
+      </Divider>
       {!hide && (
         <Stack spacing={2}>
-          <Autocomplete<number>
-            selectOnFocus={false}
-            value={config.ScoreGainersThreshold}
-            options={[0.005, 0.01, 0.05, 0.1]}
-            onChange={(e, val: number) =>
-              val && setConfig({ ...config, ScoreGainersThreshold: val })
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                helperText={`Current: ${
-                  config.ScoreGainersThreshold * 100
-                }%. Maximum percentage of market currencies that should gain or lose value for "Scores" to be updated.`}
-                label={`Score Gainers Threshold`}
-              />
-            )}
-          />
+          <Stack direction="row" spacing={2}>
+            <TextField
+              value={config.PriceAnomalyAlert}
+              label={`Price Anomaly Alert`}
+              onChange={(e) => setConfig({ ...config, PriceAnomalyAlert: +e.target.value })}
+              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.BuyDumps}
+                  onChange={(e) => setConfig({ ...config, BuyDumps: e.target.checked })}
+                />
+              }
+              label="Buy drops"
+            />
+          </Stack>
+          {scoreThresholdSelector(config, setConfig)}
         </Stack>
       )}
     </>
+  )
+}
+
+function scoreThresholdSelector(config: Config, setConfig: (config: Config) => void) {
+  return (
+    <FormControl>
+      <FormLabel>Score Update Requirements</FormLabel>
+      <RadioGroup
+        row
+        value={config.ScoreUpdateThreshold}
+        onChange={(e) => setConfig({ ...config, ScoreUpdateThreshold: +e.target.value })}
+      >
+        <FormControlLabel
+          labelPlacement="bottom"
+          value={0.005}
+          control={<Radio />}
+          label="Extreme"
+        />
+        <FormControlLabel labelPlacement="bottom" value={0.01} control={<Radio />} label="High" />
+        <FormControlLabel
+          labelPlacement="bottom"
+          value={0.05}
+          control={<Radio />}
+          label="Moderate"
+        />
+        <FormControlLabel labelPlacement="bottom" value={0.1} control={<Radio />} label="Minimal" />
+      </RadioGroup>
+    </FormControl>
   )
 }
