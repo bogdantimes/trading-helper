@@ -27,7 +27,7 @@ export const circularProgress = (
 const map = new Map<PriceMove, JSX.Element>()
 map.set(PriceMove.STRONG_DOWN, <KeyboardDoubleArrowDown htmlColor={`red`} />)
 map.set(PriceMove.DOWN, <KeyboardArrowDown htmlColor={`red`} />)
-map.set(PriceMove.NEUTRAL, <KeyboardArrowUp sx={{ transform: `rotate(90deg)` }}/>)
+map.set(PriceMove.NEUTRAL, <KeyboardArrowUp htmlColor={`lightblue`} sx={{ transform: `rotate(90deg)` }}/>)
 map.set(PriceMove.UP, <KeyboardArrowUp htmlColor={`green`} />)
 map.set(PriceMove.STRONG_UP, <KeyboardDoubleArrowUp htmlColor={`green`} />)
 export const growthIconMap = map
