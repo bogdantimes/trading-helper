@@ -13,14 +13,25 @@ import { AssetsResponse, ScoresResponse } from "../shared-lib/responses"
 const TICK_INTERVAL = 1
 const SLOW_TICK_INTERVAL = 5
 
-function doGet() {
+/**
+ * Check if the permanent storage is connected.
+ * If yes, ensure the app is running in the background.
+ * Otherwise, stop it.
+ */
+function checkDbConnectedAndAppRunning() {
   if (DefaultStore.isConnected()) {
-    // Start app if db connected but app is not running
     const processIsNotRunning = !ScriptApp.getProjectTriggers().find(
       (t) => t.getHandlerFunction() == Process.tick.name,
     )
     if (processIsNotRunning) start()
+  } else {
+    Log.alert(`ℹ️ Database is not reachable.`)
+    stop()
   }
+}
+
+function doGet() {
+  checkDbConnectedAndAppRunning()
   return HtmlService.createTemplateFromFile(`index`)
     .evaluate()
     .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
