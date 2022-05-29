@@ -220,7 +220,7 @@ function advancedSettings(
 function scoreThresholdSelector(config: Config, setConfig: (config: Config) => void) {
   return (
     <FormControl>
-      <FormLabel>Score Update Requirements</FormLabel>
+      <FormLabel>Score Selectivity</FormLabel>
       <RadioGroup
         row
         value={config.ScoreUpdateThreshold}

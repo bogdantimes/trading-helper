@@ -1,5 +1,11 @@
 import { CacheProxy } from "./CacheProxy"
-import { ExchangeSymbol, PriceProvider, StableUSDCoin, TradeState } from "../shared-lib/types"
+import {
+  ExchangeSymbol,
+  PriceProvider,
+  ScoreSelectivity,
+  StableUSDCoin,
+  TradeState,
+} from "../shared-lib/types"
 import { Log } from "./Common"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 
@@ -77,7 +83,7 @@ export class FirebaseStore implements IStore {
       AveragingDown: false,
       ProfitBasedStopLimit: false,
       PriceAnomalyAlert: 5,
-      ScoreUpdateThreshold: 0.01,
+      ScoreUpdateThreshold: ScoreSelectivity.MODERATE,
     }
     const configCacheJson = CacheProxy.get(`Config`)
     let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null

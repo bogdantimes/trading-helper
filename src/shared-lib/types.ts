@@ -77,3 +77,10 @@ export type MarketMove = {
   [PriceMove.UP]: number
   [PriceMove.STRONG_UP]: number
 }
+
+export enum ScoreSelectivity {
+  EXTREME = 0.005,
+  HIGH = 0.01,
+  MODERATE = 0.05,
+  MINIMAL = 0.1,
+}
