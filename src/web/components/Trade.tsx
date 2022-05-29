@@ -214,9 +214,11 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
               </div>
             </Typography>
           ) : (
-            <Typography marginLeft={`16px`} variant="body2" color="text.secondary">
-              <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
-            </Typography>
+            !!tm.soldPriceChangePercent() && (
+              <Typography marginLeft={`16px`} variant="body2" color="text.secondary">
+                <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
+              </Typography>
+            )
           )}
           <CardActions>
             <Stack direction={`row`} spacing={1} sx={{ marginLeft: `auto`, marginRight: `auto` }}>
@@ -294,14 +296,14 @@ const chartStyle = (theme) => ({
 
 function changeChartTheme(chart: IChartApi, theme: Theme) {
   chart &&
-  chart.applyOptions({
-    layout: {
-      backgroundColor: theme.palette.background.default,
-      textColor: theme.palette.text.primary,
-    },
-    grid: {
-      vertLines: { color: theme.palette.divider },
-      horzLines: { color: theme.palette.divider },
-    },
-  })
+    chart.applyOptions({
+      layout: {
+        backgroundColor: theme.palette.background.default,
+        textColor: theme.palette.text.primary,
+      },
+      grid: {
+        vertLines: { color: theme.palette.divider },
+        horzLines: { color: theme.palette.divider },
+      },
+    })
 }
