@@ -60,6 +60,7 @@ export class FirebaseStore implements IStore {
     // If URL changed - clean trades and config cache
     const cachedURL = CacheProxy.get(`dbURL`)
     if (!!cachedURL && cachedURL !== this.url) {
+      Log.alert(`Firebase Realtime Database URL changed.`)
       CacheProxy.remove(`Trades`)
       CacheProxy.remove(`Config`)
     }
