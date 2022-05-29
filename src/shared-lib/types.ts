@@ -84,3 +84,11 @@ export enum ScoreSelectivity {
   MODERATE = 0.05,
   MINIMAL = 0.1,
 }
+
+export enum AutoTradeBestScores {
+  OFF = 0,
+  TOP1 = 1,
+  TOP3 = 3,
+  TOP5 = 5,
+  TOP10 = 10,
+}

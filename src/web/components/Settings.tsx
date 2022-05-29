@@ -14,13 +14,14 @@ import {
   InputAdornment,
   Radio,
   RadioGroup,
+  Slider,
   Stack,
   Switch,
   TextField,
 } from "@mui/material"
-import { circularProgress } from "./Common"
-import { StableUSDCoin } from "../../shared-lib/types"
-import { f2 } from "../../shared-lib/functions"
+import { capitalizeWord, circularProgress } from "./Common"
+import { AutoTradeBestScores, StableUSDCoin } from "../../shared-lib/types"
+import { enumKeys, f2 } from "../../shared-lib/functions"
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false)
@@ -161,7 +162,7 @@ export function Settings() {
             label="Averaging down"
           />
           {advancedSettings(hideAdvanced, setHideAdvanced, config, setConfig)}
-          <Box marginTop={`24px`} alignSelf={`center`} sx={{ position: `relative` }}>
+          <Box paddingTop={`24px`} alignSelf={`center`} sx={{ position: `relative` }}>
             <Button
               variant="contained"
               color="primary"
@@ -210,6 +211,8 @@ function advancedSettings(
               label="Buy drops"
             />
           </Stack>
+          <Divider />
+          {autoTradeBestScoresSlider(config, setConfig)}
           {scoreThresholdSelector(config, setConfig)}
         </Stack>
       )}
@@ -241,6 +244,28 @@ function scoreThresholdSelector(config: Config, setConfig: (config: Config) => v
         />
         <FormControlLabel labelPlacement="bottom" value={0.1} control={<Radio />} label="Minimal" />
       </RadioGroup>
+    </FormControl>
+  )
+}
+
+function autoTradeBestScoresSlider(config: Config, setConfig: (config: Config) => void) {
+  return (
+    <FormControl>
+      <FormLabel>Auto Trade Best Scores</FormLabel>
+      <Slider
+        sx={{ marginLeft: `8px` }}
+        value={config.AutoTradeBestScores}
+        onChange={(e, value) =>
+          setConfig({ ...config, AutoTradeBestScores: value as AutoTradeBestScores })
+        }
+        step={null}
+        min={0}
+        max={10}
+        marks={enumKeys(AutoTradeBestScores).map((key) => ({
+          value: AutoTradeBestScores[key],
+          label: capitalizeWord(key),
+        }))}
+      />
     </FormControl>
   )
 }

@@ -1,5 +1,6 @@
 import { CacheProxy } from "./CacheProxy"
 import {
+  AutoTradeBestScores,
   ExchangeSymbol,
   PriceProvider,
   ScoreSelectivity,
@@ -99,6 +100,7 @@ export class FirebaseStore implements IStore {
       ProfitBasedStopLimit: false,
       PriceAnomalyAlert: 5,
       ScoreUpdateThreshold: ScoreSelectivity.MODERATE,
+      AutoTradeBestScores: AutoTradeBestScores.OFF,
     }
     const configCacheJson = CacheProxy.get(`Config`)
     let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null
@@ -312,6 +314,11 @@ export type Config = {
    * the scores will be recalculated for that 1%.
    */
   ScoreUpdateThreshold?: number
+  /**
+   * AutoTradeBestScores - when enabled, the tool will trade the "Scores" recommended coins automatically.
+   * If the coin falls out of the recommended list, it will be removed from the assets once it is sold.
+   */
+  AutoTradeBestScores?: AutoTradeBestScores
 
   /**
    * @deprecated
