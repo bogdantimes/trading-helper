@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useEffect } from "react"
 import {
+  Alert,
   Box,
   Button,
   List,
@@ -11,11 +12,11 @@ import {
   Typography,
 } from "@mui/material"
 import { Config } from "../../gas/Store"
-import { circularProgress, confirmBuy, growthIconMap } from "./Common"
+import { capitalizeWord, circularProgress, confirmBuy, growthIconMap } from "./Common"
 import { CoinScore } from "../../shared-lib/CoinScore"
 import { ScoresResponse } from "../../shared-lib/responses"
 import { f2 } from "../../shared-lib/functions"
-import { PriceMove } from "../../shared-lib/types"
+import { AutoTradeBestScores, PriceMove } from "../../shared-lib/types"
 
 export function Scores({ config }: { config: Config }) {
   const [scores, setScores] = React.useState<ScoresResponse>(null)
@@ -45,7 +46,7 @@ export function Scores({ config }: { config: Config }) {
       {scores && (
         <Stack spacing={2}>
           {marketMoveBlock(scores)}
-          {recommendedList(scores, buy)}
+          {recommendedList(scores, buy, config.AutoTradeBestScores)}
           <Stack alignSelf={`center`} direction={`row`}>
             {!!scores.recommended.length && (
               <Button
@@ -74,12 +75,17 @@ export function Scores({ config }: { config: Config }) {
   )
 }
 
-function recommendedList(scores: ScoresResponse, buy: (coinName: string) => void) {
+function recommendedList(
+  scores: ScoresResponse,
+  buy: (coinName: string) => void,
+  autoTrade: AutoTradeBestScores,
+) {
   return (
     <>
-      <Typography alignSelf={`center`} variant={`subtitle1`}>
-        Recommended
-      </Typography>
+      <Stack>
+        <Typography alignSelf={`center`} variant={`subtitle1`}>Recommended</Typography>
+        {autoTrade && getAlert(autoTrade)}
+      </Stack>
       {!scores.recommended.length && (
         <Typography alignSelf={`center`} variant={`caption`}>
           Nothing to show yet.
@@ -134,5 +140,25 @@ function marketMoveBlock(scores: ScoresResponse) {
           )}
       </Stack>
     </>
+  )
+}
+
+function getAlert(autoTrade: AutoTradeBestScores) {
+  return (
+    <Alert
+      severity={`info`}
+      sx={{
+        margin: 0,
+        padding: 0,
+        justifyContent: `center`,
+        "& div": {
+          padding: `1px 0`,
+        },
+      }}
+    >
+      <Typography marginTop={0} alignSelf={`center`} variant={`caption`}>
+        Auto-buying {capitalizeWord(AutoTradeBestScores[autoTrade])}
+      </Typography>
+    </Alert>
   )
 }
