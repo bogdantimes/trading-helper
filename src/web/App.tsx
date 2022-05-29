@@ -64,6 +64,7 @@ export default function App() {
 
   function handleConfig(cfg: Config) {
     setFetchingData(false)
+    setFetchDataError(null)
     if (!cfg || !cfg.KEY || !cfg.SECRET) {
       setInitialSetup(true)
     } else {
@@ -91,8 +92,8 @@ export default function App() {
         <Alert severity="error">
           <Typography variant="caption">{fetchDataError}</Typography>
           <Typography variant="caption">
-            Please check your network connection and that Google Apps Script application is deployed
-            and try again.
+            {` `}Please check your network connection and that Google Apps Script application is
+            deployed and try again.
           </Typography>
         </Alert>
       )}
