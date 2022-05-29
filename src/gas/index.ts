@@ -23,18 +23,20 @@ function checkDbConnectedAndAppRunning() {
     const processIsNotRunning = !ScriptApp.getProjectTriggers().find(
       (t) => t.getHandlerFunction() == Process.tick.name,
     )
-    if (processIsNotRunning) start()
+    if (processIsNotRunning) startTicker()
   } else {
     Log.alert(`ℹ️ Database is not reachable.`)
-    stop()
+    stopTicker()
   }
 }
 
 function doGet() {
-  checkDbConnectedAndAppRunning()
-  return HtmlService.createTemplateFromFile(`index`)
-    .evaluate()
-    .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
+  return catchError(() => {
+    checkDbConnectedAndAppRunning()
+    return HtmlService.createTemplateFromFile(`index`)
+      .evaluate()
+      .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
+  })
 }
 
 function doPost() {
@@ -46,24 +48,28 @@ function tick() {
 }
 
 function start() {
-  catchError(() => {
-    ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL).create()
-    Log.alert(
-      `ℹ️ Background process restarted. State synchronization interval is ${TICK_INTERVAL} minute.`,
-    )
-  })
+  catchError(startTicker)
 }
 
 function stop() {
-  catchError(() => {
-    let deleted = false
-    ScriptApp.getProjectTriggers().forEach((t) => {
-      ScriptApp.deleteTrigger(t)
-      deleted = true
-    })
-    deleted && Log.alert(`⛔ Background processes stopped.`)
+  catchError(stopTicker)
+}
+
+function startTicker() {
+  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
+  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL).create()
+  Log.alert(
+    `ℹ️ Background process restarted. State synchronization interval is ${TICK_INTERVAL} minute.`,
+  )
+}
+
+function stopTicker() {
+  let deleted = false
+  ScriptApp.getProjectTriggers().forEach((t) => {
+    ScriptApp.deleteTrigger(t)
+    deleted = true
   })
+  deleted && Log.alert(`⛔ Background processes stopped.`)
 }
 
 function slowDownTemporarily(durationSec: number) {
@@ -113,7 +119,7 @@ function initialSetup(params: InitialSetupParams): string {
       Log.alert(`Checking if Binance is reachable`)
       new Exchange(config).getFreeAsset(config.StableCoin)
       Log.alert(`Connected to Binance`)
-      start()
+      startTicker()
     }
     DefaultStore.setConfig(config)
     return `OK`
