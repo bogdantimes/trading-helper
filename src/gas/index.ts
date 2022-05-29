@@ -1,24 +1,43 @@
-import { Config, DefaultStore } from "./Store"
+import { DefaultStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
-import { Scores } from "./Scores"
-import { Log } from "./Common"
-import { Coin, Stats } from "../shared-lib/types"
+import { IScores } from "./Scores"
+import { Log, SECONDS_IN_HOUR } from "./Common"
+import { Coin, ScoresData, Stats } from "../shared-lib/types"
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { AssetsResponse } from "../shared-lib/responses"
-import { CoinScore } from "../shared-lib/CoinScore"
+import { Config } from "../shared-lib/Config"
+
+const TICK_INTERVAL = 1
+const SLOW_TICK_INTERVAL = 5
+
+/**
+ * Check if the permanent storage is connected.
+ * If yes, ensure the app is running in the background.
+ * Otherwise, stop it.
+ */
+function checkDbConnectedAndAppRunning() {
+  if (DefaultStore.isConnected()) {
+    const processIsNotRunning = !ScriptApp.getProjectTriggers().find(
+      (t) => t.getHandlerFunction() == Process.tick.name,
+    )
+    if (processIsNotRunning) startTicker()
+  } else {
+    Log.alert(`ℹ️ Database is not reachable.`)
+    stopTicker()
+  }
+}
 
 function doGet() {
-  if (!ScriptApp.getProjectTriggers().find((t) => t.getHandlerFunction() == Process.tick.name)) {
-    // Start app if not running
-    start()
-  }
-  return HtmlService.createTemplateFromFile(`index`)
-    .evaluate()
-    .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
+  return catchError(() => {
+    checkDbConnectedAndAppRunning()
+    return HtmlService.createTemplateFromFile(`index`)
+      .evaluate()
+      .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
+  })
 }
 
 function doPost() {
@@ -30,23 +49,37 @@ function tick() {
 }
 
 function start() {
-  catchError(() => {
-    stop()
-    const interval = 1
-    ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(interval).create()
-    Log.alert(`Background process started. State synchronization interval is ${interval} minute.`)
-  })
+  catchError(startTicker)
 }
 
 function stop() {
-  catchError(() => {
-    let deleted = false;
-    ScriptApp.getProjectTriggers().forEach((t) => {
-      ScriptApp.deleteTrigger(t)
-      deleted = true
-    })
-    deleted && Log.alert(`Background processes stopped.`)
+  catchError(stopTicker)
+}
+
+function startTicker() {
+  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
+  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL).create()
+  Log.alert(
+    `ℹ️ Background process restarted. State synchronization interval is ${TICK_INTERVAL} minute.`,
+  )
+}
+
+function stopTicker() {
+  let deleted = false
+  ScriptApp.getProjectTriggers().forEach((t) => {
+    ScriptApp.deleteTrigger(t)
+    deleted = true
   })
+  deleted && Log.alert(`⛔ Background processes stopped.`)
+}
+
+function slowDownTemporarily(durationSec: number) {
+  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
+  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL).create()
+  ScriptApp.newTrigger(start.name)
+    .timeBased()
+    .after(durationSec * 1000)
+    .create()
 }
 
 function catchError<T>(fn: () => T): T {
@@ -55,6 +88,17 @@ function catchError<T>(fn: () => T): T {
     Log.ifUsefulDumpAsEmail()
     return res
   } catch (e) {
+    const limitMsg1 = `Service invoked too many times`
+    const limitMsg2 = `Please wait a bit and try again`
+    if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
+      // If limit already handled, just throw the error without logging
+      if (CacheProxy.get(`TickSlowedDown`)) throw e
+      // Handle limit gracefully
+      Log.alert(`🚫 Google API daily rate limit exceeded.`)
+      slowDownTemporarily(SECONDS_IN_HOUR)
+      CacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_HOUR)
+      Log.alert(`ℹ️ Background process interval slowed down for the next hour.`)
+    }
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
     throw e
@@ -63,8 +107,8 @@ function catchError<T>(fn: () => T): T {
 
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
-    if (params.dbURL) {
-      Log.alert(`Initial setup`)
+    if (!DefaultStore.isConnected()) {
+      Log.alert(`✨ Initial setup`)
       Log.alert(`Connecting to Firebase with URL: ` + params.dbURL)
       DefaultStore.connect(params.dbURL)
       Log.alert(`Connected to Firebase`)
@@ -76,7 +120,7 @@ function initialSetup(params: InitialSetupParams): string {
       Log.alert(`Checking if Binance is reachable`)
       new Exchange(config).getFreeAsset(config.StableCoin)
       Log.alert(`Connected to Binance`)
-      start()
+      startTicker()
     }
     DefaultStore.setConfig(config)
     return `OK`
@@ -168,17 +212,19 @@ function getStatistics(): Stats {
   return catchError(() => new Statistics(DefaultStore).getAll())
 }
 
-function getScores(): CoinScore[] {
+function getScores(): ScoresData {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return new Scores(DefaultStore, exchange).getScores()
+    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, exchange) as IScores
+    return scores.get()
   })
 }
 
 function resetScores(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return new Scores(DefaultStore, exchange).resetScores()
+    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, exchange) as IScores
+    return scores.reset()
   })
 }
 

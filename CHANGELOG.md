@@ -1,3 +1,9 @@
+# v2.6.2
+
+Contains improvements to existing features:
+* Survivors feature improved and renamed to Scores. New option related to scores in Settings -> Advanced.
+* Stop-limit auto-sell now happens only on crossing-down even.
+
 # v2.6.1
 
 * Start the background process if it is not running (fix for the upgrade from v2.5.0 to v2.6.0+)

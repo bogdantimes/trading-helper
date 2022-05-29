@@ -34,7 +34,7 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 ### Info
 ![info.png](img/info.png)
 ### Scores
-![survivors.png](img/scores.png)
+![scores.png](img/scores.png)
 
 ## How to
 

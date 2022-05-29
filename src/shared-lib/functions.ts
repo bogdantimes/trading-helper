@@ -13,7 +13,7 @@ export function getRandomFromList(list) {
 
 export function absPercentageChange(v1: number, v2: number): number {
   // |100 x (v2 - v1) / |v1||
-  return f2(Math.abs(100 * (v2 - v1) / Math.abs(v1)))
+  return f2(Math.abs((100 * (v2 - v1)) / Math.abs(v1)))
 }
 
 export function f2(n: number): number {
@@ -37,7 +37,7 @@ export function getPriceChangeIndex(prices: number[]): number {
   for (let i = 1; i < prices.length; i++) {
     if (prices[i] > prices[i - 1]) {
       result++
-    } else {
+    } else if (prices[i] < prices[i - 1]) {
       result--
     }
   }
@@ -47,4 +47,8 @@ export function getPriceChangeIndex(prices: number[]): number {
 export function getPriceMove(maxCapacity: number, prices: number[]): PriceMove {
   const index = getPriceChangeIndex(prices)
   return +(((index + maxCapacity) / (2 * maxCapacity)) * PriceMove.STRONG_UP).toFixed(0)
+}
+
+export function enumKeys(enumType: any): string[] {
+  return Object.keys(enumType).filter((k) => isNaN(Number(k)))
 }

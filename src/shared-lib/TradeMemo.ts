@@ -13,7 +13,7 @@ export class TradeMemo extends PricesHolder {
    */
   deleted: boolean
   /**
-   * The price at which the asset should be sold automatically if {@link Config.SellAtStopLimit}
+   * The price at which the asset should be sold automatically if {@link SellAtStopLimit}
    * is true, and {@link TradeMemo.hodl} is false.
    */
   private stopLimit = 0
@@ -136,7 +136,7 @@ export class TradeMemo extends PricesHolder {
     return ((this.currentPrice - this.tradeResult.soldPrice) / this.tradeResult.soldPrice) * 100
   }
 
-  lossLimitCrossedDown(): boolean {
+  stopLimitCrossedDown(): boolean {
     // all prices except the last one are greater than the stop limit price
     return (
       this.currentPrice < this.stopLimitPrice &&

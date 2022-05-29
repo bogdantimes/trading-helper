@@ -1,5 +1,5 @@
 import { Statistics } from "./Statistics"
-import { Config, DefaultStore, IStore } from "./Store"
+import { DefaultStore, IStore } from "./Store"
 import { IExchange } from "./Exchange"
 import { PriceAnomaly, PriceAnomalyChecker } from "./PriceAnomalyChecker"
 import { Log } from "./Common"
@@ -8,6 +8,7 @@ import { Coin, ExchangeSymbol, PriceMap, StableUSDCoin, TradeState } from "../sh
 import { TradeMemo } from "../shared-lib/TradeMemo"
 import { TradeResult } from "../shared-lib/TradeResult"
 import { CacheProxy } from "./CacheProxy"
+import { Config } from "../shared-lib/Config"
 
 export class V2Trader {
   private readonly store: IStore
@@ -17,11 +18,11 @@ export class V2Trader {
   private readonly prices: PriceMap
 
   /**
-   * Used when {@link Config.ProfitBasedStopLimit} is enabled.
+   * Used when {@link ProfitBasedStopLimit} is enabled.
    */
   private readonly totalProfit: number
   /**
-   * Used when {@link Config.ProfitBasedStopLimit} is enabled.
+   * Used when {@link ProfitBasedStopLimit} is enabled.
    */
   private readonly numberOfBoughtAssets: number
 
@@ -49,7 +50,7 @@ export class V2Trader {
 
     const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
     if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
-      Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
+      Log.alert(`ℹ️ Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
       tm.setState(TradeState.BUY)
     }
 
@@ -85,7 +86,7 @@ export class V2Trader {
     const symbol = tm.tradeResult.symbol
     const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit * 2)
     if (priceDropped) {
-      Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
+      Log.alert(`ℹ️ ${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
     } else {
       Log.info(`${symbol} price has not dropped sufficiently, skipping swing trade`)
@@ -94,17 +95,17 @@ export class V2Trader {
 
   private processBoughtState(tm: TradeMemo): void {
     this.updateStopLimit(tm)
-    this.sendLevelsCrossingAlerts(tm)
 
-    if (tm.currentPrice < tm.stopLimitPrice) {
-      const canSell = !tm.hodl && this.store.getConfig().SellAtStopLimit
-      canSell && tm.setState(TradeState.SELL)
-    }
+    if (tm.hodl) return
 
-    const profitLimitPrice = tm.tradeResult.price * (1 + this.config.ProfitLimit)
-    if (tm.currentPrice > profitLimitPrice) {
-      const canSell = !tm.hodl && this.store.getConfig().SellAtProfitLimit
-      canSell && tm.setState(TradeState.SELL)
+    if (tm.stopLimitCrossedDown()) {
+      Log.alert(`📉 ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
+      this.config.SellAtStopLimit && tm.setState(TradeState.SELL)
+    } else if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
+      Log.alert(`📈 ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
+      this.config.SellAtProfitLimit && tm.setState(TradeState.SELL)
+    } else if (tm.entryPriceCrossedUp()) {
+      Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
     }
   }
 
@@ -112,7 +113,7 @@ export class V2Trader {
     if (this.config.ProfitBasedStopLimit) {
       const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
-    } else if (!tm.stopLimitPrice || tm.priceGoesUpStrong()) {
+    } else if (!tm.stopLimitPrice || tm.priceGoesStrongUp()) {
       const newStopLimit = tm.currentPrice * (1 - this.config.StopLimit)
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit)
     }
@@ -121,19 +122,6 @@ export class V2Trader {
   private forceUpdateStopLimit(tm: TradeMemo) {
     tm.stopLimitPrice = 0
     this.updateStopLimit(tm)
-  }
-
-  private sendLevelsCrossingAlerts(tm: TradeMemo) {
-    const symbol = tm.tradeResult.symbol
-    if (!tm.hodl) {
-      if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
-        Log.alert(`${symbol} profit limit crossed up at ${tm.currentPrice}`)
-      } else if (tm.lossLimitCrossedDown()) {
-        Log.alert(`${symbol} stop limit crossed down at ${tm.currentPrice}`)
-      } else if (tm.entryPriceCrossedUp()) {
-        Log.alert(`${symbol} entry price crossed up at ${tm.currentPrice}`)
-      }
-    }
   }
 
   private pushNewPrice(tm: TradeMemo): void {
@@ -184,7 +172,7 @@ export class V2Trader {
         const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
 
-        Log.alert(`${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
+        Log.alert(`ℹ️ ${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
 
         tradeResult.profit = profit
         this.updatePLStatistics(symbol.priceAsset, profit)
@@ -222,8 +210,8 @@ export class V2Trader {
       .getTradesList(TradeState.BOUGHT)
       .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
       .sort(byProfitPercentDesc)[0]
-    if (lowestPLTrade) {
-      Log.alert(`Averaging down is enabled`)
+    if (lowestPLTrade && lowestPLTrade.profit() < 0) {
+      Log.alert(`ℹ️ Averaging down is enabled`)
       Log.alert(
         `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
       )

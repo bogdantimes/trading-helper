@@ -41,7 +41,7 @@ export class PricesHolder {
     return this.getPriceMove() >= PriceMove.UP
   }
 
-  priceGoesUpStrong(): boolean {
+  priceGoesStrongUp(): boolean {
     return this.getPriceMove() >= PriceMove.STRONG_UP
   }
 
@@ -49,7 +49,7 @@ export class PricesHolder {
     return this.getPriceMove() <= PriceMove.DOWN
   }
 
-  priceGoesDownStrong(): boolean {
+  priceGoesStrongDown(): boolean {
     return this.getPriceMove() <= PriceMove.STRONG_DOWN
   }
 

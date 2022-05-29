@@ -1,9 +1,9 @@
-import { Config } from "./Store"
 import { IExchange, IPriceProvider } from "./Exchange"
 import { CacheProxy } from "./CacheProxy"
 import { execute, Log } from "./Common"
 import { ExchangeSymbol, PriceMap } from "../shared-lib/types"
 import { TradeResult } from "../shared-lib/TradeResult"
+import { Config } from "../shared-lib/Config"
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
 
 export class Binance implements IExchange, IPriceProvider {
@@ -82,7 +82,7 @@ export class Binance implements IExchange, IPriceProvider {
         `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`,
       )
     }
-    Log.alert(`Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`)
+    Log.alert(`➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`)
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`
     try {
       const tradeResult = this.marketTrade(symbol, query)
@@ -104,7 +104,7 @@ export class Binance implements IExchange, IPriceProvider {
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`
-    Log.alert(`Selling ${quantity} ${symbol.quantityAsset} for ${symbol.priceAsset}`)
+    Log.alert(`➖ Selling ${quantity} ${symbol.quantityAsset} for ${symbol.priceAsset}`)
     try {
       const tradeResult = this.marketTrade(symbol, query)
       tradeResult.gained = tradeResult.cost
@@ -148,7 +148,7 @@ export class Binance implements IExchange, IPriceProvider {
     let commission = 0
     fills.forEach((f) => {
       if (f.commissionAsset != `BNB`) {
-        Log.alert(`Commission is ${f.commissionAsset} instead of BNB`)
+        Log.alert(`ℹ️ Commission is ${f.commissionAsset} instead of BNB`)
       } else {
         commission += +f.commission
       }

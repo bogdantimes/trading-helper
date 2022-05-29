@@ -1,10 +1,10 @@
 import * as React from "react"
 import { useState } from "react"
-import { Config } from "../../gas/Store"
 import { Alert, Box, Button, Stack, TextField } from "@mui/material"
 import { circularProgress } from "./Common"
 import Typography from "@mui/material/Typography"
 import { InitialSetupParams } from "../../gas"
+import { Config } from "../../shared-lib/Config"
 
 export function InitialSetup({ config, onConnect }: { config: Config; onConnect: () => void }) {
   const [isConnecting, setIsConnecting] = useState(false)

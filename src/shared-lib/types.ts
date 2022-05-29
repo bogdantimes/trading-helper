@@ -1,3 +1,5 @@
+import { CoinScore } from "./CoinScore"
+
 export enum StableUSDCoin {
   USDT = `USDT`,
   USDC = `USDC`,
@@ -68,4 +70,33 @@ export enum PriceMove {
   NEUTRAL,
   UP,
   STRONG_UP,
+}
+
+export type MarketMove = {
+  [PriceMove.STRONG_DOWN]: number
+  [PriceMove.DOWN]: number
+  [PriceMove.NEUTRAL]: number
+  [PriceMove.UP]: number
+  [PriceMove.STRONG_UP]: number
+}
+
+export enum ScoreSelectivity {
+  EXTREME = 0.005,
+  HIGH = 0.01,
+  MODERATE = 0.05,
+  MINIMAL = 0.1,
+}
+
+export enum AutoTradeBestScores {
+  OFF = 0,
+  TOP1 = 1,
+  TOP3 = 3,
+  TOP5 = 5,
+  TOP10 = 10,
+}
+
+export type ScoresData = {
+  recommended: CoinScore[]
+  marketMove: MarketMove
+  realData?: boolean
 }
