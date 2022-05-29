@@ -92,12 +92,14 @@ export function Settings() {
               ))}
             </RadioGroup>
           </FormControl>
+          <Divider />
           <TextField
             value={buyQuantity}
             label={`Buy Quantity`}
             onChange={(e) => setBuyQuantity(e.target.value)}
             InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
           />
+          <Divider />
           <Stack direction="row" spacing={2}>
             <TextField
               value={profitLimit}
@@ -133,6 +135,7 @@ export function Settings() {
               label="Auto-sell"
             />
           </Stack>
+          <Divider />
           <FormControlLabel
             sx={{ margin: 0 }}
             control={
@@ -162,7 +165,7 @@ export function Settings() {
             label="Averaging down"
           />
           {advancedSettings(hideAdvanced, setHideAdvanced, config, setConfig)}
-          <Box paddingTop={`24px`} alignSelf={`center`} sx={{ position: `relative` }}>
+          <Box alignSelf={`center`} sx={{ position: `relative` }}>
             <Button
               variant="contained"
               color="primary"
@@ -214,6 +217,7 @@ function advancedSettings(
           <Divider />
           {autoTradeBestScoresSlider(config, setConfig)}
           {scoreThresholdSelector(config, setConfig)}
+          <Divider />
         </Stack>
       )}
     </>
@@ -253,7 +257,7 @@ function autoTradeBestScoresSlider(config: Config, setConfig: (config: Config) =
     <FormControl>
       <FormLabel>Auto Trade Best Scores</FormLabel>
       <Slider
-        sx={{ marginLeft: `8px` }}
+        sx={{ marginLeft: `10px` }}
         value={config.AutoTradeBestScores}
         onChange={(e, value) =>
           setConfig({ ...config, AutoTradeBestScores: value as AutoTradeBestScores })
