@@ -1,7 +1,6 @@
 import { CacheProxy } from "./CacheProxy"
 import {
   AutoTradeBestScores,
-  ExchangeSymbol,
   PriceProvider,
   ScoreSelectivity,
   StableUSDCoin,
@@ -34,7 +33,7 @@ export interface IStore {
 
   getTradesList(state?: TradeState): TradeMemo[]
 
-  getTrade(symbol: ExchangeSymbol): TradeMemo
+  hasTrade(coinName: string): boolean
 
   changeTrade(
     coinName: string,
@@ -191,8 +190,8 @@ export class FirebaseStore implements IStore {
     return state ? values.filter((trade) => trade.stateIs(state)) : values
   }
 
-  getTrade(symbol: ExchangeSymbol): TradeMemo {
-    return this.getTrades()[symbol.quantityAsset]
+  hasTrade(coinName: string): boolean {
+    return !!this.getTrades()[coinName]
   }
 
   /**

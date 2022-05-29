@@ -17,11 +17,11 @@ export class V2Trader {
   private readonly prices: PriceMap
 
   /**
-   * Used when {@link Config.ProfitBasedStopLimit} is enabled.
+   * Used when {@link ProfitBasedStopLimit} is enabled.
    */
   private readonly totalProfit: number
   /**
-   * Used when {@link Config.ProfitBasedStopLimit} is enabled.
+   * Used when {@link ProfitBasedStopLimit} is enabled.
    */
   private readonly numberOfBoughtAssets: number
 

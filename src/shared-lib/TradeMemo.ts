@@ -13,7 +13,7 @@ export class TradeMemo extends PricesHolder {
    */
   deleted: boolean
   /**
-   * The price at which the asset should be sold automatically if {@link Config.SellAtStopLimit}
+   * The price at which the asset should be sold automatically if {@link SellAtStopLimit}
    * is true, and {@link TradeMemo.hodl} is false.
    */
   private stopLimit = 0
