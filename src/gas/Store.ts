@@ -57,6 +57,13 @@ export class FirebaseStore implements IStore {
       Log.info(`Firebase Realtime Database is not connected.`)
       Log.info(`Google Apps Script property 'dbURL' is missing.`)
     }
+    // If URL changed - clean trades and config cache
+    const cachedURL = CacheProxy.get(`dbURL`)
+    if (!!cachedURL && cachedURL !== this.url) {
+      CacheProxy.remove(`Trades`)
+      CacheProxy.remove(`Config`)
+    }
+    CacheProxy.put(`dbURL`, this.url)
   }
 
   get url(): string {
