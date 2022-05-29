@@ -14,9 +14,12 @@ const TICK_INTERVAL = 1
 const SLOW_TICK_INTERVAL = 5
 
 function doGet() {
-  if (!ScriptApp.getProjectTriggers().find((t) => t.getHandlerFunction() == Process.tick.name)) {
-    // Start app if not running
-    start()
+  if (DefaultStore.isConnected()) {
+    // Start app if db connected but app is not running
+    const processIsNotRunning = !ScriptApp.getProjectTriggers().find(
+      (t) => t.getHandlerFunction() == Process.tick.name,
+    )
+    if (processIsNotRunning) start()
   }
   return HtmlService.createTemplateFromFile(`index`)
     .evaluate()
@@ -86,7 +89,7 @@ function catchError<T>(fn: () => T): T {
 
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
-    if (params.dbURL) {
+    if (!DefaultStore.isConnected()) {
       Log.alert(`✨ Initial setup`)
       Log.alert(`Connecting to Firebase with URL: ` + params.dbURL)
       DefaultStore.connect(params.dbURL)

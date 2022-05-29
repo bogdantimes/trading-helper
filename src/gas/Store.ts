@@ -47,23 +47,30 @@ export interface IStore {
 }
 
 export class FirebaseStore implements IStore {
-  private readonly dbURLKey = `dbURL`
   private source: object
 
   constructor() {
-    const url = PropertiesService.getScriptProperties().getProperty(this.dbURLKey)
-    if (url) {
+    if (this.url) {
       // @ts-ignore
-      this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken())
+      this.source = FirebaseApp.getDatabaseByUrl(this.url, ScriptApp.getOAuthToken())
     } else {
-      Log.info(`Firebase URL key 'dbURL' is not set.`)
+      Log.info(`Firebase Realtime Database is not connected.`)
+      Log.info(`Google Apps Script property 'dbURL' is missing.`)
     }
+  }
+
+  get url(): string {
+    return PropertiesService.getScriptProperties().getProperty(`dbURL`)
+  }
+
+  set url(url: string) {
+    PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
   }
 
   connect(dbURL: string) {
     // @ts-ignore
     this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken())
-    PropertiesService.getScriptProperties().setProperty(this.dbURLKey, dbURL)
+    this.url = dbURL
   }
 
   isConnected(): boolean {
