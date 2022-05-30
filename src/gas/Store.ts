@@ -234,12 +234,6 @@ export class FirebaseStore implements IStore {
         )
       }
 
-      if (changedTrade && changedTrade.getCoinName() != coinName) {
-        throw new Error(
-          `Cannot change trade: coin names do not match: ${changedTrade.getCoinName()} != ${coinName}`,
-        )
-      }
-
       if (changedTrade) {
         changedTrade.deleted ? this.deleteTrade(changedTrade) : this.setTrade(changedTrade)
       }
