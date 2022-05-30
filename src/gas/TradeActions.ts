@@ -1,7 +1,5 @@
 import { DefaultStore } from "./Store"
-import { ExchangeSymbol, TradeState } from "../shared-lib/types"
-import { TradeMemo } from "../shared-lib/TradeMemo"
-import { TradeResult } from "../shared-lib/TradeResult"
+import { ExchangeSymbol, TradeMemo, TradeResult, TradeState } from "trading-helper-lib"
 
 export class TradeActions {
   static buy(coinName: string): void {

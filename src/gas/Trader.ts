@@ -3,12 +3,18 @@ import { DefaultStore, IStore } from "./Store"
 import { IExchange } from "./Exchange"
 import { PriceAnomaly, PriceAnomalyChecker } from "./PriceAnomalyChecker"
 import { Log } from "./Common"
-import { f2 } from "../shared-lib/functions"
-import { Coin, ExchangeSymbol, PriceMap, StableUSDCoin, TradeState } from "../shared-lib/types"
-import { TradeMemo } from "../shared-lib/TradeMemo"
-import { TradeResult } from "../shared-lib/TradeResult"
+import {
+  Coin,
+  Config,
+  ExchangeSymbol,
+  f2,
+  PriceMap,
+  StableUSDCoin,
+  TradeMemo,
+  TradeResult,
+  TradeState,
+} from "trading-helper-lib"
 import { CacheProxy } from "./CacheProxy"
-import { Config } from "../shared-lib/Config"
 
 export class V2Trader {
   private readonly store: IStore

@@ -13,10 +13,14 @@ import {
   Typography,
 } from "@mui/material"
 import { capitalizeWord, circularProgress, confirmBuy, growthIconMap } from "./Common"
-import { CoinScore } from "../../shared-lib/CoinScore"
-import { f2 } from "../../shared-lib/functions"
-import { AutoTradeBestScores, PriceMove, ScoresData } from "../../shared-lib/types"
-import { Config } from "../../shared-lib/Config"
+import {
+  AutoTradeBestScores,
+  CoinScore,
+  Config,
+  f2,
+  PriceMove,
+  ScoresData,
+} from "trading-helper-lib"
 
 export function Scores({ config }: { config: Config }) {
   const [scoresData, setScoresData] = React.useState<ScoresData>(null)

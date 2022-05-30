@@ -1,13 +1,12 @@
 import { CircularProgress } from "@mui/material"
 import * as React from "react"
-import { PriceMove } from "../../shared-lib/types"
+import { Config, PriceMove } from "trading-helper-lib"
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
   KeyboardDoubleArrowDown,
   KeyboardDoubleArrowUp,
 } from "@mui/icons-material"
-import { Config } from "../../shared-lib/Config"
 
 export const circularProgress = (
   <>

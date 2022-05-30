@@ -1,7 +1,7 @@
 import { IStore } from "./Store"
 import { Log } from "./Common"
 import { TradeActions } from "./TradeActions"
-import { TradeState } from "../shared-lib/types"
+import { TradeState } from "trading-helper-lib"
 import { IScores } from "./Scores"
 
 export class ScoreTrader {

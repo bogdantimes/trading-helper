@@ -1,10 +1,15 @@
 import { CoinStats } from "./CoinStats"
 import { Binance } from "./Binance"
-import { TradeResult } from "../shared-lib/TradeResult"
+import {
+  Config,
+  ExchangeSymbol,
+  PriceMap,
+  PriceProvider,
+  StableUSDCoin,
+  TradeResult,
+} from "trading-helper-lib"
 import { CacheProxy } from "./CacheProxy"
-import { ExchangeSymbol, PriceMap, PriceProvider, StableUSDCoin } from "../shared-lib/types"
 import { Log } from "./Common"
-import { Config } from "../shared-lib/Config"
 
 export interface IExchange {
   getFreeAsset(assetName: string): number

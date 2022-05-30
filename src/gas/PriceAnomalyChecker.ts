@@ -1,7 +1,6 @@
 import { CacheProxy } from "./CacheProxy"
 import { Log } from "./Common"
-import { TradeMemo } from "../shared-lib/TradeMemo"
-import { absPercentageChange } from "../shared-lib/functions"
+import { absPercentageChange, TradeMemo } from "trading-helper-lib"
 
 export enum PriceAnomaly {
   NONE,

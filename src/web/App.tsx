@@ -18,7 +18,7 @@ import { Assets } from "./components/Assets"
 import { TabPanel } from "./components/TabPanel"
 import { InitialSetup } from "./components/InitialSetup"
 import { Scores } from "./components/Scores"
-import { Config } from "../shared-lib/Config"
+import { Config } from "trading-helper-lib"
 
 function a11yProps(index: number) {
   return {

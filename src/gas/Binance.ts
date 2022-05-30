@@ -1,9 +1,7 @@
 import { IExchange, IPriceProvider } from "./Exchange"
 import { CacheProxy } from "./CacheProxy"
 import { execute, Log } from "./Common"
-import { ExchangeSymbol, PriceMap } from "../shared-lib/types"
-import { TradeResult } from "../shared-lib/TradeResult"
-import { Config } from "../shared-lib/Config"
+import { Config, ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
 
 export class Binance implements IExchange, IPriceProvider {

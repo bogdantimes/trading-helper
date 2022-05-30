@@ -4,8 +4,7 @@ import { useState } from "react"
 import { Autocomplete, Dialog, DialogActions, DialogContent, TextField } from "@mui/material"
 import Button from "@mui/material/Button"
 import Typography from "@mui/material/Typography"
-import { TradeMemo } from "../../shared-lib/TradeMemo"
-import { ExchangeSymbol, StableUSDCoin } from "../../shared-lib/types"
+import { ExchangeSymbol, StableUSDCoin, TradeMemo } from "trading-helper-lib"
 
 export function TradeEditDialog(props: {
   tradeMemo: TradeMemo

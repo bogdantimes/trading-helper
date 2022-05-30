@@ -1,4 +1,4 @@
-import { ScoresData } from "../shared-lib/types"
+import { ScoresData } from "trading-helper-lib"
 
 export interface IScores {
   get(): ScoresData
