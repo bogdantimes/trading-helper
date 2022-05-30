@@ -5,7 +5,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Divider,
   FormControl,
   FormControlLabel,
@@ -31,7 +30,6 @@ export function Settings() {
   const [stopLimit, setLossLimit] = useState(``)
   const [profitLimit, setProfitLimit] = useState(``)
   const [buyQuantity, setBuyQuantity] = useState(``)
-  const [hideAdvanced, setHideAdvanced] = useState(true)
 
   useEffect(
     () =>
@@ -134,6 +132,24 @@ export function Settings() {
             />
           </Stack>
           <Divider />
+          <Stack direction="row" spacing={2}>
+            <TextField
+              value={config.PriceAnomalyAlert}
+              label={`Price Anomaly Alert`}
+              onChange={(e) => setConfig({ ...config, PriceAnomalyAlert: +e.target.value })}
+              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.BuyDumps}
+                  onChange={(e) => setConfig({ ...config, BuyDumps: e.target.checked })}
+                />
+              }
+              label="Buy drops"
+            />
+          </Stack>
+          <Divider />
           <FormControlLabel
             sx={{ margin: 0 }}
             control={
@@ -162,7 +178,10 @@ export function Settings() {
             }
             label="Averaging down"
           />
-          {advancedSettings(hideAdvanced, setHideAdvanced, config, setConfig)}
+          <Divider />
+          {autoTradeBestScoresSlider(config, setConfig)}
+          {scoreThresholdSelector(config, setConfig)}
+          <Divider />
           <Box alignSelf={`center`} sx={{ position: `relative` }}>
             <Button
               variant="contained"
@@ -179,46 +198,6 @@ export function Settings() {
         </Stack>
       )}
     </Box>
-  )
-}
-
-function advancedSettings(
-  hide: boolean,
-  setHide,
-  config: Config,
-  setConfig: (config: Config) => void,
-) {
-  return (
-    <>
-      <Divider sx={{ "::before, ::after": { top: 0 } }}>
-        <Chip onClick={() => setHide(!hide)} label="Advanced" />
-      </Divider>
-      {!hide && (
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              value={config.PriceAnomalyAlert}
-              label={`Price Anomaly Alert`}
-              onChange={(e) => setConfig({ ...config, PriceAnomalyAlert: +e.target.value })}
-              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.BuyDumps}
-                  onChange={(e) => setConfig({ ...config, BuyDumps: e.target.checked })}
-                />
-              }
-              label="Buy drops"
-            />
-          </Stack>
-          <Divider />
-          {autoTradeBestScoresSlider(config, setConfig)}
-          {scoreThresholdSelector(config, setConfig)}
-          <Divider />
-        </Stack>
-      )}
-    </>
   )
 }
 
