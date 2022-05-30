@@ -11,6 +11,7 @@ import {
   ListItemText,
   Stack,
   Typography,
+  useTheme,
 } from "@mui/material"
 import { capitalizeWord, circularProgress, confirmBuy, growthIconMap } from "./Common"
 import {
@@ -85,6 +86,8 @@ function recommendedList(
   buy: (coinName: string) => void,
   autoTrade: AutoTradeBestScores,
 ) {
+  const theme = useTheme()
+
   return (
     <>
       <Stack>
@@ -102,9 +105,14 @@ function recommendedList(
         <List sx={{ padding: 0, width: 332 }}>
           {scoresData.recommended.map((rJson, i) => {
             const cs = CoinScore.fromObject(rJson)
+            const order = i + 1
             return (
               <ListItem
-                sx={{ paddingLeft: `40px` }}
+                sx={{
+                  paddingLeft: `40px`,
+                  backgroundColor:
+                    autoTrade && autoTrade >= order && `${theme.palette.info.light}1A`,
+                }}
                 key={cs.coinName}
                 disablePadding={true}
                 secondaryAction={
@@ -113,7 +121,7 @@ function recommendedList(
                   </Button>
                 }
               >
-                <ListItemAvatar sx={{ minWidth: `100px` }}>#{i + 1}</ListItemAvatar>
+                <ListItemAvatar sx={{ minWidth: `100px` }}>#{order}</ListItemAvatar>
                 <ListItemText
                   sx={{ marginBottom: 0 }}
                   primary={cs.coinName}
