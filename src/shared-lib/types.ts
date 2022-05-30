@@ -83,8 +83,8 @@ export type MarketMove = {
 export enum ScoreSelectivity {
   EXTREME = 0.005,
   HIGH = 0.01,
-  MODERATE = 0.05,
-  MINIMAL = 0.1,
+  MODERATE = 0.03,
+  MINIMAL = 0.07,
 }
 
 export enum AutoTradeBestScores {
