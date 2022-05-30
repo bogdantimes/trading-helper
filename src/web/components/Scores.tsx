@@ -92,7 +92,7 @@ function recommendedList(
     <>
       <Stack>
         <Typography alignSelf={`center`} variant={`subtitle1`}>
-          Recommended
+          Recommended Coins
         </Typography>
         {getAlert(autoTrade)}
       </Stack>
@@ -172,7 +172,7 @@ function getAlert(autoTrade: AutoTradeBestScores) {
       }}
     >
       <Typography marginTop={0} alignSelf={`center`} variant={`caption`}>
-        Auto-buying {capitalizeWord(AutoTradeBestScores[autoTrade])}
+        Autonomous trading: {capitalizeWord(AutoTradeBestScores[autoTrade])}
       </Typography>
     </Alert>
   )

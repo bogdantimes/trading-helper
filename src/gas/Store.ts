@@ -110,6 +110,10 @@ export class FirebaseStore implements IStore {
     // apply existing config on top of default one
     configCache = Object.assign(defaultConfig, configCache)
 
+    if (configCache.ScoreUpdateThreshold === 0.05) { // 0.05 used to be a default value, no it's not
+      configCache.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold
+    }
+
     if (configCache.TakeProfit) {
       configCache.ProfitLimit = configCache.TakeProfit
       delete configCache.TakeProfit
