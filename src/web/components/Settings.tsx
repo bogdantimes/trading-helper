@@ -19,9 +19,7 @@ import {
   TextField,
 } from "@mui/material"
 import { capitalizeWord, circularProgress } from "./Common"
-import { AutoTradeBestScores, StableUSDCoin } from "../../shared-lib/types"
-import { enumKeys, f2 } from "../../shared-lib/functions"
-import { Config } from "../../shared-lib/Config"
+import { AutoTradeBestScores, Config, enumKeys, f2, StableUSDCoin } from "trading-helper-lib"
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false)

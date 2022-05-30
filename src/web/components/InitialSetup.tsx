@@ -4,7 +4,7 @@ import { Alert, Box, Button, Stack, TextField } from "@mui/material"
 import { circularProgress } from "./Common"
 import Typography from "@mui/material/Typography"
 import { InitialSetupParams } from "../../gas"
-import { Config } from "../../shared-lib/Config"
+import { Config } from "trading-helper-lib"
 
 export function InitialSetup({ config, onConnect }: { config: Config; onConnect: () => void }) {
   const [isConnecting, setIsConnecting] = useState(false)

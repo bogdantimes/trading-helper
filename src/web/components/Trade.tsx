@@ -18,10 +18,7 @@ import { Box, Stack, Theme, ToggleButton, useTheme } from "@mui/material"
 import { circularProgress, confirmBuy, confirmSell } from "./Common"
 import { TradeTitle } from "./TradeTitle"
 import { TradeEditDialog } from "./TradeEditDialog"
-import { TradeState } from "../../shared-lib/types"
-import { TradeMemo } from "../../shared-lib/TradeMemo"
-import { f2 } from "../../shared-lib/functions"
-import { Config } from "../../shared-lib/Config"
+import { Config, f2, TradeMemo, TradeState } from "trading-helper-lib"
 
 export default function Trade(props: { data: TradeMemo; config: Config; coinNames: string[] }) {
   const { data: tm, config, coinNames } = props

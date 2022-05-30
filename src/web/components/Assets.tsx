@@ -13,12 +13,17 @@ import {
 } from "@mui/material"
 import StableCoin from "./StableCoin"
 import { capitalizeWord, circularProgress, confirmBuy } from "./Common"
-import { TradeMemo } from "../../shared-lib/TradeMemo"
-import { Coin, ExchangeSymbol, StableUSDCoin, TradeState } from "../../shared-lib/types"
+import {
+  AssetsResponse,
+  Coin,
+  Config,
+  ExchangeSymbol,
+  StableUSDCoin,
+  TradeMemo,
+  TradeState,
+} from "trading-helper-lib"
 import { Add } from "@mui/icons-material"
 import { TradeEditDialog } from "./TradeEditDialog"
-import { AssetsResponse } from "../../shared-lib/responses"
-import { Config } from "../../shared-lib/Config"
 
 export function Assets({ config }: { config: Config }) {
   const [assets, setAssets] = React.useState<AssetsResponse>(null)

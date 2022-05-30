@@ -3,8 +3,7 @@ import * as React from "react"
 import { useState } from "react"
 import { Delete, Edit } from "@mui/icons-material"
 import Typography from "@mui/material/Typography"
-import { TradeMemo } from "../../shared-lib/TradeMemo"
-import { TradeState } from "../../shared-lib/types"
+import { TradeMemo, TradeState } from "trading-helper-lib"
 import { growthIconMap } from "./Common"
 
 export function TradeTitle({

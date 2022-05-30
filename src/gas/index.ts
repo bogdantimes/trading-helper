@@ -4,12 +4,9 @@ import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
 import { Log, SECONDS_IN_HOUR } from "./Common"
-import { Coin, ScoresData, Stats } from "../shared-lib/types"
-import { TradeMemo } from "../shared-lib/TradeMemo"
+import { AssetsResponse, Coin, Config, ScoresData, Stats, TradeMemo } from "trading-helper-lib"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
-import { AssetsResponse } from "../shared-lib/responses"
-import { Config } from "../shared-lib/Config"
 
 const TICK_INTERVAL = 1
 const SLOW_TICK_INTERVAL = 5

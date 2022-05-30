@@ -1,14 +1,14 @@
 import { CacheProxy } from "./CacheProxy"
 import {
   AutoTradeBestScores,
+  Config,
   PriceProvider,
   ScoreSelectivity,
   StableUSDCoin,
+  TradeMemo,
   TradeState,
-} from "../shared-lib/types"
+} from "trading-helper-lib"
 import { Log } from "./Common"
-import { TradeMemo } from "../shared-lib/TradeMemo"
-import { Config } from "../shared-lib/Config"
 
 export class DeadlineError extends Error {
   constructor(message: string) {
