@@ -1,7 +1,6 @@
 import { IStore } from "./Store"
-import { Log } from "./Common"
 import { TradeActions } from "./TradeActions"
-import { AutoTradeBestScores, CoinScore, TradeMemo, TradeState } from "trading-helper-lib"
+import { CoinScore, TradeMemo, TradeState } from "trading-helper-lib"
 import { IScores } from "./Scores"
 
 export class ScoreTrader {
@@ -29,10 +28,7 @@ export class ScoreTrader {
       // buy new coins from recommended list
       recommended
         .filter((cs) => !this.store.hasTrade(cs.coinName))
-        .forEach((cs) => {
-          Log.alert(`➕ Auto-buying ${AutoTradeBestScores[tradeBestScores]}: ${cs.coinName}`)
-          TradeActions.buy(cs.coinName)
-        })
+        .forEach((cs) => TradeActions.buy(cs.coinName))
 
       // remove sold coins that are not in the recommended list
       this.store
