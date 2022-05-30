@@ -1,4 +1,5 @@
-export const SECONDS_IN_HOUR = 60 * 60
+export const SECONDS_IN_MIN = 60;
+export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60
 
 export interface ExecParams {
   context?: any

@@ -3,7 +3,7 @@ import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
-import { Log, SECONDS_IN_HOUR } from "./Common"
+import { Log, SECONDS_IN_MIN } from "./Common"
 import { AssetsResponse, Coin, Config, ScoresData, Stats, TradeMemo } from "trading-helper-lib"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
@@ -92,9 +92,10 @@ function catchError<T>(fn: () => T): T {
       if (CacheProxy.get(`TickSlowedDown`)) throw e
       // Handle limit gracefully
       Log.alert(`🚫 Google API daily rate limit exceeded.`)
-      slowDownTemporarily(SECONDS_IN_HOUR)
-      CacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_HOUR)
-      Log.alert(`ℹ️ Background process interval slowed down for the next hour.`)
+      const minutes = 30
+      slowDownTemporarily(SECONDS_IN_MIN * minutes)
+      CacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_MIN * minutes)
+      Log.alert(`ℹ️ Background process interval slowed down for the next ${minutes} minutes.`)
     }
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
