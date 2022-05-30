@@ -34,15 +34,6 @@ export class ScoreTrader {
           TradeActions.buy(cs.coinName)
         })
 
-      // sell coins that have non-zero profit, non-HODL, and are not in the recommended list
-      this.store.getTradesList(TradeState.BOUGHT).forEach((tm) => {
-        if (tm.hodl) return
-
-        if (tm.profit() > 0 && !this.isRecommended(recommended, tm)) {
-          TradeActions.sell(tm.getCoinName())
-        }
-      })
-
       // remove sold coins that are not in the recommended list
       this.store
         .getTradesList(TradeState.SOLD)
