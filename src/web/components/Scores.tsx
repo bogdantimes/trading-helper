@@ -1,18 +1,17 @@
 import * as React from "react"
 import { useEffect } from "react"
-import {
-  Alert,
-  Box,
-  Button,
-  Link,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material"
+import Alert from "@mui/material/Alert"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
+import Link from "@mui/material/Link"
+import List from "@mui/material/List"
+import ListItem from "@mui/material/ListItem"
+import ListItemAvatar from "@mui/material/ListItemAvatar"
+import ListItemText from "@mui/material/ListItemText"
+import Stack from "@mui/material/Stack"
+import Typography from "@mui/material/Typography"
+import useTheme from "@mui/material/styles/useTheme"
+import { Theme } from "@mui/material/styles/createTheme"
 import { capitalizeWord, circularProgress, confirmBuy, growthIconMap } from "./Common"
 import {
   AutoTradeBestScores,
@@ -90,47 +89,48 @@ function recommendedList(
 
   return (
     <>
-      <Stack>
-        <Typography alignSelf={`center`} variant={`subtitle1`}>
-          Recommended Coins
-        </Typography>
-        {getAlert(autoTrade)}
-      </Stack>
+      <Typography alignSelf={`center`} variant={`subtitle1`}>
+        Recommended Coins
+      </Typography>
       {!scoresData.recommended.length && (
         <Typography alignSelf={`center`} variant={`body2`}>
           Nothing to show yet.
         </Typography>
       )}
       {!!scoresData.recommended.length && (
-        <List sx={{ padding: 0, width: 332 }}>
-          {scoresData.recommended.map((rJson, i) => {
-            const cs = CoinScore.fromObject(rJson)
-            const order = i + 1
-            return (
-              <ListItem
-                sx={{
-                  paddingLeft: `40px`,
-                  backgroundColor:
-                    autoTrade && autoTrade >= order && `${theme.palette.info.light}1A`,
-                }}
-                key={cs.coinName}
-                disablePadding={true}
-                secondaryAction={
-                  <Button size={`small`} onClick={() => buy(cs.coinName)}>
-                    Buy
-                  </Button>
-                }
-              >
-                <ListItemAvatar sx={{ minWidth: `100px` }}>#{order}</ListItemAvatar>
-                <ListItemText
-                  sx={{ marginBottom: 0 }}
-                  primary={cs.coinName}
-                  secondary={`Score: ${cs.score}`}
-                />
-              </ListItem>
-            )
-          })}
-        </List>
+        <Stack>
+          {getAlert(autoTrade)}
+          <List sx={{ padding: 0, marginTop: 0, width: 332 }}>
+            {scoresData.recommended.map((rJson, i) => {
+              const cs = CoinScore.fromObject(rJson)
+              const order = i + 1
+              return (
+                <ListItem
+                  sx={{
+                    padding: `0 0 6px 40px`,
+                    borderBottomLeftRadius: autoTrade == order ? theme.shape.borderRadius : 0,
+                    borderBottomRightRadius: autoTrade == order ? theme.shape.borderRadius : 0,
+                    backgroundColor: autoTrade >= order && getAlertBackgroundColor(theme),
+                  }}
+                  key={cs.coinName}
+                  disablePadding={true}
+                  secondaryAction={
+                    <Button size={`small`} onClick={() => buy(cs.coinName)}>
+                      Buy
+                    </Button>
+                  }
+                >
+                  <ListItemAvatar sx={{ minWidth: `100px` }}>#{order}</ListItemAvatar>
+                  <ListItemText
+                    sx={{ margin: `3px 0 0 0` }}
+                    primary={cs.coinName}
+                    secondary={`Score: ${cs.score}`}
+                  />
+                </ListItem>
+              )
+            })}
+          </List>
+        </Stack>
       )}
     </>
   )
@@ -158,17 +158,23 @@ function marketMoveBlock(scores: ScoresData) {
   )
 }
 
+function getAlertBackgroundColor(theme: Theme) {
+  return theme.palette.mode == `dark` ? `#071318` : `#e5f6fd`
+}
+
 function getAlert(autoTrade: AutoTradeBestScores) {
+  const theme = useTheme()
   return (
     <Alert
       severity={`info`}
       sx={{
         margin: 0,
-        padding: 0,
+        padding: `4px 16px`,
+        borderBottomLeftRadius: autoTrade ? 0 : theme.shape.borderRadius,
+        borderBottomRightRadius: autoTrade ? 0 : theme.shape.borderRadius,
+        backgroundColor: getAlertBackgroundColor(theme),
         justifyContent: `center`,
-        "& div": {
-          padding: `1px 0`,
-        },
+        "& div": { padding: 0 },
       }}
     >
       <Typography marginTop={0} alignSelf={`center`} variant={`caption`}>
