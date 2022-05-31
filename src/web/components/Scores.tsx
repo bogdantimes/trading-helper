@@ -1,17 +1,19 @@
 import * as React from "react"
 import { useEffect } from "react"
-import Alert from "@mui/material/Alert"
-import Box from "@mui/material/Box"
-import Button from "@mui/material/Button"
-import Link from "@mui/material/Link"
-import List from "@mui/material/List"
-import ListItem from "@mui/material/ListItem"
-import ListItemAvatar from "@mui/material/ListItemAvatar"
-import ListItemText from "@mui/material/ListItemText"
-import Stack from "@mui/material/Stack"
-import Typography from "@mui/material/Typography"
-import useTheme from "@mui/material/styles/useTheme"
-import { Theme } from "@mui/material/styles/createTheme"
+import {
+  Alert,
+  Box,
+  Button,
+  Link,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Stack,
+  Theme,
+  Typography,
+  useTheme,
+} from "@mui/material"
 import { capitalizeWord, circularProgress, confirmBuy, growthIconMap } from "./Common"
 import {
   AutoTradeBestScores,

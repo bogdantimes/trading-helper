@@ -125,7 +125,8 @@ function initialSetup(params: InitialSetupParams): string {
   })
 }
 
-export type InitialSetupParams = {
+// TODO: extract InitialSetupParams to trading-helper-lib
+type InitialSetupParams = {
   dbURL: string
   binanceAPIKey: string
   binanceSecretKey: string
