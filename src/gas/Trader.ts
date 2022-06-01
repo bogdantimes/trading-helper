@@ -8,13 +8,14 @@ import {
   Config,
   ExchangeSymbol,
   f2,
+  PriceHoldersMap,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
   TradeState,
 } from "trading-helper-lib"
 import { CacheProxy } from "./CacheProxy"
-import { PriceHoldersMap, PriceProvider } from "./PriceProvider"
+import { PriceProvider } from "./PriceProvider"
 
 export class V2Trader {
   private readonly store: IStore

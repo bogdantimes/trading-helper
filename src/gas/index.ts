@@ -4,9 +4,10 @@ import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
 import { Log, SECONDS_IN_MIN, SLOW_TICK_INTERVAL_MIN, TICK_INTERVAL_MIN } from "./Common"
-import { AssetsResponse, Coin, Config, ScoresData, Stats, TradeMemo } from "trading-helper-lib"
+import { AssetsResponse, Coin, Config, InitialSetupParams, ScoresData, Stats, TradeMemo } from "trading-helper-lib"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
+import { PriceProvider } from "./PriceProvider"
 
 /**
  * Check if the permanent storage is connected.
@@ -122,13 +123,6 @@ function initialSetup(params: InitialSetupParams): string {
   })
 }
 
-// TODO: extract InitialSetupParams to trading-helper-lib
-type InitialSetupParams = {
-  dbURL: string
-  binanceAPIKey: string
-  binanceSecretKey: string
-}
-
 function buyCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.buy(coinName)
@@ -211,7 +205,8 @@ function getStatistics(): Stats {
 function getScores(): ScoresData {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, exchange) as IScores
+    const priceProvider = new PriceProvider(exchange, CacheProxy)
+    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
     return scores.get()
   })
 }
@@ -219,7 +214,8 @@ function getScores(): ScoresData {
 function resetScores(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, exchange) as IScores
+    const priceProvider = new PriceProvider(exchange, CacheProxy)
+    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
     return scores.reset()
   })
 }

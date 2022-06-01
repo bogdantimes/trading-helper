@@ -68,7 +68,7 @@ export function Settings() {
         setIsSaving(false)
         setError(``)
       })
-      .setConfig(config)
+      .setConfig(config as any)
   }
 
   return (

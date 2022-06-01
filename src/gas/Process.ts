@@ -14,9 +14,9 @@ export class Process {
     const config = store.getConfig()
     const exchange = new Exchange(config)
     const statistics = new Statistics(store)
-    const priceProvider = new PriceProvider(exchange, CacheProxy, config.StableCoin)
+    const priceProvider = new PriceProvider(exchange, CacheProxy)
     const trader = new V2Trader(store, exchange, priceProvider, statistics)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, exchange) as IScores
+    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
 
     store.getTradesList().forEach((trade) => {
       try {

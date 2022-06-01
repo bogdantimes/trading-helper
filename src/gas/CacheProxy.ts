@@ -1,16 +1,11 @@
 import Integer = GoogleAppsScript.Integer
 import { Log, SECONDS_IN_HOUR } from "./Common"
+import { ICacheProxy } from "trading-helper-lib"
 
 const MAX_CACHE_VAL_SIZE_BYTES = 100 * 1024
 
 function byteCount(s: string): number {
   return encodeURI(s).split(/%..|./).length - 1
-}
-
-export interface ICacheProxy {
-  get(key: string): string | null
-  put(key: string, value: string, expirationInSeconds?: Integer): void
-  remove(key: string): void
 }
 
 class DefaultCacheProxy implements ICacheProxy {

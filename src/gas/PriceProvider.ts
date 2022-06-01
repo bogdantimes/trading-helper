@@ -1,17 +1,6 @@
-import { enumKeys, PricesHolder, StableUSDCoin } from "trading-helper-lib"
+import { enumKeys, ICacheProxy, IPriceProvider, PriceHoldersMap, PricesHolder, StableUSDCoin } from "trading-helper-lib"
 import { IExchange } from "./Exchange"
-import { ICacheProxy } from "./CacheProxy"
-import { SECONDS_IN_MIN, StableCoinMatcher, TICK_INTERVAL_MIN } from "./Common"
-
-export type CoinName = string
-
-export interface PriceHoldersMap {
-  [key: CoinName]: PricesHolder
-}
-
-export interface IPriceProvider {
-  get(stableCoin: StableUSDCoin): PriceHoldersMap
-}
+import { Log, SECONDS_IN_MIN, StableCoinMatcher, TICK_INTERVAL_MIN } from "./Common"
 
 export class PriceProvider implements IPriceProvider {
   private readonly exchange: IExchange
@@ -37,6 +26,7 @@ export class PriceProvider implements IPriceProvider {
   }
 
   private update(): void {
+    Log.alert(`PriceProvider.update()`)
     const updatedKey = `PriceProvider.updated`
     if (this.cache.get(updatedKey)) return
 
@@ -66,6 +56,7 @@ export class PriceProvider implements IPriceProvider {
     // Prices expire in (tick_interval - 5 seconds)
     const priceExpiration = TICK_INTERVAL_MIN * SECONDS_IN_MIN - 5
     this.cache.put(updatedKey, `true`, priceExpiration)
+    Log.alert(`PriceProvider.update() done`)
   }
 
   private getKey(stableCoin: string) {

@@ -1,5 +1,4 @@
-import { enumKeys, StableUSDCoin } from "trading-helper-lib"
-import { CoinName } from "./PriceProvider"
+import { CoinName, enumKeys, StableUSDCoin } from "trading-helper-lib"
 
 export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60
