@@ -26,7 +26,6 @@ export class PriceProvider implements IPriceProvider {
   }
 
   private update(): void {
-    Log.alert(`PriceProvider.update()`)
     const updatedKey = `PriceProvider.updated`
     if (this.cache.get(updatedKey)) return
 
@@ -56,7 +55,6 @@ export class PriceProvider implements IPriceProvider {
     // Prices expire in (tick_interval - 5 seconds)
     const priceExpiration = TICK_INTERVAL_MIN * SECONDS_IN_MIN - 5
     this.cache.put(updatedKey, `true`, priceExpiration)
-    Log.alert(`PriceProvider.update() done`)
   }
 
   private getKey(stableCoin: string) {
