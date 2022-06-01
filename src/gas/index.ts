@@ -3,13 +3,10 @@ import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
-import { Log, SECONDS_IN_MIN } from "./Common"
+import { Log, SECONDS_IN_MIN, SLOW_TICK_INTERVAL_MIN, TICK_INTERVAL_MIN } from "./Common"
 import { AssetsResponse, Coin, Config, ScoresData, Stats, TradeMemo } from "trading-helper-lib"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
-
-const TICK_INTERVAL = 1
-const SLOW_TICK_INTERVAL = 5
 
 /**
  * Check if the permanent storage is connected.
@@ -55,9 +52,9 @@ function stop() {
 
 function startTicker() {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL).create()
+  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL_MIN).create()
   Log.alert(
-    `ℹ️ Background process restarted. State synchronization interval is ${TICK_INTERVAL} minute.`,
+    `ℹ️ Background process restarted. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
   )
 }
 
@@ -72,7 +69,7 @@ function stopTicker() {
 
 function slowDownTemporarily(durationSec: number) {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL).create()
+  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL_MIN).create()
   ScriptApp.newTrigger(start.name)
     .timeBased()
     .after(durationSec * 1000)

@@ -1,5 +1,10 @@
+import { enumKeys, StableUSDCoin } from "trading-helper-lib"
+import { CoinName } from "./PriceProvider"
+
 export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60
+export const TICK_INTERVAL_MIN = 1
+export const SLOW_TICK_INTERVAL_MIN = 5
 
 export interface ExecParams {
   context?: any
@@ -71,5 +76,27 @@ ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
     if (this.alerts.length > 0 || this.errLog.length > 0) {
       GmailApp.sendEmail(email, `Trading-helper alert`, this.print())
     }
+  }
+}
+
+export class StableCoinMatcher {
+  private readonly symbol: string
+  private readonly match: RegExpMatchArray
+
+  constructor(symbol: string) {
+    this.symbol = symbol.toUpperCase()
+    this.match = this.symbol.match(new RegExp(`^(\\w+)(${enumKeys(StableUSDCoin).join(`|`)})$`))
+  }
+
+  get matched(): boolean {
+    return !!this.match
+  }
+
+  get coinName(): CoinName | null {
+    return this.match ? this.match[1] : null
+  }
+
+  get stableCoin(): StableUSDCoin | null {
+    return this.match ? this.match[2] as StableUSDCoin : null
   }
 }
