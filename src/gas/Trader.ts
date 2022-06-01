@@ -132,17 +132,16 @@ export class V2Trader {
   }
 
   private pushNewPrice(tm: TradeMemo): void {
-    const symbol = tm.tradeResult.symbol
-    const priceHolder = this.prices[symbol.quantityAsset]
+    const priceHolder = this.prices[tm.getCoinName()]
     if (priceHolder) {
       tm.pushPrice(priceHolder.currentPrice)
     } else if (tm.tradeResult.quantity) {
       // no price available, but we have quantity, which means we bought something earlier
-      throw Error(`Exchange does not have price for ${symbol}`)
+      throw Error(`Exchange does not have price for ${tm.getCoinName()}${this.config.StableCoin}`)
     } else {
       // no price available, and no quantity, which means we haven't bought anything yet
       // could be a non-existing symbol, or not yet published in the exchange
-      Log.info(`Exchange does not have price for ${symbol}`)
+      Log.info(`Exchange does not have price for ${tm.getCoinName()}${this.config.StableCoin}`)
     }
   }
 
