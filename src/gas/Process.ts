@@ -46,7 +46,7 @@ export class Process {
     }
 
     try {
-      new ScoreTrader(store, scores).trade()
+      new ScoreTrader(store, priceProvider, scores).trade()
     } catch (e) {
       Log.alert(`Failed to trade recommended coins`)
       Log.error(e)

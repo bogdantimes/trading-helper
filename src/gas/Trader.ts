@@ -47,12 +47,6 @@ export class V2Trader {
   }
 
   tickerCheck(tm: TradeMemo): TradeMemo {
-    if (new Coin(tm.getCoinName()).isStable()) {
-      // Remove stable coins from the list of coins to check
-      tm.deleted = true
-      return tm
-    }
-
     this.pushNewPrice(tm)
 
     const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
@@ -229,7 +223,7 @@ export class V2Trader {
   }
 
   private updatePLStatistics(gainedCoin: string, profit: number): void {
-    if (new Coin(gainedCoin).isStable()) {
+    if (StableUSDCoin[gainedCoin]) {
       this.stats.addProfit(profit)
       Log.info(`P/L added to statistics: ` + profit)
     }

@@ -134,42 +134,42 @@ function initialSetup(params: InitialSetupParams): string {
 
 function buyCoin(coinName: string): string {
   return catchError(() => {
-    TradeActions.buy(coinName)
+    TradeActions.default().buy(coinName)
     return `Buying ${coinName}`
   })
 }
 
 function cancelAction(coinName: string): string {
   return catchError(() => {
-    TradeActions.cancel(coinName)
+    TradeActions.default().cancel(coinName)
     return `Cancelling actions on ${coinName}`
   })
 }
 
 function sellCoin(coinName: string): string {
   return catchError(() => {
-    TradeActions.sell(coinName)
+    TradeActions.default().sell(coinName)
     return `Selling ${coinName}`
   })
 }
 
 function setHold(coinName: string, value: boolean): string {
   return catchError(() => {
-    TradeActions.setHold(coinName, value)
+    TradeActions.default().setHold(coinName, value)
     return `Setting HODL for ${coinName} to ${value}`
   })
 }
 
 function dropCoin(coinName: string): string {
   return catchError(() => {
-    TradeActions.drop(coinName)
+    TradeActions.default().drop(coinName)
     return `Removing ${coinName}`
   })
 }
 
 function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
   return catchError(() => {
-    TradeActions.replace(coinName, TradeMemo.copy(newTradeMemo))
+    TradeActions.default().replace(coinName, TradeMemo.copy(newTradeMemo))
     return `Making changes for ${coinName}`
   })
 }

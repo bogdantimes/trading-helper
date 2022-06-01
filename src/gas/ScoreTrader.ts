@@ -1,14 +1,16 @@
 import { IStore } from "./Store"
 import { TradeActions } from "./TradeActions"
-import { CoinScore, TradeMemo, TradeState } from "trading-helper-lib"
+import { CoinScore, IPriceProvider, TradeMemo, TradeState } from "trading-helper-lib"
 import { IScores } from "./Scores"
 
 export class ScoreTrader {
-  private store: IStore
-  private scores: IScores
+  private readonly store: IStore
+  private readonly priceProvider: IPriceProvider
+  private readonly scores: IScores
 
-  constructor(store: IStore, scores: IScores) {
+  constructor(store: IStore, priceProvider: IPriceProvider, scores: IScores) {
     this.store = store
+    this.priceProvider = priceProvider
     this.scores = scores
   }
 
@@ -26,21 +28,22 @@ export class ScoreTrader {
       const recommended = scoresData.recommended.slice(0, tradeBestScores)
 
       // buy new coins from recommended list
+      const tradeActions = TradeActions.default()
       recommended
         .filter((cs) => !this.store.hasTrade(cs.coinName))
-        .forEach((cs) => TradeActions.buy(cs.coinName))
+        .forEach((cs) => tradeActions.buy(cs.coinName))
 
       // remove sold coins that are not in the recommended list
       this.store
         .getTradesList(TradeState.SOLD)
         .filter((tm) => !this.isRecommended(recommended, tm))
-        .forEach((tm) => TradeActions.drop(tm.getCoinName()))
+        .forEach((tm) => tradeActions.drop(tm.getCoinName()))
 
       // cancel buying coins that are no longer in the recommended list
       this.store
         .getTradesList(TradeState.BUY)
         .filter((tm) => !this.isRecommended(recommended, tm))
-        .forEach((tm) => TradeActions.cancel(tm.getCoinName()))
+        .forEach((tm) => tradeActions.cancel(tm.getCoinName()))
     }
   }
 
