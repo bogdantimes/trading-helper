@@ -1,7 +1,8 @@
-# v2.6.2
+# v2.7.0
 
-Contains improvements to existing features:
-* Survivors feature improved and renamed to Scores. New option related to scores in Settings -> Advanced.
+* New "Scores" feature (successor to "Survivors"). New related Settings: "Autonomous trading" and "Score Selectivity".
+* UI improvements.
+* Many improvements under the hood.
 * Stop-limit auto-sell now happens only on crossing-down even.
 
 # v2.6.1
