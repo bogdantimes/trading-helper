@@ -2,14 +2,7 @@ import * as React from "react"
 import { useState } from "react"
 import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material"
 import { circularProgress } from "./Common"
-import { Config } from "trading-helper-lib"
-
-// TODO: extract InitialSetupParams to trading-helper-lib
-type InitialSetupParams = {
-  dbURL: string
-  binanceAPIKey: string
-  binanceSecretKey: string
-}
+import { Config, InitialSetupParams } from "trading-helper-lib"
 
 export function InitialSetup({ config, onConnect }: { config: Config; onConnect: () => void }) {
   const [isConnecting, setIsConnecting] = useState(false)
@@ -36,7 +29,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
         setIsConnecting(false)
         setError(resp.toString())
       })
-      .initialSetup(params)
+      .initialSetup(params as any)
   }
 
   const welcomeMsg = `Welcome to the Trading Helper!`

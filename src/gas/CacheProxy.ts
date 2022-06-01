@@ -1,5 +1,6 @@
 import Integer = GoogleAppsScript.Integer
 import { Log, SECONDS_IN_HOUR } from "./Common"
+import { ICacheProxy } from "trading-helper-lib"
 
 const MAX_CACHE_VAL_SIZE_BYTES = 100 * 1024
 
@@ -7,10 +8,10 @@ function byteCount(s: string): number {
   return encodeURI(s).split(/%..|./).length - 1
 }
 
-export class CacheProxy {
-  static readonly StableCoins = `StableCoins`
+class DefaultCacheProxy implements ICacheProxy {
+  readonly StableCoins = `StableCoins`
 
-  static get(key: string): string | null {
+  get(key: string): string | null {
     return CacheService.getScriptCache().get(key)
   }
 
@@ -19,7 +20,7 @@ export class CacheProxy {
    * @param value
    * @param expirationInSeconds By default, keep for 6 hours (maximum time allowed by GAS)
    */
-  static put(key: string, value: string, expirationInSeconds: Integer = SECONDS_IN_HOUR * 6): void {
+  put(key: string, value: string, expirationInSeconds: Integer = SECONDS_IN_HOUR * 6): void {
     const size = byteCount(value)
     if (size > 0.9 * MAX_CACHE_VAL_SIZE_BYTES) {
       Log.info(
@@ -37,7 +38,9 @@ export class CacheProxy {
     CacheService.getScriptCache().put(key, value, expirationInSeconds)
   }
 
-  static remove(key: string): void {
+  remove(key: string): void {
     CacheService.getScriptCache().remove(key)
   }
 }
+
+export const CacheProxy = new DefaultCacheProxy()

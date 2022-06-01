@@ -8,20 +8,21 @@ import {
   Config,
   ExchangeSymbol,
   f2,
-  PriceMap,
+  PriceHoldersMap,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
   TradeState,
 } from "trading-helper-lib"
 import { CacheProxy } from "./CacheProxy"
+import { PriceProvider } from "./PriceProvider"
 
 export class V2Trader {
   private readonly store: IStore
   private readonly config: Config
   private readonly exchange: IExchange
   private readonly stats: Statistics
-  private readonly prices: PriceMap
+  private readonly prices: PriceHoldersMap
 
   /**
    * Used when {@link ProfitBasedStopLimit} is enabled.
@@ -32,12 +33,12 @@ export class V2Trader {
    */
   private readonly numberOfBoughtAssets: number
 
-  constructor(store: IStore, exchange: IExchange, stats: Statistics) {
+  constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
     this.store = store
     this.config = store.getConfig()
+    this.prices = priceProvider.get(this.config.StableCoin)
     this.exchange = exchange
     this.stats = stats
-    this.prices = exchange.getPrices()
 
     if (this.config.ProfitBasedStopLimit) {
       this.totalProfit = stats.getAll().TotalProfit
@@ -132,9 +133,9 @@ export class V2Trader {
 
   private pushNewPrice(tm: TradeMemo): void {
     const symbol = tm.tradeResult.symbol
-    const price = this.prices[symbol.toString()]
-    if (price) {
-      tm.pushPrice(price)
+    const priceHolder = this.prices[symbol.quantityAsset]
+    if (priceHolder) {
+      tm.pushPrice(priceHolder.currentPrice)
     } else if (tm.tradeResult.quantity) {
       // no price available, but we have quantity, which means we bought something earlier
       throw Error(`Exchange does not have price for ${symbol}`)
@@ -253,8 +254,8 @@ export class V2Trader {
   }
 
   private getBNBCommissionCost(commission: number): number {
-    const bnbPrice = this.prices[`BNB` + this.config.StableCoin]
-    return bnbPrice ? commission * bnbPrice : 0
+    const bnbPriceHolder = this.prices[`BNB`]
+    return bnbPriceHolder ? commission * bnbPriceHolder.currentPrice : 0
   }
 
   private updateBNBBalance(quantity: number): boolean {

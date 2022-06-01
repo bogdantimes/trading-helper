@@ -1,15 +1,5 @@
-import { CoinStats } from "./CoinStats"
 import { Binance } from "./Binance"
-import {
-  Config,
-  ExchangeSymbol,
-  PriceMap,
-  PriceProvider,
-  StableUSDCoin,
-  TradeResult,
-} from "trading-helper-lib"
-import { CacheProxy } from "./CacheProxy"
-import { Log } from "./Common"
+import { Config, ExchangeSymbol, PriceMap, StableUSDCoin, TradeResult } from "trading-helper-lib"
 
 export interface IExchange {
   getFreeAsset(assetName: string): number
@@ -23,34 +13,13 @@ export interface IExchange {
   getPrice(symbol: ExchangeSymbol): number
 }
 
-export interface IPriceProvider {
-  getPrices(): PriceMap
-}
-
 export class Exchange implements IExchange {
   private readonly exchange: Binance
   private readonly stableCoin: StableUSDCoin
-  private priceProvider: IPriceProvider
 
   constructor(config: Config) {
     this.exchange = new Binance(config)
     this.stableCoin = config.StableCoin
-
-    switch (config.PriceProvider) {
-      case PriceProvider.Binance:
-        this.priceProvider = this.exchange
-        break
-      case PriceProvider.CoinStats:
-        this.priceProvider = new CoinStats()
-        break
-      default:
-        Log.error(
-          new Error(
-            `Unknown price provider: ${config.PriceProvider}. Using Binance as price provider.`,
-          ),
-        )
-        this.priceProvider = this.exchange
-    }
   }
 
   getFreeAsset(assetName: string): number {
@@ -62,13 +31,7 @@ export class Exchange implements IExchange {
   }
 
   getPrices(): PriceMap {
-    const pricesJson = CacheProxy.get(`Prices`)
-    let prices = pricesJson ? JSON.parse(pricesJson) : null
-    if (!prices) {
-      prices = this.priceProvider.getPrices()
-      CacheProxy.put(`Prices`, JSON.stringify(prices), 45) // cache for 45 seconds
-    }
-    return prices
+    return this.exchange.getPrices()
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {

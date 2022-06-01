@@ -6,13 +6,17 @@ import { Log } from "./Common"
 import { ScoreTrader } from "./ScoreTrader"
 import { CacheProxy } from "./CacheProxy"
 import { IScores } from "./Scores"
+import { PriceProvider } from "./PriceProvider"
 
 export class Process {
   static tick() {
     const store = DefaultStore
-    const exchange = new Exchange(store.getConfig())
-    const trader = new V2Trader(store, exchange, new Statistics(store))
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, exchange) as IScores
+    const config = store.getConfig()
+    const exchange = new Exchange(config)
+    const statistics = new Statistics(store)
+    const priceProvider = new PriceProvider(exchange, CacheProxy)
+    const trader = new V2Trader(store, exchange, priceProvider, statistics)
+    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
 
     store.getTradesList().forEach((trade) => {
       try {

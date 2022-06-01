@@ -1,10 +1,10 @@
-import { IExchange, IPriceProvider } from "./Exchange"
+import { IExchange } from "./Exchange"
 import { CacheProxy } from "./CacheProxy"
 import { execute, Log } from "./Common"
 import { Config, ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
 
-export class Binance implements IExchange, IPriceProvider {
+export class Binance implements IExchange {
   private readonly key: string
   private readonly secret: string
   private readonly attempts: number = 5
