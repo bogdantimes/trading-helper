@@ -15,7 +15,7 @@ import StableCoin from "./StableCoin"
 import { capitalizeWord, circularProgress, confirmBuy } from "./Common"
 import {
   AssetsResponse,
-  Coin,
+  Coin, CoinName,
   Config,
   ExchangeSymbol,
   StableUSDCoin,
@@ -28,7 +28,7 @@ import { TradeEditDialog } from "./TradeEditDialog"
 export function Assets({ config }: { config: Config }) {
   const [assets, setAssets] = React.useState<AssetsResponse>(null)
   const [coinName, setCoinName] = React.useState(`BTC`)
-  const [coinNames, setCoinNames] = React.useState([] as string[])
+  const [coinNames, setCoinNames] = React.useState<CoinName[]>([])
   const [addCoin, setAddCoin] = useState(false)
 
   useEffect(() => {

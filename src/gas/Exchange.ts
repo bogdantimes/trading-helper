@@ -41,14 +41,4 @@ export class Exchange implements IExchange {
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     return this.exchange.marketSell(symbol, quantity)
   }
-
-  getCoinNames(): string[] {
-    const coinNames = []
-    Object.keys(this.exchange.getPrices()).forEach((symbol) => {
-      if (symbol.endsWith(this.stableCoin)) {
-        coinNames.push(symbol.split(this.stableCoin)[0])
-      }
-    })
-    return coinNames
-  }
 }

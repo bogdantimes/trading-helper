@@ -4,7 +4,16 @@ import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
 import { Log, SECONDS_IN_MIN, SLOW_TICK_INTERVAL_MIN, TICK_INTERVAL_MIN } from "./Common"
-import { AssetsResponse, Coin, Config, InitialSetupParams, ScoresData, Stats, TradeMemo } from "trading-helper-lib"
+import {
+  AssetsResponse,
+  Coin,
+  CoinName,
+  Config,
+  InitialSetupParams,
+  ScoresData,
+  Stats,
+  TradeMemo,
+} from "trading-helper-lib"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { PriceProvider } from "./PriceProvider"
@@ -220,10 +229,11 @@ function resetScores(): void {
   })
 }
 
-function getCoinNames(): string[] {
+function getCoinNames(): CoinName[] {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return exchange.getCoinNames()
+    const priceProvider = new PriceProvider(exchange, CacheProxy)
+    return priceProvider.getCoinNames(DefaultStore.getConfig().StableCoin)
   })
 }
 

@@ -1,6 +1,14 @@
-import { enumKeys, ICacheProxy, IPriceProvider, PriceHoldersMap, PricesHolder, StableUSDCoin } from "trading-helper-lib"
+import {
+  CoinName,
+  enumKeys,
+  ICacheProxy,
+  IPriceProvider,
+  PriceHoldersMap,
+  PricesHolder,
+  StableUSDCoin,
+} from "trading-helper-lib"
 import { IExchange } from "./Exchange"
-import { Log, SECONDS_IN_MIN, StableCoinMatcher, TICK_INTERVAL_MIN } from "./Common"
+import { SECONDS_IN_MIN, StableCoinMatcher, TICK_INTERVAL_MIN } from "./Common"
 
 export class PriceProvider implements IPriceProvider {
   private readonly exchange: IExchange
@@ -30,10 +38,12 @@ export class PriceProvider implements IPriceProvider {
     if (this.cache.get(updatedKey)) return
 
     const prices = this.exchange.getPrices()
-    const allMaps = {}
+    const curMaps = {}
+    const newMaps = {}
 
     enumKeys(StableUSDCoin).forEach(stableCoin => {
-      allMaps[stableCoin] = this.getFromCache(stableCoin as StableUSDCoin)
+      curMaps[stableCoin] = this.getFromCache(stableCoin as StableUSDCoin)
+      newMaps[stableCoin] = {}
     })
 
     Object.keys(prices).forEach(symbol => {
@@ -42,13 +52,13 @@ export class PriceProvider implements IPriceProvider {
       if (!matcher.matched) return
 
       const pricesHolder = new PricesHolder()
-      pricesHolder.prices = allMaps[matcher.stableCoin][matcher.coinName]?.prices
+      pricesHolder.prices = curMaps[matcher.stableCoin][matcher.coinName]?.prices
       pricesHolder.pushPrice(prices[symbol])
-      allMaps[matcher.stableCoin][matcher.coinName] = pricesHolder
+      newMaps[matcher.stableCoin][matcher.coinName] = pricesHolder
     })
 
-    Object.keys(allMaps).forEach(stableCoin => {
-      const map = allMaps[stableCoin]
+    Object.keys(newMaps).forEach(stableCoin => {
+      const map = newMaps[stableCoin]
       this.cache.put(this.getKey(stableCoin), JSON.stringify(map))
     })
 
@@ -59,5 +69,9 @@ export class PriceProvider implements IPriceProvider {
 
   private getKey(stableCoin: string) {
     return `PriceProvider.get.${stableCoin}`
+  }
+
+  getCoinNames(stableCoin: StableUSDCoin): CoinName[] {
+    return Object.keys(this.getFromCache(stableCoin))
   }
 }
