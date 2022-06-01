@@ -3,7 +3,7 @@
 * New "Scores" feature (successor to "Survivors"). New related Settings: "Autonomous trading" and "Score Selectivity".
 * UI improvements.
 * Many improvements under the hood.
-* Stop-limit auto-sell now happens only on crossing-down even.
+* Stop-limit auto-sell now happens only on crossing-down event.
 
 # v2.6.1
 
