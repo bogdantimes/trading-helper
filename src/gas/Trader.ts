@@ -145,7 +145,11 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
+        // flatten out prices to make them not cross any limits right after the trade
+        tm.prices = [tradeResult.price]
+        // join existing trade result quantity, commission, paid price, etc with the new one
         tm.joinWithNewTrade(tradeResult)
+        // set the stop limit according to the current settings
         this.forceUpdateStopLimit(tm)
         this.processBuyFee(tradeResult)
         Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
