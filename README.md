@@ -17,24 +17,36 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 
 ## Features
 
-* Integration with Binance: buy and sell coins on the spot.
+* Integration with Binance spot.
+* Settings for manual, semi-autonomous or fully-autonomous trading style.
 * Set up your profit and stop limits to automatically sell coins when the limits are crossed.
-* A moving stop-limit, which goes up together with the price.
-* A stop-limit based on a total profit of the tool.
+* A moving stop-limit, which goes up together with the price, or fixed, based on a total profit of the tool.
 * Price anomalies detection (pump or dump) with an option to auto-buy when price drops.
 * Swing trading: automatically buy low and sell high during the rally.
 * Averaging down: automatically re-invest gains into most unprofitable coins to buy them at discount prices.
 * Your statistics: see how much you have made and how much you have lost on a daily basis.
-* Survivors: currencies that show movement up when 99% of the market goes down or not moves.
+
+### Available for Patrons only
+
+* __Scores__: the recommendations engine which finds best/rare opportunities and enables a truly fully-autonomous
+  trading.
 
 ### Assets
+
 ![assets.png](img/assets.png)
-### Settings
-![settings.png](img/settings.png)
+
+### Scores
+
+![scores.png](img/scores.png)
+
 ### Info
+
 ![info.png](img/info.png)
-### Survivors
-![survivors.png](img/survivors.png)
+
+### Settings
+
+![settings1.png](img/settings1.png)
+![settings2.png](img/settings2.png)
 
 ## How to
 
@@ -46,10 +58,12 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 ### Set up the latest build
 
 There are ready to use builds published in the Google Apps Script and made available to everyone via a link.
-Links are attached to each release. See [latest release](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
+Links are attached to each release.
+See [latest release](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
 
 You will need to clone the Google Apps Script project to your account and set it up.
-See the [Tutorials playlist on YouTube](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox). The setup was simplified as much as possible for this kind of project.
+See the [Tutorials playlist on YouTube](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox). The
+setup was simplified as much as possible for this kind of project.
 
 ### Set up from sources
 

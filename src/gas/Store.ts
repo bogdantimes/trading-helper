@@ -1,7 +1,14 @@
 import { CacheProxy } from "./CacheProxy"
-import { ExchangeSymbol, PriceProvider, StableUSDCoin, TradeState } from "../shared-lib/types"
+import {
+  AutoTradeBestScores,
+  Config,
+  PriceProvider,
+  ScoreSelectivity,
+  StableUSDCoin,
+  TradeMemo,
+  TradeState,
+} from "trading-helper-lib"
 import { Log } from "./Common"
-import { TradeMemo } from "../shared-lib/TradeMemo"
 
 export class DeadlineError extends Error {
   constructor(message: string) {
@@ -27,7 +34,7 @@ export interface IStore {
 
   getTradesList(state?: TradeState): TradeMemo[]
 
-  getTrade(symbol: ExchangeSymbol): TradeMemo
+  hasTrade(coinName: string): boolean
 
   changeTrade(
     coinName: string,
@@ -41,24 +48,38 @@ export interface IStore {
 }
 
 export class FirebaseStore implements IStore {
-  private readonly dbURLKey = `dbURL`;
   private source: object
 
   constructor() {
-    const url = PropertiesService.getScriptProperties().getProperty(this.dbURLKey)
-    if (url) {
+    if (this.url) {
       // @ts-ignore
-      this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken());
+      this.source = FirebaseApp.getDatabaseByUrl(this.url, ScriptApp.getOAuthToken())
     } else {
-      Log.info(`Firebase URL key 'dbURL' is not set.`)
+      Log.info(`Firebase Realtime Database is not connected.`)
+      Log.info(`Google Apps Script property 'dbURL' is missing.`)
     }
+    // If URL changed - clean trades and config cache
+    const cachedURL = CacheProxy.get(`dbURL`)
+    if (!!cachedURL && cachedURL !== this.url) {
+      Log.alert(`Firebase Realtime Database URL changed.`)
+      CacheProxy.remove(`Trades`)
+      CacheProxy.remove(`Config`)
+    }
+    CacheProxy.put(`dbURL`, this.url)
   }
 
+  get url(): string {
+    return PropertiesService.getScriptProperties().getProperty(`dbURL`)
+  }
+
+  set url(url: string) {
+    PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
+  }
 
   connect(dbURL: string) {
     // @ts-ignore
-    this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken());
-    PropertiesService.getScriptProperties().setProperty(this.dbURLKey, dbURL);
+    this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken())
+    this.url = dbURL
   }
 
   isConnected(): boolean {
@@ -77,15 +98,21 @@ export class FirebaseStore implements IStore {
       PriceProvider: PriceProvider.Binance,
       AveragingDown: false,
       ProfitBasedStopLimit: false,
-      PriceAnomalyAlert: 5
+      PriceAnomalyAlert: 5,
+      ScoreUpdateThreshold: ScoreSelectivity.MODERATE,
+      AutoTradeBestScores: AutoTradeBestScores.OFF,
     }
-    const configCacheJson = CacheProxy.get(`Config`);
-    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
+    const configCacheJson = CacheProxy.get(`Config`)
+    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null
     if (!configCache) {
       configCache = this.getOrSet(`Config`, defaultConfig)
     }
     // apply existing config on top of default one
     configCache = Object.assign(defaultConfig, configCache)
+
+    if (configCache.ScoreUpdateThreshold === 0.05) { // 0.05 used to be a default value, no it's not
+      configCache.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold
+    }
 
     if (configCache.TakeProfit) {
       configCache.ProfitLimit = configCache.TakeProfit
@@ -109,7 +136,7 @@ export class FirebaseStore implements IStore {
 
     CacheProxy.put(`Config`, JSON.stringify(configCache))
 
-    return configCache;
+    return configCache
   }
 
   setConfig(config: Config): void {
@@ -130,11 +157,11 @@ export class FirebaseStore implements IStore {
       throw new Error(`Firebase is not connected.`)
     }
     // @ts-ignore
-    return this.source.getData(key);
+    return this.source.getData(key)
   }
 
   getOrSet(key: string, value: any): any {
-    const val = this.get(key) || value;
+    const val = this.get(key) || value
     // @ts-ignore
     this.source.setData(key, val)
     return val
@@ -150,26 +177,26 @@ export class FirebaseStore implements IStore {
   }
 
   getTrades(): { [p: string]: TradeMemo } {
-    const tradesCacheJson = CacheProxy.get(`Trades`);
-    let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null;
+    const tradesCacheJson = CacheProxy.get(`Trades`)
+    let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null
     if (!tradesCache) {
-      tradesCache = this.getOrSet(`trade`, {});
+      tradesCache = this.getOrSet(`trade`, {})
       CacheProxy.put(`Trades`, JSON.stringify(tradesCache))
     }
     // Convert raw trades to TradeMemo objects
     return Object.keys(tradesCache).reduce((acc, key) => {
       acc[key] = TradeMemo.fromObject(tradesCache[key])
       return acc
-    }, {});
+    }, {})
   }
 
   getTradesList(state?: TradeState): TradeMemo[] {
-    const values = Object.values(this.getTrades());
-    return state ? values.filter(trade => trade.stateIs(state)) : values;
+    const values = Object.values(this.getTrades())
+    return state ? values.filter((trade) => trade.stateIs(state)) : values
   }
 
-  getTrade(symbol: ExchangeSymbol): TradeMemo {
-    return this.getTrades()[symbol.quantityAsset]
+  hasTrade(coinName: string): boolean {
+    return !!this.getTrades()[coinName]
   }
 
   /**
@@ -191,15 +218,16 @@ export class FirebaseStore implements IStore {
   changeTrade(
     coinName: string,
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined): void {
-    coinName = coinName.toUpperCase();
-    const key = `TradeLocker_${coinName}`;
+    notFoundFn?: () => TradeMemo | undefined,
+  ): void {
+    coinName = coinName.toUpperCase()
+    const key = `TradeLocker_${coinName}`
     try {
-      while (CacheProxy.get(key)) Utilities.sleep(200);
-      const deadline = 10 // Lock for 10 seconds
-      CacheProxy.put(key, `true`, deadline);
+      while (CacheProxy.get(key)) Utilities.sleep(200)
+      const deadline = 30 // Lock for 30 seconds to give a function enough time for com w/ Binance
+      CacheProxy.put(key, `true`, deadline)
 
-      const trade = this.getTrades()[coinName];
+      const trade = this.getTrades()[coinName]
       // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
       // otherwise changedTrade is null.
       const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
@@ -210,23 +238,16 @@ export class FirebaseStore implements IStore {
         )
       }
 
-      if (changedTrade && changedTrade.getCoinName() != coinName) {
-        throw new Error(
-          `Cannot change trade: coin names do not match: ${changedTrade.getCoinName()} != ${coinName}`,
-        )
-      }
-
       if (changedTrade) {
         changedTrade.deleted ? this.deleteTrade(changedTrade) : this.setTrade(changedTrade)
       }
-
     } finally {
       CacheProxy.remove(key)
     }
   }
 
   private setTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades();
+    const trades = this.getTrades()
     trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
     CacheProxy.put(`Trades`, JSON.stringify(trades))
   }
@@ -245,62 +266,6 @@ export class FirebaseStore implements IStore {
       CacheProxy.put(key, `true`, 300)
     }
   }
-
-}
-
-export type Config = {
-  KEY?: string
-  SECRET?: string
-  StableCoin: StableUSDCoin
-  BuyQuantity: number
-  StopLimit: number
-  /**
-   * When ProfitBasedStopLimit is true - a stop limit for each asset is calculated based on the total profit of the tool.
-   * All profit is divided equally between all assets and this amount is how much loss is allowed for each asset.
-   * Such stop limits are always recalculated when the total profit or number of assets changes.
-   * Overrides {@link StopLimit}.
-   */
-  ProfitBasedStopLimit: boolean
-  ProfitLimit: number
-  SellAtStopLimit: boolean
-  SellAtProfitLimit: boolean
-  SwingTradeEnabled: boolean
-  PriceProvider: PriceProvider
-  /**
-   * When averaging down is enabled, all the money gained from selling is used to buy more your existing
-   * most unprofitable (in percentage) asset.
-   * If you have assets A, B (-10% loss) and C(-15% loss) and A is sold, the tool will buy more
-   * of C, and C loss will be averaged down, for example to -7%.
-   * Next time, if C turns profitable and is sold, the tool will buy more of B.
-   * This way, **if the price decline is temporary** for all of your assets,
-   * the tool will gradually sell all assets without loss.
-   */
-  AveragingDown: boolean
-  /**
-   * When price suddenly pumps or dumps for more than or equal percentage - an alert is sent.
-   */
-  PriceAnomalyAlert?: number;
-  /**
-   * If true - buy the price dump automatically when {@link PriceAnomalyAlert} alert happens.
-   */
-  BuyDumps?: boolean;
-
-  /**
-   * @deprecated
-   */
-  PriceAsset?: string
-  /**
-   * @deprecated
-   */
-  TakeProfit?: number
-  /**
-   * @deprecated
-   */
-  LossLimit?: number
-  /**
-   * @deprecated
-   */
-  SellAtTakeProfit?: boolean
 }
 
 export const DefaultStore = new FirebaseStore()

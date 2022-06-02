@@ -11,19 +11,24 @@ import {
   TextField,
   Typography,
 } from "@mui/material"
-import { Config } from "../../gas/Store"
 import StableCoin from "./StableCoin"
 import { capitalizeWord, circularProgress, confirmBuy } from "./Common"
-import { TradeMemo } from "../../shared-lib/TradeMemo"
-import { Coin, ExchangeSymbol, StableUSDCoin, TradeState } from "../../shared-lib/types"
+import {
+  AssetsResponse,
+  Coin, CoinName,
+  Config,
+  ExchangeSymbol,
+  StableUSDCoin,
+  TradeMemo,
+  TradeState,
+} from "trading-helper-lib"
 import { Add } from "@mui/icons-material"
 import { TradeEditDialog } from "./TradeEditDialog"
-import { AssetsResponse } from "../../shared-lib/responses"
 
 export function Assets({ config }: { config: Config }) {
   const [assets, setAssets] = React.useState<AssetsResponse>(null)
   const [coinName, setCoinName] = React.useState(`BTC`)
-  const [coinNames, setCoinNames] = React.useState([] as string[])
+  const [coinNames, setCoinNames] = React.useState<CoinName[]>([])
   const [addCoin, setAddCoin] = useState(false)
 
   useEffect(() => {
@@ -58,6 +63,7 @@ export function Assets({ config }: { config: Config }) {
             <Grid item>
               <Stack sx={{ width: `332px` }} direction={`row`} spacing={2}>
                 <Autocomplete
+                  selectOnFocus={false}
                   value={coinName}
                   fullWidth={true}
                   options={coinNames}
@@ -82,11 +88,12 @@ export function Assets({ config }: { config: Config }) {
         )}
         {getStableCoinViews(assets?.stableCoins)}
         {[TradeState.BUY, TradeState.SELL, TradeState.BOUGHT, TradeState.SOLD].map((s) =>
-          getTradeViews(capitalizeWord(s), tradesMap?.get(s), config, coinNames),
+          getTradeViews(s, tradesMap?.get(s), config, coinNames),
         )}
       </Grid>
       {addCoin && (
         <TradeEditDialog
+          coinNames={coinNames}
           tradeMemo={TradeMemo.newManual(new ExchangeSymbol(coinName, config.StableCoin))}
           onClose={() => setAddCoin(false)}
           onCancel={() => setAddCoin(false)}
@@ -144,15 +151,24 @@ function getStableCoinViews(stableCoins?: Coin[]) {
   )
 }
 
-function getTradeViews(label: string, elems?: TradeMemo[], config?: Config, coinNames?: string[]) {
-  const [hide, setHide] = useState(false)
+function getTradeViews(
+  state: TradeState,
+  elems?: TradeMemo[],
+  config?: Config,
+  coinNames?: string[],
+) {
+  // hide Sold trades by default, others visible by default
+  const [hide, setHide] = useState(state === TradeState.SOLD)
   return (
     elems &&
     elems.length && (
       <>
         <Grid item xs={12}>
           <Divider>
-            <Chip onClick={() => setHide(!hide)} label={`${label} (${elems.length})`} />
+            <Chip
+              onClick={() => setHide(!hide)}
+              label={`${capitalizeWord(state)} (${elems.length})`}
+            />
           </Divider>
         </Grid>
         {!hide && (
@@ -162,11 +178,7 @@ function getTradeViews(label: string, elems?: TradeMemo[], config?: Config, coin
                 ?.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
                 .map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <Trade
-                      tradeNotAllowed={!coinNames.includes(t.getCoinName())}
-                      data={t}
-                      config={config}
-                    />
+                    <Trade coinNames={coinNames} data={t} config={config} />
                   </Grid>
                 ))}
             </Grid>

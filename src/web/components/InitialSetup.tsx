@@ -1,10 +1,8 @@
 import * as React from "react"
 import { useState } from "react"
-import { Config } from "../../gas/Store"
-import { Alert, Box, Button, Stack, TextField } from "@mui/material"
+import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material"
 import { circularProgress } from "./Common"
-import Typography from "@mui/material/Typography"
-import { InitialSetupParams } from "../../gas"
+import { Config, InitialSetupParams } from "trading-helper-lib"
 
 export function InitialSetup({ config, onConnect }: { config: Config; onConnect: () => void }) {
   const [isConnecting, setIsConnecting] = useState(false)
@@ -31,7 +29,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
         setIsConnecting(false)
         setError(resp.toString())
       })
-      .initialSetup(params)
+      .initialSetup(params as any)
   }
 
   const welcomeMsg = `Welcome to the Trading Helper!`

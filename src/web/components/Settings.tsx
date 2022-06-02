@@ -1,21 +1,26 @@
 import * as React from "react"
 import { useEffect, useState } from "react"
 import SaveIcon from "@mui/icons-material/Save"
-import { Config } from "../../gas/Store"
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
+  Divider,
+  FormControl,
   FormControlLabel,
+  FormLabel,
   InputAdornment,
+  Radio,
+  RadioGroup,
+  Slider,
   Stack,
   Switch,
   TextField,
+  Typography,
 } from "@mui/material"
-import { circularProgress } from "./Common"
-import { StableUSDCoin } from "../../shared-lib/types"
-import { f2 } from "../../shared-lib/functions"
+import { capitalizeWord, circularProgress } from "./Common"
+import { AutoTradeBestScores, Config, enumKeys, f2, StableUSDCoin } from "trading-helper-lib"
+import { ScoreSelectivity } from "trading-helper-lib/dist/Types"
 
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false)
@@ -63,7 +68,7 @@ export function Settings() {
         setIsSaving(false)
         setError(``)
       })
-      .setConfig(config)
+      .setConfig(config as any)
   }
 
   return (
@@ -72,54 +77,61 @@ export function Settings() {
     >
       {!configLoaded && circularProgress}
       {configLoaded && (
-        <Stack spacing={2}>
-          <Autocomplete
-            disableClearable={true}
-            value={config.StableCoin}
-            options={Object.values(StableUSDCoin)}
-            onChange={(e, val) => val && setConfig({ ...config, StableCoin: val as StableUSDCoin })}
-            renderInput={(params) => <TextField {...params} label={`Stable Coin`} />}
-          />
+        <Stack spacing={2} divider={<Divider />}>
+          <FormControl>
+            <FormLabel>Stable Coin</FormLabel>
+            <RadioGroup
+              row
+              value={config.StableCoin}
+              onChange={(e, val) => setConfig({ ...config, StableCoin: val as StableUSDCoin })}
+            >
+              {Object.values(StableUSDCoin).map((coin) => (
+                <FormControlLabel key={coin} value={coin} control={<Radio />} label={coin} />
+              ))}
+            </RadioGroup>
+          </FormControl>
           <TextField
             value={buyQuantity}
             label={`Buy Quantity`}
             onChange={(e) => setBuyQuantity(e.target.value)}
             InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
           />
-          <Stack direction="row" spacing={2}>
-            <TextField
-              value={profitLimit}
-              label={`Profit Limit`}
-              onChange={(e) => setProfitLimit(e.target.value)}
-              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.SellAtProfitLimit}
-                  onChange={(e) => setConfig({ ...config, SellAtProfitLimit: e.target.checked })}
-                />
-              }
-              label="Auto-sell"
-            />
-          </Stack>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              disabled={config.ProfitBasedStopLimit}
-              value={stopLimit}
-              label={`Stop Limit`}
-              onChange={(e) => setLossLimit(e.target.value)}
-              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.SellAtStopLimit}
-                  onChange={(e) => setConfig({ ...config, SellAtStopLimit: e.target.checked })}
-                />
-              }
-              label="Auto-sell"
-            />
+          <Stack spacing={2}>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                value={profitLimit}
+                label={`Profit Limit`}
+                onChange={(e) => setProfitLimit(e.target.value)}
+                InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.SellAtProfitLimit}
+                    onChange={(e) => setConfig({ ...config, SellAtProfitLimit: e.target.checked })}
+                  />
+                }
+                label="Auto-sell"
+              />
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                disabled={config.ProfitBasedStopLimit}
+                value={stopLimit}
+                label={`Stop Limit`}
+                onChange={(e) => setLossLimit(e.target.value)}
+                InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.SellAtStopLimit}
+                    onChange={(e) => setConfig({ ...config, SellAtStopLimit: e.target.checked })}
+                  />
+                }
+                label="Auto-sell"
+              />
+            </Stack>
           </Stack>
           <Stack direction="row" spacing={2}>
             <TextField
@@ -138,34 +150,9 @@ export function Settings() {
               label="Buy drops"
             />
           </Stack>
-          <FormControlLabel
-            sx={{ margin: 0 }}
-            control={
-              <Switch
-                checked={config.ProfitBasedStopLimit}
-                onChange={(e) => setConfig({ ...config, ProfitBasedStopLimit: e.target.checked })}
-              />
-            }
-            label="P/L based Stop Limit"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={config.SwingTradeEnabled}
-                onChange={(e) => setConfig({ ...config, SwingTradeEnabled: e.target.checked })}
-              />
-            }
-            label="Swing trading"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={config.AveragingDown}
-                onChange={(e) => setConfig({ ...config, AveragingDown: e.target.checked })}
-              />
-            }
-            label="Averaging down"
-          />
+          {switchers(config, setConfig)}
+          {autoTradeBestScoresSlider(config, setConfig)}
+          {scoreThresholdSelector(config, setConfig)}
           <Box alignSelf={`center`} sx={{ position: `relative` }}>
             <Button
               variant="contained"
@@ -182,5 +169,100 @@ export function Settings() {
         </Stack>
       )}
     </Box>
+  )
+}
+
+function switchers(
+  config: Config,
+  setConfig: (value: ((prevState: Config) => Config) | Config) => void,
+) {
+  return (
+    <Stack>
+      <FormControlLabel
+        control={
+          <Switch
+            checked={config.ProfitBasedStopLimit}
+            onChange={(e) => setConfig({ ...config, ProfitBasedStopLimit: e.target.checked })}
+          />
+        }
+        label="P/L based Stop Limit"
+      />
+      <FormControlLabel
+        control={
+          <Switch
+            checked={config.SwingTradeEnabled}
+            onChange={(e) => setConfig({ ...config, SwingTradeEnabled: e.target.checked })}
+          />
+        }
+        label="Swing trading"
+      />
+      <FormControlLabel
+        control={
+          <Switch
+            checked={config.AveragingDown}
+            onChange={(e) => setConfig({ ...config, AveragingDown: e.target.checked })}
+          />
+        }
+        label="Averaging down"
+      />
+    </Stack>
+  )
+}
+
+function scoreThresholdSelector(config: Config, setConfig: (config: Config) => void) {
+  return (
+    <FormControl>
+      <FormLabel>Score Selectivity</FormLabel>
+      <RadioGroup
+        value={config.ScoreUpdateThreshold}
+        onChange={(e) => setConfig({ ...config, ScoreUpdateThreshold: +e.target.value })}
+      >
+        {enumKeys(ScoreSelectivity).map((key) => (
+          <FormControlLabel
+            key={key}
+            labelPlacement="end"
+            value={ScoreSelectivity[key]}
+            control={<Radio size={`small`} color={selectivityColorMap[ScoreSelectivity[key]]} />}
+            label={
+              <Box>
+                <Typography marginBottom={`-8px`}>{capitalizeWord(key)}</Typography>
+                <Typography variant={`caption`}>
+                  {`Only ${f2(ScoreSelectivity[key] * 100)}% passes the threshold`}
+                </Typography>
+              </Box>
+            }
+          />
+        ))}
+      </RadioGroup>
+    </FormControl>
+  )
+}
+
+const selectivityColorMap = {
+  [ScoreSelectivity.EXTREME]: `error`,
+  [ScoreSelectivity.HIGH]: `warning`,
+  [ScoreSelectivity.MODERATE]: `info`,
+  [ScoreSelectivity.MINIMAL]: `success`,
+}
+
+function autoTradeBestScoresSlider(config: Config, setConfig: (config: Config) => void) {
+  return (
+    <FormControl>
+      <FormLabel>Autonomous Trading</FormLabel>
+      <Slider
+        sx={{ marginLeft: `10px` }}
+        value={config.AutoTradeBestScores}
+        onChange={(e, value) =>
+          setConfig({ ...config, AutoTradeBestScores: value as AutoTradeBestScores })
+        }
+        step={null}
+        min={0}
+        max={10}
+        marks={enumKeys(AutoTradeBestScores).map((key) => ({
+          value: AutoTradeBestScores[key],
+          label: capitalizeWord(key),
+        }))}
+      />
+    </FormControl>
   )
 }

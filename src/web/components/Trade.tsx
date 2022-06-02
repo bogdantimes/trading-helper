@@ -5,7 +5,6 @@ import CardActions from "@mui/material/CardActions"
 import CardContent from "@mui/material/CardContent"
 import Button from "@mui/material/Button"
 import Typography from "@mui/material/Typography"
-import { Config } from "../../gas/Store"
 import {
   ChartOptions,
   createChart,
@@ -19,18 +18,11 @@ import { Box, Stack, Theme, ToggleButton, useTheme } from "@mui/material"
 import { circularProgress, confirmBuy, confirmSell } from "./Common"
 import { TradeTitle } from "./TradeTitle"
 import { TradeEditDialog } from "./TradeEditDialog"
-import { TradeState } from "../../shared-lib/types"
-import { TradeMemo } from "../../shared-lib/TradeMemo"
-import { f2 } from "../../shared-lib/functions"
+import { Config, f2, TradeMemo, TradeState } from "trading-helper-lib"
 
-export default function Trade(props: {
-  data: TradeMemo
-  config: Config
-  tradeNotAllowed: boolean
-}) {
-  const tm: TradeMemo = props.data
-  const config: Config = props.config
-  const tradeNotAllowed = props.tradeNotAllowed
+export default function Trade(props: { data: TradeMemo; config: Config; coinNames: string[] }) {
+  const { data: tm, config, coinNames } = props
+  const tradeNotAllowed = !coinNames.includes(tm.getCoinName())
   const coinName = tm.getCoinName()
 
   const chartContainerRef = useRef()
@@ -219,9 +211,11 @@ export default function Trade(props: {
               </div>
             </Typography>
           ) : (
-            <Typography marginLeft={`16px`} variant="body2" color="text.secondary">
-              <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
-            </Typography>
+            !!tm.soldPriceChangePercent() && (
+              <Typography marginLeft={`16px`} variant="body2" color="text.secondary">
+                <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
+              </Typography>
+            )
           )}
           <CardActions>
             <Stack direction={`row`} spacing={1} sx={{ marginLeft: `auto`, marginRight: `auto` }}>
@@ -266,6 +260,7 @@ export default function Trade(props: {
       )}
       {editMode && (
         <TradeEditDialog
+          coinNames={coinNames}
           tradeMemo={tm}
           onClose={() => setEditMode(false)}
           onCancel={() => setEditMode(false)}

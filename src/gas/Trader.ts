@@ -1,36 +1,44 @@
 import { Statistics } from "./Statistics"
-import { Config, DefaultStore, IStore } from "./Store"
+import { DefaultStore, IStore } from "./Store"
 import { IExchange } from "./Exchange"
 import { PriceAnomaly, PriceAnomalyChecker } from "./PriceAnomalyChecker"
 import { Log } from "./Common"
-import { f2 } from "../shared-lib/functions"
-import { Coin, ExchangeSymbol, PriceMap, StableUSDCoin, TradeState } from "../shared-lib/types"
-import { TradeMemo } from "../shared-lib/TradeMemo"
-import { TradeResult } from "../shared-lib/TradeResult"
+import {
+  Coin,
+  Config,
+  ExchangeSymbol,
+  f2,
+  PriceHoldersMap,
+  StableUSDCoin,
+  TradeMemo,
+  TradeResult,
+  TradeState,
+} from "trading-helper-lib"
 import { CacheProxy } from "./CacheProxy"
+import { PriceProvider } from "./PriceProvider"
 
 export class V2Trader {
   private readonly store: IStore
   private readonly config: Config
   private readonly exchange: IExchange
   private readonly stats: Statistics
-  private readonly prices: PriceMap
+  private readonly prices: PriceHoldersMap
 
   /**
-   * Used when {@link Config.ProfitBasedStopLimit} is enabled.
+   * Used when {@link ProfitBasedStopLimit} is enabled.
    */
   private readonly totalProfit: number
   /**
-   * Used when {@link Config.ProfitBasedStopLimit} is enabled.
+   * Used when {@link ProfitBasedStopLimit} is enabled.
    */
   private readonly numberOfBoughtAssets: number
 
-  constructor(store: IStore, exchange: IExchange, stats: Statistics) {
+  constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
     this.store = store
     this.config = store.getConfig()
+    this.prices = priceProvider.get(this.config.StableCoin)
     this.exchange = exchange
     this.stats = stats
-    this.prices = exchange.getPrices()
 
     if (this.config.ProfitBasedStopLimit) {
       this.totalProfit = stats.getAll().TotalProfit
@@ -39,17 +47,11 @@ export class V2Trader {
   }
 
   tickerCheck(tm: TradeMemo): TradeMemo {
-    if (new Coin(tm.getCoinName()).isStable()) {
-      // Remove stable coins from the list of coins to check
-      tm.deleted = true
-      return tm
-    }
-
     this.pushNewPrice(tm)
 
     const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
     if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
-      Log.alert(`Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
+      Log.alert(`ℹ️ Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
       tm.setState(TradeState.BUY)
     }
 
@@ -85,7 +87,7 @@ export class V2Trader {
     const symbol = tm.tradeResult.symbol
     const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit * 2)
     if (priceDropped) {
-      Log.alert(`${symbol} will be bought again as price dropped sufficiently`)
+      Log.alert(`ℹ️ ${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
     } else {
       Log.info(`${symbol} price has not dropped sufficiently, skipping swing trade`)
@@ -94,17 +96,17 @@ export class V2Trader {
 
   private processBoughtState(tm: TradeMemo): void {
     this.updateStopLimit(tm)
-    this.sendLevelsCrossingAlerts(tm)
 
-    if (tm.currentPrice < tm.stopLimitPrice) {
-      const canSell = !tm.hodl && this.store.getConfig().SellAtStopLimit
-      canSell && tm.setState(TradeState.SELL)
-    }
+    if (tm.hodl) return
 
-    const profitLimitPrice = tm.tradeResult.price * (1 + this.config.ProfitLimit)
-    if (tm.currentPrice > profitLimitPrice) {
-      const canSell = !tm.hodl && this.store.getConfig().SellAtProfitLimit
-      canSell && tm.setState(TradeState.SELL)
+    if (tm.stopLimitCrossedDown()) {
+      Log.alert(`ℹ️ ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
+      this.config.SellAtStopLimit && tm.setState(TradeState.SELL)
+    } else if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
+      Log.alert(`ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
+      this.config.SellAtProfitLimit && tm.setState(TradeState.SELL)
+    } else if (tm.entryPriceCrossedUp()) {
+      Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
     }
   }
 
@@ -112,7 +114,7 @@ export class V2Trader {
     if (this.config.ProfitBasedStopLimit) {
       const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
-    } else if (!tm.stopLimitPrice || tm.priceGoesUpStrong()) {
+    } else if (!tm.stopLimitPrice || tm.priceGoesStrongUp()) {
       const newStopLimit = tm.currentPrice * (1 - this.config.StopLimit)
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit)
     }
@@ -123,31 +125,17 @@ export class V2Trader {
     this.updateStopLimit(tm)
   }
 
-  private sendLevelsCrossingAlerts(tm: TradeMemo) {
-    const symbol = tm.tradeResult.symbol
-    if (!tm.hodl) {
-      if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
-        Log.alert(`${symbol} profit limit crossed up at ${tm.currentPrice}`)
-      } else if (tm.lossLimitCrossedDown()) {
-        Log.alert(`${symbol} stop limit crossed down at ${tm.currentPrice}`)
-      } else if (tm.entryPriceCrossedUp()) {
-        Log.alert(`${symbol} entry price crossed up at ${tm.currentPrice}`)
-      }
-    }
-  }
-
   private pushNewPrice(tm: TradeMemo): void {
-    const symbol = tm.tradeResult.symbol
-    const price = this.prices[symbol.toString()]
-    if (price) {
-      tm.pushPrice(price)
+    const priceHolder = this.prices[tm.getCoinName()]
+    if (priceHolder) {
+      tm.pushPrice(priceHolder.currentPrice)
     } else if (tm.tradeResult.quantity) {
       // no price available, but we have quantity, which means we bought something earlier
-      throw Error(`Exchange does not have price for ${symbol}`)
+      throw Error(`Exchange does not have price for ${tm.getCoinName()}${this.config.StableCoin}`)
     } else {
       // no price available, and no quantity, which means we haven't bought anything yet
       // could be a non-existing symbol, or not yet published in the exchange
-      Log.info(`Exchange does not have price for ${symbol}`)
+      Log.info(`Exchange does not have price for ${tm.getCoinName()}${this.config.StableCoin}`)
     }
   }
 
@@ -157,7 +145,11 @@ export class V2Trader {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
+        // flatten out prices to make them not cross any limits right after the trade
+        tm.prices = [tradeResult.price]
+        // join existing trade result quantity, commission, paid price, etc with the new one
         tm.joinWithNewTrade(tradeResult)
+        // set the stop limit according to the current settings
         this.forceUpdateStopLimit(tm)
         this.processBuyFee(tradeResult)
         Log.alert(`${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`)
@@ -184,7 +176,7 @@ export class V2Trader {
         const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
 
-        Log.alert(`${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
+        Log.alert(`ℹ️ ${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
 
         tradeResult.profit = profit
         this.updatePLStatistics(symbol.priceAsset, profit)
@@ -222,8 +214,8 @@ export class V2Trader {
       .getTradesList(TradeState.BOUGHT)
       .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
       .sort(byProfitPercentDesc)[0]
-    if (lowestPLTrade) {
-      Log.alert(`Averaging down is enabled`)
+    if (lowestPLTrade && lowestPLTrade.profit() < 0) {
+      Log.alert(`ℹ️ Averaging down is enabled`)
       Log.alert(
         `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
       )
@@ -235,7 +227,7 @@ export class V2Trader {
   }
 
   private updatePLStatistics(gainedCoin: string, profit: number): void {
-    if (new Coin(gainedCoin).isStable()) {
+    if (StableUSDCoin[gainedCoin]) {
       this.stats.addProfit(profit)
       Log.info(`P/L added to statistics: ` + profit)
     }
@@ -259,8 +251,8 @@ export class V2Trader {
   }
 
   private getBNBCommissionCost(commission: number): number {
-    const bnbPrice = this.prices[`BNB` + this.config.StableCoin]
-    return bnbPrice ? commission * bnbPrice : 0
+    const bnbPriceHolder = this.prices[`BNB`]
+    return bnbPriceHolder ? commission * bnbPriceHolder.currentPrice : 0
   }
 
   private updateBNBBalance(quantity: number): boolean {

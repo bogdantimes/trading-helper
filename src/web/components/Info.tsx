@@ -3,7 +3,7 @@ import { useEffect } from "react"
 import { Alert, Box, ListItem, ListItemAvatar, ListItemText, Stack } from "@mui/material"
 import { FixedSizeList } from "react-window"
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material"
-import { Stats } from "../../shared-lib/types"
+import { Stats } from "trading-helper-lib"
 
 export function Info() {
   const [stats, setStats] = React.useState<Stats>(null)

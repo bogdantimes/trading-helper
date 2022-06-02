@@ -1,11 +1,19 @@
 {
   "timeZone": "Europe/London",
   "dependencies": {
-    "libraries": [{
-      "userSymbol": "FirebaseApp",
-      "libraryId": "1hguuh4Zx72XVC1Zldm_vTtcUUKUA6iBUOoGnJUWLfqDWx5WlOJHqYkrt",
-      "version": "30"
-    }]
+    "libraries": [
+      {
+        "userSymbol": "FirebaseApp",
+        "libraryId": "1hguuh4Zx72XVC1Zldm_vTtcUUKUA6iBUOoGnJUWLfqDWx5WlOJHqYkrt",
+        "version": "30"
+      },
+      {
+        "userSymbol": "TradingHelperScores",
+        "version": "3",
+        "libraryId": "1ePSsOk0NIf_IyHfgxbRM-Uq7muXvnKB4MIUUi8lnS1VA_LjEnt1X6D8W",
+        "developmentMode": false
+      }
+    ]
   },
   "webapp": {
     "executeAs": "USER_DEPLOYING",

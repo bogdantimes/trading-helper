@@ -1,6 +1,6 @@
 {
   "name": "trading-helper",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "",
   "scripts": {
     "glogin": "clasp login",
@@ -51,6 +51,7 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-vis": "^1.11.7",
-    "react-window": "^1.8.7"
+    "react-window": "^1.8.7",
+    "trading-helper-lib": "^0.1.2"
   }
 }

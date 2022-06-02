@@ -1,10 +1,5 @@
-import { CoinStats } from "./CoinStats"
 import { Binance } from "./Binance"
-import { Config } from "./Store"
-import { TradeResult } from "../shared-lib/TradeResult"
-import { CacheProxy } from "./CacheProxy"
-import { ExchangeSymbol, PriceMap, PriceProvider, StableUSDCoin } from "../shared-lib/types"
-import { Log } from "./Common"
+import { Config, ExchangeSymbol, PriceMap, StableUSDCoin, TradeResult } from "trading-helper-lib"
 
 export interface IExchange {
   getFreeAsset(assetName: string): number
@@ -18,66 +13,32 @@ export interface IExchange {
   getPrice(symbol: ExchangeSymbol): number
 }
 
-export interface IPriceProvider {
-  getPrices(): PriceMap
-}
-
 export class Exchange implements IExchange {
-  private readonly exchange: Binance;
-  private readonly stableCoin: StableUSDCoin;
-  private priceProvider: IPriceProvider;
+  private readonly exchange: Binance
+  private readonly stableCoin: StableUSDCoin
 
   constructor(config: Config) {
-    this.exchange = new Binance(config);
-    this.stableCoin = config.StableCoin;
-
-    switch (config.PriceProvider) {
-      case PriceProvider.Binance:
-        this.priceProvider = this.exchange;
-        break;
-      case PriceProvider.CoinStats:
-        this.priceProvider = new CoinStats();
-        break;
-      default:
-        Log.error(new Error(`Unknown price provider: ${config.PriceProvider}. Using Binance as price provider.`));
-        this.priceProvider = this.exchange;
-    }
-
+    this.exchange = new Binance(config)
+    this.stableCoin = config.StableCoin
   }
 
   getFreeAsset(assetName: string): number {
-    return this.exchange.getFreeAsset(assetName);
+    return this.exchange.getFreeAsset(assetName)
   }
 
   getPrice(symbol: ExchangeSymbol): number {
-    return this.getPrices()[symbol.toString()];
+    return this.getPrices()[symbol.toString()]
   }
 
   getPrices(): PriceMap {
-    const pricesJson = CacheProxy.get(`Prices`);
-    let prices = pricesJson ? JSON.parse(pricesJson) : null;
-    if (!prices) {
-      prices = this.priceProvider.getPrices();
-      CacheProxy.put(`Prices`, JSON.stringify(prices), 45); // cache for 45 seconds
-    }
-    return prices;
+    return this.exchange.getPrices()
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
-    return this.exchange.marketBuy(symbol, cost);
+    return this.exchange.marketBuy(symbol, cost)
   }
 
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
-    return this.exchange.marketSell(symbol, quantity);
-  }
-
-  getCoinNames(): string[] {
-    const coinNames = [];
-    Object.keys(this.exchange.getPrices()).forEach(symbol => {
-      if (symbol.endsWith(this.stableCoin)) {
-        coinNames.push(symbol.split(this.stableCoin)[0]);
-      }
-    });
-    return coinNames;
+    return this.exchange.marketSell(symbol, quantity)
   }
 }

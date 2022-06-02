@@ -1,12 +1,10 @@
-import { Config } from "./Store"
-import { IExchange, IPriceProvider } from "./Exchange"
+import { IExchange } from "./Exchange"
 import { CacheProxy } from "./CacheProxy"
 import { execute, Log } from "./Common"
-import { ExchangeSymbol, PriceMap } from "../shared-lib/types"
-import { TradeResult } from "../shared-lib/TradeResult"
+import { Config, ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
 
-export class Binance implements IExchange, IPriceProvider {
+export class Binance implements IExchange {
   private readonly key: string
   private readonly secret: string
   private readonly attempts: number = 5
@@ -82,7 +80,7 @@ export class Binance implements IExchange, IPriceProvider {
         `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`,
       )
     }
-    Log.alert(`Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`)
+    Log.alert(`➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`)
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`
     try {
       const tradeResult = this.marketTrade(symbol, query)
@@ -104,7 +102,7 @@ export class Binance implements IExchange, IPriceProvider {
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`
-    Log.alert(`Selling ${quantity} ${symbol.quantityAsset} for ${symbol.priceAsset}`)
+    Log.alert(`➖ Selling ${quantity} ${symbol.quantityAsset} for ${symbol.priceAsset}`)
     try {
       const tradeResult = this.marketTrade(symbol, query)
       tradeResult.gained = tradeResult.cost
@@ -148,7 +146,7 @@ export class Binance implements IExchange, IPriceProvider {
     let commission = 0
     fills.forEach((f) => {
       if (f.commissionAsset != `BNB`) {
-        Log.alert(`Commission is ${f.commissionAsset} instead of BNB`)
+        Log.alert(`ℹ️ Commission is ${f.commissionAsset} instead of BNB`)
       } else {
         commission += +f.commission
       }
@@ -186,9 +184,8 @@ export class Binance implements IExchange, IPriceProvider {
           }
         }
 
-        if (resp.getResponseCode() === 418) {
-          // Limit reached
-          Log.debug(`Got 418 response code from ` + server)
+        if (resp.getResponseCode() === 418 || resp.getResponseCode() === 429) {
+          Log.debug(`Limit reached on server ` + server)
         }
 
         if (
