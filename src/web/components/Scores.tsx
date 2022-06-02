@@ -199,6 +199,9 @@ function featureDisabledInfo() {
         </Link>
         {` `}to unlock the {`"Scores"`} functionality.
       </Typography>
+      <Typography variant="caption">
+        <b>Important: use the same Google account in Patreon.</b>
+      </Typography>
     </Alert>
   )
 }
