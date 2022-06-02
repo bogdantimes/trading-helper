@@ -100,10 +100,10 @@ export class V2Trader {
     if (tm.hodl) return
 
     if (tm.stopLimitCrossedDown()) {
-      Log.alert(`📉 ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
+      Log.alert(`ℹ️ ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
       this.config.SellAtStopLimit && tm.setState(TradeState.SELL)
     } else if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
-      Log.alert(`📈 ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
+      Log.alert(`ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
       this.config.SellAtProfitLimit && tm.setState(TradeState.SELL)
     } else if (tm.entryPriceCrossedUp()) {
       Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
