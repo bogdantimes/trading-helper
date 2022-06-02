@@ -184,9 +184,8 @@ export class Binance implements IExchange {
           }
         }
 
-        if (resp.getResponseCode() === 418) {
-          // Limit reached
-          Log.debug(`Got 418 response code from ` + server)
+        if (resp.getResponseCode() === 418 || resp.getResponseCode() === 429) {
+          Log.debug(`Limit reached on server ` + server)
         }
 
         if (
