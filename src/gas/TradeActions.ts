@@ -39,7 +39,9 @@ export class TradeActions {
 
   sell(coinName: string): void {
     this.store.changeTrade(coinName, (trade) => {
-      trade.setState(TradeState.SELL)
+      if (trade.stateIs(TradeState.BOUGHT)) {
+        trade.setState(TradeState.SELL)
+      }
       return trade
     })
   }

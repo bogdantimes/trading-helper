@@ -1,16 +1,14 @@
-import { IStore } from "./Store"
-import { TradeActions } from "./TradeActions"
-import { CoinScore, IPriceProvider, TradeMemo, TradeState } from "trading-helper-lib"
-import { IScores } from "./Scores"
+import { IStore } from "../Store"
+import { TradeActions } from "../TradeActions"
+import { CoinScore, TradeMemo, TradeState } from "trading-helper-lib"
+import { IScores } from "../Scores"
 
 export class ScoreTrader {
   private readonly store: IStore
-  private readonly priceProvider: IPriceProvider
   private readonly scores: IScores
 
-  constructor(store: IStore, priceProvider: IPriceProvider, scores: IScores) {
+  constructor(store: IStore, scores: IScores) {
     this.store = store
-    this.priceProvider = priceProvider
     this.scores = scores
   }
 
