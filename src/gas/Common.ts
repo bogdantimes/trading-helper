@@ -76,8 +76,8 @@ ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
       try {
         GmailApp.sendEmail(email, `Trading-helper alert`, this.print())
       } catch (e) {
-        // TODO: email cannot be sent, find other way to deliver
-        console.error(e)
+        Log.error(e)
+        GmailApp.createDraft(email, `Trading-helper alert`, this.print())
       }
     }
   }

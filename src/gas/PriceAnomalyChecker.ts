@@ -11,12 +11,16 @@ export enum PriceAnomaly {
 
 export class PriceAnomalyChecker {
   public static check(tm: TradeMemo, pdAlertPercentage: number): PriceAnomaly {
-    const key = `${tm.getCoinName()}-pump-dump-start`
-    const anomalyStartPrice = CacheProxy.get(key)
+    const trackingKey = `${tm.getCoinName()}-pump-dump-tracking`
+    const tracking = CacheProxy.get(trackingKey)
+    const startPriceKey = `${tm.getCoinName()}-start-price`
+    const anomalyStartPrice = CacheProxy.get(startPriceKey)
 
-    if (tm.priceGoesStrongUp() || tm.priceGoesStrongDown()) {
-      Log.debug(`${tm.getCoinName()} price anomaly detected`)
-      CacheProxy.put(key, anomalyStartPrice || tm.prices[0].toString(), 120) // 2 minutes
+    if (tracking || tm.priceGoesStrongUp() || tm.priceGoesStrongDown()) {
+      !anomalyStartPrice && Log.alert(`${tm.getCoinName()} price anomaly detected`)
+      // If price STRONG move repeats within 2 minutes, we keep tracking the anomaly
+      CacheProxy.put(trackingKey, `true`, 120)
+      CacheProxy.put(startPriceKey, anomalyStartPrice || tm.prices[0].toString())
       return PriceAnomaly.TRACKING
     }
 
@@ -24,7 +28,7 @@ export class PriceAnomalyChecker {
       return PriceAnomaly.NONE
     }
 
-    CacheProxy.remove(key)
+    CacheProxy.remove(startPriceKey)
     const percent = absPercentageChange(+anomalyStartPrice, tm.currentPrice)
 
     if (percent < pdAlertPercentage) {
