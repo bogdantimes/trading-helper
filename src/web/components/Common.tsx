@@ -47,3 +47,5 @@ export const confirmSell = (coinName: string, config: Config) =>
   )
 
 export const capitalizeWord = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+
+export const cardWidth = `332px`

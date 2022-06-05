@@ -10,8 +10,10 @@ import {
   FormControlLabel,
   FormLabel,
   InputAdornment,
+  MenuItem,
   Radio,
   RadioGroup,
+  Select,
   Slider,
   Stack,
   Switch,
@@ -73,7 +75,7 @@ export function Settings() {
 
   return (
     <Box
-      sx={{ justifyContent: `center`, display: `flex`, "& .MuiTextField-root": { width: `25ch` } }}
+      sx={{ justifyContent: `center`, display: `flex` }}
     >
       {!configLoaded && circularProgress}
       {configLoaded && (
@@ -133,25 +135,32 @@ export function Settings() {
               />
             </Stack>
           </Stack>
-          <Stack direction="row" spacing={2}>
+          <Stack spacing={1}>
             <TextField
               value={config.PriceAnomalyAlert}
               label={`Price Anomaly Alert`}
               onChange={(e) => setConfig({ ...config, PriceAnomalyAlert: +e.target.value })}
               InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
             />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.BuyDumps}
-                  onChange={(e) => setConfig({ ...config, BuyDumps: e.target.checked })}
-                />
-              }
-              label="Buy drops"
-            />
+            <Select
+              value={[config.BuyDumps, config.SellPumps].toString()}
+              onChange={(e) => {
+                const [buyDumps, sellPumps] = e.target.value.split(`,`)
+                setConfig({
+                  ...config,
+                  BuyDumps: buyDumps === `true`,
+                  SellPumps: sellPumps === `true`,
+                })
+              }}
+            >
+              <MenuItem value={[false, false].toString()}>No Action</MenuItem>
+              <MenuItem value={[true, false].toString()}>Buy Dumps</MenuItem>
+              <MenuItem value={[false, true].toString()}>Sell Pumps</MenuItem>
+              <MenuItem value={[true, true].toString()}>Buy Dumps & Sell Pumps</MenuItem>
+            </Select>
           </Stack>
           {switchers(config, setConfig)}
-          {autoTradeBestScoresSlider(config, setConfig)}
+          {autonomousTrading(config, setConfig)}
           {scoreThresholdSelector(config, setConfig)}
           <Box alignSelf={`center`} sx={{ position: `relative` }}>
             <Button
@@ -245,9 +254,9 @@ const selectivityColorMap = {
   [ScoreSelectivity.MINIMAL]: `success`,
 }
 
-function autoTradeBestScoresSlider(config: Config, setConfig: (config: Config) => void) {
+function autonomousTrading(config: Config, setConfig: (config: Config) => void) {
   return (
-    <FormControl>
+    <FormControl sx={{ paddingRight: `28px` }}>
       <FormLabel>Autonomous Trading</FormLabel>
       <Slider
         sx={{ marginLeft: `10px` }}

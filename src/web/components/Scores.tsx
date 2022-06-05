@@ -14,7 +14,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material"
-import { capitalizeWord, circularProgress, confirmBuy, growthIconMap } from "./Common"
+import { capitalizeWord, cardWidth, circularProgress, confirmBuy, growthIconMap } from "./Common"
 import {
   AutoTradeBestScores,
   CoinScore,
@@ -102,7 +102,7 @@ function recommendedList(
       {!!scoresData.recommended.length && (
         <Stack>
           {getAlert(autoTrade)}
-          <List sx={{ padding: 0, marginTop: 0, width: 332 }}>
+          <List sx={{ padding: 0, marginTop: 0, width: cardWidth }}>
             {scoresData.recommended.map((rJson, i) => {
               const cs = CoinScore.fromObject(rJson)
               const order = i + 1

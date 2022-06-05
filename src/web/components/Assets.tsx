@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material"
 import StableCoin from "./StableCoin"
-import { capitalizeWord, circularProgress, confirmBuy } from "./Common"
+import { capitalizeWord, cardWidth, circularProgress, confirmBuy } from "./Common"
 import {
   AssetsResponse,
   Coin, CoinName,
@@ -61,7 +61,7 @@ export function Assets({ config }: { config: Config }) {
         <Grid item xs={12}>
           <Grid container justifyContent="center" spacing={2}>
             <Grid item>
-              <Stack sx={{ width: `332px` }} direction={`row`} spacing={2}>
+              <Stack sx={{ width: cardWidth }} direction={`row`} spacing={2}>
                 <Autocomplete
                   selectOnFocus={false}
                   value={coinName}
