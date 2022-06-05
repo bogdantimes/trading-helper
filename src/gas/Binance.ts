@@ -63,7 +63,7 @@ export class Binance implements IExchange {
           () => `${resource}?${this.addSignature(query)}`,
           this.defaultReqOpts,
         )
-        CacheProxy.put(`AccountData`, JSON.stringify(accountData), 1) // 1 second
+        CacheProxy.put(`AccountData`, JSON.stringify(accountData), 55) // 55 second
       } catch (e) {
         throw new Error(`Failed to get available ${assetName}: ${e.message}`)
       }
