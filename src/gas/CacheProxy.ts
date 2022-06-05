@@ -20,6 +20,10 @@ export class DefaultCacheProxy implements ICacheProxy {
     return CacheService.getScriptCache().get(`${this.profile.name}${key}`)
   }
 
+  getAll(keys: string[]): { [key: string]: any } {
+    return CacheService.getScriptCache().getAll(keys)
+  }
+
   /**
    * @param key
    * @param value

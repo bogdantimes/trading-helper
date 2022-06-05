@@ -1,4 +1,4 @@
-import { DefaultCacheProxy } from "./CacheProxy";
+import { CacheProxy, DefaultCacheProxy } from "./CacheProxy";
 import {
   AutoTradeBestScores,
   Config,
@@ -94,13 +94,19 @@ export class FirebaseStore implements IStore {
   }
 
   static getProfiles(): { [key: string]: Profile } {
-    return DefaultStore.get(`Profiles`) || {};
+    const profilesJson = CacheProxy.get(`Profiles`);
+    let profiles = profilesJson ? JSON.parse(profilesJson) : null;
+    if (!profiles) {
+      profiles = DefaultStore.get(`Profiles`) || {};
+      CacheProxy.put(`Profiles`, JSON.stringify(profiles));
+    }
+    return profiles
   }
 
   static newProfileConfig(): Config {
-    const { KEY, SECRET } = DefaultStore.getConfig();
+    const { KEY, SECRET, StableCoin } = DefaultStore.getConfig();
     const defaultConfig = FirebaseStore.getDefaultConfig();
-    return Object.assign(defaultConfig, { KEY, SECRET })
+    return Object.assign(defaultConfig, { KEY, SECRET, StableCoin });
   }
 
   static createProfile(profile: Profile, config: Config): void {
@@ -109,7 +115,10 @@ export class FirebaseStore implements IStore {
       throw new Error(`Profile with name ${profile.name} already exists.`);
     }
     const profileStore = new FirebaseStore(profile);
-    profileStore.set(`Config`, config);
+    profileStore.setConfig(config);
+    profiles[profile.name] = profile;
+    DefaultStore.set(`Profiles/${profile.name}`, profile);
+    CacheProxy.put(`Profiles`, JSON.stringify(profiles));
   }
 
   static deleteProfile(profile: Profile) {

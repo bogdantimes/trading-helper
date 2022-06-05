@@ -1,5 +1,11 @@
 import { DefaultStore, IStore } from "./Store"
-import { ExchangeSymbol, IPriceProvider, TradeMemo, TradeResult, TradeState } from "trading-helper-lib"
+import {
+  ExchangeSymbol,
+  IPriceProvider,
+  TradeMemo,
+  TradeResult,
+  TradeState,
+} from "trading-helper-lib"
 import { Exchange } from "./Exchange"
 import { PriceProvider } from "./PriceProvider"
 import { CacheProxy } from "./CacheProxy"
@@ -8,9 +14,9 @@ export class TradeActions {
   private readonly store: IStore
   private readonly priceProvider: IPriceProvider
 
-  static default(): TradeActions {
+  static default(store: IStore = DefaultStore): TradeActions {
     const exchange = new Exchange(DefaultStore.getConfig())
-    return new TradeActions(DefaultStore, new PriceProvider(exchange, CacheProxy))
+    return new TradeActions(store, new PriceProvider(exchange, CacheProxy))
   }
 
   private constructor(store: IStore, priceProvider: IPriceProvider) {

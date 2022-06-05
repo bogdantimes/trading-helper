@@ -1,5 +1,5 @@
 import { Statistics } from "../Statistics"
-import { DefaultStore, IStore } from "../Store"
+import { IStore } from "../Store"
 import { IExchange } from "../Exchange"
 import { Log } from "../Common"
 import {
@@ -7,17 +7,18 @@ import {
   Config,
   ExchangeSymbol,
   f2,
+  ICacheProxy,
   PriceHoldersMap,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
   TradeState,
 } from "trading-helper-lib"
-import { CacheProxy } from "../CacheProxy"
 import { PriceProvider } from "../PriceProvider"
 
 export class DefaultTrader {
   private readonly store: IStore
+  private readonly cache: ICacheProxy
   private readonly config: Config
   private readonly exchange: IExchange
   private readonly stats: Statistics
@@ -32,8 +33,15 @@ export class DefaultTrader {
    */
   private readonly numberOfBoughtAssets: number
 
-  constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
+  constructor(
+    store: IStore,
+    cache: ICacheProxy,
+    exchange: IExchange,
+    priceProvider: PriceProvider,
+    stats: Statistics,
+  ) {
     this.store = store
+    this.cache = cache
     this.config = store.getConfig()
     this.prices = priceProvider.get(this.config.StableCoin)
     this.exchange = exchange
@@ -212,7 +220,7 @@ export class DefaultTrader {
       Log.alert(
         `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
       )
-      DefaultStore.changeTrade(lowestPLTrade.getCoinName(), (tm) => {
+      this.store.changeTrade(lowestPLTrade.getCoinName(), (tm) => {
         this.buy(tm, tradeResult.gained)
         return tm
       })
@@ -250,7 +258,7 @@ export class DefaultTrader {
 
   private updateBNBBalance(quantity: number): boolean {
     let updated = false
-    DefaultStore.changeTrade(`BNB`, (tm) => {
+    this.store.changeTrade(`BNB`, (tm) => {
       // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
       // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
       tm.tradeResult.addQuantity(quantity, 0)
@@ -267,6 +275,6 @@ export class DefaultTrader {
       const balance = this.exchange.getFreeAsset(coin)
       balance && stableCoins.push(new Coin(coin, balance))
     })
-    CacheProxy.put(CacheProxy.StableCoins, JSON.stringify(stableCoins))
+    this.cache.put(`StableCoins`, JSON.stringify(stableCoins))
   }
 }

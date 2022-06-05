@@ -26,7 +26,7 @@ export class ScoreTrader {
       const recommended = scoresData.recommended.slice(0, tradeBestScores)
 
       // buy new coins from recommended list
-      const tradeActions = TradeActions.default()
+      const tradeActions = TradeActions.default(this.store)
       recommended
         .filter((cs) => !this.store.hasTrade(cs.coinName))
         .forEach((cs) => tradeActions.buy(cs.coinName))

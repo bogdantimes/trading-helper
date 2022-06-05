@@ -41,7 +41,7 @@ export class PriceProvider implements IPriceProvider {
     const curMaps = {}
     const newMaps = {}
 
-    enumKeys(StableUSDCoin).forEach(stableCoin => {
+    enumKeys<keyof typeof StableUSDCoin>(StableUSDCoin).forEach(stableCoin => {
       curMaps[stableCoin] = this.getFromCache(stableCoin as StableUSDCoin)
       newMaps[stableCoin] = {}
     })

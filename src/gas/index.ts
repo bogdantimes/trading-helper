@@ -84,7 +84,7 @@ function stopTicker() {
 function slowDownTemporarily(durationSec: number) {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
   ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL_MIN).create()
-  ScriptApp.newTrigger(start.name)
+  ScriptApp.newTrigger(global.start.name)
     .timeBased()
     .after(durationSec * 1000)
     .create()
@@ -252,10 +252,12 @@ function getCoinNames(): CoinName[] {
 function createAutoTradeProfiles(): void {
   return catchError(() => {
     enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
-      const profile = { name: `AutoTrade${sel}Top3` }
+      const profile = { name: `AutoTrade${sel}Top1` }
       const profileConfig = FirebaseStore.newProfileConfig();
       profileConfig.ScoreSelectivity = sel
-      profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP3
+      profileConfig.BuyQuantity = 11
+      profileConfig.ProfitLimit = 0.05
+      profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP1
       profileConfig.SellAtProfitLimit = true
       profileConfig.SellAtStopLimit = true
       profileConfig.ProfitBasedStopLimit = true
