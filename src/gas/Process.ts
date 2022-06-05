@@ -54,7 +54,7 @@ export class Process {
     }
 
     try {
-      new AnomalyTrader(store, priceProvider).trade()
+      new AnomalyTrader(store, CacheProxy, priceProvider).trade()
     } catch (e) {
       Log.alert(`Failed to trade price anomalies`)
       Log.error(e)

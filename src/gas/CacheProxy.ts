@@ -8,11 +8,15 @@ function byteCount(s: string): number {
   return encodeURI(s).split(/%..|./).length - 1
 }
 
-class DefaultCacheProxy implements ICacheProxy {
+export class DefaultCacheProxy implements ICacheProxy {
   readonly StableCoins = `StableCoins`
 
   get(key: string): string | null {
     return CacheService.getScriptCache().get(key)
+  }
+
+  getAll(keys: string[]): { [key: string]: any } {
+    return CacheService.getScriptCache().getAll(keys)
   }
 
   /**
