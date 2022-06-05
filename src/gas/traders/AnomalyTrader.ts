@@ -1,5 +1,5 @@
 import { CacheProxy } from "../CacheProxy"
-import { Log } from "../Common"
+import { Log, SECONDS_IN_MIN } from "../Common"
 import {
   absPercentageChange,
   CoinName, Config,
@@ -57,9 +57,11 @@ export class AnomalyTrader {
 
     if (tracking || ph.priceGoesStrongUp() || ph.priceGoesStrongDown()) {
       !anomalyStartPrice && Log.alert(`${coin} price anomaly detected`)
-      // If price STRONG move repeats within 2 minutes, we keep tracking the anomaly
-      CacheProxy.put(trackingKey, `true`, 120)
-      CacheProxy.put(startPriceKey, anomalyStartPrice || ph.prices[0].toString())
+      // If price STRONG move repeats within 3 minutes, we keep tracking the anomaly
+      CacheProxy.put(trackingKey, `true`, SECONDS_IN_MIN * 3)
+      // Saving the max or min price of the anomaly depending on the direction
+      const minMaxPrice = ph.priceGoesStrongUp() ? Math.min(...ph.prices) : Math.max(...ph.prices)
+      CacheProxy.put(startPriceKey, `${anomalyStartPrice || minMaxPrice}`)
       return PriceAnomaly.TRACKING
     }
 
