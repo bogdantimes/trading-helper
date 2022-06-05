@@ -65,7 +65,13 @@ export class Process {
 
       const profileScoresTradesStart = Date.now()
       try {
-        new ScoreTrader(store, scores).trade()
+        // TODO: use same scores but get recommended for profile
+        const profileScores = global.TradingHelperScores.create(
+          CacheProxy,
+          store,
+          priceProvider,
+        ) as IScores
+        new ScoreTrader(store, profileScores).trade()
       } catch (e) {
         Log.alert(`Failed to trade recommended coins`)
         Log.error(e)
