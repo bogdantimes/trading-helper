@@ -45,8 +45,9 @@ export default function App() {
 
   useEffect(initialFetch, [])
   useEffect(() => {
-    // data re-fetch happens only if it is not the initial setup state
-    const interval = setInterval(() => !initialSetup && reFetchData(), 10000) // 10 seconds
+    // re-fetch config from time to time just to synchronize it in case changes
+    // were made in different browser tabs, etc.
+    const interval = setInterval(() => !initialSetup && reFetchData(), 60000) // 60 seconds
     return () => clearInterval(interval)
   }, [initialSetup])
 
@@ -118,7 +119,7 @@ export default function App() {
             <Info />
           </TabPanel>
           <TabPanel value={value} index={3}>
-            <Settings />
+            <Settings config={config} setConfig={setConfig}/>
           </TabPanel>
         </Box>
       )}

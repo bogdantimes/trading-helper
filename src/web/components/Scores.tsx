@@ -53,7 +53,7 @@ export function Scores({ config }: { config: Config }) {
       {scoresData && scoresData.realData && (
         <Stack spacing={2}>
           {marketMoveBlock(scoresData)}
-          {recommendedList(scoresData, buy, config.AutoTradeBestScores)}
+          {recommendedList(scoresData, buy, config)}
           <Stack alignSelf={`center`} direction={`row`}>
             {!!scoresData.recommended.length && (
               <Button
@@ -85,10 +85,12 @@ export function Scores({ config }: { config: Config }) {
 function recommendedList(
   scoresData: ScoresData,
   buy: (coinName: string) => void,
-  autoTrade: AutoTradeBestScores,
+  config: Config,
 ) {
   const theme = useTheme()
 
+  const autoTrade = config.AutoTradeBestScores
+  const selectivity = config.ScoreSelectivity
   return (
     <>
       <Typography alignSelf={`center`} variant={`subtitle1`}>
@@ -126,7 +128,7 @@ function recommendedList(
                   <ListItemText
                     sx={{ margin: `3px 0 0 0` }}
                     primary={cs.coinName}
-                    secondary={`Score: ${cs.score}`}
+                    secondary={`Score: ${cs.getScore(selectivity)}`}
                   />
                 </ListItem>
               )
