@@ -40,8 +40,8 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
   }
 
   const chartOpts: DeepPartial<ChartOptions> = {
-    width: 300,
-    height: 200,
+    width: 260,
+    height: 180,
     timeScale: { visible: false },
     handleScroll: false,
     handleScale: false,
