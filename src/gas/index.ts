@@ -1,4 +1,4 @@
-import { DefaultStore } from "./Store"
+import { DefaultStore, FirebaseStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
@@ -6,11 +6,15 @@ import { IScores } from "./Scores"
 import { Log, SECONDS_IN_MIN, SLOW_TICK_INTERVAL_MIN, TICK_INTERVAL_MIN } from "./Common"
 import {
   AssetsResponse,
+  AutoTradeBestScores,
   Coin,
   CoinName,
   Config,
+  enumKeys,
   InitialSetupParams,
   ScoresData,
+  ScoreSelectivity,
+  ScoreSelectivityKeys,
   Stats,
   TradeMemo,
 } from "trading-helper-lib"
@@ -215,7 +219,11 @@ function getScores(): ScoresData {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
+    const scores = global.TradingHelperScores.create(
+      CacheProxy,
+      DefaultStore,
+      priceProvider,
+    ) as IScores
     return scores.get()
   })
 }
@@ -224,7 +232,11 @@ function resetScores(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
+    const scores = global.TradingHelperScores.create(
+      CacheProxy,
+      DefaultStore,
+      priceProvider,
+    ) as IScores
     return scores.reset()
   })
 }
@@ -234,6 +246,22 @@ function getCoinNames(): CoinName[] {
     const exchange = new Exchange(DefaultStore.getConfig())
     const priceProvider = new PriceProvider(exchange, CacheProxy)
     return priceProvider.getCoinNames(DefaultStore.getConfig().StableCoin)
+  })
+}
+
+function createAutoTradeProfiles(): void {
+  return catchError(() => {
+    enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
+      const profile = { name: `AutoTrade${sel}Top3` }
+      const profileConfig = FirebaseStore.newProfileConfig();
+      profileConfig.ScoreSelectivity = sel
+      profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP3
+      profileConfig.SellAtProfitLimit = true
+      profileConfig.SellAtStopLimit = true
+      profileConfig.ProfitBasedStopLimit = true
+      FirebaseStore.createProfile(profile, profileConfig)
+      Log.alert(`Created profile ${profile.name}`)
+    })
   })
 }
 
@@ -258,3 +286,4 @@ global.getStatistics = getStatistics
 global.getScores = getScores
 global.resetScores = resetScores
 global.getCoinNames = getCoinNames
+global.createAutoTradeProfiles = createAutoTradeProfiles

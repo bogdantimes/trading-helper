@@ -1,19 +1,21 @@
-import { CacheProxy } from "./CacheProxy"
+import { DefaultCacheProxy } from "./CacheProxy";
 import {
   AutoTradeBestScores,
   Config,
+  ICacheProxy,
   PriceProvider,
-  ScoreSelectivity, ScoreSelectivityKeys,
+  ScoreSelectivity,
+  ScoreSelectivityKeys,
   StableUSDCoin,
   TradeMemo,
   TradeState
 } from "trading-helper-lib";
-import { Log } from "./Common"
+import { Log, Profile } from "./Common";
 
 export class DeadlineError extends Error {
   constructor(message: string) {
-    super(message)
-    this.name = `DeadlineError`
+    super(message);
+    this.name = `DeadlineError`;
   }
 }
 
@@ -48,46 +50,127 @@ export interface IStore {
 }
 
 export class FirebaseStore implements IStore {
-  private source: object
+  private source: object;
+  private readonly cache: ICacheProxy;
+  private readonly profile: Profile;
 
-  constructor() {
+  constructor(profile: Profile = { name: `` }) {
+    this.profile = profile;
+    this.cache = new DefaultCacheProxy(profile);
+
     if (this.url) {
       // @ts-ignore
-      this.source = FirebaseApp.getDatabaseByUrl(this.url, ScriptApp.getOAuthToken())
+      this.source = FirebaseApp.getDatabaseByUrl(this.url, ScriptApp.getOAuthToken());
     } else {
-      Log.info(`Firebase Realtime Database is not connected.`)
-      Log.info(`Google Apps Script property 'dbURL' is missing.`)
+      Log.info(`Firebase Realtime Database is not connected.`);
+      Log.info(`Google Apps Script property 'dbURL' is missing.`);
     }
     // If URL changed - clean trades and config cache
-    const cachedURL = CacheProxy.get(`dbURL`)
+    const cachedURL = this.cache.get(`dbURL`);
     if (!!cachedURL && cachedURL !== this.url) {
-      Log.alert(`Firebase Realtime Database URL changed.`)
-      CacheProxy.remove(`Trades`)
-      CacheProxy.remove(`Config`)
+      Log.alert(`Firebase Realtime Database URL changed.`);
+      this.cache.remove(`Trades`);
+      this.cache.remove(`Config`);
     }
-    CacheProxy.put(`dbURL`, this.url)
+    this.cache.put(`dbURL`, this.url);
   }
 
   get url(): string {
-    return PropertiesService.getScriptProperties().getProperty(`dbURL`)
+    return PropertiesService.getScriptProperties().getProperty(`dbURL`);
   }
 
   set url(url: string) {
-    PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
+    PropertiesService.getScriptProperties().setProperty(`dbURL`, url);
   }
 
   connect(dbURL: string) {
     // @ts-ignore
-    this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken())
-    this.url = dbURL
+    this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken());
+    this.url = dbURL;
   }
 
   isConnected(): boolean {
-    return !!this.source
+    return !!this.source;
+  }
+
+  static getProfiles(): { [key: string]: Profile } {
+    return DefaultStore.get(`Profiles`) || {};
+  }
+
+  static newProfileConfig(): Config {
+    const { KEY, SECRET } = DefaultStore.getConfig();
+    const defaultConfig = FirebaseStore.getDefaultConfig();
+    return Object.assign(defaultConfig, { KEY, SECRET })
+  }
+
+  static createProfile(profile: Profile, config: Config): void {
+    const profiles = FirebaseStore.getProfiles();
+    if (profiles[profile.name]) {
+      throw new Error(`Profile with name ${profile.name} already exists.`);
+    }
+    const profileStore = new FirebaseStore(profile);
+    profileStore.set(`Config`, config);
+  }
+
+  static deleteProfile(profile: Profile) {
+    const profiles = FirebaseStore.getProfiles();
+    if (!profiles[profile.name]) {
+      throw new Error(`Profile with name ${profile.name} does not exist.`);
+    }
+    const profileStore = new FirebaseStore(profile);
+    profileStore.delete(`Config`);
+    DefaultStore.delete(`Profiles/${profile.name}`);
   }
 
   getConfig(): Config {
-    const defaultConfig: Config = {
+    const defaultConfig = FirebaseStore.getDefaultConfig();
+    const configCacheJson = this.cache.get(`Config`);
+    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null;
+    if (!configCache) {
+      configCache = this.getOrSet(`Config`, defaultConfig);
+    }
+    // apply existing config on top of default one
+    configCache = Object.assign(defaultConfig, configCache);
+
+    if (configCache.ScoreUpdateThreshold === 0.05) {
+      // 0.05 used to be a default value, no it's not
+      configCache.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold;
+    }
+
+    if (configCache.ScoreUpdateThreshold) {
+      configCache.ScoreSelectivity = ScoreSelectivity[
+        configCache.ScoreUpdateThreshold
+        ] as ScoreSelectivityKeys;
+      delete configCache.ScoreUpdateThreshold;
+    }
+
+    if (configCache.TakeProfit) {
+      configCache.ProfitLimit = configCache.TakeProfit;
+      delete configCache.TakeProfit;
+    }
+
+    if (configCache.SellAtTakeProfit) {
+      configCache.SellAtProfitLimit = configCache.SellAtTakeProfit;
+      delete configCache.SellAtTakeProfit;
+    }
+
+    if (configCache.LossLimit) {
+      configCache.StopLimit = configCache.LossLimit;
+      delete configCache.LossLimit;
+    }
+
+    if (configCache.PriceAsset) {
+      configCache.StableCoin = <StableUSDCoin>configCache.PriceAsset;
+      delete configCache.PriceAsset;
+    }
+
+    this.cache.put(`Config`, JSON.stringify(configCache));
+
+    return configCache;
+  }
+
+  static getDefaultConfig(): Config {
+    return {
       BuyQuantity: 10,
       StableCoin: StableUSDCoin.USDT,
       StopLimit: 0.05,
@@ -100,108 +183,71 @@ export class FirebaseStore implements IStore {
       ProfitBasedStopLimit: false,
       PriceAnomalyAlert: 5,
       ScoreSelectivity: `MODERATE`,
-      AutoTradeBestScores: AutoTradeBestScores.OFF,
-    }
-    const configCacheJson = CacheProxy.get(`Config`)
-    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null
-    if (!configCache) {
-      configCache = this.getOrSet(`Config`, defaultConfig)
-    }
-    // apply existing config on top of default one
-    configCache = Object.assign(defaultConfig, configCache)
-
-    if (configCache.ScoreUpdateThreshold === 0.05) { // 0.05 used to be a default value, no it's not
-      configCache.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold
-    }
-
-    if (configCache.ScoreUpdateThreshold) {
-      configCache.ScoreSelectivity = ScoreSelectivity[configCache.ScoreUpdateThreshold] as ScoreSelectivityKeys
-      delete configCache.ScoreUpdateThreshold
-    }
-
-    if (configCache.TakeProfit) {
-      configCache.ProfitLimit = configCache.TakeProfit
-      delete configCache.TakeProfit
-    }
-
-    if (configCache.SellAtTakeProfit) {
-      configCache.SellAtProfitLimit = configCache.SellAtTakeProfit
-      delete configCache.SellAtTakeProfit
-    }
-
-    if (configCache.LossLimit) {
-      configCache.StopLimit = configCache.LossLimit
-      delete configCache.LossLimit
-    }
-
-    if (configCache.PriceAsset) {
-      configCache.StableCoin = <StableUSDCoin>configCache.PriceAsset
-      delete configCache.PriceAsset
-    }
-
-    CacheProxy.put(`Config`, JSON.stringify(configCache))
-
-    return configCache
+      AutoTradeBestScores: AutoTradeBestScores.OFF
+    };
   }
 
   setConfig(config: Config): void {
-    this.set(`Config`, config)
-    CacheProxy.put(`Config`, JSON.stringify(config))
+    this.set(`Config`, config);
+    this.cache.put(`Config`, JSON.stringify(config));
   }
 
   delete(key: string) {
+    key = `${this.profile.name}${key}`;
     if (!this.isConnected()) {
-      throw new Error(`Firebase is not connected.`)
+      throw new Error(`Firebase is not connected.`);
     }
     // @ts-ignore
-    this.source.removeData(key)
+    this.source.removeData(key);
   }
 
   get(key: string): any {
+    key = `${this.profile.name}${key}`;
     if (!this.isConnected()) {
-      throw new Error(`Firebase is not connected.`)
+      throw new Error(`Firebase is not connected.`);
     }
     // @ts-ignore
-    return this.source.getData(key)
+    return this.source.getData(key);
   }
 
   getOrSet(key: string, value: any): any {
-    const val = this.get(key) || value
+    const val = this.get(key) || value;
     // @ts-ignore
-    this.source.setData(key, val)
-    return val
+    this.source.setData(key, val);
+    return val;
   }
 
   set(key: string, value: any): any {
+    key = `${this.profile.name}${key}`;
     if (!this.isConnected()) {
-      throw new Error(`Firebase is not connected.`)
+      throw new Error(`Firebase is not connected.`);
     }
     // @ts-ignore
-    this.source.setData(key, value)
-    return value
+    this.source.setData(key, value);
+    return value;
   }
 
   getTrades(): { [p: string]: TradeMemo } {
-    const tradesCacheJson = CacheProxy.get(`Trades`)
-    let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null
+    const tradesCacheJson = this.cache.get(`Trades`);
+    let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null;
     if (!tradesCache) {
-      tradesCache = this.getOrSet(`trade`, {})
-      CacheProxy.put(`Trades`, JSON.stringify(tradesCache))
+      tradesCache = this.getOrSet(`trade`, {});
+      this.cache.put(`Trades`, JSON.stringify(tradesCache));
     }
     // Convert raw trades to TradeMemo objects
     return Object.keys(tradesCache).reduce((acc, key) => {
-      acc[key] = TradeMemo.fromObject(tradesCache[key])
-      return acc
-    }, {})
+      acc[key] = TradeMemo.fromObject(tradesCache[key]);
+      return acc;
+    }, {});
   }
 
   getTradesList(state?: TradeState): TradeMemo[] {
-    const values = Object.values(this.getTrades())
-    return state ? values.filter((trade) => trade.stateIs(state)) : values
+    const values = Object.values(this.getTrades());
+    return state ? values.filter((trade) => trade.stateIs(state)) : values;
   }
 
   hasTrade(coinName: string): boolean {
-    return !!this.getTrades()[coinName]
+    return !!this.getTrades()[coinName];
   }
 
   /**
@@ -223,54 +269,54 @@ export class FirebaseStore implements IStore {
   changeTrade(
     coinName: string,
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined,
+    notFoundFn?: () => TradeMemo | undefined
   ): void {
-    coinName = coinName.toUpperCase()
-    const key = `TradeLocker_${coinName}`
+    coinName = coinName.toUpperCase();
+    const key = `TradeLocker_${coinName}`;
     try {
-      while (CacheProxy.get(key)) Utilities.sleep(200)
-      const deadline = 30 // Lock for 30 seconds to give a function enough time for com w/ Binance
-      CacheProxy.put(key, `true`, deadline)
+      while (this.cache.get(key)) Utilities.sleep(200);
+      const deadline = 30; // Lock for 30 seconds to give a function enough time for com w/ Binance
+      this.cache.put(key, `true`, deadline);
 
-      const trade = this.getTrades()[coinName]
+      const trade = this.getTrades()[coinName];
       // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
       // otherwise changedTrade is null.
-      const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
+      const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null;
 
-      if (!CacheProxy.get(key)) {
+      if (!this.cache.get(key)) {
         throw new DeadlineError(
-          `Couldn't apply ${coinName} change within ${deadline} seconds deadline. Please, try again.`,
-        )
+          `Couldn't apply ${coinName} change within ${deadline} seconds deadline. Please, try again.`
+        );
       }
 
       if (changedTrade) {
-        changedTrade.deleted ? this.deleteTrade(changedTrade) : this.setTrade(changedTrade)
+        changedTrade.deleted ? this.deleteTrade(changedTrade) : this.setTrade(changedTrade);
       }
     } finally {
-      CacheProxy.remove(key)
+      this.cache.remove(key);
     }
   }
 
   private setTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades()
-    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
-    CacheProxy.put(`Trades`, JSON.stringify(trades))
+    const trades = this.getTrades();
+    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo;
+    this.cache.put(`Trades`, JSON.stringify(trades));
   }
 
   private deleteTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades()
-    delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
-    CacheProxy.put(`Trades`, JSON.stringify(trades))
+    const trades = this.getTrades();
+    delete trades[tradeMemo.tradeResult.symbol.quantityAsset];
+    this.cache.put(`Trades`, JSON.stringify(trades));
   }
 
   dumpChanges() {
-    const key = `FirebaseTradesSynced`
-    if (!CacheProxy.get(key)) {
-      this.set(`trade`, this.getTrades())
+    const key = `FirebaseTradesSynced`;
+    if (!this.cache.get(key)) {
+      this.set(`trade`, this.getTrades());
       // Sync trades with firebase every 5 minutes
-      CacheProxy.put(key, `true`, 300)
+      this.cache.put(key, `true`, 300);
     }
   }
 }
 
-export const DefaultStore = new FirebaseStore()
+export const DefaultStore = new FirebaseStore();

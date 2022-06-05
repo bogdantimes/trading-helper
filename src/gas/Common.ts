@@ -104,3 +104,7 @@ export class StableCoinMatcher {
     return this.match ? this.match[2] as StableUSDCoin : null
   }
 }
+
+export interface Profile {
+  name: string
+}
