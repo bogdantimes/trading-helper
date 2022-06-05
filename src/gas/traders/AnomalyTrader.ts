@@ -56,7 +56,6 @@ export class AnomalyTrader {
     const anomalyStartPrice = CacheProxy.get(startPriceKey)
 
     if (tracking || ph.priceGoesStrongUp() || ph.priceGoesStrongDown()) {
-      !anomalyStartPrice && Log.alert(`${coin} price anomaly detected`)
       // If price STRONG move repeats within 3 minutes, we keep tracking the anomaly
       CacheProxy.put(trackingKey, `true`, SECONDS_IN_MIN * 3)
       // Saving the max or min price of the anomaly depending on the direction
