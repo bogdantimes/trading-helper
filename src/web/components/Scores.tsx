@@ -14,7 +14,14 @@ import {
   Typography,
   useTheme,
 } from "@mui/material"
-import { capitalizeWord, circularProgress, confirmBuy, growthIconMap } from "./Common"
+import {
+  capitalizeWord,
+  cardWidth,
+  circularProgress,
+  confirmBuy,
+  growthIconMap,
+  selectivityColorMap,
+} from "./Common"
 import {
   AutoTradeBestScores,
   CoinScore,
@@ -53,7 +60,7 @@ export function Scores({ config }: { config: Config }) {
       {scoresData && scoresData.realData && (
         <Stack spacing={2}>
           {marketMoveBlock(scoresData)}
-          {recommendedList(scoresData, buy, config.AutoTradeBestScores)}
+          {recommendedList(scoresData, buy, config)}
           <Stack alignSelf={`center`} direction={`row`}>
             {!!scoresData.recommended.length && (
               <Button
@@ -82,17 +89,20 @@ export function Scores({ config }: { config: Config }) {
   )
 }
 
-function recommendedList(
-  scoresData: ScoresData,
-  buy: (coinName: string) => void,
-  autoTrade: AutoTradeBestScores,
-) {
+function recommendedList(scoresData: ScoresData, buy: (coinName: string) => void, config: Config) {
   const theme = useTheme()
 
+  const autoTrade = config.AutoTradeBestScores
+  const selectivity = config.ScoreSelectivity
+  const selectivityMark = (
+    <Typography color={theme.palette[selectivityColorMap[selectivity]].main}>
+      {selectivity[0]}
+    </Typography>
+  )
   return (
     <>
       <Typography alignSelf={`center`} variant={`subtitle1`}>
-        Recommended Coins
+        Recommended Coins ({selectivityMark})
       </Typography>
       {!scoresData.recommended.length && (
         <Typography alignSelf={`center`} variant={`body2`}>
@@ -102,7 +112,7 @@ function recommendedList(
       {!!scoresData.recommended.length && (
         <Stack>
           {getAlert(autoTrade)}
-          <List sx={{ padding: 0, marginTop: 0, width: 332 }}>
+          <List sx={{ padding: 0, marginTop: 0, width: cardWidth }}>
             {scoresData.recommended.map((rJson, i) => {
               const cs = CoinScore.fromObject(rJson)
               const order = i + 1
@@ -126,7 +136,7 @@ function recommendedList(
                   <ListItemText
                     sx={{ margin: `3px 0 0 0` }}
                     primary={cs.coinName}
-                    secondary={`Score: ${cs.score}`}
+                    secondary={`Score: ${cs.getScore(selectivity)}`}
                   />
                 </ListItem>
               )

@@ -3,11 +3,11 @@ import {
   AutoTradeBestScores,
   Config,
   PriceProvider,
-  ScoreSelectivity,
+  ScoreSelectivity, ScoreSelectivityKeys,
   StableUSDCoin,
   TradeMemo,
-  TradeState,
-} from "trading-helper-lib"
+  TradeState
+} from "trading-helper-lib";
 import { Log } from "./Common"
 
 export class DeadlineError extends Error {
@@ -99,7 +99,7 @@ export class FirebaseStore implements IStore {
       AveragingDown: false,
       ProfitBasedStopLimit: false,
       PriceAnomalyAlert: 5,
-      ScoreUpdateThreshold: ScoreSelectivity.MODERATE,
+      ScoreSelectivity: `MODERATE`,
       AutoTradeBestScores: AutoTradeBestScores.OFF,
     }
     const configCacheJson = CacheProxy.get(`Config`)
@@ -112,6 +112,11 @@ export class FirebaseStore implements IStore {
 
     if (configCache.ScoreUpdateThreshold === 0.05) { // 0.05 used to be a default value, no it's not
       configCache.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold
+    }
+
+    if (configCache.ScoreUpdateThreshold) {
+      configCache.ScoreSelectivity = ScoreSelectivity[configCache.ScoreUpdateThreshold] as ScoreSelectivityKeys
+      delete configCache.ScoreUpdateThreshold
     }
 
     if (configCache.TakeProfit) {

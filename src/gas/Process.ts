@@ -1,12 +1,13 @@
-import { V2Trader } from "./Trader"
+import { DefaultTrader } from "./traders/DefaultTrader"
 import { Exchange } from "./Exchange"
 import { Statistics } from "./Statistics"
 import { DeadlineError, DefaultStore } from "./Store"
 import { Log } from "./Common"
-import { ScoreTrader } from "./ScoreTrader"
+import { ScoreTrader } from "./traders/ScoreTrader"
 import { CacheProxy } from "./CacheProxy"
 import { IScores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
+import { AnomalyTrader } from "./traders/AnomalyTrader"
 
 export class Process {
   static tick() {
@@ -15,7 +16,7 @@ export class Process {
     const exchange = new Exchange(config)
     const statistics = new Statistics(store)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const trader = new V2Trader(store, exchange, priceProvider, statistics)
+    const trader = new DefaultTrader(store, exchange, priceProvider, statistics)
     const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
 
     store.getTradesList().forEach((trade) => {
@@ -46,9 +47,16 @@ export class Process {
     }
 
     try {
-      new ScoreTrader(store, priceProvider, scores).trade()
+      new ScoreTrader(store, scores).trade()
     } catch (e) {
       Log.alert(`Failed to trade recommended coins`)
+      Log.error(e)
+    }
+
+    try {
+      new AnomalyTrader(store, priceProvider).trade()
+    } catch (e) {
+      Log.alert(`Failed to trade price anomalies`)
       Log.error(e)
     }
 

@@ -1,8 +1,7 @@
-import { Statistics } from "./Statistics"
-import { DefaultStore, IStore } from "./Store"
-import { IExchange } from "./Exchange"
-import { PriceAnomaly, PriceAnomalyChecker } from "./PriceAnomalyChecker"
-import { Log } from "./Common"
+import { Statistics } from "../Statistics"
+import { DefaultStore, IStore } from "../Store"
+import { IExchange } from "../Exchange"
+import { Log } from "../Common"
 import {
   Coin,
   Config,
@@ -14,10 +13,10 @@ import {
   TradeResult,
   TradeState,
 } from "trading-helper-lib"
-import { CacheProxy } from "./CacheProxy"
-import { PriceProvider } from "./PriceProvider"
+import { CacheProxy } from "../CacheProxy"
+import { PriceProvider } from "../PriceProvider"
 
-export class V2Trader {
+export class DefaultTrader {
   private readonly store: IStore
   private readonly config: Config
   private readonly exchange: IExchange
@@ -48,12 +47,6 @@ export class V2Trader {
 
   tickerCheck(tm: TradeMemo): TradeMemo {
     this.pushNewPrice(tm)
-
-    const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
-    if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
-      Log.alert(`ℹ️ Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
-      tm.setState(TradeState.BUY)
-    }
 
     if (tm.stateIs(TradeState.BOUGHT)) {
       this.processBoughtState(tm)
@@ -147,7 +140,7 @@ export class V2Trader {
       try {
         // flatten out prices to make them not cross any limits right after the trade
         tm.prices = [tradeResult.price]
-        // join existing trade result quantity, commission, paid price, etc with the new one
+        // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult)
         // set the stop limit according to the current settings
         this.forceUpdateStopLimit(tm)

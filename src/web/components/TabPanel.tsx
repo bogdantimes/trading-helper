@@ -13,6 +13,7 @@ export function TabPanel(props: TabPanelProps) {
 
   return (
     <Container
+      disableGutters={true}
       role="tabpanel"
       hidden={value !== index}
       id={`simple-tabpanel-${index}`}
