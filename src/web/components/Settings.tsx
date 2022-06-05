@@ -20,7 +20,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material"
-import { capitalizeWord, circularProgress } from "./Common"
+import { capitalizeWord, circularProgress, selectivityColorMap } from "./Common"
 import {
   AutoTradeBestScores,
   Config,
@@ -238,13 +238,6 @@ function scoreThresholdSelector(config: Config, setConfig: (config: Config) => v
       </RadioGroup>
     </FormControl>
   )
-}
-
-const selectivityColorMap: { [key in ScoreSelectivityKeys]: string } = {
-  EXTREME: `error`,
-  HIGH: `warning`,
-  MODERATE: `info`,
-  MINIMAL: `success`,
 }
 
 function autonomousTrading(config: Config, setConfig: (config: Config) => void) {

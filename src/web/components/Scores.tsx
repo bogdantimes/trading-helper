@@ -14,7 +14,14 @@ import {
   Typography,
   useTheme,
 } from "@mui/material"
-import { capitalizeWord, cardWidth, circularProgress, confirmBuy, growthIconMap } from "./Common"
+import {
+  capitalizeWord,
+  cardWidth,
+  circularProgress,
+  confirmBuy,
+  growthIconMap,
+  selectivityColorMap,
+} from "./Common"
 import {
   AutoTradeBestScores,
   CoinScore,
@@ -82,19 +89,20 @@ export function Scores({ config }: { config: Config }) {
   )
 }
 
-function recommendedList(
-  scoresData: ScoresData,
-  buy: (coinName: string) => void,
-  config: Config,
-) {
+function recommendedList(scoresData: ScoresData, buy: (coinName: string) => void, config: Config) {
   const theme = useTheme()
 
   const autoTrade = config.AutoTradeBestScores
   const selectivity = config.ScoreSelectivity
+  const selectivityMark = (
+    <Typography color={theme.palette[selectivityColorMap[selectivity]].main}>
+      {selectivity[0]}
+    </Typography>
+  )
   return (
     <>
       <Typography alignSelf={`center`} variant={`subtitle1`}>
-        Recommended Coins
+        Recommended Coins ({selectivityMark})
       </Typography>
       {!scoresData.recommended.length && (
         <Typography alignSelf={`center`} variant={`body2`}>
