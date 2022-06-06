@@ -1,4 +1,4 @@
-import { Log, SECONDS_IN_MIN } from "../Common";
+import { Log, SECONDS_IN_MIN } from "../Common"
 import {
   absPercentageChange,
   CoinName,
@@ -6,11 +6,11 @@ import {
   IPriceProvider,
   PriceHoldersMap,
   PricesHolder,
-  TradeState
-} from "trading-helper-lib";
-import { TradeActions } from "../TradeActions";
-import { IStore } from "../Store";
-import { DefaultCacheProxy } from "../CacheProxy";
+  TradeState,
+} from "trading-helper-lib"
+import { TradeActions } from "../TradeActions"
+import { IStore } from "../Store"
+import { CacheProxy } from "../CacheProxy"
 
 export enum PriceAnomaly {
   NONE,
@@ -21,12 +21,12 @@ export enum PriceAnomaly {
 
 export class AnomalyTrader {
   private readonly store: IStore
-  private readonly cache: DefaultCacheProxy
+  private readonly cache: CacheProxy
   private readonly config: Config
   private readonly priceProvider: IPriceProvider
   private readonly tradeActions: TradeActions
 
-  constructor(store: IStore, cache: DefaultCacheProxy, priceProvider: IPriceProvider) {
+  constructor(store: IStore, cache: CacheProxy, priceProvider: IPriceProvider) {
     this.store = store
     this.cache = cache
     this.config = store.getConfig()
@@ -38,7 +38,7 @@ export class AnomalyTrader {
     const prices = this.priceProvider.get(this.config.StableCoin)
 
     // Performance improvement: populating cache map once for all
-    const cacheMap = this.populateCacheMap(prices);
+    const cacheMap = this.populateCacheMap(prices)
 
     Object.keys(prices).forEach((coin: CoinName) => {
       const anomaly = this.check(coin, prices[coin], cacheMap)
@@ -46,7 +46,7 @@ export class AnomalyTrader {
         Log.alert(`ℹ️ Buying price dumps is enabled: ${coin} will be bought.`)
         this.tradeActions.buy(coin)
       } else if (anomaly === PriceAnomaly.PUMP && this.config.SellPumps) {
-        this.store.changeTrade(coin, tm => {
+        this.store.changeTrade(coin, (tm) => {
           if (tm.profit() > 0) {
             Log.alert(`ℹ️ Selling price pumps is enabled: ${coin} will be sold.`)
             tm.setState(TradeState.SELL)
@@ -58,12 +58,12 @@ export class AnomalyTrader {
   }
 
   private populateCacheMap(prices: PriceHoldersMap) {
-    const cacheKeys = [];
-    Object.keys(prices).forEach(coin => {
-      cacheKeys.push(`${coin}-pump-dump-tracking`);
-      cacheKeys.push(`${coin}-start-price`);
-    });
-    return this.cache.getAll(cacheKeys);
+    const cacheKeys = []
+    Object.keys(prices).forEach((coin) => {
+      cacheKeys.push(`${coin}-pump-dump-tracking`)
+      cacheKeys.push(`${coin}-start-price`)
+    })
+    return this.cache.getAll(cacheKeys)
   }
 
   private check(coin: CoinName, ph: PricesHolder, cacheMap: { [key: string]: any }): PriceAnomaly {

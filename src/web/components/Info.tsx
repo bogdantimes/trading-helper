@@ -3,14 +3,14 @@ import { useEffect } from "react"
 import { Alert, Box, ListItem, ListItemAvatar, ListItemText, Stack } from "@mui/material"
 import { FixedSizeList } from "react-window"
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material"
-import { Stats } from "trading-helper-lib"
+import { Config, Stats } from "trading-helper-lib"
 import { cardWidth } from "./Common"
 
-export function Info() {
+export function Info({ config }: { config: Config }) {
   const [stats, setStats] = React.useState<Stats>(null)
 
   useEffect(() => {
-    google.script.run.withSuccessHandler(setStats).getStatistics()
+    google.script.run.withSuccessHandler(setStats).getStatistics(config.profile as any)
   }, [])
 
   const rows = []

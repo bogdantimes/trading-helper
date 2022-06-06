@@ -1,5 +1,5 @@
 import { IExchange } from "./Exchange"
-import { CacheProxy } from "./CacheProxy"
+import { DefaultProfileCacheProxy } from "./CacheProxy"
 import { execute, Log } from "./Common"
 import { Config, ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
@@ -53,7 +53,7 @@ export class Binance implements IExchange {
   }
 
   getFreeAsset(assetName: string): number {
-    const accountDataJson = CacheProxy.get(`AccountData`)
+    const accountDataJson = DefaultProfileCacheProxy.get(`AccountData`)
     let accountData = accountDataJson ? JSON.parse(accountDataJson) : null
     if (!accountData) {
       const resource = `account`
@@ -63,7 +63,7 @@ export class Binance implements IExchange {
           () => `${resource}?${this.addSignature(query)}`,
           this.defaultReqOpts,
         )
-        CacheProxy.put(`AccountData`, JSON.stringify(accountData), 55) // 55 seconds
+        DefaultProfileCacheProxy.put(`AccountData`, JSON.stringify(accountData), 55) // 55 seconds
       } catch (e) {
         throw new Error(`Failed to get available ${assetName}: ${e.message}`)
       }

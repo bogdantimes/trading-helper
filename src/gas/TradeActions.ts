@@ -1,4 +1,4 @@
-import { DefaultStore, IStore } from "./Store"
+import { IStore } from "./Store"
 import {
   ExchangeSymbol,
   IPriceProvider,
@@ -8,15 +8,15 @@ import {
 } from "trading-helper-lib"
 import { Exchange } from "./Exchange"
 import { PriceProvider } from "./PriceProvider"
-import { CacheProxy } from "./CacheProxy"
+import { DefaultProfileCacheProxy } from "./CacheProxy"
 
 export class TradeActions {
   private readonly store: IStore
   private readonly priceProvider: IPriceProvider
 
-  static default(store: IStore = DefaultStore): TradeActions {
-    const exchange = new Exchange(DefaultStore.getConfig())
-    return new TradeActions(store, new PriceProvider(exchange, CacheProxy))
+  static default(store: IStore): TradeActions {
+    const exchange = new Exchange(store.getConfig())
+    return new TradeActions(store, new PriceProvider(exchange, DefaultProfileCacheProxy))
   }
 
   private constructor(store: IStore, priceProvider: IPriceProvider) {

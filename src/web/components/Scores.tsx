@@ -35,12 +35,12 @@ export function Scores({ config }: { config: Config }) {
   const [scoresData, setScoresData] = React.useState<ScoresData>(null)
 
   const updateScores = () => {
-    google.script.run.withSuccessHandler(setScoresData).getScores()
+    google.script.run.withSuccessHandler(setScoresData).getScores(config.profile as any)
   }
 
   function buy(coinName: string) {
     if (confirmBuy(coinName, config)) {
-      google.script.run.withSuccessHandler(alert).buyCoin(coinName)
+      google.script.run.withSuccessHandler(alert).buyCoin(coinName, config.profile as any)
     }
   }
 
@@ -75,7 +75,7 @@ export function Scores({ config }: { config: Config }) {
                           }
                         }),
                       )
-                      .resetScores()
+                      .resetScores(config.profile as any)
                   }
                 }}
               >

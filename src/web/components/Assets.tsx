@@ -15,7 +15,8 @@ import StableCoin from "./StableCoin"
 import { capitalizeWord, cardWidth, circularProgress, confirmBuy } from "./Common"
 import {
   AssetsResponse,
-  Coin, CoinName,
+  Coin,
+  CoinName,
   Config,
   ExchangeSymbol,
   StableUSDCoin,
@@ -31,19 +32,23 @@ export function Assets({ config }: { config: Config }) {
   const [coinNames, setCoinNames] = React.useState<CoinName[]>([])
   const [addCoin, setAddCoin] = useState(false)
 
-  useEffect(() => {
-    google.script.run.withSuccessHandler(setAssets).getAssets()
-    const interval = setInterval(google.script.run.withSuccessHandler(setAssets).getAssets, 15000) // 15 seconds
-    return () => clearInterval(interval)
-  }, [])
+  function getAssets() {
+    google.script.run.withSuccessHandler(setAssets).getAssets(config.profile as any)
+  }
 
   useEffect(() => {
-    google.script.run.withSuccessHandler(setCoinNames).getCoinNames()
+    getAssets()
+    const interval = setInterval(getAssets, 15000) // 15 seconds
+    return () => clearInterval(interval)
+  }, [config.profile])
+
+  useEffect(() => {
+    google.script.run.withSuccessHandler(setCoinNames).getCoinNames(config.profile as any)
   }, [])
 
   function buy() {
     if (confirmBuy(coinName, config)) {
-      google.script.run.withSuccessHandler(alert).buyCoin(coinName)
+      google.script.run.withSuccessHandler(alert).buyCoin(coinName, config.profile as any)
     }
   }
 
@@ -107,8 +112,7 @@ export function Assets({ config }: { config: Config }) {
                 .withFailureHandler((err) => {
                   reject(err)
                 })
-                // @ts-ignore
-                .editTrade(newTm.getCoinName(), newTm)
+                .editTrade(newTm.getCoinName(), newTm as any, config.profile as any)
             })
           }
         />

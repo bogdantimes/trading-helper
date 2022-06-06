@@ -61,10 +61,10 @@ export class Log {
   static print(): string {
     return `${this.alerts.length > 0 ? `${this.alerts.join(`\n`)}\n` : ``}
 ${
-      this.errLog.length > 0
-        ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
-        : ``
-    }
+  this.errLog.length > 0
+    ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
+    : ``
+}
 ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``}
 ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
 `
@@ -101,10 +101,8 @@ export class StableCoinMatcher {
   }
 
   get stableCoin(): StableUSDCoin | null {
-    return this.match ? this.match[2] as StableUSDCoin : null
+    return this.match ? (this.match[2] as StableUSDCoin) : null
   }
 }
 
-export interface Profile {
-  name: string
-}
+export const DefaultProfile = { name: `` }

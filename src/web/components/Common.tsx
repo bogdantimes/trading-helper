@@ -50,7 +50,9 @@ export const capitalizeWord = (s: string) => s.charAt(0).toUpperCase() + s.slice
 
 export const cardWidth = `332px`
 
-export const selectivityColorMap: { [key in ScoreSelectivityKeys]: string } = {
+export type colorUnion = `error` | `info` | `success` | `warning`
+
+export const selectivityColorMap: { [key in ScoreSelectivityKeys]: colorUnion } = {
   EXTREME: `error`,
   HIGH: `warning`,
   MODERATE: `info`,

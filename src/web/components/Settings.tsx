@@ -219,7 +219,7 @@ function scoreThresholdSelector(config: Config, setConfig: (config: Config) => v
           setConfig({ ...config, ScoreSelectivity: e.target.value as ScoreSelectivityKeys })
         }
       >
-        {enumKeys(ScoreSelectivity).map((key) => (
+        {enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((key) => (
           <FormControlLabel
             key={key}
             labelPlacement="end"
@@ -253,7 +253,7 @@ function autonomousTrading(config: Config, setConfig: (config: Config) => void) 
         step={null}
         min={0}
         max={10}
-        marks={enumKeys(AutoTradeBestScores).map((key) => ({
+        marks={enumKeys<keyof typeof AutoTradeBestScores>(AutoTradeBestScores).map((key) => ({
           value: AutoTradeBestScores[key],
           label: capitalizeWord(key),
         }))}

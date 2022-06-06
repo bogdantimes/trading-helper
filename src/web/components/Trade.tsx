@@ -125,7 +125,10 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
         alert(resp.toString())
         setIsSelling(false)
       }
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).sellCoin(coinName)
+      google.script.run
+        .withSuccessHandler(handle)
+        .withFailureHandler(handle)
+        .sellCoin(coinName, config.profile as any)
     }
   }
 
@@ -138,7 +141,10 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
         alert(resp.toString())
         setIsBuying(false)
       }
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(coinName)
+      google.script.run
+        .withSuccessHandler(handle)
+        .withFailureHandler(handle)
+        .buyCoin(coinName, config.profile as any)
     }
   }
 
@@ -147,7 +153,10 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
   function onCancel() {
     if (confirm(`Are you sure you want to cancel the action on ${coinName}?`)) {
       const handle = () => setActionCanceled(true)
-      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(coinName)
+      google.script.run
+        .withSuccessHandler(handle)
+        .withFailureHandler(alert)
+        .cancelAction(coinName, config.profile as any)
     }
   }
 
@@ -167,7 +176,7 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
         alert(resp.toString())
         setIsHodlSwitching(false)
       })
-      .setHold(coinName, !isHodl)
+      .setHold(coinName, !isHodl, config.profile as any)
   }
 
   const [removed, setRemoved] = useState(false)
@@ -177,7 +186,7 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
       google.script.run
         .withSuccessHandler(() => setRemoved(true))
         .withFailureHandler(alert)
-        .dropCoin(coinName)
+        .dropCoin(coinName, config.profile as any)
     }
   }
 
@@ -274,8 +283,7 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
                 .withFailureHandler((err) => {
                   reject(err)
                 })
-                // @ts-ignore
-                .editTrade(tm.getCoinName(), newTm)
+                .editTrade(tm.getCoinName(), newTm as any, config.profile as any)
             })
           }
         />

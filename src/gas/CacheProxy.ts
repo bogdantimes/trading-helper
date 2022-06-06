@@ -1,6 +1,6 @@
 import Integer = GoogleAppsScript.Integer
-import { Log, Profile, SECONDS_IN_HOUR } from "./Common";
-import { ICacheProxy } from "trading-helper-lib"
+import { DefaultProfile, Log, SECONDS_IN_HOUR } from "./Common"
+import { ICacheProxy, Profile } from "trading-helper-lib"
 
 const MAX_CACHE_VAL_SIZE_BYTES = 100 * 1024
 
@@ -8,11 +8,12 @@ function byteCount(s: string): number {
   return encodeURI(s).split(/%..|./).length - 1
 }
 
-export class DefaultCacheProxy implements ICacheProxy {
+export class CacheProxy implements ICacheProxy {
   readonly StableCoins = `StableCoins`
-  private readonly profile: Profile;
+  private readonly profile: Profile
 
-  constructor(profile: Profile = { name: `` }) {
+  constructor(profile: Profile) {
+    if (!profile) throw new Error(`Profile is required`)
     this.profile = profile
   }
 
@@ -49,8 +50,8 @@ export class DefaultCacheProxy implements ICacheProxy {
   }
 
   remove(key: string): void {
-    CacheService.getScriptCache().remove( `${this.profile.name}${key}`)
+    CacheService.getScriptCache().remove(`${this.profile.name}${key}`)
   }
 }
 
-export const CacheProxy = new DefaultCacheProxy()
+export const DefaultProfileCacheProxy = new CacheProxy(DefaultProfile)
