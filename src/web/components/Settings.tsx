@@ -135,7 +135,7 @@ export function Settings({
             InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
           />
           <Select
-            value={[config.BuyDumps, config.SellPumps].toString()}
+            value={[!!config.BuyDumps, !!config.SellPumps].toString()}
             onChange={(e) => {
               const [buyDumps, sellPumps] = e.target.value.split(`,`)
               setConfig({
