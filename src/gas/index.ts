@@ -84,7 +84,7 @@ function stopTicker() {
 function slowDownTemporarily(durationSec: number) {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
   ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL_MIN).create()
-  ScriptApp.newTrigger(global.start.name)
+  ScriptApp.newTrigger(`start`)
     .timeBased()
     .after(durationSec * 1000)
     .create()
