@@ -49,15 +49,12 @@ export class Process {
         }
       })
 
-      const profileStableCoinCheckStart = Date.now()
       try {
         trader.updateStableCoinsBalance()
       } catch (e) {
         Log.alert(`Failed to read stable coins balance`)
         Log.error(e)
       }
-      Log.debug(`Profile ${profile.name} stable coins checked in ${Date.now() - profileStableCoinCheckStart}ms`)
-
 
       try {
         // TODO: creating scores with profile store to get recommended for profile
