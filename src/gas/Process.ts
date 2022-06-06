@@ -19,20 +19,17 @@ export class Process {
       priceProvider,
     ) as IScores
 
-    const scoreUpdateStart = Date.now()
     try {
       scores.update()
     } catch (e) {
       Log.alert(`Failed to update scores`)
       Log.error(e)
     }
-    Log.debug(`Scores updated in ${Date.now() - scoreUpdateStart}ms`)
 
     const profiles = FirebaseStore.getProfiles()
     profiles.default = { name: `` }
 
     Object.values(profiles).forEach((profile) => {
-      const profileTradesCheckStart = Date.now()
 
       const store = new FirebaseStore(profile)
       const cache = new DefaultCacheProxy(profile);
@@ -51,7 +48,6 @@ export class Process {
           }
         }
       })
-      Log.debug(`Profile ${profile.name} trades checked in ${Date.now() - profileTradesCheckStart}ms`)
 
       const profileStableCoinCheckStart = Date.now()
       try {
@@ -63,9 +59,8 @@ export class Process {
       Log.debug(`Profile ${profile.name} stable coins checked in ${Date.now() - profileStableCoinCheckStart}ms`)
 
 
-      const profileScoresTradesStart = Date.now()
       try {
-        // TODO: use same scores but get recommended for profile
+        // TODO: creating scores with profile store to get recommended for profile
         const profileScores = global.TradingHelperScores.create(
           CacheProxy,
           store,
@@ -76,16 +71,13 @@ export class Process {
         Log.alert(`Failed to trade recommended coins`)
         Log.error(e)
       }
-      Log.debug(`Profile ${profile.name} scores checked in ${Date.now() - profileScoresTradesStart}ms`)
 
-      const profileAnomalyTradesStart = Date.now()
       try {
         new AnomalyTrader(store, cache, priceProvider).trade()
       } catch (e) {
         Log.alert(`Failed to trade price anomalies`)
         Log.error(e)
       }
-      Log.debug(`Profile ${profile.name} anomaly trades checked in ${Date.now() - profileAnomalyTradesStart}ms`)
 
       store.dumpChanges()
     })
