@@ -267,6 +267,20 @@ function createAutoTradeProfiles(): void {
   })
 }
 
+function patchProfileConfigs(): void {
+  return catchError(() => {
+    enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
+      const profile = { name: `AutoTrade${sel}Top1` }
+      const profileStore = new FirebaseStore(profile);
+      const config = profileStore.getConfig();
+      const patch = { SellPumps: true }
+      Object.assign(config, patch)
+      profileStore.setConfig(config)
+      Log.alert(`Profile config patched: ${profile.name}, ${JSON.stringify(patch)}`)
+    })
+  })
+}
+
 global.doGet = doGet
 global.doPost = doPost
 global.tick = tick
@@ -289,3 +303,4 @@ global.getScores = getScores
 global.resetScores = resetScores
 global.getCoinNames = getCoinNames
 global.createAutoTradeProfiles = createAutoTradeProfiles
+global.patchProfileConfigs = patchProfileConfigs
