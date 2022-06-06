@@ -5,11 +5,9 @@ import Tab from "@mui/material/Tab"
 import Box from "@mui/material/Box"
 import {
   Alert,
-  Chip,
   createTheme,
   CssBaseline,
   LinearProgress,
-  Stack,
   ThemeProvider,
   Typography,
   useMediaQuery,
@@ -48,21 +46,16 @@ export default function App() {
   const [profiles, setProfiles] = React.useState(null)
   const [selectedProfile, setSelectedProfile] = React.useState<Profile>(null)
 
-  useEffect(initialFetch, [selectedProfile])
-  useEffect(() => {
-    // re-fetch config from time to time just to synchronize it in case changes
-    // were made in different browser tabs, etc.
-    const interval = setInterval(() => selectedProfile && reFetchData(selectedProfile), 60000) // 60 seconds
-    return () => clearInterval(interval)
-  }, [selectedProfile])
+  // Step 1
+  useEffect(fetchProfiles, [])
 
   function fetchProfiles() {
     google.script.run
       .withSuccessHandler((response) => {
-        if (Object.keys(response).length < 2) {
+        setProfiles(response)
+        if (response && Object.keys(response).length == 1 && response.default) {
           setSelectedProfile(response.default)
         }
-        setProfiles(response)
       })
       .withFailureHandler((resp) => {
         setFetchDataError(resp.toString())
@@ -70,7 +63,8 @@ export default function App() {
       .getProfiles()
   }
 
-  useEffect(() => !initialSetup && fetchProfiles(), [initialSetup])
+  // Step 2
+  useEffect(() => selectedProfile && initialFetch(), [selectedProfile])
 
   function initialFetch() {
     setFetchingData(true)
@@ -85,6 +79,7 @@ export default function App() {
   }
 
   function handleConfig(cfg: Config) {
+    setConfig(cfg)
     setFetchingData(false)
     setFetchDataError(null)
     if (!cfg || !cfg.KEY || !cfg.SECRET) {
@@ -92,14 +87,20 @@ export default function App() {
     } else {
       setInitialSetup(false)
     }
-    setConfig(cfg)
   }
 
-  function reFetchData(profile: Profile) {
+  useEffect(() => {
+    // re-fetch config from time to time just to synchronize it in case changes
+    // were made in different browser tabs, etc.
+    const interval = setInterval(() => selectedProfile && reFetchData(), 60000) // 60 seconds
+    return () => clearInterval(interval)
+  }, [selectedProfile])
+
+  function reFetchData() {
     google.script.run
       .withSuccessHandler(handleConfig)
       .withFailureHandler((resp) => setFetchDataError(resp.toString()))
-      .getConfig(profile as any)
+      .getConfig(selectedProfile as any)
   }
 
   return (
@@ -122,36 +123,30 @@ export default function App() {
       {profiles && !selectedProfile && (
         <ProfilePickerDialog profiles={profiles} onSelect={setSelectedProfile} />
       )}
-      {selectedProfile && (
-        <>
-          {!fetchingData && initialSetup && (
-            <InitialSetup config={config} onConnect={initialFetch} />
-          )}
-          {!fetchingData && !initialSetup && (
-            <Box sx={{ width: `100%` }}>
-              <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
-                <Tabs value={value} onChange={handleChange} centered>
-                  <Tab label="Assets" {...a11yProps(0)} />
-                  <Tab label="Scores" {...a11yProps(1)} />
-                  <Tab sx={{ minWidth: `50px` }} label="Info" {...a11yProps(2)} />
-                  <Tab label="Settings" {...a11yProps(3)} />
-                </Tabs>
-              </Box>
-              <TabPanel value={value} index={0}>
-                <Assets config={config} />
-              </TabPanel>
-              <TabPanel value={value} index={1}>
-                <Scores config={config} />
-              </TabPanel>
-              <TabPanel value={value} index={2}>
-                <Info config={config} />
-              </TabPanel>
-              <TabPanel value={value} index={3}>
-                <Settings config={config} setConfig={setConfig} />
-              </TabPanel>
-            </Box>
-          )}
-        </>
+      {!fetchingData && initialSetup && <InitialSetup config={config} onConnect={initialFetch} />}
+      {!fetchingData && !initialSetup && (
+        <Box sx={{ width: `100%` }}>
+          <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
+            <Tabs value={value} onChange={handleChange} centered>
+              <Tab label="Assets" {...a11yProps(0)} />
+              <Tab label="Scores" {...a11yProps(1)} />
+              <Tab sx={{ minWidth: `50px` }} label="Info" {...a11yProps(2)} />
+              <Tab label="Settings" {...a11yProps(3)} />
+            </Tabs>
+          </Box>
+          <TabPanel value={value} index={0}>
+            <Assets config={config} />
+          </TabPanel>
+          <TabPanel value={value} index={1}>
+            <Scores config={config} />
+          </TabPanel>
+          <TabPanel value={value} index={2}>
+            <Info config={config} />
+          </TabPanel>
+          <TabPanel value={value} index={3}>
+            <Settings config={config} setConfig={setConfig} />
+          </TabPanel>
+        </Box>
       )}
     </ThemeProvider>
   )
