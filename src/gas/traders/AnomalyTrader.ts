@@ -70,6 +70,7 @@ export class AnomalyTrader {
     Object.keys(prices).forEach(coin => {
       cacheKeys.push(`${coin}-pump-dump-tracking`);
       cacheKeys.push(`${coin}-start-price`);
+      cacheKeys.push(`${coin}-channel-tracking`)
     });
     return this.cache.getAll(cacheKeys);
   }
