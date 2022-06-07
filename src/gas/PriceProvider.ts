@@ -27,7 +27,7 @@ export class PriceProvider implements IPriceProvider {
   private getFromCache(stableCoin: StableUSDCoin) {
     const jsonStr = this.cache.get(this.getKey(stableCoin))
     const map = jsonStr ? JSON.parse(jsonStr) : {}
-    Object.keys(map).forEach(key => {
+    Object.keys(map).forEach((key) => {
       map[key] = Object.assign(Object.create(PricesHolder.prototype), map[key])
     })
     return map
@@ -41,12 +41,12 @@ export class PriceProvider implements IPriceProvider {
     const curMaps = {}
     const newMaps = {}
 
-    enumKeys<keyof typeof StableUSDCoin>(StableUSDCoin).forEach(stableCoin => {
+    enumKeys<keyof typeof StableUSDCoin>(StableUSDCoin).forEach((stableCoin) => {
       curMaps[stableCoin] = this.getFromCache(stableCoin as StableUSDCoin)
       newMaps[stableCoin] = {}
     })
 
-    Object.keys(prices).forEach(symbol => {
+    Object.keys(prices).forEach((symbol) => {
       // if symbol does not end with any of the stable coins - skip it
       const matcher = new StableCoinMatcher(symbol)
       if (!matcher.matched) return
@@ -57,7 +57,7 @@ export class PriceProvider implements IPriceProvider {
       newMaps[matcher.stableCoin][matcher.coinName] = pricesHolder
     })
 
-    Object.keys(newMaps).forEach(stableCoin => {
+    Object.keys(newMaps).forEach((stableCoin) => {
       const map = newMaps[stableCoin]
       this.cache.put(this.getKey(stableCoin), JSON.stringify(map))
     })

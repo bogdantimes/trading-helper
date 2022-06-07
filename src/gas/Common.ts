@@ -3,7 +3,6 @@ import { CoinName, enumKeys, StableUSDCoin } from "trading-helper-lib"
 export const SECONDS_IN_MIN = 60
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60
 export const TICK_INTERVAL_MIN = 1
-export const SLOW_TICK_INTERVAL_MIN = 5
 
 export interface ExecParams {
   context?: any

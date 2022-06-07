@@ -3,7 +3,7 @@ import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
-import { Log, SECONDS_IN_MIN, SLOW_TICK_INTERVAL_MIN, TICK_INTERVAL_MIN } from "./Common"
+import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common"
 import {
   AssetsResponse,
   AutoTradeBestScores,
