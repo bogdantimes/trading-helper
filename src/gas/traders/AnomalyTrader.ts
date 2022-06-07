@@ -17,7 +17,14 @@ export enum PriceAnomaly {
   PUMP,
   DUMP,
   TRACKING,
+  FLAT,
 }
+
+interface Duration {
+  minutes: number
+}
+
+const channelHeightPercentage = 0.05
 
 export class AnomalyTrader {
   private readonly store: IStore
@@ -52,6 +59,8 @@ export class AnomalyTrader {
             return tm
           }
         })
+      } else if (anomaly === PriceAnomaly.FLAT) {
+        Log.alert(`ℹ️${coin} price is flat.`)
       }
     })
   }
@@ -69,42 +78,77 @@ export class AnomalyTrader {
     const trackingKey = `${coin}-pump-dump-tracking`
     const tracking = cacheMap[trackingKey]
     const startPriceKey = `${coin}-start-price`
-    const anomalyStartPrice = cacheMap[startPriceKey]
+    const pumpDumpStartPrice = cacheMap[startPriceKey]
 
     if (tracking || ph.priceGoesStrongUp() || ph.priceGoesStrongDown()) {
       // If price STRONG move repeats within 3 minutes, we keep tracking the anomaly
       this.cache.put(trackingKey, `true`, SECONDS_IN_MIN * 3)
       // Saving the max or min price of the anomaly depending on the direction
       const minMaxPrice = ph.priceGoesStrongUp() ? Math.min(...ph.prices) : Math.max(...ph.prices)
-      this.cache.put(startPriceKey, `${anomalyStartPrice || minMaxPrice}`)
+      this.cache.put(startPriceKey, `${pumpDumpStartPrice || minMaxPrice}`)
       return PriceAnomaly.TRACKING
     }
 
-    if (!anomalyStartPrice) {
-      return PriceAnomaly.NONE
+    if (!pumpDumpStartPrice) {
+      // if neither pumping nor dumping, check if price is flat (inside channel)
+      const flatPriceDuration = this.priceInsideChannel(coin, ph, cacheMap, channelHeightPercentage)
+      // if more than 1 hour - we consider it a flat price
+      return flatPriceDuration.minutes >= 5 ? PriceAnomaly.FLAT : PriceAnomaly.NONE
     }
 
     this.cache.remove(startPriceKey)
-    const percent = absPercentageChange(+anomalyStartPrice, ph.currentPrice)
+    const percent = absPercentageChange(+pumpDumpStartPrice, ph.currentPrice)
 
     if (percent < this.config.PriceAnomalyAlert) {
       return PriceAnomaly.NONE
     }
 
-    if (+anomalyStartPrice > ph.currentPrice) {
+    if (+pumpDumpStartPrice > ph.currentPrice) {
       Log.alert(
-        `📉 ${coin} price dumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
+        `📉 ${coin} price dumped for ${percent}%: ${pumpDumpStartPrice} -> ${ph.currentPrice}`,
       )
       return PriceAnomaly.DUMP
     }
 
-    if (+anomalyStartPrice < ph.currentPrice) {
+    if (+pumpDumpStartPrice < ph.currentPrice) {
       Log.alert(
-        `📈 ${coin} price pumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
+        `📈 ${coin} price pumped for ${percent}%: ${pumpDumpStartPrice} -> ${ph.currentPrice}`,
       )
       return PriceAnomaly.PUMP
     }
 
     return PriceAnomaly.NONE
+  }
+
+  priceInsideChannel(
+    coin: CoinName,
+    ph: PricesHolder,
+    cacheMap: { [key: string]: any },
+    percentage: number,
+  ): Duration {
+    const channelTrackingKey = `${coin}-channel-tracking`
+    const channel = cacheMap[channelTrackingKey] ? JSON.parse(cacheMap[channelTrackingKey]) : null
+    const minPrice = Math.min(...ph.prices)
+    const maxPrice = Math.max(...ph.prices)
+
+    if (channel) {
+      const topPrice = channel.topPrice
+      const bottomPrice = channel.bottomPrice
+      const startTime = channel.startTime
+
+      if (minPrice >= bottomPrice && maxPrice <= topPrice) {
+        // Still inside channel, return the duration
+        return {
+          minutes: Math.floor((Date.now() - startTime) / 1000 / 60),
+        }
+      }
+    }
+
+    const avgPrice = (minPrice + maxPrice) / 2
+    const topPrice = avgPrice * (1 + percentage / 2)
+    const bottomPrice = avgPrice * (1 - percentage / 2)
+    const startTime = Date.now()
+    this.cache.put(channelTrackingKey, JSON.stringify({ topPrice, bottomPrice, startTime }))
+    return { minutes: 0 }
   }
 }
