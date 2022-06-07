@@ -53,8 +53,13 @@ function doPost() {
   return `404`
 }
 
+const skipNextTick = `skipNextTick`
+
 function tick() {
-  catchError(Process.tick)
+  catchError(() => {
+    if (DefaultProfileCacheProxy.get(skipNextTick)) return
+    Process.tick()
+  })
 }
 
 function start() {
@@ -82,15 +87,6 @@ function stopTicker() {
   deleted && Log.alert(`⛔ Background processes stopped.`)
 }
 
-function slowDownTemporarily(durationSec: number) {
-  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL_MIN).create()
-  ScriptApp.newTrigger(`start`)
-    .timeBased()
-    .after(durationSec * 1000)
-    .create()
-}
-
 function catchError<T>(fn: () => T): T {
   try {
     const res = fn()
@@ -101,13 +97,12 @@ function catchError<T>(fn: () => T): T {
     const limitMsg2 = `Please wait a bit and try again`
     if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
       // If limit already handled, just throw the error without logging
-      if (DefaultProfileCacheProxy.get(`TickSlowedDown`)) throw e
+      if (DefaultProfileCacheProxy.get(skipNextTick)) throw e
       // Handle limit gracefully
       Log.alert(`🚫 Google API daily rate limit exceeded.`)
-      const minutes = 30
-      slowDownTemporarily(SECONDS_IN_MIN * minutes)
-      DefaultProfileCacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_MIN * minutes)
-      Log.alert(`ℹ️ Background process interval slowed down for the next ${minutes} minutes.`)
+      const minutes = 5
+      DefaultProfileCacheProxy.put(skipNextTick, `true`, SECONDS_IN_MIN * minutes)
+      Log.alert(`ℹ️ Background process paused for the next ${minutes} minutes.`)
     }
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
