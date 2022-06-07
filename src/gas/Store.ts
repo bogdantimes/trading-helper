@@ -225,10 +225,7 @@ export class FirebaseStore implements IStore {
   }
 
   getOrSet(key: string, value: any): any {
-    const val = this.get(key) || value
-    // @ts-ignore
-    this.source.setData(key, val)
-    return val
+    return this.get(key) || this.set(key, value)
   }
 
   set(key: string, value: any): any {
