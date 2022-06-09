@@ -3,7 +3,7 @@ import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
-import { Log, SECONDS_IN_MIN, SLOW_TICK_INTERVAL_MIN, TICK_INTERVAL_MIN } from "./Common"
+import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common"
 import {
   AssetsResponse,
   Coin,
@@ -48,8 +48,13 @@ function doPost() {
   return `404`
 }
 
+const skipNextTick = `skipNextTick`
+
 function tick() {
-  catchError(Process.tick)
+  catchError(() => {
+    if (CacheProxy.get(skipNextTick)) return
+    Process.tick()
+  })
 }
 
 function start() {
@@ -77,15 +82,6 @@ function stopTicker() {
   deleted && Log.alert(`⛔ Background processes stopped.`)
 }
 
-function slowDownTemporarily(durationSec: number) {
-  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL_MIN).create()
-  ScriptApp.newTrigger(start.name)
-    .timeBased()
-    .after(durationSec * 1000)
-    .create()
-}
-
 function catchError<T>(fn: () => T): T {
   try {
     const res = fn()
@@ -96,13 +92,12 @@ function catchError<T>(fn: () => T): T {
     const limitMsg2 = `Please wait a bit and try again`
     if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
       // If limit already handled, just throw the error without logging
-      if (CacheProxy.get(`TickSlowedDown`)) throw e
+      if (CacheProxy.get(skipNextTick)) throw e
       // Handle limit gracefully
       Log.alert(`🚫 Google API daily rate limit exceeded.`)
-      const minutes = 30
-      slowDownTemporarily(SECONDS_IN_MIN * minutes)
-      CacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_MIN * minutes)
-      Log.alert(`ℹ️ Background process interval slowed down for the next ${minutes} minutes.`)
+      const minutes = 5
+      CacheProxy.put(skipNextTick, `true`, SECONDS_IN_MIN * minutes)
+      Log.alert(`ℹ️ Background process paused for the next ${minutes} minutes.`)
     }
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
@@ -215,7 +210,11 @@ function getScores(): ScoresData {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
+    const scores = global.TradingHelperScores.create(
+      CacheProxy,
+      DefaultStore,
+      priceProvider,
+    ) as IScores
     return scores.get()
   })
 }
@@ -224,7 +223,11 @@ function resetScores(): void {
   return catchError(() => {
     const exchange = new Exchange(DefaultStore.getConfig())
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
+    const scores = global.TradingHelperScores.create(
+      CacheProxy,
+      DefaultStore,
+      priceProvider,
+    ) as IScores
     return scores.reset()
   })
 }
