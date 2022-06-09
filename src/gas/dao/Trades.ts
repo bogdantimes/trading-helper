@@ -1,12 +1,6 @@
 import { ICacheProxy, TradeMemo, TradeState } from "trading-helper-lib"
 import { IStore } from "../Store"
-
-export class DeadlineError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = `DeadlineError`
-  }
-}
+import { Log } from "../Common"
 
 export class TradesDao {
   private readonly store: IStore
@@ -43,28 +37,23 @@ export class TradesDao {
     notFoundFn?: () => TradeMemo | undefined,
   ): void {
     coinName = coinName.toUpperCase()
-    const key = `TradeLocker_${coinName}`
+    const lock = LockService.getScriptLock()
     try {
-      while (this.cache.get(key)) Utilities.sleep(200)
-      const deadline = 30 // Lock for 30 seconds to give a function enough time for com w/ Binance
-      this.cache.put(key, `true`, deadline)
+      if (!lock.tryLock(30000)) {
+        Log.error(new Error(`Failed to acquire lock for ${coinName}`))
+        return
+      }
 
       const trade = this.get()[coinName]
       // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
       // otherwise changedTrade is null.
       const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
 
-      if (!this.cache.get(key)) {
-        throw new DeadlineError(
-          `Couldn't apply ${coinName} change within ${deadline} seconds deadline. Please, try again.`,
-        )
-      }
-
       if (changedTrade) {
         changedTrade.deleted ? this.#delete(changedTrade) : this.#set(changedTrade)
       }
     } finally {
-      this.cache.remove(key)
+      lock.releaseLock()
     }
   }
 

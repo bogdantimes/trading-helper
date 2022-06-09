@@ -31,12 +31,7 @@ export class Process {
       try {
         tradesDao.update(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
       } catch (e) {
-        // send DeadlineError only to debug channel
-        if (e.name === DeadlineError.name) {
-          Log.debug(e)
-        } else {
-          Log.error(e)
-        }
+        Log.error(e)
       }
     })
 
