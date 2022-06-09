@@ -14,10 +14,6 @@ export interface IStore {
 
   set(key: string, value: any): any
 
-  getConfig(): Config
-
-  setConfig(config: Config): void
-
   getOrSet(key: string, value: any): any
 
   delete(key: string)
@@ -62,72 +58,6 @@ export class FirebaseStore implements IStore {
 
   isConnected(): boolean {
     return !!this.source
-  }
-
-  getConfig(): Config {
-    const defaultConfig: Config = {
-      BuyQuantity: 10,
-      StableCoin: StableUSDCoin.USDT,
-      StopLimit: 0.05,
-      ProfitLimit: 0.1,
-      SellAtStopLimit: false,
-      SellAtProfitLimit: true,
-      SwingTradeEnabled: false,
-      PriceProvider: PriceProvider.Binance,
-      AveragingDown: false,
-      ProfitBasedStopLimit: false,
-      PriceAnomalyAlert: 5,
-      ScoreSelectivity: `MODERATE`,
-      AutoTradeBestScores: AutoTradeBestScores.OFF,
-    }
-    const configCacheJson = CacheProxy.get(`Config`)
-    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null
-    if (!configCache) {
-      configCache = this.getOrSet(`Config`, defaultConfig)
-    }
-    // apply existing config on top of default one
-    configCache = Object.assign(defaultConfig, configCache)
-
-    if (configCache.ScoreUpdateThreshold === 0.05) {
-      // 0.05 used to be a default value, no it's not
-      configCache.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold
-    }
-
-    if (configCache.ScoreUpdateThreshold) {
-      configCache.ScoreSelectivity = ScoreSelectivity[
-        configCache.ScoreUpdateThreshold
-      ] as ScoreSelectivityKeys
-      delete configCache.ScoreUpdateThreshold
-    }
-
-    if (configCache.TakeProfit) {
-      configCache.ProfitLimit = configCache.TakeProfit
-      delete configCache.TakeProfit
-    }
-
-    if (configCache.SellAtTakeProfit) {
-      configCache.SellAtProfitLimit = configCache.SellAtTakeProfit
-      delete configCache.SellAtTakeProfit
-    }
-
-    if (configCache.LossLimit) {
-      configCache.StopLimit = configCache.LossLimit
-      delete configCache.LossLimit
-    }
-
-    if (configCache.PriceAsset) {
-      configCache.StableCoin = <StableUSDCoin>configCache.PriceAsset
-      delete configCache.PriceAsset
-    }
-
-    CacheProxy.put(`Config`, JSON.stringify(configCache))
-
-    return configCache
-  }
-
-  setConfig(config: Config): void {
-    this.set(`Config`, config)
-    CacheProxy.put(`Config`, JSON.stringify(config))
   }
 
   delete(key: string) {

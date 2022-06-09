@@ -9,22 +9,24 @@ import { IScores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
 import { AnomalyTrader } from "./traders/AnomalyTrader"
 import { AssetsDao, DeadlineError } from "./dao/Assets"
+import { ConfigDao } from "./dao/Config"
 
 export class Process {
   static tick() {
     const store = DefaultStore
-    const config = store.getConfig()
-    const exchange = new Exchange(config)
+    const assetsDao = new AssetsDao(store, CacheProxy)
+    const configDao = new ConfigDao(store, CacheProxy)
+
+    const exchange = new Exchange(configDao.get())
     const statistics = new Statistics(store)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const trader = new DefaultTrader(store, exchange, priceProvider, statistics)
+    const trader = new DefaultTrader(store, CacheProxy, exchange, priceProvider, statistics)
     const scores = global.TradingHelperScores.create(
       CacheProxy,
       DefaultStore,
       priceProvider,
     ) as IScores
 
-    const assetsDao = new AssetsDao(store, CacheProxy)
     assetsDao.getList().forEach((trade) => {
       try {
         assetsDao.update(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
@@ -53,7 +55,7 @@ export class Process {
     }
 
     try {
-      new ScoreTrader(store, scores).trade()
+      new ScoreTrader(store, CacheProxy, scores).trade()
     } catch (e) {
       Log.alert(`Failed to trade recommended coins`)
       Log.error(e)

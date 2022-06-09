@@ -18,6 +18,7 @@ import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { PriceProvider } from "./PriceProvider"
 import { AssetsDao } from "./dao/Assets"
+import { ConfigDao } from "./dao/Config"
 
 /**
  * Check if the permanent storage is connected.
@@ -114,7 +115,8 @@ function initialSetup(params: InitialSetupParams): string {
       DefaultStore.connect(params.dbURL)
       Log.alert(`Connected to Firebase`)
     }
-    const config = DefaultStore.getConfig()
+    const configDao = new ConfigDao(DefaultStore, CacheProxy)
+    const config = configDao.get()
     config.KEY = params.binanceAPIKey || config.KEY
     config.SECRET = params.binanceSecretKey || config.SECRET
     if (config.KEY && config.SECRET) {
@@ -123,7 +125,7 @@ function initialSetup(params: InitialSetupParams): string {
       Log.alert(`Connected to Binance`)
       startTicker()
     }
-    DefaultStore.setConfig(config)
+    configDao.set(config)
     return `OK`
   })
 }
@@ -192,13 +194,13 @@ function getAssets(): AssetsResponse {
 
 function getConfig(): Config {
   return catchError(() => {
-    return DefaultStore.isConnected() ? DefaultStore.getConfig() : null
+    return DefaultStore.isConnected() ? new ConfigDao(DefaultStore, CacheProxy).get() : null
   })
 }
 
 function setConfig(config): string {
   return catchError(() => {
-    DefaultStore.setConfig(config)
+    new ConfigDao(DefaultStore, CacheProxy).set(config)
     return `Config updated`
   })
 }
@@ -209,7 +211,8 @@ function getStatistics(): Stats {
 
 function getScores(): ScoresData {
   return catchError(() => {
-    const exchange = new Exchange(DefaultStore.getConfig())
+    const config = new ConfigDao(DefaultStore, CacheProxy).get()
+    const exchange = new Exchange(config)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
     const scores = global.TradingHelperScores.create(
       CacheProxy,
@@ -222,7 +225,8 @@ function getScores(): ScoresData {
 
 function resetScores(): void {
   return catchError(() => {
-    const exchange = new Exchange(DefaultStore.getConfig())
+    const config = new ConfigDao(DefaultStore, CacheProxy).get()
+    const exchange = new Exchange(config)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
     const scores = global.TradingHelperScores.create(
       CacheProxy,
@@ -235,9 +239,10 @@ function resetScores(): void {
 
 function getCoinNames(): CoinName[] {
   return catchError(() => {
-    const exchange = new Exchange(DefaultStore.getConfig())
+    const config = new ConfigDao(DefaultStore, CacheProxy).get()
+    const exchange = new Exchange(config)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    return priceProvider.getCoinNames(DefaultStore.getConfig().StableCoin)
+    return priceProvider.getCoinNames(config.StableCoin)
   })
 }
 

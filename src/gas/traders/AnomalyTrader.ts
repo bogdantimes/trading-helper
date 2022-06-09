@@ -12,6 +12,7 @@ import {
 import { TradeActions } from "../TradeActions"
 import { AssetsDao } from "../dao/Assets"
 import { IStore } from "../Store"
+import { ConfigDao } from "../dao/Config"
 
 export enum PriceAnomaly {
   NONE,
@@ -29,9 +30,9 @@ export class AnomalyTrader {
 
   constructor(store: IStore, cache: DefaultCacheProxy, priceProvider: IPriceProvider) {
     this.cache = cache
-    this.config = store.getConfig()
     this.priceProvider = priceProvider
     this.assetsDao = new AssetsDao(store, cache)
+    this.config = new ConfigDao(store, cache).get()
   }
 
   public trade(): void {

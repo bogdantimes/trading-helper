@@ -6,6 +6,7 @@ import {
   Config,
   ExchangeSymbol,
   f2,
+  ICacheProxy,
   PriceHoldersMap,
   StableUSDCoin,
   TradeMemo,
@@ -16,6 +17,7 @@ import { CacheProxy } from "../CacheProxy"
 import { PriceProvider } from "../PriceProvider"
 import { AssetsDao } from "../dao/Assets"
 import { IStore } from "../Store"
+import { ConfigDao } from "../dao/Config"
 
 export class DefaultTrader {
   private readonly config: Config
@@ -33,8 +35,14 @@ export class DefaultTrader {
    */
   private readonly numberOfBoughtAssets: number
 
-  constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
-    this.config = store.getConfig()
+  constructor(
+    store: IStore,
+    cache: ICacheProxy,
+    exchange: IExchange,
+    priceProvider: PriceProvider,
+    stats: Statistics,
+  ) {
+    this.config = new ConfigDao(store, cache).get()
     this.prices = priceProvider.get(this.config.StableCoin)
     this.exchange = exchange
     this.stats = stats

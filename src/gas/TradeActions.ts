@@ -11,6 +11,7 @@ import { Exchange } from "./Exchange"
 import { PriceProvider } from "./PriceProvider"
 import { CacheProxy } from "./CacheProxy"
 import { AssetsDao } from "./dao/Assets"
+import { ConfigDao } from "./dao/Config"
 
 export class TradeActions {
   private readonly config: Config
@@ -18,12 +19,13 @@ export class TradeActions {
   private readonly assetsDao: AssetsDao
 
   static default(): TradeActions {
-    const exchange = new Exchange(DefaultStore.getConfig())
-    return new TradeActions(DefaultStore, new PriceProvider(exchange, CacheProxy))
+    const config = new ConfigDao(DefaultStore, CacheProxy).get()
+    const exchange = new Exchange(config)
+    return new TradeActions(DefaultStore, config, new PriceProvider(exchange, CacheProxy))
   }
 
-  private constructor(store: FirebaseStore, priceProvider: IPriceProvider) {
-    this.config = store.getConfig()
+  private constructor(store: FirebaseStore, config: Config, priceProvider: IPriceProvider) {
+    this.config = config
     this.priceProvider = priceProvider
     this.assetsDao = new AssetsDao(store, CacheProxy)
   }
