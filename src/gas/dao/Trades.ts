@@ -8,7 +8,7 @@ export class DeadlineError extends Error {
   }
 }
 
-export class AssetsDao {
+export class TradesDao {
   private readonly store: IStore
   private readonly cache: ICacheProxy
 

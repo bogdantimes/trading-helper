@@ -10,7 +10,7 @@ import {
   TradeState,
 } from "trading-helper-lib"
 import { TradeActions } from "../TradeActions"
-import { AssetsDao } from "../dao/Assets"
+import { TradesDao } from "../dao/Trades"
 import { IStore } from "../Store"
 import { ConfigDao } from "../dao/Config"
 
@@ -26,12 +26,12 @@ export class AnomalyTrader {
   private readonly config: Config
   private readonly priceProvider: IPriceProvider
   private readonly tradeActions = TradeActions.default()
-  private readonly assetsDao: AssetsDao
+  private readonly TradesDao: TradesDao
 
   constructor(store: IStore, cache: DefaultCacheProxy, priceProvider: IPriceProvider) {
     this.cache = cache
     this.priceProvider = priceProvider
-    this.assetsDao = new AssetsDao(store, cache)
+    this.TradesDao = new TradesDao(store, cache)
     this.config = new ConfigDao(store, cache).get()
   }
 
@@ -55,7 +55,7 @@ export class AnomalyTrader {
     }
 
     if (anomaly === PriceAnomaly.PUMP && this.config.SellPumps) {
-      this.assetsDao.update(coin, (tm) => {
+      this.TradesDao.update(coin, (tm) => {
         if (tm.profit() > 0) {
           Log.alert(`ℹ️ Selling price pumps is enabled: ${coin} will be sold.`)
           tm.setState(TradeState.SELL)

@@ -17,7 +17,7 @@ import {
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { PriceProvider } from "./PriceProvider"
-import { AssetsDao } from "./dao/Assets"
+import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
 
 /**
@@ -173,7 +173,7 @@ function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
 }
 
 function getTrades(): TradeMemo[] {
-  return catchError(() => new AssetsDao(DefaultStore, CacheProxy).getList())
+  return catchError(() => new TradesDao(DefaultStore, CacheProxy).getList())
 }
 
 function getStableCoins(): Coin[] {

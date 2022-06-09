@@ -1,12 +1,4 @@
 import { CacheProxy } from "./CacheProxy"
-import {
-  AutoTradeBestScores,
-  Config,
-  PriceProvider,
-  ScoreSelectivity,
-  ScoreSelectivityKeys,
-  StableUSDCoin,
-} from "trading-helper-lib"
 import { Log } from "./Common"
 
 export interface IStore {

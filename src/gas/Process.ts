@@ -8,13 +8,13 @@ import { CacheProxy } from "./CacheProxy"
 import { IScores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
 import { AnomalyTrader } from "./traders/AnomalyTrader"
-import { AssetsDao, DeadlineError } from "./dao/Assets"
+import { DeadlineError, TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
 
 export class Process {
   static tick() {
     const store = DefaultStore
-    const assetsDao = new AssetsDao(store, CacheProxy)
+    const tradesDao = new TradesDao(store, CacheProxy)
     const configDao = new ConfigDao(store, CacheProxy)
 
     const exchange = new Exchange(configDao.get())
@@ -27,9 +27,9 @@ export class Process {
       priceProvider,
     ) as IScores
 
-    assetsDao.getList().forEach((trade) => {
+    tradesDao.getList().forEach((trade) => {
       try {
-        assetsDao.update(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
+        tradesDao.update(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
       } catch (e) {
         // send DeadlineError only to debug channel
         if (e.name === DeadlineError.name) {
@@ -68,6 +68,6 @@ export class Process {
       Log.error(e)
     }
 
-    assetsDao.persist()
+    tradesDao.persist()
   }
 }

@@ -8,7 +8,6 @@ import {
   ScoreSelectivityKeys,
   StableUSDCoin,
 } from "trading-helper-lib"
-import { CacheProxy } from "../CacheProxy"
 
 export class ConfigDao {
   private readonly store: IStore
