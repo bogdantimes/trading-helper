@@ -66,6 +66,6 @@ export class Process {
       Log.error(e)
     }
 
-    store.dumpChanges()
+    assetsDao.persist()
   }
 }

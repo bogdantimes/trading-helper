@@ -1,8 +1,5 @@
 import { ICacheProxy, TradeMemo, TradeState } from "trading-helper-lib"
-
-interface IStore {
-  getOrSet(key: string, value: any): any
-}
+import { IStore } from "../Store"
 
 export class DeadlineError extends Error {
   constructor(message: string) {
@@ -100,5 +97,14 @@ export class AssetsDao {
     const trades = this.get()
     delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
     this.cache.put(`Trades`, JSON.stringify(trades))
+  }
+
+  persist() {
+    const key = `FirebaseTradesSynced`
+    if (!this.cache.get(key)) {
+      this.store.set(`trade`, this.get())
+      // Sync trades with firebase every 5 minutes
+      this.cache.put(key, `true`, 300)
+    }
   }
 }

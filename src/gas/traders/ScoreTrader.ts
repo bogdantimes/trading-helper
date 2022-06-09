@@ -3,11 +3,7 @@ import { CoinScore, Config, TradeMemo, TradeState } from "trading-helper-lib"
 import { IScores } from "../Scores"
 import { AssetsDao } from "../dao/Assets"
 import { CacheProxy } from "../CacheProxy"
-
-interface IStore {
-  getOrSet(key: string, value: any): any
-  getConfig(): Config
-}
+import { IStore } from "../Store"
 
 export class ScoreTrader {
   private readonly config: Config

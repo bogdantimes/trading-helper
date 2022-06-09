@@ -15,11 +15,7 @@ import {
 import { CacheProxy } from "../CacheProxy"
 import { PriceProvider } from "../PriceProvider"
 import { AssetsDao } from "../dao/Assets"
-
-interface IStore {
-  getOrSet(key: string, value: any): any
-  getConfig(): Config
-}
+import { IStore } from "../Store"
 
 export class DefaultTrader {
   private readonly config: Config

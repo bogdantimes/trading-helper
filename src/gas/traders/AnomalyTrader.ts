@@ -11,17 +11,13 @@ import {
 } from "trading-helper-lib"
 import { TradeActions } from "../TradeActions"
 import { AssetsDao } from "../dao/Assets"
+import { IStore } from "../Store"
 
 export enum PriceAnomaly {
   NONE,
   PUMP,
   DUMP,
   TRACKING,
-}
-
-interface IStore {
-  getOrSet(key: string, value: any): any
-  getConfig(): Config
 }
 
 export class AnomalyTrader {

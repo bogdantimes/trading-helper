@@ -8,9 +8,24 @@ import {
   StableUSDCoin,
 } from "trading-helper-lib"
 import { Log } from "./Common"
-import { AssetsDao } from "./dao/Assets"
 
-export class FirebaseStore {
+export interface IStore {
+  get(key: string): any
+
+  set(key: string, value: any): any
+
+  getConfig(): Config
+
+  setConfig(config: Config): void
+
+  getOrSet(key: string, value: any): any
+
+  delete(key: string)
+
+  isConnected(): boolean
+}
+
+export class FirebaseStore implements IStore {
   private source: object
 
   constructor() {
@@ -142,15 +157,6 @@ export class FirebaseStore {
     // @ts-ignore
     this.source.setData(key, value)
     return value
-  }
-
-  dumpChanges() {
-    const key = `FirebaseTradesSynced`
-    if (!CacheProxy.get(key)) {
-      this.set(`trade`, new AssetsDao(this, CacheProxy).get())
-      // Sync trades with firebase every 5 minutes
-      CacheProxy.put(key, `true`, 300)
-    }
   }
 }
 

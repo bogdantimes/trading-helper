@@ -1,9 +1,5 @@
 import { f2, Stats } from "trading-helper-lib"
-
-interface IStore {
-  get(key: string): any
-  set(key: string, value: any): any
-}
+import { IStore } from "./Store"
 
 export class Statistics {
   private readonly store: IStore
