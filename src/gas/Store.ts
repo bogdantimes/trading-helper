@@ -3,11 +3,12 @@ import {
   AutoTradeBestScores,
   Config,
   PriceProvider,
-  ScoreSelectivity, ScoreSelectivityKeys,
+  ScoreSelectivity,
+  ScoreSelectivityKeys,
   StableUSDCoin,
   TradeMemo,
-  TradeState
-} from "trading-helper-lib";
+  TradeState,
+} from "trading-helper-lib"
 import { Log } from "./Common"
 
 export class DeadlineError extends Error {
@@ -110,12 +111,15 @@ export class FirebaseStore implements IStore {
     // apply existing config on top of default one
     configCache = Object.assign(defaultConfig, configCache)
 
-    if (configCache.ScoreUpdateThreshold === 0.05) { // 0.05 used to be a default value, no it's not
+    if (configCache.ScoreUpdateThreshold === 0.05) {
+      // 0.05 used to be a default value, no it's not
       configCache.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold
     }
 
     if (configCache.ScoreUpdateThreshold) {
-      configCache.ScoreSelectivity = ScoreSelectivity[configCache.ScoreUpdateThreshold] as ScoreSelectivityKeys
+      configCache.ScoreSelectivity = ScoreSelectivity[
+        configCache.ScoreUpdateThreshold
+      ] as ScoreSelectivityKeys
       delete configCache.ScoreUpdateThreshold
     }
 
@@ -166,10 +170,7 @@ export class FirebaseStore implements IStore {
   }
 
   getOrSet(key: string, value: any): any {
-    const val = this.get(key) || value
-    // @ts-ignore
-    this.source.setData(key, val)
-    return val
+    return this.get(key) || this.set(key, value)
   }
 
   set(key: string, value: any): any {
