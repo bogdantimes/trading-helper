@@ -95,7 +95,7 @@ function recommendedList(scoresData: ScoresData, buy: (coinName: string) => void
   const autoTrade = config.AutoTradeBestScores
   const selectivity = config.ScoreSelectivity
   const selectivityMark = (
-    <Typography color={theme.palette[selectivityColorMap[selectivity]].main}>
+    <Typography variant={`caption`} color={theme.palette[selectivityColorMap[selectivity]].main}>
       {selectivity[0]}
     </Typography>
   )

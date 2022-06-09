@@ -8,9 +8,39 @@ export interface IStore {
 
   getOrSet(key: string, value: any): any
 
-  delete(key: string)
+  delete(key: string): void
 
   isConnected(): boolean
+
+  connect(dbURL: string): void
+}
+
+export class ScriptStore implements IStore {
+  delete(key: string): void {
+    PropertiesService.getScriptProperties().deleteProperty(key)
+  }
+
+  get(key: string): any {
+    const value = PropertiesService.getScriptProperties().getProperty(key)
+    return value ? JSON.parse(value) : null
+  }
+
+  getOrSet(key: string, value: any): any {
+    return this.get(key) || this.set(key, value)
+  }
+
+  isConnected(): boolean {
+    return true
+  }
+
+  connect(): void {
+    // noop
+  }
+
+  set(key: string, value: any): any {
+    PropertiesService.getScriptProperties().setProperty(key, JSON.stringify(value))
+    return value
+  }
 }
 
 export class FirebaseStore implements IStore {
@@ -42,7 +72,7 @@ export class FirebaseStore implements IStore {
     PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
   }
 
-  connect(dbURL: string) {
+  connect(dbURL: string): void {
     // @ts-ignore
     this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken())
     this.url = dbURL
@@ -82,4 +112,5 @@ export class FirebaseStore implements IStore {
   }
 }
 
-export const DefaultStore = new FirebaseStore()
+const firebaseStore = new FirebaseStore()
+export const DefaultStore = firebaseStore.isConnected() ? firebaseStore : new ScriptStore()
