@@ -1,15 +1,23 @@
-import { IStore } from "../Store"
 import { TradeActions } from "../TradeActions"
-import { CoinScore, TradeMemo, TradeState } from "trading-helper-lib"
+import { CoinScore, Config, TradeMemo, TradeState } from "trading-helper-lib"
 import { IScores } from "../Scores"
+import { AssetsDao } from "../dao/Assets"
+import { CacheProxy } from "../CacheProxy"
+
+interface IStore {
+  getOrSet(key: string, value: any): any
+  getConfig(): Config
+}
 
 export class ScoreTrader {
-  private readonly store: IStore
+  private readonly config: Config
   private readonly scores: IScores
+  private readonly assetsDao: AssetsDao
 
   constructor(store: IStore, scores: IScores) {
-    this.store = store
     this.scores = scores
+    this.config = store.getConfig()
+    this.assetsDao = new AssetsDao(store, CacheProxy)
   }
 
   /**
@@ -18,7 +26,7 @@ export class ScoreTrader {
    * Coins that are sold and not in the recommended list are removed from the portfolio.
    */
   trade(): void {
-    const tradeBestScores = this.store.getConfig().AutoTradeBestScores
+    const tradeBestScores = this.config.AutoTradeBestScores
     if (tradeBestScores) {
       const scoresData = this.scores.get()
       if (!scoresData.realData) return
@@ -28,18 +36,18 @@ export class ScoreTrader {
       // buy new coins from recommended list
       const tradeActions = TradeActions.default()
       recommended
-        .filter((cs) => !this.store.hasTrade(cs.coinName))
+        .filter((cs) => !this.assetsDao.has(cs.coinName))
         .forEach((cs) => tradeActions.buy(cs.coinName))
 
       // remove sold coins that are not in the recommended list
-      this.store
-        .getTradesList(TradeState.SOLD)
+      this.assetsDao
+        .getList(TradeState.SOLD)
         .filter((tm) => !this.isRecommended(recommended, tm))
         .forEach((tm) => tradeActions.drop(tm.getCoinName()))
 
       // cancel buying coins that are no longer in the recommended list
-      this.store
-        .getTradesList(TradeState.BUY)
+      this.assetsDao
+        .getList(TradeState.BUY)
         .filter((tm) => !this.isRecommended(recommended, tm))
         .forEach((tm) => tradeActions.cancel(tm.getCoinName()))
     }

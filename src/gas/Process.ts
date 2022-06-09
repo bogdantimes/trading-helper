@@ -1,13 +1,14 @@
 import { DefaultTrader } from "./traders/DefaultTrader"
 import { Exchange } from "./Exchange"
 import { Statistics } from "./Statistics"
-import { DeadlineError, DefaultStore } from "./Store"
+import { DefaultStore } from "./Store"
 import { Log } from "./Common"
 import { ScoreTrader } from "./traders/ScoreTrader"
 import { CacheProxy } from "./CacheProxy"
 import { IScores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
 import { AnomalyTrader } from "./traders/AnomalyTrader"
+import { AssetsDao, DeadlineError } from "./dao/Assets"
 
 export class Process {
   static tick() {
@@ -17,11 +18,16 @@ export class Process {
     const statistics = new Statistics(store)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
     const trader = new DefaultTrader(store, exchange, priceProvider, statistics)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
+    const scores = global.TradingHelperScores.create(
+      CacheProxy,
+      DefaultStore,
+      priceProvider,
+    ) as IScores
 
-    store.getTradesList().forEach((trade) => {
+    const assetsDao = new AssetsDao(store, CacheProxy)
+    assetsDao.getList().forEach((trade) => {
       try {
-        DefaultStore.changeTrade(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
+        assetsDao.update(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
       } catch (e) {
         // send DeadlineError only to debug channel
         if (e.name === DeadlineError.name) {

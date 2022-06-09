@@ -6,49 +6,11 @@ import {
   ScoreSelectivity,
   ScoreSelectivityKeys,
   StableUSDCoin,
-  TradeMemo,
-  TradeState,
 } from "trading-helper-lib"
 import { Log } from "./Common"
+import { AssetsDao } from "./dao/Assets"
 
-export class DeadlineError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = `DeadlineError`
-  }
-}
-
-export interface IStore {
-  get(key: string): any
-
-  set(key: string, value: any): any
-
-  getConfig(): Config
-
-  setConfig(config: Config): void
-
-  getOrSet(key: string, value: any): any
-
-  delete(key: string)
-
-  getTrades(): { [key: string]: TradeMemo }
-
-  getTradesList(state?: TradeState): TradeMemo[]
-
-  hasTrade(coinName: string): boolean
-
-  changeTrade(
-    coinName: string,
-    mutateFn: (tm: TradeMemo) => TradeMemo,
-    notFoundFn?: () => TradeMemo | undefined,
-  ): void
-
-  dumpChanges(): void
-
-  isConnected(): boolean
-}
-
-export class FirebaseStore implements IStore {
+export class FirebaseStore {
   private source: object
 
   constructor() {
@@ -182,92 +144,10 @@ export class FirebaseStore implements IStore {
     return value
   }
 
-  getTrades(): { [p: string]: TradeMemo } {
-    const tradesCacheJson = CacheProxy.get(`Trades`)
-    let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null
-    if (!tradesCache) {
-      tradesCache = this.getOrSet(`trade`, {})
-      CacheProxy.put(`Trades`, JSON.stringify(tradesCache))
-    }
-    // Convert raw trades to TradeMemo objects
-    return Object.keys(tradesCache).reduce((acc, key) => {
-      acc[key] = TradeMemo.fromObject(tradesCache[key])
-      return acc
-    }, {})
-  }
-
-  getTradesList(state?: TradeState): TradeMemo[] {
-    const values = Object.values(this.getTrades())
-    return state ? values.filter((trade) => trade.stateIs(state)) : values
-  }
-
-  hasTrade(coinName: string): boolean {
-    return !!this.getTrades()[coinName]
-  }
-
-  /**
-   * changeTrade function provides a way to update the trade memo object.
-   *
-   * It locks the trade memo object for the duration of the mutation function but no more than 30 seconds.
-   *
-   * It expects a coinName and a mutate function. The mutate function receives either an existing trade memo object
-   * from a store or if not found, calls the optional notFoundFn callback.
-   *
-   * Mutation function can return an updated trade memo object or undefined/null value.
-   * If returned trade memo object has deleted flag set to true, this trade memo will be deleted.
-   * If undefined/null value is returned, the trade memo will not be updated.
-   *
-   * @param coinName
-   * @param mutateFn
-   * @param notFoundFn?
-   */
-  changeTrade(
-    coinName: string,
-    mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined,
-  ): void {
-    coinName = coinName.toUpperCase()
-    const key = `TradeLocker_${coinName}`
-    try {
-      while (CacheProxy.get(key)) Utilities.sleep(200)
-      const deadline = 30 // Lock for 30 seconds to give a function enough time for com w/ Binance
-      CacheProxy.put(key, `true`, deadline)
-
-      const trade = this.getTrades()[coinName]
-      // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
-      // otherwise changedTrade is null.
-      const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
-
-      if (!CacheProxy.get(key)) {
-        throw new DeadlineError(
-          `Couldn't apply ${coinName} change within ${deadline} seconds deadline. Please, try again.`,
-        )
-      }
-
-      if (changedTrade) {
-        changedTrade.deleted ? this.deleteTrade(changedTrade) : this.setTrade(changedTrade)
-      }
-    } finally {
-      CacheProxy.remove(key)
-    }
-  }
-
-  private setTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades()
-    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
-    CacheProxy.put(`Trades`, JSON.stringify(trades))
-  }
-
-  private deleteTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades()
-    delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
-    CacheProxy.put(`Trades`, JSON.stringify(trades))
-  }
-
   dumpChanges() {
     const key = `FirebaseTradesSynced`
     if (!CacheProxy.get(key)) {
-      this.set(`trade`, this.getTrades())
+      this.set(`trade`, new AssetsDao(this, CacheProxy).get())
       // Sync trades with firebase every 5 minutes
       CacheProxy.put(key, `true`, 300)
     }

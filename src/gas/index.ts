@@ -17,6 +17,7 @@ import {
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { PriceProvider } from "./PriceProvider"
+import { AssetsDao } from "./dao/Assets"
 
 /**
  * Check if the permanent storage is connected.
@@ -170,7 +171,7 @@ function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
 }
 
 function getTrades(): TradeMemo[] {
-  return catchError(() => DefaultStore.getTradesList())
+  return catchError(() => new AssetsDao(DefaultStore, CacheProxy).getList())
 }
 
 function getStableCoins(): Coin[] {

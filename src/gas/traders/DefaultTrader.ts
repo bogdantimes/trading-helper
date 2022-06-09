@@ -1,5 +1,4 @@
 import { Statistics } from "../Statistics"
-import { DefaultStore, IStore } from "../Store"
 import { IExchange } from "../Exchange"
 import { Log } from "../Common"
 import {
@@ -15,13 +14,19 @@ import {
 } from "trading-helper-lib"
 import { CacheProxy } from "../CacheProxy"
 import { PriceProvider } from "../PriceProvider"
+import { AssetsDao } from "../dao/Assets"
+
+interface IStore {
+  getOrSet(key: string, value: any): any
+  getConfig(): Config
+}
 
 export class DefaultTrader {
-  private readonly store: IStore
   private readonly config: Config
   private readonly exchange: IExchange
   private readonly stats: Statistics
   private readonly prices: PriceHoldersMap
+  private readonly assetsDao: AssetsDao
 
   /**
    * Used when {@link ProfitBasedStopLimit} is enabled.
@@ -33,15 +38,15 @@ export class DefaultTrader {
   private readonly numberOfBoughtAssets: number
 
   constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
-    this.store = store
     this.config = store.getConfig()
     this.prices = priceProvider.get(this.config.StableCoin)
     this.exchange = exchange
     this.stats = stats
+    this.assetsDao = new AssetsDao(store, CacheProxy)
 
     if (this.config.ProfitBasedStopLimit) {
       this.totalProfit = stats.getAll().TotalProfit
-      this.numberOfBoughtAssets = store.getTradesList(TradeState.BOUGHT).length
+      this.numberOfBoughtAssets = this.assetsDao.getList(TradeState.BOUGHT).length
     }
   }
 
@@ -203,8 +208,8 @@ export class DefaultTrader {
     // all gains are reinvested to most unprofitable asset
     // find a trade with the lowest profit percentage
     const byProfitPercentDesc = (t1, t2) => (t1.profitPercent() < t2.profitPercent() ? -1 : 1)
-    const lowestPLTrade = this.store
-      .getTradesList(TradeState.BOUGHT)
+    const lowestPLTrade = this.assetsDao
+      .getList(TradeState.BOUGHT)
       .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
       .sort(byProfitPercentDesc)[0]
     if (lowestPLTrade && lowestPLTrade.profit() < 0) {
@@ -212,7 +217,7 @@ export class DefaultTrader {
       Log.alert(
         `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
       )
-      DefaultStore.changeTrade(lowestPLTrade.getCoinName(), (tm) => {
+      this.assetsDao.update(lowestPLTrade.getCoinName(), (tm) => {
         this.buy(tm, tradeResult.gained)
         return tm
       })
@@ -250,7 +255,7 @@ export class DefaultTrader {
 
   private updateBNBBalance(quantity: number): boolean {
     let updated = false
-    DefaultStore.changeTrade(`BNB`, (tm) => {
+    this.assetsDao.update(`BNB`, (tm) => {
       // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
       // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
       tm.tradeResult.addQuantity(quantity, 0)
