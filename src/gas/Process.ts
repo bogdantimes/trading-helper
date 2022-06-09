@@ -8,7 +8,7 @@ import { CacheProxy } from "./CacheProxy"
 import { IScores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
 import { AnomalyTrader } from "./traders/AnomalyTrader"
-import { DeadlineError, TradesDao } from "./dao/Trades"
+import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
 
 export class Process {
