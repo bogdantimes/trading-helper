@@ -214,11 +214,7 @@ function getScores(): ScoresData {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(
-      CacheProxy,
-      DefaultStore,
-      priceProvider,
-    ) as IScores
+    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
     return scores.get()
   })
 }
@@ -228,11 +224,7 @@ function resetScores(): void {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(
-      CacheProxy,
-      DefaultStore,
-      priceProvider,
-    ) as IScores
+    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
     return scores.reset()
   })
 }

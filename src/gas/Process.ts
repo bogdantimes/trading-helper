@@ -17,15 +17,12 @@ export class Process {
     const tradesDao = new TradesDao(store)
     const configDao = new ConfigDao(store)
 
-    const exchange = new Exchange(configDao.get())
+    const config = configDao.get()
+    const exchange = new Exchange(config)
     const statistics = new Statistics(store)
     const priceProvider = new PriceProvider(exchange, CacheProxy)
     const trader = new DefaultTrader(store, CacheProxy, exchange, priceProvider, statistics)
-    const scores = global.TradingHelperScores.create(
-      CacheProxy,
-      DefaultStore,
-      priceProvider,
-    ) as IScores
+    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
 
     tradesDao.getList().forEach((trade) => {
       try {
