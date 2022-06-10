@@ -58,35 +58,28 @@ export class Log {
     this.errLog.push(new Error(`${err.stack.slice(0, 1000)}`))
   }
 
-  static printAlerts(): string {
-    const alerts = this.alerts.length ? `${this.alerts.join(`\n`)}\n` : ``
-    const infos = this.infoLog.length ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``
-    return `${alerts}\n\n${infos}`
-  }
-
-  static printErrorsAndDebug() {
-    const errs = this.errLog.length
-      ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
-      : ``
-    const debugs = this.debugLog.length ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``
-    return `${errs}\n\n${debugs}`
+  static print(): string {
+    return `${this.alerts.length > 0 ? `${this.alerts.join(`\n`)}\n` : ``}
+${
+  this.errLog.length > 0
+    ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
+    : ``
+}
+${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``}
+${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
+`
   }
 
   static ifUsefulDumpAsEmail() {
     const email = Session.getEffectiveUser().getEmail()
-    if (this.alerts.length > 0) {
+    if (this.alerts.length > 0 || this.errLog.length > 0) {
+      const subject = `Trading Helper ${this.errLog.length ? `Error` : `Alert`}`
       try {
-        GmailApp.sendEmail(email, `Trading Helper Alert`, this.printAlerts())
+        GmailApp.sendEmail(email, subject, this.print())
       } catch (e) {
         Log.error(e)
+        GmailApp.createDraft(email, subject, this.print())
       }
-    }
-    if (this.errLog.length > 0) {
-      GmailApp.createDraft(
-        email,
-        `Trading Helper Error`,
-        `${this.printAlerts()}\n\n${this.printErrorsAndDebug()}`,
-      )
     }
   }
 }
