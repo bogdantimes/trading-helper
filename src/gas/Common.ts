@@ -12,6 +12,7 @@ export interface ExecParams {
 }
 
 export const INTERRUPT = `INTERRUPT`
+export const SERVICE_LIMIT = `Service invoked too many times`
 
 export function execute({ context, runnable, interval = 500, attempts = 5 }: ExecParams) {
   let err: Error
@@ -21,7 +22,7 @@ export function execute({ context, runnable, interval = 500, attempts = 5 }: Exe
       return runnable(context)
     } catch (e) {
       err = e
-      if (e.message.includes(INTERRUPT)) {
+      if (e.message.includes(INTERRUPT) || e.message.includes(SERVICE_LIMIT)) {
         break
       }
     }
