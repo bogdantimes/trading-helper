@@ -72,12 +72,12 @@ export class TradesDao {
   #set(tradeMemo: TradeMemo) {
     const trades = this.get()
     trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
-    this.store.set(`Trades`, JSON.stringify(trades))
+    this.store.set(`Trades`, trades)
   }
 
   #delete(tradeMemo: TradeMemo) {
     const trades = this.get()
     delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
-    this.store.set(`Trades`, JSON.stringify(trades))
+    this.store.set(`Trades`, trades)
   }
 }
