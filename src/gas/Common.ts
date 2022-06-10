@@ -76,10 +76,10 @@ export class Log {
     const email = Session.getEffectiveUser().getEmail()
     if (this.alerts.length > 0 || this.errLog.length > 0) {
       try {
-        GmailApp.sendEmail(email, `Trading-helper alert`, this.printAlertsAndInfo())
+        GmailApp.sendEmail(email, `Trading Helper Alert`, this.printAlertsAndInfo())
       } catch (e) {
         Log.error(e)
-        GmailApp.createDraft(email, `Trading-helper error`, this.printErrorsAndDebug())
+        GmailApp.createDraft(email, `Trading Helper Error`, this.printErrorsAndDebug())
       }
     }
   }
