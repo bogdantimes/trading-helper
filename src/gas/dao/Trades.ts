@@ -56,7 +56,7 @@ export class TradesDao {
   }
 
   get(): { [p: string]: TradeMemo } {
-    const trades = this.store.getOrSet(`trade`, {})
+    const trades = this.store.getOrSet(`Trades`, {})
     // Convert raw trades to TradeMemo objects
     return Object.keys(trades).reduce((acc, key) => {
       acc[key] = TradeMemo.fromObject(trades[key])
