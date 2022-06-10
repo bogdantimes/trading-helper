@@ -58,7 +58,7 @@ export class Log {
     this.errLog.push(new Error(`${err.stack.slice(0, 1000)}`))
   }
 
-  static printAlertsAndInfo(): string {
+  static printAlerts(): string {
     const alerts = this.alerts.length ? `${this.alerts.join(`\n`)}\n` : ``
     const infos = this.infoLog.length ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``
     return `${alerts}\n\n${infos}`
@@ -74,13 +74,19 @@ export class Log {
 
   static ifUsefulDumpAsEmail() {
     const email = Session.getEffectiveUser().getEmail()
-    if (this.alerts.length > 0 || this.errLog.length > 0) {
+    if (this.alerts.length > 0) {
       try {
-        GmailApp.sendEmail(email, `Trading Helper Alert`, this.printAlertsAndInfo())
+        GmailApp.sendEmail(email, `Trading Helper Alert`, this.printAlerts())
       } catch (e) {
         Log.error(e)
-        GmailApp.createDraft(email, `Trading Helper Error`, this.printErrorsAndDebug())
       }
+    }
+    if (this.errLog.length > 0) {
+      GmailApp.createDraft(
+        email,
+        `Trading Helper Error`,
+        `${this.printAlerts()}\n\n${this.printErrorsAndDebug()}`,
+      )
     }
   }
 }
