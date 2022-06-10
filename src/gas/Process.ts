@@ -14,8 +14,8 @@ import { ConfigDao } from "./dao/Config"
 export class Process {
   static tick() {
     const store = DefaultStore
-    const tradesDao = new TradesDao(store, CacheProxy)
-    const configDao = new ConfigDao(store, CacheProxy)
+    const tradesDao = new TradesDao(store)
+    const configDao = new ConfigDao(store)
 
     const exchange = new Exchange(configDao.get())
     const statistics = new Statistics(store)
@@ -62,7 +62,5 @@ export class Process {
       Log.alert(`Failed to trade price anomalies`)
       Log.error(e)
     }
-
-    tradesDao.persist()
   }
 }

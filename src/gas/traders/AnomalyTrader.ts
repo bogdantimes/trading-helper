@@ -31,8 +31,8 @@ export class AnomalyTrader {
   constructor(store: IStore, cache: DefaultCacheProxy, priceProvider: IPriceProvider) {
     this.cache = cache
     this.priceProvider = priceProvider
-    this.TradesDao = new TradesDao(store, cache)
-    this.config = new ConfigDao(store, cache).get()
+    this.TradesDao = new TradesDao(store)
+    this.config = new ConfigDao(store).get()
   }
 
   public trade(): void {

@@ -2,7 +2,6 @@ import { IStore } from "../Store"
 import {
   AutoTradeBestScores,
   Config,
-  ICacheProxy,
   PriceProvider,
   ScoreSelectivity,
   ScoreSelectivityKeys,
@@ -11,11 +10,9 @@ import {
 
 export class ConfigDao {
   private readonly store: IStore
-  private readonly cache: ICacheProxy
 
-  constructor(store: IStore, cache: ICacheProxy) {
+  constructor(store: IStore) {
     this.store = store
-    this.cache = cache
   }
 
   get(): Config {
@@ -34,11 +31,7 @@ export class ConfigDao {
       ScoreSelectivity: `MODERATE`,
       AutoTradeBestScores: AutoTradeBestScores.OFF,
     }
-    const configCacheJson = this.cache.get(`Config`)
-    let config: Config = configCacheJson ? JSON.parse(configCacheJson) : null
-    if (!config) {
-      config = this.store.getOrSet(`Config`, defaultConfig)
-    }
+    let config: Config = this.store.getOrSet(`Config`, defaultConfig)
     // apply existing config on top of default one
     config = Object.assign(defaultConfig, config)
 
@@ -74,13 +67,10 @@ export class ConfigDao {
       delete config.PriceAsset
     }
 
-    this.cache.put(`Config`, JSON.stringify(config))
-
     return config
   }
 
   set(config: Config): void {
     this.store.set(`Config`, config)
-    this.cache.put(`Config`, JSON.stringify(config))
   }
 }

@@ -1,4 +1,4 @@
-import { DefaultStore, FirebaseStore } from "./Store"
+import { DefaultStore, IStore } from "./Store"
 import {
   Config,
   ExchangeSymbol,
@@ -16,24 +16,24 @@ import { ConfigDao } from "./dao/Config"
 export class TradeActions {
   private readonly config: Config
   private readonly priceProvider: IPriceProvider
-  private readonly TradesDao: TradesDao
+  private readonly tradesDao: TradesDao
 
   static default(): TradeActions {
-    const config = new ConfigDao(DefaultStore, CacheProxy).get()
+    const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config)
     return new TradeActions(DefaultStore, config, new PriceProvider(exchange, CacheProxy))
   }
 
-  private constructor(store: FirebaseStore, config: Config, priceProvider: IPriceProvider) {
+  private constructor(store: IStore, config: Config, priceProvider: IPriceProvider) {
     this.config = config
     this.priceProvider = priceProvider
-    this.TradesDao = new TradesDao(store, CacheProxy)
+    this.tradesDao = new TradesDao(store)
   }
 
   buy(coinName: string): void {
     const stableCoin = this.config.StableCoin
     const symbol = new ExchangeSymbol(coinName, stableCoin)
-    this.TradesDao.update(
+    this.tradesDao.update(
       coinName,
       (tm) => {
         tm.setState(TradeState.BUY)
@@ -50,7 +50,7 @@ export class TradeActions {
   }
 
   sell(coinName: string): void {
-    this.TradesDao.update(coinName, (trade) => {
+    this.tradesDao.update(coinName, (trade) => {
       if (trade.stateIs(TradeState.BOUGHT)) {
         trade.setState(TradeState.SELL)
       }
@@ -59,28 +59,28 @@ export class TradeActions {
   }
 
   setHold(coinName: string, value: boolean): void {
-    this.TradesDao.update(coinName, (trade) => {
+    this.tradesDao.update(coinName, (trade) => {
       trade.hodl = !!value
       return trade
     })
   }
 
   drop(coinName: string): void {
-    this.TradesDao.update(coinName, (trade) => {
+    this.tradesDao.update(coinName, (trade) => {
       trade.deleted = true
       return trade
     })
   }
 
   cancel(coinName: string): void {
-    this.TradesDao.update(coinName, (trade) => {
+    this.tradesDao.update(coinName, (trade) => {
       trade.resetState()
       return trade
     })
   }
 
   replace(coinName: string, newTrade: TradeMemo): void {
-    this.TradesDao.update(
+    this.tradesDao.update(
       coinName,
       (trade) => {
         if (trade.getCoinName() != newTrade.getCoinName()) {

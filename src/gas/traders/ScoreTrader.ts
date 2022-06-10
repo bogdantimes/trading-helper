@@ -2,7 +2,6 @@ import { TradeActions } from "../TradeActions"
 import { CoinScore, Config, ICacheProxy, TradeMemo, TradeState } from "trading-helper-lib"
 import { IScores } from "../Scores"
 import { TradesDao } from "../dao/Trades"
-import { CacheProxy } from "../CacheProxy"
 import { IStore } from "../Store"
 import { ConfigDao } from "../dao/Config"
 
@@ -13,8 +12,8 @@ export class ScoreTrader {
 
   constructor(store: IStore, cache: ICacheProxy, scores: IScores) {
     this.scores = scores
-    this.config = new ConfigDao(store, cache).get()
-    this.TradesDao = new TradesDao(store, CacheProxy)
+    this.config = new ConfigDao(store).get()
+    this.TradesDao = new TradesDao(store)
   }
 
   /**

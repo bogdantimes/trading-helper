@@ -1,14 +1,12 @@
-import { ICacheProxy, TradeMemo, TradeState } from "trading-helper-lib"
+import { TradeMemo, TradeState } from "trading-helper-lib"
 import { IStore } from "../Store"
 import { Log } from "../Common"
 
 export class TradesDao {
   private readonly store: IStore
-  private readonly cache: ICacheProxy
 
-  constructor(store: IStore, cache: ICacheProxy) {
+  constructor(store: IStore) {
     this.store = store
-    this.cache = cache
   }
 
   has(coinName: string): boolean {
@@ -58,12 +56,7 @@ export class TradesDao {
   }
 
   get(): { [p: string]: TradeMemo } {
-    const cacheJson = this.cache.get(`Trades`)
-    let trades = cacheJson ? JSON.parse(cacheJson) : null
-    if (!trades) {
-      trades = this.store.getOrSet(`trade`, {})
-      this.cache.put(`Trades`, JSON.stringify(trades))
-    }
+    const trades = this.store.getOrSet(`trade`, {})
     // Convert raw trades to TradeMemo objects
     return Object.keys(trades).reduce((acc, key) => {
       acc[key] = TradeMemo.fromObject(trades[key])
@@ -79,21 +72,12 @@ export class TradesDao {
   #set(tradeMemo: TradeMemo) {
     const trades = this.get()
     trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
-    this.cache.put(`Trades`, JSON.stringify(trades))
+    this.store.set(`Trades`, JSON.stringify(trades))
   }
 
   #delete(tradeMemo: TradeMemo) {
     const trades = this.get()
     delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
-    this.cache.put(`Trades`, JSON.stringify(trades))
-  }
-
-  persist() {
-    const key = `FirebaseTradesSynced`
-    if (!this.cache.get(key)) {
-      this.store.set(`trade`, this.get())
-      // Sync trades with firebase every 5 minutes
-      this.cache.put(key, `true`, 300)
-    }
+    this.store.set(`Trades`, JSON.stringify(trades))
   }
 }

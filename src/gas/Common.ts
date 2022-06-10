@@ -3,7 +3,6 @@ import { CoinName, enumKeys, StableUSDCoin } from "trading-helper-lib"
 export const SECONDS_IN_MIN = 60
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60
 export const TICK_INTERVAL_MIN = 1
-export const SLOW_TICK_INTERVAL_MIN = 5
 
 export interface ExecParams {
   context?: any
@@ -61,10 +60,10 @@ export class Log {
   static print(): string {
     return `${this.alerts.length > 0 ? `${this.alerts.join(`\n`)}\n` : ``}
 ${
-      this.errLog.length > 0
-        ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
-        : ``
-    }
+  this.errLog.length > 0
+    ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
+    : ``
+}
 ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``}
 ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
 `
@@ -101,6 +100,6 @@ export class StableCoinMatcher {
   }
 
   get stableCoin(): StableUSDCoin | null {
-    return this.match ? this.match[2] as StableUSDCoin : null
+    return this.match ? (this.match[2] as StableUSDCoin) : null
   }
 }

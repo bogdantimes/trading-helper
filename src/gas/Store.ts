@@ -1,8 +1,10 @@
-import { CacheProxy } from "./CacheProxy"
+import { CacheProxy, DefaultCacheProxy } from "./CacheProxy"
 import { Log } from "./Common"
 
 export interface IStore {
   get(key: string): any
+
+  getKeys(): string[]
 
   set(key: string, value: any): any
 
@@ -23,6 +25,10 @@ export class ScriptStore implements IStore {
   get(key: string): any {
     const value = PropertiesService.getScriptProperties().getProperty(key)
     return value ? JSON.parse(value) : null
+  }
+
+  getKeys(): string[] {
+    return PropertiesService.getScriptProperties().getKeys()
   }
 
   getOrSet(key: string, value: any): any {
@@ -98,6 +104,12 @@ export class FirebaseStore implements IStore {
     return this.source.getData(key)
   }
 
+  getKeys(): string[] {
+    // @ts-ignore
+    const data = this.source.getData(``)
+    return Object.keys(data)
+  }
+
   getOrSet(key: string, value: any): any {
     return this.get(key) || this.set(key, value)
   }
@@ -112,5 +124,66 @@ export class FirebaseStore implements IStore {
   }
 }
 
+export class CachedStore implements IStore {
+  #store: IStore
+  #cache: DefaultCacheProxy
+  #syncIntervalSec = 5 * 60 // 5 minutes
+
+  constructor(store: IStore, cache: DefaultCacheProxy) {
+    this.#store = store
+    this.#cache = cache
+    this.#syncCache()
+  }
+
+  connect(dbURL: string): void {
+    this.#store.connect(dbURL)
+  }
+
+  delete(key: string): void {
+    this.#store.delete(key)
+    this.#cache.remove(key)
+  }
+
+  get(key: string): any {
+    const cached = this.#cache.get(key)
+    let value = cached ? JSON.parse(cached) : null
+    if (!value) {
+      value = this.#store.get(key)
+      value && this.#cache.put(key, JSON.stringify(value))
+    }
+    return value
+  }
+
+  getKeys(): string[] {
+    return this.#store.getKeys()
+  }
+
+  getOrSet(key: string, value: any): any {
+    return this.get(key) || this.set(key, value)
+  }
+
+  isConnected(): boolean {
+    return this.#store.isConnected()
+  }
+
+  set(key: string, value: any): any {
+    const synced = this.#cache.get(`${key}_synced`)
+    if (!synced) {
+      this.#store.set(key, value)
+      this.#cache.put(`${key}_synced`, `true`, this.#syncIntervalSec)
+    }
+    this.#cache.put(key, JSON.stringify(value))
+    return value
+  }
+
+  #syncCache() {
+    const cachedStoreValues = this.#cache.getAll(this.#store.getKeys())
+    Object.keys(cachedStoreValues).forEach((key) =>
+      this.set(key, JSON.parse(cachedStoreValues[key])),
+    )
+  }
+}
+
 const firebaseStore = new FirebaseStore()
-export const DefaultStore = firebaseStore.isConnected() ? firebaseStore : new ScriptStore()
+const defaultStore = firebaseStore.isConnected() ? firebaseStore : new ScriptStore()
+export const DefaultStore = new CachedStore(defaultStore, CacheProxy)

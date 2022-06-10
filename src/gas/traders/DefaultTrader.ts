@@ -42,11 +42,11 @@ export class DefaultTrader {
     priceProvider: PriceProvider,
     stats: Statistics,
   ) {
-    this.config = new ConfigDao(store, cache).get()
+    this.config = new ConfigDao(store).get()
     this.prices = priceProvider.get(this.config.StableCoin)
     this.exchange = exchange
     this.stats = stats
-    this.TradesDao = new TradesDao(store, CacheProxy)
+    this.TradesDao = new TradesDao(store)
 
     if (this.config.ProfitBasedStopLimit) {
       this.totalProfit = stats.getAll().TotalProfit
