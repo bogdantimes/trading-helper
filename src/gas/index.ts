@@ -96,10 +96,10 @@ function catchError<T>(fn: () => T): T {
       // If limit already handled, just throw the error without logging
       if (CacheProxy.get(skipNextTick)) throw e
       // Handle limit gracefully
-      Log.alert(`🚫 Google API daily rate limit exceeded.`)
+      Log.alert(`ℹ️Google API daily rate limit exceeded.`)
       const minutes = 5
       CacheProxy.put(skipNextTick, `true`, SECONDS_IN_MIN * minutes)
-      Log.alert(`ℹ️ Background process paused for the next ${minutes} minutes.`)
+      Log.alert(`ℹ️Background process paused for the next ${minutes} minutes.`)
     }
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
