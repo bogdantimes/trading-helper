@@ -107,14 +107,14 @@ export class AnomalyTrader {
 
     if (+anomalyStartPrice > ph.currentPrice) {
       Log.alert(
-        `ℹ️${coin} price dumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
+        `ℹ️ ${coin} price dumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
       )
       return PriceAnomaly.DUMP
     }
 
     if (+anomalyStartPrice < ph.currentPrice) {
       Log.alert(
-        `ℹ️${coin} price pumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
+        `ℹ️ ${coin} price pumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
       )
       return PriceAnomaly.PUMP
     }

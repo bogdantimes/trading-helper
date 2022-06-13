@@ -44,13 +44,20 @@ export function Settings({
   const [stopLimit, setLossLimit] = useState(f2(config.StopLimit * 100).toString())
   const [profitLimit, setProfitLimit] = useState(f2(config.ProfitLimit * 100).toString())
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString())
-  const [fbURL, setFbURL] = useState(``)
 
+  const [curFbURL, setCurFbURL] = useState(``)
+  const [newFbURL, setNewFbURL] = useState(``)
+
+  useEffect(() => setNewFbURL(curFbURL), [curFbURL])
   useEffect(() => {
-    google.script.run.withSuccessHandler(setFbURL).withFailureHandler(setError).getFirebaseURL()
+    google.script.run.withSuccessHandler(setCurFbURL).withFailureHandler(setError).getFirebaseURL()
   }, [])
 
   const onSave = () => {
+    if (curFbURL !== newFbURL) {
+      google.script.run.withFailureHandler(setError).setFirebaseURL(newFbURL)
+    }
+
     if (!config.StableCoin) {
       setError(`Stable Coin is required`)
       return
@@ -160,9 +167,9 @@ export function Settings({
         {autonomousTrading(config, setConfig)}
         {scoreThresholdSelector(config, setConfig)}
         <TextField
-          value={fbURL}
+          value={newFbURL}
           label={`Firebase URL`}
-          onChange={(e) => setFbURL(e.target.value)}
+          onChange={(e) => setNewFbURL(e.target.value)}
         />
         <Box alignSelf={`center`} sx={{ position: `relative` }}>
           <Button

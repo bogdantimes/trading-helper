@@ -53,35 +53,30 @@ export class FirebaseStore implements IStore {
   private source: object
 
   constructor() {
-    if (this.url) {
+    const url = FirebaseStore.url
+    if (url) {
       // @ts-ignore
-      this.source = FirebaseApp.getDatabaseByUrl(this.url, ScriptApp.getOAuthToken())
-    } else {
-      Log.info(`Firebase Realtime Database is not connected.`)
-      Log.info(`Google Apps Script property 'dbURL' is missing.`)
+      this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken())
     }
-    // If URL changed - clean trades and config cache
-    const cachedURL = CacheProxy.get(`dbURL`)
-    if (!!cachedURL && cachedURL !== this.url) {
-      Log.alert(`Firebase Realtime Database URL changed.`)
-      CacheProxy.remove(`Trades`)
-      CacheProxy.remove(`Config`)
-    }
-    CacheProxy.put(`dbURL`, this.url)
   }
 
-  get url(): string {
+  static get url(): string {
     return PropertiesService.getScriptProperties().getProperty(`dbURL`)
   }
 
-  set url(url: string) {
+  static set url(url: string) {
     PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
   }
 
   connect(dbURL: string): void {
     // @ts-ignore
     this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken())
-    this.url = dbURL
+    FirebaseStore.url = dbURL
+  }
+
+  disconnect(): void {
+    this.source = null
+    FirebaseStore.url = null
   }
 
   isConnected(): boolean {
@@ -107,7 +102,7 @@ export class FirebaseStore implements IStore {
   getKeys(): string[] {
     // @ts-ignore
     const data = this.source.getData(``)
-    return Object.keys(data)
+    return data && typeof data === `object` ? Object.keys(data) : []
   }
 
   getOrSet(key: string, value: any): any {
@@ -184,6 +179,5 @@ export class CachedStore implements IStore {
   }
 }
 
-const firebaseStore = new FirebaseStore()
-const defaultStore = firebaseStore.isConnected() ? firebaseStore : new ScriptStore()
+const defaultStore = FirebaseStore.url ? new FirebaseStore() : new ScriptStore()
 export const DefaultStore = new CachedStore(defaultStore, CacheProxy)

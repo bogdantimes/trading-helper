@@ -1,4 +1,4 @@
-import { DefaultStore } from "./Store"
+import { DefaultStore, FirebaseStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
@@ -109,12 +109,7 @@ function catchError<T>(fn: () => T): T {
 
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
-    if (!DefaultStore.isConnected()) {
-      Log.alert(`✨ Initial setup`)
-      Log.alert(`Connecting to Firebase with URL: ` + params.dbURL)
-      DefaultStore.connect(params.dbURL)
-      Log.alert(`Connected to Firebase`)
-    }
+    Log.alert(`✨ Initial setup`)
     const configDao = new ConfigDao(DefaultStore)
     const config = configDao.get()
     config.KEY = params.binanceAPIKey || config.KEY
@@ -238,6 +233,24 @@ function getCoinNames(): CoinName[] {
   })
 }
 
+function getFirebaseURL(): string {
+  return catchError(() => FirebaseStore.url)
+}
+
+function setFirebaseURL(url: string): string {
+  return catchError(() => {
+    if (url) {
+      new FirebaseStore().connect(url)
+      Log.alert(`Connected to Firebase: ${url}`)
+      return `OK`
+    } else {
+      new FirebaseStore().disconnect()
+      Log.alert(`Disconnected from Firebase`)
+      return `OK`
+    }
+  })
+}
+
 global.doGet = doGet
 global.doPost = doPost
 global.tick = tick
@@ -259,3 +272,5 @@ global.getStatistics = getStatistics
 global.getScores = getScores
 global.resetScores = resetScores
 global.getCoinNames = getCoinNames
+global.getFirebaseURL = getFirebaseURL
+global.setFirebaseURL = setFirebaseURL
