@@ -262,15 +262,17 @@ function getProfiles(): { [key: string]: Profile } {
 function createAutoTradeProfiles(): void {
   return catchError(() => {
     enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
-      const profile = { name: `AutoTrade${sel}Top1` }
+      const profile = { name: `${sel}` }
       const profileConfig = FirebaseStore.newProfileConfig(profile)
       profileConfig.ScoreSelectivity = sel
       profileConfig.BuyQuantity = 11
       profileConfig.ProfitLimit = 0.05
-      profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP1
+      profileConfig.StopLimit = 0.02
+      profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP5
+      profileConfig.SwingTradeEnabled = true
+      profileConfig.SellPumps = true
       profileConfig.SellAtProfitLimit = true
       profileConfig.SellAtStopLimit = true
-      profileConfig.ProfitBasedStopLimit = true
       FirebaseStore.createProfile(profile, profileConfig)
       Log.alert(`Created profile ${profile.name}`)
     })
