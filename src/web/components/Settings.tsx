@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import SaveIcon from "@mui/icons-material/Save"
 import {
   Alert,
@@ -44,6 +44,11 @@ export function Settings({
   const [stopLimit, setLossLimit] = useState(f2(config.StopLimit * 100).toString())
   const [profitLimit, setProfitLimit] = useState(f2(config.ProfitLimit * 100).toString())
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString())
+  const [fbURL, setFbURL] = useState(``)
+
+  useEffect(() => {
+    google.script.run.withSuccessHandler(setFbURL).withFailureHandler(setError).getFirebaseURL()
+  }, [])
 
   const onSave = () => {
     if (!config.StableCoin) {
@@ -154,6 +159,11 @@ export function Settings({
         {switchers(config, setConfig)}
         {autonomousTrading(config, setConfig)}
         {scoreThresholdSelector(config, setConfig)}
+        <TextField
+          value={fbURL}
+          label={`Firebase URL`}
+          onChange={(e) => setFbURL(e.target.value)}
+        />
         <Box alignSelf={`center`} sx={{ position: `relative` }}>
           <Button
             variant="contained"
@@ -219,7 +229,7 @@ function scoreThresholdSelector(config: Config, setConfig: (config: Config) => v
           setConfig({ ...config, ScoreSelectivity: e.target.value as ScoreSelectivityKeys })
         }
       >
-        {enumKeys(ScoreSelectivity).map((key) => (
+        {enumKeys<string>(ScoreSelectivity).map((key) => (
           <FormControlLabel
             key={key}
             labelPlacement="end"
@@ -253,7 +263,7 @@ function autonomousTrading(config: Config, setConfig: (config: Config) => void) 
         step={null}
         min={0}
         max={10}
-        marks={enumKeys(AutoTradeBestScores).map((key) => ({
+        marks={enumKeys<string>(AutoTradeBestScores).map((key) => ({
           value: AutoTradeBestScores[key],
           label: capitalizeWord(key),
         }))}
