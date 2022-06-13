@@ -12,6 +12,7 @@ export interface ExecParams {
 }
 
 export const INTERRUPT = `INTERRUPT`
+export const SERVICE_LIMIT = `Service invoked too many times`
 
 export function execute({ context, runnable, interval = 500, attempts = 5 }: ExecParams) {
   let err: Error
@@ -21,7 +22,7 @@ export function execute({ context, runnable, interval = 500, attempts = 5 }: Exe
       return runnable(context)
     } catch (e) {
       err = e
-      if (e.message.includes(INTERRUPT)) {
+      if (e.message.includes(INTERRUPT) || e.message.includes(SERVICE_LIMIT)) {
         break
       }
     }
@@ -72,11 +73,12 @@ ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
   static ifUsefulDumpAsEmail() {
     const email = Session.getEffectiveUser().getEmail()
     if (this.alerts.length > 0 || this.errLog.length > 0) {
+      const subject = `Trading Helper ${this.errLog.length ? `Error` : `Alert`}`
       try {
-        GmailApp.sendEmail(email, `Trading-helper alert`, this.print())
+        GmailApp.sendEmail(email, subject, this.print())
       } catch (e) {
         Log.error(e)
-        GmailApp.createDraft(email, `Trading-helper alert`, this.print())
+        GmailApp.createDraft(email, subject, this.print())
       }
     }
   }

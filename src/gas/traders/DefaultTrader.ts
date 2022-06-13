@@ -9,6 +9,7 @@ import {
   f2,
   ICacheProxy,
   PriceHoldersMap,
+  PriceMove,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
@@ -62,16 +63,15 @@ export class DefaultTrader {
       this.processSoldState(tm)
     }
 
-    const priceGoesUp = tm.priceGoesUp()
-    priceGoesUp && Log.info(`${tm.tradeResult.symbol} price goes up`)
+    const priceMove = tm.getPriceMove()
 
     // take action after processing
-    if (tm.stateIs(TradeState.SELL) && !priceGoesUp) {
-      // sell if price not goes up anymore
+    if (tm.stateIs(TradeState.SELL) && priceMove < PriceMove.UP) {
+      // sell if price does not go up anymore
       // this allows to wait if price continues to go up
       this.sell(tm)
-    } else if (tm.stateIs(TradeState.BUY) && priceGoesUp) {
-      // buy only if price started to go up
+    } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
+      // buy only if price stopped going down
       // this allows to wait if price continues to fall
       this.buy(tm, this.config.BuyQuantity)
     }

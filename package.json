@@ -53,6 +53,6 @@
     "react-error-boundary": "^3.1.4",
     "react-vis": "^1.11.7",
     "react-window": "^1.8.7",
-    "trading-helper-lib": "^0.1.16"
+    "trading-helper-lib": "0.1.16"
   }
 }
