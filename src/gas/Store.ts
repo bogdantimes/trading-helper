@@ -65,7 +65,11 @@ export class FirebaseStore implements IStore {
   }
 
   static set url(url: string) {
-    PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
+    if (url) {
+      PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
+    } else {
+      PropertiesService.getScriptProperties().deleteProperty(`dbURL`)
+    }
   }
 
   connect(dbURL: string): void {

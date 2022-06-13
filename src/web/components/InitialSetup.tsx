@@ -96,7 +96,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           {isConnecting && circularProgress}
         </Box>
       </Stack>
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert severity="error">{error.toString()}</Alert>}
     </Stack>
   )
 }

@@ -45,17 +45,25 @@ export function Settings({
   const [profitLimit, setProfitLimit] = useState(f2(config.ProfitLimit * 100).toString())
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString())
 
-  const [curFbURL, setCurFbURL] = useState(``)
+  const [initialFbURL, setInitialFbURL] = useState(``)
   const [newFbURL, setNewFbURL] = useState(``)
 
-  useEffect(() => setNewFbURL(curFbURL), [curFbURL])
+  useEffect(() => setNewFbURL(initialFbURL), [initialFbURL])
   useEffect(() => {
-    google.script.run.withSuccessHandler(setCurFbURL).withFailureHandler(setError).getFirebaseURL()
+    google.script.run
+      .withSuccessHandler(setInitialFbURL)
+      .withFailureHandler(setError)
+      .getFirebaseURL()
   }, [])
 
   const onSave = () => {
-    if (curFbURL !== newFbURL) {
-      google.script.run.withFailureHandler(setError).setFirebaseURL(newFbURL)
+    if (initialFbURL !== newFbURL) {
+      google.script.run
+        .withSuccessHandler(() => {
+          setInitialFbURL(newFbURL)
+        })
+        .withFailureHandler(setError)
+        .setFirebaseURL(newFbURL)
     }
 
     if (!config.StableCoin) {
@@ -170,6 +178,8 @@ export function Settings({
           value={newFbURL}
           label={`Firebase URL`}
           onChange={(e) => setNewFbURL(e.target.value)}
+          sx={{ maxWidth: `389px` }}
+          helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. Your data won't be lost.`}
         />
         <Box alignSelf={`center`} sx={{ position: `relative` }}>
           <Button
@@ -183,7 +193,7 @@ export function Settings({
           </Button>
           {isSaving && circularProgress}
         </Box>
-        {error && <Alert severity="error">{error}</Alert>}
+        {error && <Alert severity="error">{error.toString()}</Alert>}
       </Stack>
     </Box>
   )
