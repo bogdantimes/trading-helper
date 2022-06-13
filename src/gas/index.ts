@@ -1,4 +1,4 @@
-import { DefaultStore, FirebaseStore } from "./Store"
+import { DefaultStore, FirebaseStore, IStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
@@ -20,26 +20,8 @@ import { PriceProvider } from "./PriceProvider"
 import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
 
-/**
- * Check if the permanent storage is connected.
- * If yes, ensure the app is running in the background.
- * Otherwise, stop it.
- */
-function checkDbConnectedAndAppRunning() {
-  if (DefaultStore.isConnected()) {
-    const processIsNotRunning = !ScriptApp.getProjectTriggers().find(
-      (t) => t.getHandlerFunction() == Process.tick.name,
-    )
-    if (processIsNotRunning) startTicker()
-  } else {
-    Log.alert(`ℹ️ Database is not reachable.`)
-    stopTicker()
-  }
-}
-
 function doGet() {
   return catchError(() => {
-    checkDbConnectedAndAppRunning()
     return HtmlService.createTemplateFromFile(`index`)
       .evaluate()
       .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
@@ -71,7 +53,7 @@ function startTicker() {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
   ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL_MIN).create()
   Log.alert(
-    `ℹ️ Background process restarted. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
+    `ℹ️ Background process started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
   )
 }
 
@@ -110,7 +92,14 @@ function catchError<T>(fn: () => T): T {
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
     Log.alert(`✨ Initial setup`)
-    const configDao = new ConfigDao(DefaultStore)
+    let store: IStore = DefaultStore
+    if (params.dbURL) {
+      const fbStore = new FirebaseStore()
+      fbStore.connect(params.dbURL)
+      Log.alert(`Connected to Firebase: ${params.dbURL}`)
+      store = fbStore
+    }
+    const configDao = new ConfigDao(store)
     const config = configDao.get()
     config.KEY = params.binanceAPIKey || config.KEY
     config.SECRET = params.binanceSecretKey || config.SECRET
