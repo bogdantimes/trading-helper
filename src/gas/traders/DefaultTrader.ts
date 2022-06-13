@@ -115,7 +115,7 @@ export class DefaultTrader {
     if (this.config.ProfitBasedStopLimit) {
       const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
-    } else if (!tm.stopLimitPrice || tm.priceGoesStrongUp()) {
+    } else if (!tm.stopLimitPrice || tm.getPriceMove() > PriceMove.NEUTRAL) {
       const newStopLimit = tm.currentPrice * (1 - this.config.StopLimit)
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit)
     }
