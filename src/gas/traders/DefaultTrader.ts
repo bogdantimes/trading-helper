@@ -91,8 +91,6 @@ export class DefaultTrader {
     if (priceDropped) {
       Log.alert(`ℹ️ ${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
-    } else {
-      Log.info(`${symbol} price has not dropped sufficiently, skipping swing trade`)
     }
   }
 
@@ -108,7 +106,7 @@ export class DefaultTrader {
       Log.alert(`ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
       this.config.SellAtProfitLimit && tm.setState(TradeState.SELL)
     } else if (tm.entryPriceCrossedUp()) {
-      Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
+      // Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
     }
   }
 
