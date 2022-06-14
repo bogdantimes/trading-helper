@@ -14,18 +14,30 @@ type StableCoinKeys = keyof typeof StableUSDCoin
 type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap }
 
 export class PriceProvider implements IPriceProvider {
+  static #instance: PriceProvider
+
   readonly #exchange: IExchange
   readonly #cache: ICacheProxy
-  readonly #priceMaps: PriceMaps
 
-  constructor(exchange: IExchange, cache: ICacheProxy) {
+  #priceMaps: PriceMaps
+
+  static getInstance(exchange: IExchange, cache: ICacheProxy): PriceProvider {
+    PriceProvider.#instance = PriceProvider.#instance || new PriceProvider(exchange, cache)
+    return PriceProvider.#instance
+  }
+
+  private constructor(exchange: IExchange, cache: ICacheProxy) {
     this.#exchange = exchange
     this.#cache = cache
-    this.#priceMaps = this.#update()
+    this.#priceMaps = this.#getPriceMapsFromCache()
   }
 
   get(stableCoin: StableUSDCoin): PriceHoldersMap {
     return this.#priceMaps[stableCoin]
+  }
+
+  update() {
+    this.#priceMaps = this.#update()
   }
 
   getCoinNames(stableCoin: StableUSDCoin): CoinName[] {
@@ -40,7 +52,6 @@ export class PriceProvider implements IPriceProvider {
     }
 
     const prices = this.#exchange.getPrices()
-    const curPriceMaps: PriceMaps = this.#getPriceMapsFromCache()
     const updatedPriceMaps: PriceMaps = {}
     enumKeys<StableCoinKeys>(StableUSDCoin).forEach((k) => (updatedPriceMaps[k] = {}))
 
@@ -50,7 +61,7 @@ export class PriceProvider implements IPriceProvider {
       if (!matcher.matched) return
 
       const pricesHolder = new PricesHolder()
-      pricesHolder.prices = curPriceMaps[matcher.stableCoin][matcher.coinName]?.prices
+      pricesHolder.prices = this.#priceMaps[matcher.stableCoin][matcher.coinName]?.prices
       pricesHolder.pushPrice(prices[symbol])
       updatedPriceMaps[matcher.stableCoin][matcher.coinName] = pricesHolder
     })

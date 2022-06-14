@@ -16,7 +16,7 @@ export class TradeActions {
 
   static default(store: IStore): TradeActions {
     const exchange = new Exchange(store.getConfig())
-    return new TradeActions(store, new PriceProvider(exchange, DefaultProfileCacheProxy))
+    return new TradeActions(store, PriceProvider.getInstance(exchange, DefaultProfileCacheProxy))
   }
 
   private constructor(store: IStore, priceProvider: IPriceProvider) {

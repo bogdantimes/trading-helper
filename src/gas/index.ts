@@ -220,7 +220,7 @@ function getScores(profile: Profile): ScoresData {
   return catchError(() => {
     const store = new FirebaseStore(profile)
     const exchange = new Exchange(store.getConfig())
-    const priceProvider = new PriceProvider(exchange, DefaultProfileCacheProxy)
+    const priceProvider = PriceProvider.getInstance(exchange, DefaultProfileCacheProxy)
     const scores = global.TradingHelperScores.create(
       DefaultProfileCacheProxy,
       store,
@@ -234,7 +234,7 @@ function resetScores(profile: Profile): void {
   return catchError(() => {
     const store = new FirebaseStore(profile)
     const exchange = new Exchange(store.getConfig())
-    const priceProvider = new PriceProvider(exchange, DefaultProfileCacheProxy)
+    const priceProvider = PriceProvider.getInstance(exchange, DefaultProfileCacheProxy)
     const scores = global.TradingHelperScores.create(
       DefaultProfileCacheProxy,
       store,
@@ -248,7 +248,7 @@ function getCoinNames(profile: Profile): CoinName[] {
   return catchError(() => {
     const store = new FirebaseStore(profile)
     const exchange = new Exchange(store.getConfig())
-    const priceProvider = new PriceProvider(exchange, DefaultProfileCacheProxy)
+    const priceProvider = PriceProvider.getInstance(exchange, DefaultProfileCacheProxy)
     return priceProvider.getCoinNames(store.getConfig().StableCoin)
   })
 }

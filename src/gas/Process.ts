@@ -1,7 +1,7 @@
 import { DefaultTrader } from "./traders/DefaultTrader"
 import { Exchange } from "./Exchange"
 import { Statistics } from "./Statistics"
-import { DeadlineError, DefaultProfileStore, FirebaseStore } from "./Store"
+import { DefaultProfileStore, FirebaseStore } from "./Store"
 import { Log } from "./Common"
 import { ScoreTrader } from "./traders/ScoreTrader"
 import { CacheProxy, DefaultProfileCacheProxy } from "./CacheProxy"
@@ -12,7 +12,11 @@ import { AnomalyTrader } from "./traders/AnomalyTrader"
 export class Process {
   static tick() {
     const exchange = new Exchange(DefaultProfileStore.getConfig())
-    const priceProvider = new PriceProvider(exchange, DefaultProfileCacheProxy)
+    const priceProvider = PriceProvider.getInstance(exchange, DefaultProfileCacheProxy)
+
+    // Update prices every tick. This should the only place to call `update` on the price provider.
+    priceProvider.update()
+
     const scores = global.TradingHelperScores.create(
       DefaultProfileCacheProxy,
       DefaultProfileStore,
