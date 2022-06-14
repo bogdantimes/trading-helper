@@ -20,7 +20,11 @@ export class Process {
     const config = configDao.get()
     const exchange = new Exchange(config)
     const statistics = new Statistics(store)
-    const priceProvider = new PriceProvider(exchange, CacheProxy)
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
+
+    // Update prices every tick. This should the only place to call `update` on the price provider.
+    priceProvider.update()
+
     const trader = new DefaultTrader(store, CacheProxy, exchange, priceProvider, statistics)
     const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
 

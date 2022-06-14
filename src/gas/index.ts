@@ -197,7 +197,7 @@ function getScores(): ScoresData {
   return catchError(() => {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config)
-    const priceProvider = new PriceProvider(exchange, CacheProxy)
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
     const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
     return scores.get()
   })
@@ -207,7 +207,7 @@ function resetScores(): void {
   return catchError(() => {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config)
-    const priceProvider = new PriceProvider(exchange, CacheProxy)
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
     const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
     return scores.reset()
   })
@@ -217,7 +217,7 @@ function getCoinNames(): CoinName[] {
   return catchError(() => {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config)
-    const priceProvider = new PriceProvider(exchange, CacheProxy)
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
     return priceProvider.getCoinNames(config.StableCoin)
   })
 }

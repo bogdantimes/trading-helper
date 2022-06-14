@@ -21,7 +21,7 @@ export class TradeActions {
   static default(): TradeActions {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config)
-    return new TradeActions(DefaultStore, config, new PriceProvider(exchange, CacheProxy))
+    return new TradeActions(DefaultStore, config, PriceProvider.getInstance(exchange, CacheProxy))
   }
 
   private constructor(store: IStore, config: Config, priceProvider: IPriceProvider) {
