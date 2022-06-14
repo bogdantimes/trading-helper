@@ -8,6 +8,11 @@ function byteCount(s: string): number {
   return encodeURI(s).split(/%..|./).length - 1
 }
 
+const MAX_EXPIRATION = SECONDS_IN_HOUR * 6
+
+export type Entries = { [key: string]: any }
+export type ExpirationEntries = { [key: string]: { value: string; expiration?: Integer } }
+
 export class CacheProxy implements ICacheProxy {
   readonly StableCoins = `StableCoins`
   private readonly profile: Profile
@@ -21,8 +26,23 @@ export class CacheProxy implements ICacheProxy {
     return CacheService.getScriptCache().get(`${this.profile.name}${key}`)
   }
 
-  getAll(keys: string[]): { [key: string]: any } {
-    return CacheService.getScriptCache().getAll(keys)
+  getAll(keys: string[]): Entries {
+    const profileKeys = keys.map((key) => `${this.profile.name}${key}`)
+    return CacheService.getScriptCache().getAll(profileKeys)
+  }
+
+  putAll(values: ExpirationEntries): void {
+    // group values into maps by expiration
+    const map: { [key: Integer]: Entries } = {}
+    Object.keys(values).forEach((key) => {
+      const { value, expiration = MAX_EXPIRATION } = values[key]
+      map[expiration] = map[expiration] || {}
+      map[expiration][`${this.profile.name}${key}`] = value
+    })
+    // put all values into cache
+    Object.keys(map).forEach((expiration) => {
+      CacheService.getScriptCache().putAll(map[expiration], +expiration)
+    })
   }
 
   /**
@@ -30,7 +50,7 @@ export class CacheProxy implements ICacheProxy {
    * @param value
    * @param expirationInSeconds By default, keep for 6 hours (maximum time allowed by GAS)
    */
-  put(key: string, value: string, expirationInSeconds: Integer = SECONDS_IN_HOUR * 6): void {
+  put(key: string, value: string, expirationInSeconds: Integer = MAX_EXPIRATION): void {
     key = `${this.profile.name}${key}`
     const size = byteCount(value)
     if (size > 0.9 * MAX_CACHE_VAL_SIZE_BYTES) {
@@ -51,6 +71,11 @@ export class CacheProxy implements ICacheProxy {
 
   remove(key: string): void {
     CacheService.getScriptCache().remove(`${this.profile.name}${key}`)
+  }
+
+  removeAll(keys: string[]): void {
+    const profileKeys = keys.map((key) => `${this.profile.name}${key}`)
+    CacheService.getScriptCache().removeAll(profileKeys)
   }
 }
 

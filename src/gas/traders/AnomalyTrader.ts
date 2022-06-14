@@ -10,7 +10,7 @@ import {
 } from "trading-helper-lib"
 import { TradeActions } from "../TradeActions"
 import { IStore } from "../Store"
-import { CacheProxy } from "../CacheProxy"
+import { CacheProxy, Entries, ExpirationEntries } from "../CacheProxy"
 
 export enum PriceAnomaly {
   NONE,
@@ -26,6 +26,10 @@ export class AnomalyTrader {
   private readonly priceProvider: IPriceProvider
   private readonly tradeActions: TradeActions
 
+  #cacheGetAll: Entries
+  #cachePutAll: ExpirationEntries = {}
+  #cacheRemoveAll: string[] = []
+
   constructor(store: IStore, cache: CacheProxy, priceProvider: IPriceProvider) {
     this.store = store
     this.cache = cache
@@ -38,15 +42,19 @@ export class AnomalyTrader {
     const prices = this.priceProvider.get(this.config.StableCoin)
 
     // Performance improvement: populating cache map once for all
-    const cacheMap = this.populateCacheMap(prices)
+    this.#getAllCache(prices)
 
-    Object.keys(prices).forEach((coin: CoinName) => {
-      const anomaly = this.checkPumpAndDump(coin, prices[coin], cacheMap)
-      this.handleAnomaly(coin, anomaly)
+    const anomalies = Object.keys(prices).map((coin: CoinName) => {
+      return { coin, anomaly: this.#checkAnomaly(coin, prices[coin]) }
     })
+
+    // Performance improvement: update cache once for all
+    this.#updateAllCache()
+
+    anomalies.forEach(({ coin, anomaly }) => this.#handleAnomaly(coin, anomaly))
   }
 
-  private handleAnomaly(coin: string, anomaly: PriceAnomaly) {
+  #handleAnomaly(coin: string, anomaly: PriceAnomaly) {
     if (anomaly === PriceAnomaly.DUMP && this.config.BuyDumps) {
       Log.alert(`ℹ️ Buying price dumps is enabled: ${coin} will be bought.`)
       this.tradeActions.buy(coin)
@@ -65,31 +73,31 @@ export class AnomalyTrader {
     }
   }
 
-  private populateCacheMap(prices: PriceHoldersMap) {
+  #getAllCache(prices: PriceHoldersMap): void {
     const cacheKeys = []
     Object.keys(prices).forEach((coin) => {
       cacheKeys.push(`${coin}-pump-dump-tracking`)
       cacheKeys.push(`${coin}-start-price`)
     })
-    return this.cache.getAll(cacheKeys)
+    this.#cacheGetAll = this.cache.getAll(cacheKeys)
   }
 
-  private checkPumpAndDump(
-    coin: CoinName,
-    ph: PricesHolder,
-    cacheMap: { [key: string]: any },
-  ): PriceAnomaly {
+  #checkAnomaly(coin: CoinName, ph: PricesHolder): PriceAnomaly {
     const trackingKey = `${coin}-pump-dump-tracking`
-    const tracking = cacheMap[trackingKey]
+    const tracking = this.#cacheGetAll[trackingKey]
     const startPriceKey = `${coin}-start-price`
-    const anomalyStartPrice = cacheMap[startPriceKey]
+    const anomalyStartPrice = this.#cacheGetAll[startPriceKey]
 
     if (tracking || ph.priceGoesStrongUp() || ph.priceGoesStrongDown()) {
       // If price STRONG move repeats within 3 minutes, we keep tracking the anomaly
-      this.cache.put(trackingKey, `true`, SECONDS_IN_MIN * 3)
+      const trackingDuration = SECONDS_IN_MIN * 3
+      this.#cachePutAll[trackingKey] = { value: `true`, expiration: trackingDuration }
       // Saving the max or min price of the anomaly depending on the direction
       const minMaxPrice = ph.priceGoesStrongUp() ? Math.min(...ph.prices) : Math.max(...ph.prices)
-      this.cache.put(startPriceKey, `${anomalyStartPrice || minMaxPrice}`)
+      this.#cachePutAll[startPriceKey] = {
+        value: `${anomalyStartPrice || minMaxPrice}`,
+        expiration: trackingDuration * 2,
+      }
       return PriceAnomaly.TRACKING
     }
 
@@ -97,7 +105,7 @@ export class AnomalyTrader {
       return PriceAnomaly.NONE
     }
 
-    this.cache.remove(startPriceKey)
+    this.#cacheRemoveAll.push(startPriceKey)
     const percent = absPercentageChange(+anomalyStartPrice, ph.currentPrice)
 
     if (percent < this.config.PriceAnomalyAlert) {
@@ -106,18 +114,23 @@ export class AnomalyTrader {
 
     if (+anomalyStartPrice > ph.currentPrice) {
       Log.alert(
-        `ℹ️${coin} price dumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
+        `ℹ️ ${coin} price dumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
       )
       return PriceAnomaly.DUMP
     }
 
     if (+anomalyStartPrice < ph.currentPrice) {
       Log.alert(
-        `ℹ️${coin} price pumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
+        `ℹ️ ${coin} price pumped for ${percent}%: ${anomalyStartPrice} -> ${ph.currentPrice}`,
       )
       return PriceAnomaly.PUMP
     }
 
     return PriceAnomaly.NONE
+  }
+
+  #updateAllCache(): void {
+    this.cache.putAll(this.#cachePutAll)
+    this.cache.removeAll(this.#cacheRemoveAll)
   }
 }
