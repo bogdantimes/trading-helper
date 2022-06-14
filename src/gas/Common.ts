@@ -105,3 +105,35 @@ export class StableCoinMatcher {
     return this.match ? (this.match[2] as StableUSDCoin) : null
   }
 }
+
+export class StopWatch {
+  private startTime: number
+  private stopTime: number
+  private prefix: string
+  private readonly printer: (msg: string) => void
+
+  constructor(printer?: (msg: string) => void) {
+    this.startTime = 0
+    this.stopTime = 0
+    this.printer = printer
+  }
+
+  start(prefix: string) {
+    this.prefix = prefix
+    this.startTime = new Date().getTime()
+    this.printer?.(`${prefix} started`)
+  }
+
+  stop() {
+    this.stopTime = new Date().getTime()
+    this.printer?.(this.printElapsed())
+  }
+
+  printElapsed() {
+    return `${this.prefix} took ${this.getElapsedTime()}ms`
+  }
+
+  getElapsedTime() {
+    return this.stopTime - this.startTime
+  }
+}
