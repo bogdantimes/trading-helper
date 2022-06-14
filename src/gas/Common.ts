@@ -121,7 +121,6 @@ export class StopWatch {
   start(prefix: string) {
     this.prefix = prefix
     this.startTime = new Date().getTime()
-    this.printer?.(`${prefix} started`)
   }
 
   stop() {

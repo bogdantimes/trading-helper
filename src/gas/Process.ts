@@ -13,7 +13,7 @@ import { ConfigDao } from "./dao/Config"
 
 export class Process {
   static tick() {
-    const stopWatch = new StopWatch((...args) => Log.alert(...args))
+    const stopWatch = new StopWatch((...args) => Log.debug(...args))
 
     const store = DefaultStore
     const tradesDao = new TradesDao(store)
