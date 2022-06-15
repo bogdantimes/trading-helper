@@ -9,9 +9,9 @@
       },
       {
         "userSymbol": "TradingHelperScores",
-        "version": "9",
+        "version": "10",
         "libraryId": "1ePSsOk0NIf_IyHfgxbRM-Uq7muXvnKB4MIUUi8lnS1VA_LjEnt1X6D8W",
-        "developmentMode": true
+        "developmentMode": false
       }
     ]
   },
