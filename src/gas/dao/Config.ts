@@ -15,6 +15,10 @@ export class ConfigDao {
     this.store = store
   }
 
+  isInitialized(): boolean {
+    return !!this.store.get(`Config`)
+  }
+
   get(): Config {
     const defaultConfig: Config = {
       BuyQuantity: 10,

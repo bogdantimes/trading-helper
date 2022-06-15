@@ -20,6 +20,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
+    "typescript": "^4.7.3",
     "@google/clasp": "^2.4.1",
     "@parcel/reporter-bundle-analyzer": "^2.5.0",
     "@types/google-apps-script": "^1.0.47",

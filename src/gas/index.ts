@@ -178,7 +178,8 @@ function getAssets(): AssetsResponse {
 
 function getConfig(): Config {
   return catchError(() => {
-    return DefaultStore.isConnected() ? new ConfigDao(DefaultStore).get() : null
+    const configDao = new ConfigDao(DefaultStore)
+    return configDao.isInitialized() ? configDao.get() : null
   })
 }
 

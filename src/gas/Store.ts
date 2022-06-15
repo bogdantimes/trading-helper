@@ -1,5 +1,4 @@
 import { CacheProxy, DefaultCacheProxy } from "./CacheProxy"
-import { Log } from "./Common"
 
 export interface IStore {
   get(key: string): any
