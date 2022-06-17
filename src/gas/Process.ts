@@ -24,16 +24,14 @@ export class Process {
     const statistics = new Statistics(store)
     const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
 
-    stopWatch.start(`priceProvider.update`)
+    stopWatch.start(`Prices update`)
     // Update prices every tick. This should the only place to call `update` on the price provider.
     priceProvider.update()
     stopWatch.stop()
 
-    stopWatch.start(`trader.new`)
     const trader = new DefaultTrader(store, CacheProxy, exchange, priceProvider, statistics)
-    stopWatch.stop()
 
-    stopWatch.start(`trader.update`)
+    stopWatch.start(`Trades check`)
     tradesDao.getList().forEach((trade) => {
       try {
         tradesDao.update(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
@@ -43,7 +41,7 @@ export class Process {
     })
     stopWatch.stop()
 
-    stopWatch.start(`trader.updateStableCoinsBalance`)
+    stopWatch.start(`Stable Coins update`)
     try {
       trader.updateStableCoinsBalance()
     } catch (e) {
@@ -52,11 +50,9 @@ export class Process {
     }
     stopWatch.stop()
 
-    stopWatch.start(`scores.create`)
     const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
-    stopWatch.stop()
 
-    stopWatch.start(`scores.update`)
+    stopWatch.start(`Scores update`)
     try {
       scores.update()
     } catch (e) {
@@ -65,7 +61,7 @@ export class Process {
     }
     stopWatch.stop()
 
-    stopWatch.start(`scoreTrader.trade`)
+    stopWatch.start(`Recommended coins check`)
     try {
       new ScoreTrader(store, CacheProxy, scores).trade()
     } catch (e) {
@@ -74,7 +70,7 @@ export class Process {
     }
     stopWatch.stop()
 
-    stopWatch.start(`anomalyTrader.trade`)
+    stopWatch.start(`Anomalies check`)
     try {
       new AnomalyTrader(store, CacheProxy, priceProvider).trade()
     } catch (e) {
