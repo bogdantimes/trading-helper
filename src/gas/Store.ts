@@ -11,7 +11,7 @@ import {
   TradeMemo,
   TradeState,
 } from "trading-helper-lib"
-import { DefaultProfile, Log } from "./Common"
+import { DefaultProfile, execute, Log } from "./Common"
 
 export interface IStore {
   get(key: string): any
@@ -276,13 +276,8 @@ export class FirebaseStore implements IStore {
     notFoundFn?: () => TradeMemo | undefined,
   ): void {
     coinName = coinName.toUpperCase()
-    const lock = LockService.getScriptLock()
+    const lock = this.#acquireTradeLock(coinName)
     try {
-      if (!lock.tryLock(30000)) {
-        Log.error(new Error(`Failed to acquire lock for ${coinName}`))
-        return
-      }
-
       const trade = this.getTrades()[coinName]
       // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
       // otherwise changedTrade is null.
@@ -293,6 +288,20 @@ export class FirebaseStore implements IStore {
       }
     } finally {
       lock.releaseLock()
+    }
+  }
+
+  #acquireTradeLock(coinName: string): GoogleAppsScript.Lock.Lock {
+    const lock = LockService.getScriptLock()
+    try {
+      execute({
+        attempts: 4,
+        interval: 1000, // 1 second
+        runnable: () => lock.waitLock(5000), // 5 seconds
+      })
+      return lock
+    } catch (e) {
+      throw new Error(`Failed to acquire lock for ${coinName}: ${e.message}`)
     }
   }
 
