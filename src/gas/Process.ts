@@ -29,7 +29,7 @@ export class Process {
     priceProvider.update()
     stopWatch.stop()
 
-    const trader = new DefaultTrader(store, CacheProxy, exchange, priceProvider, statistics)
+    const trader = new DefaultTrader(store, exchange, priceProvider, statistics)
 
     stopWatch.start(`Trades check`)
     tradesDao.getList().forEach((trade) => {

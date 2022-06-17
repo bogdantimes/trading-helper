@@ -6,7 +6,6 @@ import {
   Config,
   ExchangeSymbol,
   f2,
-  ICacheProxy,
   PriceHoldersMap,
   PriceMove,
   StableUSDCoin,
@@ -36,13 +35,7 @@ export class DefaultTrader {
    */
   private readonly numberOfBoughtAssets: number
 
-  constructor(
-    store: IStore,
-    cache: ICacheProxy,
-    exchange: IExchange,
-    priceProvider: PriceProvider,
-    stats: Statistics,
-  ) {
+  constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
     this.config = new ConfigDao(store).get()
     this.prices = priceProvider.get(this.config.StableCoin)
     this.exchange = exchange
