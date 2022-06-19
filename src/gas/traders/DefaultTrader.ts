@@ -108,10 +108,20 @@ export class DefaultTrader {
       const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
     } else {
+      // The stop limit price is the price at which the trade will be sold if the price drops below it.
+      // The stop limit price is calculated as follows:
+      // 1. Get the last N prices and calculate the average price.
+      // 2. Multiply the average price by K, where: 1 - StopLimit <= K <= 0.99,
+      //    K -> 0.99 proportionally to the current profit.
+      //    The closer the current profit to the ProfitLimit, the closer K is to 0.99.
+      const SL = this.config.StopLimit
+      const PL = this.config.ProfitLimit
+      const P = tm.profitPercent() / 100
+      const K = Math.min(0.99, 1 - SL + (P * SL) / PL)
+
       const lastN = 3
-      // average of last N prices minus the stop limit percentage
-      const newStopLimit =
-        (tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN) * (1 - this.config.StopLimit)
+      const avePrice = tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN
+      const newStopLimit = K * avePrice
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit)
     }
   }
