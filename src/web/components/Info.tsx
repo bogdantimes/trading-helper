@@ -33,7 +33,7 @@ export function Info({ config }: { config: Config }) {
         </Alert>
         <FixedSizeList
           width={cardWidth}
-          height={400}
+          height={440}
           itemSize={55}
           itemCount={rows.length}
           overscanCount={5}
