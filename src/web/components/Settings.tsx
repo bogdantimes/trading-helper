@@ -237,10 +237,10 @@ function switchers(
 }
 
 const scoreSelectorCaption: { [key in ScoreSelectivityKeys]: string } = {
-  EXTREME: `Best for manual trading. Wait for 30+ score points.`,
-  HIGH: `Best for manual or supervised autonomous trading. Wait for 60+ score points.`,
-  MODERATE: `Best for unsupervised fully-autonomous trading.`,
-  MINIMAL: `Best for manual or supervised autonomous trading. Almost live score update.`,
+  EXTREME: `Best for manual trading. Reliable score starts at ~15 points.`,
+  HIGH: `Best for manual or supervised autonomous trading. Reliable score starts at ~30 points.`,
+  MODERATE: `Best for unsupervised fully-autonomous trading. Reliable score starts at ~90 points.`,
+  MINIMAL: `Best for manual or supervised autonomous trading. Reliable score starts at ~210 points.`,
 }
 
 function scoreThresholdSelector(config: Config, setConfig: (config: Config) => void) {
