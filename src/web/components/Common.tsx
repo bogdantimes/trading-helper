@@ -7,6 +7,7 @@ import {
   KeyboardDoubleArrowDown,
   KeyboardDoubleArrowUp,
 } from "@mui/icons-material"
+import { AlertColor } from "@mui/material/Alert/Alert"
 
 export const circularProgress = (
   <>
@@ -50,7 +51,7 @@ export const capitalizeWord = (s: string) => s.charAt(0).toUpperCase() + s.slice
 
 export const cardWidth = `332px`
 
-export const selectivityColorMap: { [key in ScoreSelectivityKeys]: string } = {
+export const selectivityColorMap: { [key in ScoreSelectivityKeys]: AlertColor } = {
   EXTREME: `error`,
   HIGH: `warning`,
   MODERATE: `info`,

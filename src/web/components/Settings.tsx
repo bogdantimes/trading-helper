@@ -20,7 +20,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material"
-import { capitalizeWord, circularProgress, selectivityColorMap } from "./Common"
+import { capitalizeWord, cardWidth, circularProgress, selectivityColorMap } from "./Common"
 import {
   AutoTradeBestScores,
   Config,
@@ -236,9 +236,16 @@ function switchers(
   )
 }
 
+const scoreSelectorCaption: { [key in ScoreSelectivityKeys]: string } = {
+  EXTREME: `Best for manual trading. Wait for 30+ score points.`,
+  HIGH: `Best for manual or supervised autonomous trading. Wait for 60+ score points.`,
+  MODERATE: `Best for unsupervised fully-autonomous trading.`,
+  MINIMAL: `Best for manual or supervised autonomous trading. Almost live score update.`,
+}
+
 function scoreThresholdSelector(config: Config, setConfig: (config: Config) => void) {
   return (
-    <FormControl>
+    <FormControl sx={{ maxWidth: cardWidth }}>
       <FormLabel>Score Selectivity</FormLabel>
       <RadioGroup
         value={config.ScoreSelectivity}
@@ -246,18 +253,16 @@ function scoreThresholdSelector(config: Config, setConfig: (config: Config) => v
           setConfig({ ...config, ScoreSelectivity: e.target.value as ScoreSelectivityKeys })
         }
       >
-        {enumKeys<string>(ScoreSelectivity).map((key) => (
+        {enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((key) => (
           <FormControlLabel
             key={key}
             labelPlacement="end"
             value={key}
             control={<Radio size={`small`} color={selectivityColorMap[key]} />}
             label={
-              <Box>
-                <Typography marginBottom={`-8px`}>{capitalizeWord(key)}</Typography>
-                <Typography variant={`caption`}>
-                  {`Only ${f2(ScoreSelectivity[key] * 100)}% passes the threshold`}
-                </Typography>
+              <Box sx={{ lineHeight: `1` }}>
+                <Typography marginBottom={`-4px`}>{capitalizeWord(key)}</Typography>
+                <Typography variant={`caption`}>{scoreSelectorCaption[key]}</Typography>
               </Box>
             }
           />
