@@ -1,147 +1,89 @@
-import { CacheProxy } from "./CacheProxy"
-import {
-  AutoTradeBestScores,
-  Config,
-  PriceProvider,
-  ScoreSelectivity,
-  StableUSDCoin,
-  TradeMemo,
-  TradeState,
-} from "trading-helper-lib"
-import { Log } from "./Common"
-
-export class DeadlineError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = `DeadlineError`
-  }
-}
+import { CacheProxy, DefaultCacheProxy } from "./CacheProxy"
 
 export interface IStore {
   get(key: string): any
 
+  getKeys(): string[]
+
   set(key: string, value: any): any
-
-  getConfig(): Config
-
-  setConfig(config: Config): void
 
   getOrSet(key: string, value: any): any
 
-  delete(key: string)
-
-  getTrades(): { [key: string]: TradeMemo }
-
-  getTradesList(state?: TradeState): TradeMemo[]
-
-  hasTrade(coinName: string): boolean
-
-  changeTrade(
-    coinName: string,
-    mutateFn: (tm: TradeMemo) => TradeMemo,
-    notFoundFn?: () => TradeMemo | undefined,
-  ): void
-
-  dumpChanges(): void
+  delete(key: string): void
 
   isConnected(): boolean
+
+  connect(dbURL: string): void
+}
+
+export class ScriptStore implements IStore {
+  delete(key: string): void {
+    PropertiesService.getScriptProperties().deleteProperty(key)
+  }
+
+  get(key: string): any {
+    const value = PropertiesService.getScriptProperties().getProperty(key)
+    return value ? JSON.parse(value) : null
+  }
+
+  getKeys(): string[] {
+    return PropertiesService.getScriptProperties().getKeys()
+  }
+
+  getOrSet(key: string, value: any): any {
+    return this.get(key) || this.set(key, value)
+  }
+
+  isConnected(): boolean {
+    return true
+  }
+
+  connect(): void {
+    // noop
+  }
+
+  set(key: string, value: any): any {
+    PropertiesService.getScriptProperties().setProperty(key, JSON.stringify(value))
+    return value
+  }
 }
 
 export class FirebaseStore implements IStore {
   private source: object
 
   constructor() {
-    if (this.url) {
+    const url = FirebaseStore.url
+    if (url) {
       // @ts-ignore
-      this.source = FirebaseApp.getDatabaseByUrl(this.url, ScriptApp.getOAuthToken())
-    } else {
-      Log.info(`Firebase Realtime Database is not connected.`)
-      Log.info(`Google Apps Script property 'dbURL' is missing.`)
+      this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken())
     }
-    // If URL changed - clean trades and config cache
-    const cachedURL = CacheProxy.get(`dbURL`)
-    if (!!cachedURL && cachedURL !== this.url) {
-      Log.alert(`Firebase Realtime Database URL changed.`)
-      CacheProxy.remove(`Trades`)
-      CacheProxy.remove(`Config`)
-    }
-    CacheProxy.put(`dbURL`, this.url)
   }
 
-  get url(): string {
+  static get url(): string {
     return PropertiesService.getScriptProperties().getProperty(`dbURL`)
   }
 
-  set url(url: string) {
-    PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
+  static set url(url: string) {
+    if (url) {
+      PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
+    } else {
+      PropertiesService.getScriptProperties().deleteProperty(`dbURL`)
+    }
   }
 
-  connect(dbURL: string) {
+  connect(dbURL: string): void {
     // @ts-ignore
     this.source = FirebaseApp.getDatabaseByUrl(dbURL, ScriptApp.getOAuthToken())
-    this.url = dbURL
+    FirebaseStore.url = dbURL
+  }
+
+  disconnect(): void {
+    this.source = null
+    FirebaseStore.url = null
   }
 
   isConnected(): boolean {
     return !!this.source
-  }
-
-  getConfig(): Config {
-    const defaultConfig: Config = {
-      BuyQuantity: 10,
-      StableCoin: StableUSDCoin.USDT,
-      StopLimit: 0.05,
-      ProfitLimit: 0.1,
-      SellAtStopLimit: false,
-      SellAtProfitLimit: true,
-      SwingTradeEnabled: false,
-      PriceProvider: PriceProvider.Binance,
-      AveragingDown: false,
-      ProfitBasedStopLimit: false,
-      PriceAnomalyAlert: 5,
-      ScoreUpdateThreshold: ScoreSelectivity.MODERATE,
-      AutoTradeBestScores: AutoTradeBestScores.OFF,
-    }
-    const configCacheJson = CacheProxy.get(`Config`)
-    let configCache: Config = configCacheJson ? JSON.parse(configCacheJson) : null
-    if (!configCache) {
-      configCache = this.getOrSet(`Config`, defaultConfig)
-    }
-    // apply existing config on top of default one
-    configCache = Object.assign(defaultConfig, configCache)
-
-    if (configCache.ScoreUpdateThreshold === 0.05) { // 0.05 used to be a default value, no it's not
-      configCache.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold
-    }
-
-    if (configCache.TakeProfit) {
-      configCache.ProfitLimit = configCache.TakeProfit
-      delete configCache.TakeProfit
-    }
-
-    if (configCache.SellAtTakeProfit) {
-      configCache.SellAtProfitLimit = configCache.SellAtTakeProfit
-      delete configCache.SellAtTakeProfit
-    }
-
-    if (configCache.LossLimit) {
-      configCache.StopLimit = configCache.LossLimit
-      delete configCache.LossLimit
-    }
-
-    if (configCache.PriceAsset) {
-      configCache.StableCoin = <StableUSDCoin>configCache.PriceAsset
-      delete configCache.PriceAsset
-    }
-
-    CacheProxy.put(`Config`, JSON.stringify(configCache))
-
-    return configCache
-  }
-
-  setConfig(config: Config): void {
-    this.set(`Config`, config)
-    CacheProxy.put(`Config`, JSON.stringify(config))
   }
 
   delete(key: string) {
@@ -160,11 +102,14 @@ export class FirebaseStore implements IStore {
     return this.source.getData(key)
   }
 
-  getOrSet(key: string, value: any): any {
-    const val = this.get(key) || value
+  getKeys(): string[] {
     // @ts-ignore
-    this.source.setData(key, val)
-    return val
+    const data = this.source.getData(``)
+    return data && typeof data === `object` ? Object.keys(data) : []
+  }
+
+  getOrSet(key: string, value: any): any {
+    return this.get(key) || this.set(key, value)
   }
 
   set(key: string, value: any): any {
@@ -175,97 +120,67 @@ export class FirebaseStore implements IStore {
     this.source.setData(key, value)
     return value
   }
+}
 
-  getTrades(): { [p: string]: TradeMemo } {
-    const tradesCacheJson = CacheProxy.get(`Trades`)
-    let tradesCache = tradesCacheJson ? JSON.parse(tradesCacheJson) : null
-    if (!tradesCache) {
-      tradesCache = this.getOrSet(`trade`, {})
-      CacheProxy.put(`Trades`, JSON.stringify(tradesCache))
+export class CachedStore implements IStore {
+  #store: IStore
+  #cache: DefaultCacheProxy
+  #syncIntervalSec = 5 * 60 // 5 minutes
+
+  constructor(store: IStore, cache: DefaultCacheProxy) {
+    this.#store = store
+    this.#cache = cache
+    this.#syncCache()
+  }
+
+  connect(dbURL: string): void {
+    this.#store.connect(dbURL)
+  }
+
+  delete(key: string): void {
+    this.#store.delete(key)
+    this.#cache.remove(key)
+  }
+
+  get(key: string): any {
+    const cached = this.#cache.get(key)
+    let value = cached ? JSON.parse(cached) : null
+    if (!value) {
+      value = this.#store.get(key)
+      value && this.#cache.put(key, JSON.stringify(value))
     }
-    // Convert raw trades to TradeMemo objects
-    return Object.keys(tradesCache).reduce((acc, key) => {
-      acc[key] = TradeMemo.fromObject(tradesCache[key])
-      return acc
-    }, {})
+    return value
   }
 
-  getTradesList(state?: TradeState): TradeMemo[] {
-    const values = Object.values(this.getTrades())
-    return state ? values.filter((trade) => trade.stateIs(state)) : values
+  getKeys(): string[] {
+    return this.#store.getKeys()
   }
 
-  hasTrade(coinName: string): boolean {
-    return !!this.getTrades()[coinName]
+  getOrSet(key: string, value: any): any {
+    return this.get(key) || this.set(key, value)
   }
 
-  /**
-   * changeTrade function provides a way to update the trade memo object.
-   *
-   * It locks the trade memo object for the duration of the mutation function but no more than 30 seconds.
-   *
-   * It expects a coinName and a mutate function. The mutate function receives either an existing trade memo object
-   * from a store or if not found, calls the optional notFoundFn callback.
-   *
-   * Mutation function can return an updated trade memo object or undefined/null value.
-   * If returned trade memo object has deleted flag set to true, this trade memo will be deleted.
-   * If undefined/null value is returned, the trade memo will not be updated.
-   *
-   * @param coinName
-   * @param mutateFn
-   * @param notFoundFn?
-   */
-  changeTrade(
-    coinName: string,
-    mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined,
-  ): void {
-    coinName = coinName.toUpperCase()
-    const key = `TradeLocker_${coinName}`
-    try {
-      while (CacheProxy.get(key)) Utilities.sleep(200)
-      const deadline = 30 // Lock for 30 seconds to give a function enough time for com w/ Binance
-      CacheProxy.put(key, `true`, deadline)
+  isConnected(): boolean {
+    return this.#store.isConnected()
+  }
 
-      const trade = this.getTrades()[coinName]
-      // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
-      // otherwise changedTrade is null.
-      const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
-
-      if (!CacheProxy.get(key)) {
-        throw new DeadlineError(
-          `Couldn't apply ${coinName} change within ${deadline} seconds deadline. Please, try again.`,
-        )
-      }
-
-      if (changedTrade) {
-        changedTrade.deleted ? this.deleteTrade(changedTrade) : this.setTrade(changedTrade)
-      }
-    } finally {
-      CacheProxy.remove(key)
+  set(key: string, value: any): any {
+    const synced = this.#cache.get(`${key}_synced`)
+    if (!synced) {
+      this.#store.set(key, value)
+      this.#cache.put(`${key}_synced`, `true`, this.#syncIntervalSec)
     }
+    this.#cache.put(key, JSON.stringify(value))
+    return value
   }
 
-  private setTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades()
-    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
-    CacheProxy.put(`Trades`, JSON.stringify(trades))
-  }
-
-  private deleteTrade(tradeMemo: TradeMemo) {
-    const trades = this.getTrades()
-    delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
-    CacheProxy.put(`Trades`, JSON.stringify(trades))
-  }
-
-  dumpChanges() {
-    const key = `FirebaseTradesSynced`
-    if (!CacheProxy.get(key)) {
-      this.set(`trade`, this.getTrades())
-      // Sync trades with firebase every 5 minutes
-      CacheProxy.put(key, `true`, 300)
-    }
+  #syncCache() {
+    const cachedStoreValues = this.#cache.getAll(this.#store.getKeys())
+    Object.keys(cachedStoreValues).forEach((key) =>
+      this.set(key, JSON.parse(cachedStoreValues[key])),
+    )
   }
 }
 
-export const DefaultStore = new FirebaseStore()
+const defaultStore = FirebaseStore.url ? new FirebaseStore() : new ScriptStore()
+export const DefaultStore = new CachedStore(defaultStore, CacheProxy)

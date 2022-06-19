@@ -1,57 +1,82 @@
-import { V2Trader } from "./Trader"
+import { DefaultTrader } from "./traders/DefaultTrader"
 import { Exchange } from "./Exchange"
 import { Statistics } from "./Statistics"
-import { DeadlineError, DefaultStore } from "./Store"
-import { Log } from "./Common"
-import { ScoreTrader } from "./ScoreTrader"
+import { DefaultStore } from "./Store"
+import { Log, StopWatch } from "./Common"
+import { ScoreTrader } from "./traders/ScoreTrader"
 import { CacheProxy } from "./CacheProxy"
 import { IScores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
+import { AnomalyTrader } from "./traders/AnomalyTrader"
+import { TradesDao } from "./dao/Trades"
+import { ConfigDao } from "./dao/Config"
 
 export class Process {
   static tick() {
+    const stopWatch = new StopWatch((...args) => Log.debug(...args))
+
     const store = DefaultStore
-    const config = store.getConfig()
+    const tradesDao = new TradesDao(store)
+    const configDao = new ConfigDao(store)
+
+    const config = configDao.get()
     const exchange = new Exchange(config)
     const statistics = new Statistics(store)
-    const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const trader = new V2Trader(store, exchange, priceProvider, statistics)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
 
-    store.getTradesList().forEach((trade) => {
+    stopWatch.start(`Prices update`)
+    // Update prices every tick. This should the only place to call `update` on the price provider.
+    priceProvider.update()
+    stopWatch.stop()
+
+    const trader = new DefaultTrader(store, exchange, priceProvider, statistics)
+
+    stopWatch.start(`Trades check`)
+    tradesDao.getList().forEach((trade) => {
       try {
-        DefaultStore.changeTrade(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
+        tradesDao.update(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
       } catch (e) {
-        // send DeadlineError only to debug channel
-        if (e.name === DeadlineError.name) {
-          Log.debug(e)
-        } else {
-          Log.error(e)
-        }
+        Log.error(e)
       }
     })
+    stopWatch.stop()
 
+    stopWatch.start(`Stable Coins update`)
     try {
       trader.updateStableCoinsBalance()
     } catch (e) {
       Log.alert(`Failed to read stable coins balance`)
       Log.error(e)
     }
+    stopWatch.stop()
 
+    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
+
+    stopWatch.start(`Scores update`)
     try {
       scores.update()
     } catch (e) {
       Log.alert(`Failed to update scores`)
       Log.error(e)
     }
+    stopWatch.stop()
 
+    stopWatch.start(`Recommended coins check`)
     try {
-      new ScoreTrader(store, priceProvider, scores).trade()
+      new ScoreTrader(store, CacheProxy, scores).trade()
     } catch (e) {
       Log.alert(`Failed to trade recommended coins`)
       Log.error(e)
     }
+    stopWatch.stop()
 
-    store.dumpChanges()
+    stopWatch.start(`Anomalies check`)
+    try {
+      new AnomalyTrader(store, CacheProxy, priceProvider).trade()
+    } catch (e) {
+      Log.alert(`Failed to trade price anomalies`)
+      Log.error(e)
+    }
+    stopWatch.stop()
   }
 }

@@ -65,13 +65,17 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
       setSoldPriceLine(chart.current.addLineSeries({ color: `cyan`, lineWidth: 1 }))
     }
 
-    chart.current.timeScale().setVisibleLogicalRange({ from: 0.5, to: tm.prices.length - 1.5 })
-
     return () => {
       chart.current.remove()
       chart.current = null
     }
-  }, [tm.prices.length])
+  }, [])
+
+  useEffect(() => {
+    if (chart.current) {
+      chart.current.timeScale().setVisibleLogicalRange({ from: 0.5, to: tm.prices.length - 1.5 })
+    }
+  }, [chart.current, tm.prices.length])
 
   // refresh chart
   useEffect(() => {

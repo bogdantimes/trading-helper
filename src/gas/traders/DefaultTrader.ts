@@ -1,28 +1,30 @@
-import { Statistics } from "./Statistics"
-import { DefaultStore, IStore } from "./Store"
-import { IExchange } from "./Exchange"
-import { PriceAnomaly, PriceAnomalyChecker } from "./PriceAnomalyChecker"
-import { Log } from "./Common"
+import { Statistics } from "../Statistics"
+import { IExchange } from "../Exchange"
+import { Log } from "../Common"
 import {
   Coin,
   Config,
   ExchangeSymbol,
   f2,
   PriceHoldersMap,
+  PriceMove,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
   TradeState,
 } from "trading-helper-lib"
-import { CacheProxy } from "./CacheProxy"
-import { PriceProvider } from "./PriceProvider"
+import { CacheProxy } from "../CacheProxy"
+import { PriceProvider } from "../PriceProvider"
+import { TradesDao } from "../dao/Trades"
+import { IStore } from "../Store"
+import { ConfigDao } from "../dao/Config"
 
-export class V2Trader {
-  private readonly store: IStore
+export class DefaultTrader {
   private readonly config: Config
   private readonly exchange: IExchange
   private readonly stats: Statistics
   private readonly prices: PriceHoldersMap
+  private readonly trades: TradesDao
 
   /**
    * Used when {@link ProfitBasedStopLimit} is enabled.
@@ -34,26 +36,20 @@ export class V2Trader {
   private readonly numberOfBoughtAssets: number
 
   constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
-    this.store = store
-    this.config = store.getConfig()
+    this.config = new ConfigDao(store).get()
     this.prices = priceProvider.get(this.config.StableCoin)
     this.exchange = exchange
     this.stats = stats
+    this.trades = new TradesDao(store)
 
     if (this.config.ProfitBasedStopLimit) {
       this.totalProfit = stats.getAll().TotalProfit
-      this.numberOfBoughtAssets = store.getTradesList(TradeState.BOUGHT).length
+      this.numberOfBoughtAssets = this.trades.getList(TradeState.BOUGHT).length
     }
   }
 
   tickerCheck(tm: TradeMemo): TradeMemo {
     this.pushNewPrice(tm)
-
-    const result = PriceAnomalyChecker.check(tm, this.config.PriceAnomalyAlert)
-    if (result === PriceAnomaly.DUMP && tm.stateIs(TradeState.BOUGHT) && this.config.BuyDumps) {
-      Log.alert(`ℹ️ Buying price dumps is enabled: more ${tm.getCoinName()} will be bought.`)
-      tm.setState(TradeState.BUY)
-    }
 
     if (tm.stateIs(TradeState.BOUGHT)) {
       this.processBoughtState(tm)
@@ -61,16 +57,15 @@ export class V2Trader {
       this.processSoldState(tm)
     }
 
-    const priceGoesUp = tm.priceGoesUp()
-    priceGoesUp && Log.info(`${tm.tradeResult.symbol} price goes up`)
+    const priceMove = tm.getPriceMove()
 
     // take action after processing
-    if (tm.stateIs(TradeState.SELL) && !priceGoesUp) {
-      // sell if price not goes up anymore
+    if (tm.stateIs(TradeState.SELL) && priceMove < PriceMove.UP) {
+      // sell if price does not go up anymore
       // this allows to wait if price continues to go up
       this.sell(tm)
-    } else if (tm.stateIs(TradeState.BUY) && priceGoesUp) {
-      // buy only if price started to go up
+    } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
+      // buy only if price stopped going down
       // this allows to wait if price continues to fall
       this.buy(tm, this.config.BuyQuantity)
     }
@@ -89,8 +84,6 @@ export class V2Trader {
     if (priceDropped) {
       Log.alert(`ℹ️ ${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
-    } else {
-      Log.info(`${symbol} price has not dropped sufficiently, skipping swing trade`)
     }
   }
 
@@ -106,7 +99,7 @@ export class V2Trader {
       Log.alert(`ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
       this.config.SellAtProfitLimit && tm.setState(TradeState.SELL)
     } else if (tm.entryPriceCrossedUp()) {
-      Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
+      // Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
     }
   }
 
@@ -114,8 +107,21 @@ export class V2Trader {
     if (this.config.ProfitBasedStopLimit) {
       const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
-    } else if (!tm.stopLimitPrice || tm.priceGoesStrongUp()) {
-      const newStopLimit = tm.currentPrice * (1 - this.config.StopLimit)
+    } else {
+      // The stop limit price is the price at which the trade will be sold if the price drops below it.
+      // The stop limit price is calculated as follows:
+      // 1. Get the last N prices and calculate the average price.
+      // 2. Multiply the average price by K, where: 1 - StopLimit <= K <= 0.99,
+      //    K -> 0.99 proportionally to the current profit.
+      //    The closer the current profit to the ProfitLimit, the closer K is to 0.99.
+      const SL = this.config.StopLimit
+      const PL = this.config.ProfitLimit
+      const P = tm.profitPercent() / 100
+      const K = Math.min(0.99, 1 - SL + (P * SL) / PL)
+
+      const lastN = 3
+      const avePrice = tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN
+      const newStopLimit = K * avePrice
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit)
     }
   }
@@ -147,7 +153,7 @@ export class V2Trader {
       try {
         // flatten out prices to make them not cross any limits right after the trade
         tm.prices = [tradeResult.price]
-        // join existing trade result quantity, commission, paid price, etc with the new one
+        // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult)
         // set the stop limit according to the current settings
         this.forceUpdateStopLimit(tm)
@@ -210,8 +216,8 @@ export class V2Trader {
     // all gains are reinvested to most unprofitable asset
     // find a trade with the lowest profit percentage
     const byProfitPercentDesc = (t1, t2) => (t1.profitPercent() < t2.profitPercent() ? -1 : 1)
-    const lowestPLTrade = this.store
-      .getTradesList(TradeState.BOUGHT)
+    const lowestPLTrade = this.trades
+      .getList(TradeState.BOUGHT)
       .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
       .sort(byProfitPercentDesc)[0]
     if (lowestPLTrade && lowestPLTrade.profit() < 0) {
@@ -219,7 +225,7 @@ export class V2Trader {
       Log.alert(
         `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
       )
-      DefaultStore.changeTrade(lowestPLTrade.getCoinName(), (tm) => {
+      this.trades.update(lowestPLTrade.getCoinName(), (tm) => {
         this.buy(tm, tradeResult.gained)
         return tm
       })
@@ -257,7 +263,7 @@ export class V2Trader {
 
   private updateBNBBalance(quantity: number): boolean {
     let updated = false
-    DefaultStore.changeTrade(`BNB`, (tm) => {
+    this.trades.update(`BNB`, (tm) => {
       // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
       // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
       tm.tradeResult.addQuantity(quantity, 0)

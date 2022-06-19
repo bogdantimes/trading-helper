@@ -1,3 +1,14 @@
+# v2.7.1
+
+* Firebase Realtime Database is made optional and initial setup simplified.
+* Added "Price Anomaly Alert" actions in Settings: "No action", "Buy Dumps", "Sell Pumps", "Buy Dumps & Sell Pumps".
+* Disabled non-important alerts.
+* Improved stop limit auto-adjustment.
+* Improved Google Apps Script quota limits handling.
+* Improved price pump and dump computation speed.
+* Minor fixes in buy / sell decision-making.
+* Store and Cache unified into a single CachedStore (cache is now synced to store every 5 minutes).
+
 # v2.7.0
 
 * New "Scores" feature (successor to "Survivors"). New related Settings: "Autonomous trading" and "Score Selectivity".

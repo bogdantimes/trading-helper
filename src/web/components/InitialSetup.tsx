@@ -4,14 +4,20 @@ import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material"
 import { circularProgress } from "./Common"
 import { Config, InitialSetupParams } from "trading-helper-lib"
 
+enum Step {
+  DbConnect,
+  BinanceConnect,
+}
+
 export function InitialSetup({ config, onConnect }: { config: Config; onConnect: () => void }) {
+  const [step, setStep] = useState(Step.DbConnect)
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState(``)
 
   const [params, setParams] = useState<InitialSetupParams>({
     dbURL: ``,
-    binanceAPIKey: config && config.KEY,
-    binanceSecretKey: config && config.SECRET,
+    binanceAPIKey: config?.KEY,
+    binanceSecretKey: config?.SECRET,
   })
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -32,10 +38,13 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
       .initialSetup(params as any)
   }
 
-  const welcomeMsg = `Welcome to the Trading Helper!`
-  const welcomeDescr = `Before you begin, you need to connect your database.`
-  const step2Header = `Almost done!`
-  const step2descr = `Setup API key and secret to connect Binance.`
+  const welcomeTitle = `Welcome to the Trading Helper!`
+  const welcomeTxt = `You can connect Firebase Realtime Database as a permanent storage now or do this later in the settings. 
+ Firebase allows to upgrade the tool and maintain your data when a new version of Trading Helper is available.`
+
+  const step2Title = `Almost done!`
+  const step2Txt = `Setup API key and secret to connect Binance.`
+
   return (
     <Stack
       spacing={2}
@@ -43,7 +52,8 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
         margin: `10px`,
         alignItems: `center`,
         justifyContent: `center`,
-        "& .MuiTextField-root": { width: `70ch` },
+        "& .MuiTextField-root": { width: `90%`, maxWidth: `700px` },
+        "& .MuiTypography-root": { width: `90%`, maxWidth: `700px` },
       }}
     >
       <img
@@ -52,12 +62,12 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
         alt="Trading Helper logo"
       />
       <Typography variant="h5" component="h3">
-        {!config ? welcomeMsg : step2Header}
+        {step === Step.DbConnect ? welcomeTitle : step2Title}
       </Typography>
       <Typography variant="body1" component="p">
-        {!config ? welcomeDescr : step2descr}
+        {step === Step.DbConnect ? welcomeTxt : step2Txt}
       </Typography>
-      {!config && (
+      {step === Step.DbConnect && (
         <TextField
           value={params.dbURL}
           label={`Firebase Database URL`}
@@ -65,7 +75,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           name="dbURL"
         />
       )}
-      {config && (
+      {step === Step.BinanceConnect && (
         <TextField
           type={`password`}
           value={params.binanceAPIKey}
@@ -74,7 +84,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           name="binanceAPIKey"
         />
       )}
-      {config && (
+      {step === Step.BinanceConnect && (
         <TextField
           type={`password`}
           value={params.binanceSecretKey}
@@ -83,7 +93,18 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           name="binanceSecretKey"
         />
       )}
-      <Stack direction={`row`}>
+      <Stack direction={`row`} spacing={2}>
+        {step === Step.DbConnect && (
+          <Button
+            color="primary"
+            onClick={() => {
+              setParams({ ...params, dbURL: `` })
+              setStep(Step.BinanceConnect)
+            }}
+          >
+            Skip
+          </Button>
+        )}
         <Box sx={{ position: `relative` }}>
           <Button
             variant="contained"
@@ -96,7 +117,7 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           {isConnecting && circularProgress}
         </Box>
       </Stack>
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert severity="error">{error.toString()}</Alert>}
     </Stack>
   )
 }

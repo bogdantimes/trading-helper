@@ -8,11 +8,34 @@ function byteCount(s: string): number {
   return encodeURI(s).split(/%..|./).length - 1
 }
 
-class DefaultCacheProxy implements ICacheProxy {
+const MAX_EXPIRATION = SECONDS_IN_HOUR * 6
+
+export type Entries = { [key: string]: any }
+export type ExpirationEntries = { [key: string]: { value: string; expiration?: Integer } }
+
+export class DefaultCacheProxy implements ICacheProxy {
   readonly StableCoins = `StableCoins`
 
   get(key: string): string | null {
     return CacheService.getScriptCache().get(key)
+  }
+
+  getAll(keys: string[]): Entries {
+    return CacheService.getScriptCache().getAll(keys)
+  }
+
+  putAll(values: ExpirationEntries): void {
+    // group values into maps by expiration
+    const map: { [key: Integer]: { [key: string]: any } } = {}
+    Object.keys(values).forEach((key) => {
+      const { value, expiration = MAX_EXPIRATION } = values[key]
+      map[expiration] = map[expiration] || {}
+      map[expiration][key] = value
+    })
+    // put all values into cache
+    Object.keys(map).forEach((expiration) => {
+      CacheService.getScriptCache().putAll(map[expiration], +expiration)
+    })
   }
 
   /**
@@ -20,7 +43,7 @@ class DefaultCacheProxy implements ICacheProxy {
    * @param value
    * @param expirationInSeconds By default, keep for 6 hours (maximum time allowed by GAS)
    */
-  put(key: string, value: string, expirationInSeconds: Integer = SECONDS_IN_HOUR * 6): void {
+  put(key: string, value: string, expirationInSeconds: Integer = MAX_EXPIRATION): void {
     const size = byteCount(value)
     if (size > 0.9 * MAX_CACHE_VAL_SIZE_BYTES) {
       Log.info(
@@ -40,6 +63,10 @@ class DefaultCacheProxy implements ICacheProxy {
 
   remove(key: string): void {
     CacheService.getScriptCache().remove(key)
+  }
+
+  removeAll(keys: string[]): void {
+    CacheService.getScriptCache().removeAll(keys)
   }
 }
 

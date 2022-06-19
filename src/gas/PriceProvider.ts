@@ -10,68 +10,94 @@ import {
 import { IExchange } from "./Exchange"
 import { SECONDS_IN_MIN, StableCoinMatcher, TICK_INTERVAL_MIN } from "./Common"
 
+type StableCoinKeys = keyof typeof StableUSDCoin
+type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap }
+
 export class PriceProvider implements IPriceProvider {
-  private readonly exchange: IExchange
-  private readonly cache: ICacheProxy
+  static #instance: PriceProvider
 
-  constructor(exchange: IExchange, cache: ICacheProxy) {
-    this.exchange = exchange
-    this.cache = cache
+  readonly #exchange: IExchange
+  readonly #cache: ICacheProxy
+
+  #priceMaps: PriceMaps
+
+  static getInstance(exchange: IExchange, cache: ICacheProxy): PriceProvider {
+    PriceProvider.#instance = PriceProvider.#instance || new PriceProvider(exchange, cache)
+    return PriceProvider.#instance
   }
 
-  public get(stableCoin: StableUSDCoin): PriceHoldersMap {
-    this.update()
-    return this.getFromCache(stableCoin)
+  private constructor(exchange: IExchange, cache: ICacheProxy) {
+    this.#exchange = exchange
+    this.#cache = cache
+    this.#priceMaps = this.#getPriceMapsFromCache()
   }
 
-  private getFromCache(stableCoin: StableUSDCoin) {
-    const jsonStr = this.cache.get(this.getKey(stableCoin))
-    const map = jsonStr ? JSON.parse(jsonStr) : {}
-    Object.keys(map).forEach(key => {
-      map[key] = Object.assign(Object.create(PricesHolder.prototype), map[key])
-    })
-    return map
+  get(stableCoin: StableUSDCoin): PriceHoldersMap {
+    return this.#priceMaps[stableCoin]
   }
 
-  private update(): void {
+  update() {
+    this.#priceMaps = this.#update()
+  }
+
+  getCoinNames(stableCoin: StableUSDCoin): CoinName[] {
+    return Object.keys(this.#priceMaps[stableCoin])
+  }
+
+  #update(): PriceMaps {
     const updatedKey = `PriceProvider.updated`
-    if (this.cache.get(updatedKey)) return
 
-    const prices = this.exchange.getPrices()
-    const curMaps = {}
-    const newMaps = {}
+    if (this.#cache.get(updatedKey)) {
+      return this.#getPriceMapsFromCache()
+    }
 
-    enumKeys(StableUSDCoin).forEach(stableCoin => {
-      curMaps[stableCoin] = this.getFromCache(stableCoin as StableUSDCoin)
-      newMaps[stableCoin] = {}
-    })
+    const prices = this.#exchange.getPrices()
+    const updatedPriceMaps: PriceMaps = {}
+    enumKeys<StableCoinKeys>(StableUSDCoin).forEach((k) => (updatedPriceMaps[k] = {}))
 
-    Object.keys(prices).forEach(symbol => {
+    Object.keys(prices).forEach((symbol) => {
       // if symbol does not end with any of the stable coins - skip it
       const matcher = new StableCoinMatcher(symbol)
       if (!matcher.matched) return
 
       const pricesHolder = new PricesHolder()
-      pricesHolder.prices = curMaps[matcher.stableCoin][matcher.coinName]?.prices
+      pricesHolder.prices = this.#priceMaps[matcher.stableCoin][matcher.coinName]?.prices
       pricesHolder.pushPrice(prices[symbol])
-      newMaps[matcher.stableCoin][matcher.coinName] = pricesHolder
+      updatedPriceMaps[matcher.stableCoin][matcher.coinName] = pricesHolder
     })
 
-    Object.keys(newMaps).forEach(stableCoin => {
-      const map = newMaps[stableCoin]
-      this.cache.put(this.getKey(stableCoin), JSON.stringify(map))
+    Object.keys(updatedPriceMaps).forEach((stableCoin) => {
+      const map = updatedPriceMaps[stableCoin]
+      this.#cache.put(this.#getKey(stableCoin), JSON.stringify(map))
     })
 
     // Prices expire in (tick_interval - 5 seconds)
     const priceExpiration = TICK_INTERVAL_MIN * SECONDS_IN_MIN - 5
-    this.cache.put(updatedKey, `true`, priceExpiration)
+    this.#cache.put(updatedKey, `true`, priceExpiration)
+
+    return updatedPriceMaps
   }
 
-  private getKey(stableCoin: string) {
+  #getPriceMapsFromCache(): PriceMaps {
+    const priceMaps: PriceMaps = {}
+
+    enumKeys<StableCoinKeys>(StableUSDCoin).forEach((stableCoin) => {
+      priceMaps[stableCoin] = this.#getFromCache(stableCoin as StableUSDCoin)
+    })
+
+    return priceMaps
+  }
+
+  #getFromCache(stableCoin: StableUSDCoin) {
+    const jsonStr = this.#cache.get(this.#getKey(stableCoin))
+    const map = jsonStr ? JSON.parse(jsonStr) : {}
+    Object.keys(map).forEach((key) => {
+      map[key] = Object.assign(Object.create(PricesHolder.prototype), map[key])
+    })
+    return map
+  }
+
+  #getKey(stableCoin: string) {
     return `PriceProvider.get.${stableCoin}`
-  }
-
-  getCoinNames(stableCoin: StableUSDCoin): CoinName[] {
-    return Object.keys(this.getFromCache(stableCoin))
   }
 }

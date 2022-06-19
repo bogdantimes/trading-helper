@@ -1,12 +1,13 @@
 import { CircularProgress } from "@mui/material"
 import * as React from "react"
-import { Config, PriceMove } from "trading-helper-lib"
+import { Config, PriceMove, ScoreSelectivityKeys } from "trading-helper-lib"
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
   KeyboardDoubleArrowDown,
   KeyboardDoubleArrowUp,
 } from "@mui/icons-material"
+import { AlertColor } from "@mui/material/Alert/Alert"
 
 export const circularProgress = (
   <>
@@ -47,3 +48,12 @@ export const confirmSell = (coinName: string, config: Config) =>
   )
 
 export const capitalizeWord = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+
+export const cardWidth = `332px`
+
+export const selectivityColorMap: { [key in ScoreSelectivityKeys]: AlertColor } = {
+  EXTREME: `error`,
+  HIGH: `warning`,
+  MODERATE: `info`,
+  MINIMAL: `success`,
+}

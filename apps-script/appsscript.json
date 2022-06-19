@@ -9,7 +9,7 @@
       },
       {
         "userSymbol": "TradingHelperScores",
-        "version": "3",
+        "version": "10",
         "libraryId": "1ePSsOk0NIf_IyHfgxbRM-Uq7muXvnKB4MIUUi8lnS1VA_LjEnt1X6D8W",
         "developmentMode": false
       }
@@ -25,6 +25,7 @@
     "https://www.googleapis.com/auth/script.external_request",
     "https://www.googleapis.com/auth/script.scriptapp",
     "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/gmail.compose",
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/firebase.database"
   ]

@@ -4,6 +4,7 @@ import { Alert, Box, ListItem, ListItemAvatar, ListItemText, Stack } from "@mui/
 import { FixedSizeList } from "react-window"
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material"
 import { Stats } from "trading-helper-lib"
+import { cardWidth } from "./Common"
 
 export function Info() {
   const [stats, setStats] = React.useState<Stats>(null)
@@ -26,13 +27,13 @@ export function Info() {
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
-        <Alert sx={{ width: 332 }} severity={`info`}>
+        <Alert sx={{ width: cardWidth }} severity={`info`}>
           The summary of realised profits and losses for each day and the total P/L since the
           beginning.
         </Alert>
         <FixedSizeList
-          width={332}
-          height={400}
+          width={cardWidth}
+          height={440}
           itemSize={55}
           itemCount={rows.length}
           overscanCount={5}

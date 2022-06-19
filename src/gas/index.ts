@@ -1,9 +1,9 @@
-import { DefaultStore } from "./Store"
+import { DefaultStore, FirebaseStore, IStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
-import { Log, SECONDS_IN_MIN, SLOW_TICK_INTERVAL_MIN, TICK_INTERVAL_MIN } from "./Common"
+import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common"
 import {
   AssetsResponse,
   Coin,
@@ -17,27 +17,11 @@ import {
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { PriceProvider } from "./PriceProvider"
-
-/**
- * Check if the permanent storage is connected.
- * If yes, ensure the app is running in the background.
- * Otherwise, stop it.
- */
-function checkDbConnectedAndAppRunning() {
-  if (DefaultStore.isConnected()) {
-    const processIsNotRunning = !ScriptApp.getProjectTriggers().find(
-      (t) => t.getHandlerFunction() == Process.tick.name,
-    )
-    if (processIsNotRunning) startTicker()
-  } else {
-    Log.alert(`ℹ️ Database is not reachable.`)
-    stopTicker()
-  }
-}
+import { TradesDao } from "./dao/Trades"
+import { ConfigDao } from "./dao/Config"
 
 function doGet() {
   return catchError(() => {
-    checkDbConnectedAndAppRunning()
     return HtmlService.createTemplateFromFile(`index`)
       .evaluate()
       .addMetaTag(`viewport`, `width=device-width, initial-scale=1, maximum-scale=1`)
@@ -48,8 +32,13 @@ function doPost() {
   return `404`
 }
 
+const skipNextTick = `skipNextTick`
+
 function tick() {
-  catchError(Process.tick)
+  catchError(() => {
+    if (CacheProxy.get(skipNextTick)) return
+    Process.tick()
+  })
 }
 
 function start() {
@@ -64,7 +53,7 @@ function startTicker() {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
   ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(TICK_INTERVAL_MIN).create()
   Log.alert(
-    `ℹ️ Background process restarted. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
+    `ℹ️ Background process started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
   )
 }
 
@@ -77,15 +66,6 @@ function stopTicker() {
   deleted && Log.alert(`⛔ Background processes stopped.`)
 }
 
-function slowDownTemporarily(durationSec: number) {
-  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t))
-  ScriptApp.newTrigger(Process.tick.name).timeBased().everyMinutes(SLOW_TICK_INTERVAL_MIN).create()
-  ScriptApp.newTrigger(start.name)
-    .timeBased()
-    .after(durationSec * 1000)
-    .create()
-}
-
 function catchError<T>(fn: () => T): T {
   try {
     const res = fn()
@@ -96,13 +76,12 @@ function catchError<T>(fn: () => T): T {
     const limitMsg2 = `Please wait a bit and try again`
     if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
       // If limit already handled, just throw the error without logging
-      if (CacheProxy.get(`TickSlowedDown`)) throw e
+      if (CacheProxy.get(skipNextTick)) throw e
       // Handle limit gracefully
-      Log.alert(`🚫 Google API daily rate limit exceeded.`)
-      const minutes = 30
-      slowDownTemporarily(SECONDS_IN_MIN * minutes)
-      CacheProxy.put(`TickSlowedDown`, `true`, SECONDS_IN_MIN * minutes)
-      Log.alert(`ℹ️ Background process interval slowed down for the next ${minutes} minutes.`)
+      Log.alert(`ℹ️Google API daily rate limit exceeded.`)
+      const minutes = 5
+      CacheProxy.put(skipNextTick, `true`, SECONDS_IN_MIN * minutes)
+      Log.alert(`ℹ️Background process paused for the next ${minutes} minutes.`)
     }
     Log.error(e)
     Log.ifUsefulDumpAsEmail()
@@ -112,13 +91,16 @@ function catchError<T>(fn: () => T): T {
 
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
-    if (!DefaultStore.isConnected()) {
-      Log.alert(`✨ Initial setup`)
-      Log.alert(`Connecting to Firebase with URL: ` + params.dbURL)
-      DefaultStore.connect(params.dbURL)
-      Log.alert(`Connected to Firebase`)
+    Log.alert(`✨ Initial setup`)
+    let store: IStore = DefaultStore
+    if (params.dbURL) {
+      const fbStore = new FirebaseStore()
+      fbStore.connect(params.dbURL)
+      Log.alert(`Connected to Firebase: ${params.dbURL}`)
+      store = fbStore
     }
-    const config = DefaultStore.getConfig()
+    const configDao = new ConfigDao(store)
+    const config = configDao.get()
     config.KEY = params.binanceAPIKey || config.KEY
     config.SECRET = params.binanceSecretKey || config.SECRET
     if (config.KEY && config.SECRET) {
@@ -127,7 +109,7 @@ function initialSetup(params: InitialSetupParams): string {
       Log.alert(`Connected to Binance`)
       startTicker()
     }
-    DefaultStore.setConfig(config)
+    configDao.set(config)
     return `OK`
   })
 }
@@ -175,7 +157,7 @@ function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
 }
 
 function getTrades(): TradeMemo[] {
-  return catchError(() => DefaultStore.getTradesList())
+  return catchError(() => new TradesDao(DefaultStore).getList())
 }
 
 function getStableCoins(): Coin[] {
@@ -196,13 +178,14 @@ function getAssets(): AssetsResponse {
 
 function getConfig(): Config {
   return catchError(() => {
-    return DefaultStore.isConnected() ? DefaultStore.getConfig() : null
+    const configDao = new ConfigDao(DefaultStore)
+    return configDao.isInitialized() ? configDao.get() : null
   })
 }
 
 function setConfig(config): string {
   return catchError(() => {
-    DefaultStore.setConfig(config)
+    new ConfigDao(DefaultStore).set(config)
     return `Config updated`
   })
 }
@@ -213,27 +196,48 @@ function getStatistics(): Stats {
 
 function getScores(): ScoresData {
   return catchError(() => {
-    const exchange = new Exchange(DefaultStore.getConfig())
-    const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
+    const config = new ConfigDao(DefaultStore).get()
+    const exchange = new Exchange(config)
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
+    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
     return scores.get()
   })
 }
 
 function resetScores(): void {
   return catchError(() => {
-    const exchange = new Exchange(DefaultStore.getConfig())
-    const priceProvider = new PriceProvider(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(CacheProxy, DefaultStore, priceProvider) as IScores
+    const config = new ConfigDao(DefaultStore).get()
+    const exchange = new Exchange(config)
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
+    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
     return scores.reset()
   })
 }
 
 function getCoinNames(): CoinName[] {
   return catchError(() => {
-    const exchange = new Exchange(DefaultStore.getConfig())
-    const priceProvider = new PriceProvider(exchange, CacheProxy)
-    return priceProvider.getCoinNames(DefaultStore.getConfig().StableCoin)
+    const config = new ConfigDao(DefaultStore).get()
+    const exchange = new Exchange(config)
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
+    return priceProvider.getCoinNames(config.StableCoin)
+  })
+}
+
+function getFirebaseURL(): string {
+  return catchError(() => FirebaseStore.url)
+}
+
+function setFirebaseURL(url: string): string {
+  return catchError(() => {
+    if (url) {
+      new FirebaseStore().connect(url)
+      Log.alert(`Connected to Firebase: ${url}`)
+      return `OK`
+    } else {
+      new FirebaseStore().disconnect()
+      Log.alert(`Disconnected from Firebase`)
+      return `OK`
+    }
   })
 }
 
@@ -258,3 +262,5 @@ global.getStatistics = getStatistics
 global.getScores = getScores
 global.resetScores = resetScores
 global.getCoinNames = getCoinNames
+global.getFirebaseURL = getFirebaseURL
+global.setFirebaseURL = setFirebaseURL

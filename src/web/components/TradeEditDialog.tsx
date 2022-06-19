@@ -98,7 +98,7 @@ export function TradeEditDialog(props: {
       </DialogActions>
       {error && (
         <DialogContent>
-          <Typography color="error">{error}</Typography>
+          <Typography color="error">{error.toString()}</Typography>
         </DialogContent>
       )}
     </Dialog>
