@@ -279,6 +279,16 @@ function createAutoTradeProfiles(): void {
   })
 }
 
+function deleteAutoTradeProfiles(): void {
+  return catchError(() => {
+    enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
+      const profile = { name: `${sel}` }
+      FirebaseStore.deleteProfile(profile)
+      Log.alert(`Deleted profile ${profile.name}`)
+    })
+  })
+}
+
 function patchProfileConfigs(): void {
   return catchError(() => {
     enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
@@ -315,4 +325,5 @@ global.resetScores = resetScores
 global.getCoinNames = getCoinNames
 global.getProfiles = getProfiles
 global.createAutoTradeProfiles = createAutoTradeProfiles
+global.deleteAutoTradeProfiles = deleteAutoTradeProfiles
 global.patchProfileConfigs = patchProfileConfigs

@@ -125,6 +125,9 @@ export class FirebaseStore implements IStore {
     }
     const profileStore = new FirebaseStore(profile)
     profileStore.delete(`Config`)
+    profileStore.delete(`trade`)
+    profileStore.delete(`Statistics`)
+    new CacheProxy(profile).removeAll([`Config`, `Trades`])
     DefaultProfileStore.delete(`Profiles/${profile.name}`)
   }
 
