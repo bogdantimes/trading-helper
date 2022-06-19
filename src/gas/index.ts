@@ -286,6 +286,7 @@ function deleteAutoTradeProfiles(): void {
       FirebaseStore.deleteProfile(profile)
       Log.alert(`Deleted profile ${profile.name}`)
     })
+    DefaultProfileCacheProxy.remove(`Profiles`)
   })
 }
 
