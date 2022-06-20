@@ -12,7 +12,6 @@ No one, except you, have access to the WEB-application and the data. If you trus
 Buy me a coffee, to support this project. It will not evolve without your support!
 
 * [patreon.com/bogdantimes](patreon.com/bogdantimes)
-* [revolut.me/bogdantimes](revolut.me/bogdantimes)
 * USDT/USDC/BUSD/BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
 
 ## Features
