@@ -259,48 +259,108 @@ function getProfiles(): { [key: string]: Profile } {
   })
 }
 
+const commonParams = {
+  BuyQuantity: 11,
+  SellAtProfitLimit: false,
+  SellAtStopLimit: true,
+  StopLimit: 0.03,
+  ProfitLimit: 0.06,
+  PriceAnomalyAlert: 15,
+}
+
+function profile1() {
+  const profile = { name: `ModerateTop5` }
+  const profileConfig = FirebaseStore.newProfileConfig(profile)
+  Object.assign(profileConfig, commonParams)
+  profileConfig.ScoreSelectivity = `MODERATE`
+  profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP5
+  profileConfig.SwingTradeEnabled = true
+  return profileConfig
+}
+
+function profile2() {
+  const profile = { name: `ModerateTop10` }
+  const profileConfig = FirebaseStore.newProfileConfig(profile)
+  Object.assign(profileConfig, commonParams)
+  profileConfig.ScoreSelectivity = `MODERATE`
+  profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP10
+  return profileConfig
+}
+
+function profile3() {
+  const profile = { name: `MinimalTop5` }
+  const profileConfig = FirebaseStore.newProfileConfig(profile)
+  Object.assign(profileConfig, commonParams)
+  profileConfig.ScoreSelectivity = `MINIMAL`
+  profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP5
+  profileConfig.ProfitLimit = 0.03
+  profileConfig.SwingTradeEnabled = true
+  return profileConfig
+}
+
+function profile4() {
+  const profile = { name: `HighTop5` }
+  const profileConfig = FirebaseStore.newProfileConfig(profile)
+  Object.assign(profileConfig, commonParams)
+  profileConfig.ScoreSelectivity = `HIGH`
+  profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP5
+  profileConfig.StopLimit = 0.06
+  profileConfig.ProfitLimit = 0.12
+  profileConfig.SwingTradeEnabled = true
+  return profileConfig
+}
+
+function profile5() {
+  const profile = { name: `PnD7` }
+  const profileConfig = FirebaseStore.newProfileConfig(profile)
+  Object.assign(profileConfig, commonParams)
+  profileConfig.PriceAnomalyAlert = 7
+  profileConfig.BuyDumps = true
+  profileConfig.SellPumps = true
+  return profileConfig
+}
+
+function profile6(): Config {
+  const profile = { name: `PnD10` }
+  const profileConfig = FirebaseStore.newProfileConfig(profile)
+  Object.assign(profileConfig, commonParams)
+  profileConfig.PriceAnomalyAlert = 10
+  profileConfig.BuyDumps = true
+  profileConfig.SellPumps = true
+  return profileConfig
+}
+
 function createAutoTradeProfiles(): void {
   return catchError(() => {
-    enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
-      const profile = { name: `${sel}` }
-      const profileConfig = FirebaseStore.newProfileConfig(profile)
-      profileConfig.ScoreSelectivity = sel
-      profileConfig.BuyQuantity = 11
-      profileConfig.ProfitLimit = 0.05
-      profileConfig.StopLimit = 0.02
-      profileConfig.AutoTradeBestScores = AutoTradeBestScores.TOP5
-      profileConfig.SwingTradeEnabled = true
-      profileConfig.SellPumps = true
-      profileConfig.SellAtProfitLimit = true
-      profileConfig.SellAtStopLimit = true
-      FirebaseStore.createProfile(profile, profileConfig)
-      Log.alert(`Created profile ${profile.name}`)
-    })
+    function create(config: Config) {
+      FirebaseStore.createProfile(config.profile, config)
+      Log.alert(`Created profile ${config.profile.name}`)
+    }
+
+    create(profile1())
+    create(profile2())
+    create(profile3())
+    create(profile4())
+    create(profile5())
+    create(profile6())
   })
 }
 
 function deleteAutoTradeProfiles(): void {
   return catchError(() => {
-    enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
-      const profile = { name: `${sel}` }
-      FirebaseStore.deleteProfile(profile)
-      Log.alert(`Deleted profile ${profile.name}`)
-    })
-    DefaultProfileCacheProxy.remove(`Profiles`)
-  })
-}
+    function deleteProf(config: Config) {
+      FirebaseStore.deleteProfile(config.profile)
+      Log.alert(`Deleted profile ${config.profile.name}`)
+    }
 
-function patchProfileConfigs(): void {
-  return catchError(() => {
-    enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((sel) => {
-      const profile = { name: `AutoTrade${sel}Top1` }
-      const profileStore = new FirebaseStore(profile)
-      const config = profileStore.getConfig()
-      const patch = { SellPumps: true }
-      Object.assign(config, patch)
-      profileStore.setConfig(config)
-      Log.alert(`Profile config patched: ${profile.name}, ${JSON.stringify(patch)}`)
-    })
+    deleteProf(profile1())
+    deleteProf(profile2())
+    deleteProf(profile3())
+    deleteProf(profile4())
+    deleteProf(profile5())
+    deleteProf(profile6())
+
+    DefaultProfileCacheProxy.remove(`Profiles`)
   })
 }
 
@@ -327,4 +387,3 @@ global.getCoinNames = getCoinNames
 global.getProfiles = getProfiles
 global.createAutoTradeProfiles = createAutoTradeProfiles
 global.deleteAutoTradeProfiles = deleteAutoTradeProfiles
-global.patchProfileConfigs = patchProfileConfigs
