@@ -127,7 +127,8 @@ export class DefaultTrader {
 
       const lastN = 3
       const avePrice = tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN
-      const newStopLimit = K * avePrice
+      // new stop limit cannot be higher than current price
+      const newStopLimit = Math.min(K * avePrice, tm.currentPrice)
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit)
     }
   }
