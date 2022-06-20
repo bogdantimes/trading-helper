@@ -26,17 +26,23 @@ import {
   Config,
   enumKeys,
   f2,
+  Profile,
   ScoreSelectivityKeys,
   StableUSDCoin,
 } from "trading-helper-lib"
 import { ScoreSelectivity } from "trading-helper-lib/dist/Types"
+import { Add } from "@mui/icons-material"
 
 export function Settings({
   config,
   setConfig,
+  profiles,
+  setProfileByName,
 }: {
   config: Config
   setConfig: (config: Config) => void
+  profiles: { [key: string]: Profile }
+  setProfileByName: (name: string) => void
 }) {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -72,6 +78,16 @@ export function Settings({
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} divider={<Divider />}>
+        <Select
+          value={config.profile.name || `default`}
+          onChange={(e) => setProfileByName(e.target.value)}
+        >
+          {Object.keys(profiles).map((name) => (
+            <MenuItem key={name} value={name}>
+              {name}
+            </MenuItem>
+          ))}
+        </Select>
         <FormControl>
           <FormLabel>Stable Coin</FormLabel>
           <RadioGroup

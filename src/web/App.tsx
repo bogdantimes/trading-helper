@@ -19,7 +19,6 @@ import { TabPanel } from "./components/TabPanel"
 import { InitialSetup } from "./components/InitialSetup"
 import { Scores } from "./components/Scores"
 import { Config, Profile } from "trading-helper-lib"
-import { ProfilePickerDialog } from "./components/ProfilePickerDialog"
 
 function a11yProps(index: number) {
   return {
@@ -43,24 +42,29 @@ export default function App() {
   const [initialSetup, setInitialSetup] = React.useState(true)
   const [fetchingData, setFetchingData] = React.useState(true)
   const [fetchDataError, setFetchDataError] = React.useState(null)
-  const [profiles, setProfiles] = React.useState(null)
+  const [profiles, setProfiles] = React.useState<{ [key: string]: Profile }>(null)
   const [selectedProfile, setSelectedProfile] = React.useState<Profile>(null)
 
   // Step 1
   useEffect(fetchProfiles, [])
 
+  useEffect(() => {
+    // using URL hash (if present) as a profile name
+    google.script.url.getLocation(({ hash }) => setProfileByName(hash))
+  }, [profiles])
+
   function fetchProfiles() {
     google.script.run
-      .withSuccessHandler((response) => {
-        setProfiles(response)
-        if (response && Object.keys(response).length == 1 && response.default) {
-          setSelectedProfile(response.default)
-        }
-      })
+      .withSuccessHandler(setProfiles)
       .withFailureHandler((resp) => {
         setFetchDataError(resp.toString())
       })
       .getProfiles()
+  }
+
+  function setProfileByName(name: string) {
+    const profile = profiles?.[name]
+    setSelectedProfile(profile ?? profiles?.default)
   }
 
   // Step 2
@@ -114,14 +118,7 @@ export default function App() {
       {fetchDataError && (
         <Alert severity="error">
           <Typography variant="caption">{fetchDataError}</Typography>
-          <Typography variant="caption">
-            {` `}Please check your network connection and that Google Apps Script application is
-            deployed and try again.
-          </Typography>
         </Alert>
-      )}
-      {profiles && !selectedProfile && (
-        <ProfilePickerDialog profiles={profiles} onSelect={setSelectedProfile} />
       )}
       {!fetchingData && initialSetup && <InitialSetup config={config} onConnect={initialFetch} />}
       {!fetchingData && !initialSetup && (
@@ -144,7 +141,12 @@ export default function App() {
             <Info config={config} />
           </TabPanel>
           <TabPanel value={value} index={3}>
-            <Settings config={config} setConfig={setConfig} />
+            <Settings
+              config={config}
+              setConfig={setConfig}
+              profiles={profiles}
+              setProfileByName={setProfileByName}
+            />
           </TabPanel>
         </Box>
       )}
