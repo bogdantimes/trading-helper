@@ -4,7 +4,7 @@ import { PriceProvider } from "../src/gas/PriceProvider"
 import { Statistics } from "../src/gas/Statistics"
 import { ConfigDao } from "../src/gas/dao/Config"
 import { TradesDao } from "../src/gas/dao/Trades"
-import { Log } from "../src/gas/Common"
+import { Log, LogLevel } from "../src/gas/Common"
 import { ScoreTrader } from "../src/gas/traders/ScoreTrader"
 import { AnomalyTrader } from "../src/gas/traders/AnomalyTrader"
 import { InMemoryStore } from "./InMemoryStore"
@@ -31,6 +31,9 @@ async function test(startDate: Date, endDate: Date) {
     console.error(`End date must be before today`)
     return
   }
+
+  // Silence Log for better performance
+  Log.level = LogLevel.NONE
 
   const exchange = new BinanceHistory()
   const fmtDate = (date: Date) => `${date.getMonth() + 1}-${date.getDate()}-${date.getFullYear()}`

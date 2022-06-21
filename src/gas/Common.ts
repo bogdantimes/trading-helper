@@ -37,7 +37,8 @@ export function execute({ context, runnable, interval = 500, attempts = 5 }: Exe
   }
 }
 
-enum LogLevel {
+export enum LogLevel {
+  NONE,
   ALERT,
   ERROR,
   INFO,
@@ -50,7 +51,7 @@ export class Log {
   private static readonly errLog: Error[] = []
   private static readonly alerts: string[] = []
 
-  static level: LogLevel = LogLevel.ALERT
+  static level: LogLevel = LogLevel.INFO
 
   static alert(msg: string) {
     this.level >= LogLevel.ALERT && this.alerts.push(msg)
