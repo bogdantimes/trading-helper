@@ -284,6 +284,6 @@ export class DefaultTrader {
       const balance = this.exchange.getFreeAsset(coin)
       balance && stableCoins.push(new Coin(coin, balance))
     })
-    this.#store.set(StableCoins, JSON.stringify(stableCoins))
+    this.#store.set(StableCoins, stableCoins)
   }
 }
