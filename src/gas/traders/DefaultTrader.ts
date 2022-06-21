@@ -1,6 +1,6 @@
 import { Statistics } from "../Statistics"
 import { IExchange } from "../Exchange"
-import { Log } from "../Common"
+import { Log, StableCoins } from "../Common"
 import {
   Coin,
   Config,
@@ -13,7 +13,6 @@ import {
   TradeResult,
   TradeState,
 } from "trading-helper-lib"
-import { CacheProxy } from "../CacheProxy"
 import { PriceProvider } from "../PriceProvider"
 import { TradesDao } from "../dao/Trades"
 import { IStore } from "../Store"
@@ -29,11 +28,13 @@ export class DefaultTrader {
   /**
    * Used when {@link ProfitBasedStopLimit} is enabled.
    */
-  private readonly totalProfit: number
+  private totalProfit = 0
   /**
    * Used when {@link ProfitBasedStopLimit} is enabled.
    */
-  private readonly numberOfBoughtAssets: number
+  private numberOfBoughtAssets = 0
+
+  #store: IStore
 
   constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
     this.config = new ConfigDao(store).get()
@@ -41,6 +42,7 @@ export class DefaultTrader {
     this.exchange = exchange
     this.stats = stats
     this.trades = new TradesDao(store)
+    this.#store = store
 
     if (this.config.ProfitBasedStopLimit) {
       this.totalProfit = stats.getAll().TotalProfit
@@ -186,7 +188,7 @@ export class DefaultTrader {
         Log.alert(`ℹ️ ${profit >= 0 ? `Profit` : `Loss`}: ${profit} (${profitPercentage}%)`)
 
         tradeResult.profit = profit
-        this.updatePLStatistics(symbol.priceAsset, profit)
+        this.updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit)
       } catch (e) {
         Log.error(e)
       } finally {
@@ -216,7 +218,8 @@ export class DefaultTrader {
   private averageDown(tradeResult: TradeResult) {
     // all gains are reinvested to most unprofitable asset
     // find a trade with the lowest profit percentage
-    const byProfitPercentDesc = (t1, t2) => (t1.profitPercent() < t2.profitPercent() ? -1 : 1)
+    const byProfitPercentDesc = (t1: TradeMemo, t2: TradeMemo) =>
+      t1.profitPercent() < t2.profitPercent() ? -1 : 1
     const lowestPLTrade = this.trades
       .getList(TradeState.BOUGHT)
       .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
@@ -233,7 +236,7 @@ export class DefaultTrader {
     }
   }
 
-  private updatePLStatistics(gainedCoin: string, profit: number): void {
+  private updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
     if (StableUSDCoin[gainedCoin]) {
       this.stats.addProfit(profit)
       Log.info(`P/L added to statistics: ` + profit)
@@ -276,11 +279,11 @@ export class DefaultTrader {
   }
 
   updateStableCoinsBalance() {
-    const stableCoins = []
+    const stableCoins: any[] = []
     Object.keys(StableUSDCoin).forEach((coin) => {
       const balance = this.exchange.getFreeAsset(coin)
       balance && stableCoins.push(new Coin(coin, balance))
     })
-    CacheProxy.put(CacheProxy.StableCoins, JSON.stringify(stableCoins))
+    this.#store.set(StableCoins, JSON.stringify(stableCoins))
   }
 }

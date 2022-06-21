@@ -11,3 +11,8 @@ parcel-bundle-reports
 # IDE setting
 .idea
 .vscode
+
+# Test data
+*prices.json
+*scores.json
+*.log

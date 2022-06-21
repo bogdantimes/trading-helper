@@ -26,9 +26,9 @@ export class AnomalyTrader {
   readonly #priceProvider: IPriceProvider
   readonly #tradesDao: TradesDao
   readonly #config: Config
-  readonly #tradeActions = TradeActions.default()
+  readonly #tradeActions: TradeActions
 
-  #cacheGetAll: Entries
+  #cacheGetAll: Entries = {}
   #cachePutAll: ExpirationEntries = {}
   #cacheRemoveAll: string[] = []
 
@@ -37,6 +37,7 @@ export class AnomalyTrader {
     this.#priceProvider = priceProvider
     this.#tradesDao = new TradesDao(store)
     this.#config = new ConfigDao(store).get()
+    this.#tradeActions = new TradeActions(store, this.#config, priceProvider)
   }
 
   trade(): void {
@@ -75,7 +76,7 @@ export class AnomalyTrader {
   }
 
   #getAllCache(prices: PriceHoldersMap): void {
-    const cacheKeys = []
+    const cacheKeys: string[] = []
     Object.keys(prices).forEach((coin) => {
       cacheKeys.push(`${coin}-pump-dump-tracking`)
       cacheKeys.push(`${coin}-start-price`)
@@ -109,7 +110,7 @@ export class AnomalyTrader {
     this.#cacheRemoveAll.push(startPriceKey)
     const percent = absPercentageChange(+anomalyStartPrice, ph.currentPrice)
 
-    if (percent < this.#config.PriceAnomalyAlert) {
+    if (this.#config.PriceAnomalyAlert && percent < this.#config.PriceAnomalyAlert) {
       return PriceAnomaly.NONE
     }
 

@@ -3,7 +3,7 @@ import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
 import { IScores } from "./Scores"
-import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common"
+import { Log, SECONDS_IN_MIN, StableCoins, TICK_INTERVAL_MIN } from "./Common"
 import {
   AssetsResponse,
   Coin,
@@ -162,8 +162,7 @@ function getTrades(): TradeMemo[] {
 
 function getStableCoins(): Coin[] {
   return catchError(() => {
-    const raw = CacheProxy.get(CacheProxy.StableCoins)
-    return raw ? JSON.parse(raw) : []
+    return DefaultStore.get(StableCoins) || []
   })
 }
 

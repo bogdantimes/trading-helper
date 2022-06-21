@@ -33,7 +33,7 @@ export class PriceProvider implements IPriceProvider {
   }
 
   get(stableCoin: StableUSDCoin): PriceHoldersMap {
-    return this.#priceMaps[stableCoin]
+    return this.#priceMaps[stableCoin] || {}
   }
 
   update() {
@@ -41,7 +41,7 @@ export class PriceProvider implements IPriceProvider {
   }
 
   getCoinNames(stableCoin: StableUSDCoin): CoinName[] {
-    return Object.keys(this.#priceMaps[stableCoin])
+    return Object.keys(this.get(stableCoin))
   }
 
   #update(): PriceMaps {
@@ -58,16 +58,18 @@ export class PriceProvider implements IPriceProvider {
     Object.keys(prices).forEach((symbol) => {
       // if symbol does not end with any of the stable coins - skip it
       const matcher = new StableCoinMatcher(symbol)
-      if (!matcher.matched) return
+      if (!matcher.stableCoin || !matcher.coinName) return
 
       const pricesHolder = new PricesHolder()
-      pricesHolder.prices = this.#priceMaps[matcher.stableCoin][matcher.coinName]?.prices
+      pricesHolder.prices = this.#priceMaps[matcher.stableCoin]?.[matcher.coinName]?.prices ?? []
       pricesHolder.pushPrice(prices[symbol])
-      updatedPriceMaps[matcher.stableCoin][matcher.coinName] = pricesHolder
+
+      const priceMap = updatedPriceMaps[matcher.stableCoin]
+      priceMap && (priceMap[matcher.coinName] = pricesHolder)
     })
 
     Object.keys(updatedPriceMaps).forEach((stableCoin) => {
-      const map = updatedPriceMaps[stableCoin]
+      const map = updatedPriceMaps[stableCoin as StableUSDCoin]
       this.#cache.put(this.#getKey(stableCoin), JSON.stringify(map))
     })
 

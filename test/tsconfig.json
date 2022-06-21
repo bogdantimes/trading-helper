@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "noImplicitUseStrict": true,
+    "experimentalDecorators": true
+  },
+  "ts-node": {
+    "transpileOnly": true
+  }
+}

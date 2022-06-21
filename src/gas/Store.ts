@@ -1,4 +1,5 @@
 import { CacheProxy, DefaultCacheProxy } from "./CacheProxy"
+import { isNode } from "browser-or-node"
 
 export interface IStore {
   get(key: string): any
@@ -49,7 +50,7 @@ export class ScriptStore implements IStore {
 }
 
 export class FirebaseStore implements IStore {
-  private source: object
+  private source: object | null = null
 
   constructor() {
     const url = FirebaseStore.url
@@ -59,11 +60,11 @@ export class FirebaseStore implements IStore {
     }
   }
 
-  static get url(): string {
+  static get url(): string | null {
     return PropertiesService.getScriptProperties().getProperty(`dbURL`)
   }
 
-  static set url(url: string) {
+  static set url(url: string | null) {
     if (url) {
       PropertiesService.getScriptProperties().setProperty(`dbURL`, url)
     } else {
@@ -182,5 +183,9 @@ export class CachedStore implements IStore {
   }
 }
 
-const defaultStore = FirebaseStore.url ? new FirebaseStore() : new ScriptStore()
-export const DefaultStore = new CachedStore(defaultStore, CacheProxy)
+function getStore() {
+  const defaultStore = FirebaseStore.url ? new FirebaseStore() : new ScriptStore()
+  return new CachedStore(defaultStore, CacheProxy)
+}
+
+export const DefaultStore = isNode ? ({} as IStore) : getStore()

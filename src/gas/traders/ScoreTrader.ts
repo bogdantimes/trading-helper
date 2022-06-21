@@ -8,12 +8,14 @@ import { ConfigDao } from "../dao/Config"
 export class ScoreTrader {
   private readonly config: Config
   private readonly scores: IScores
-  private readonly TradesDao: TradesDao
+  private readonly tradesDao: TradesDao
+  private readonly tradeActions: TradeActions
 
-  constructor(store: IStore, cache: ICacheProxy, scores: IScores) {
+  constructor(store: IStore, scores: IScores, tradeActions: TradeActions) {
     this.scores = scores
     this.config = new ConfigDao(store).get()
-    this.TradesDao = new TradesDao(store)
+    this.tradesDao = new TradesDao(store)
+    this.tradeActions = tradeActions
   }
 
   /**
@@ -30,20 +32,21 @@ export class ScoreTrader {
       const recommended = scoresData.recommended.slice(0, tradeBestScores)
 
       // buy new coins from recommended list
-      const tradeActions = TradeActions.default()
       recommended
-        .filter((cs) => !this.TradesDao.has(cs.coinName))
-        .forEach((cs) => tradeActions.buy(cs.coinName))
+        .filter((cs) => !this.tradesDao.has(cs.coinName))
+        .forEach((cs) => this.tradeActions.buy(cs.coinName))
 
       // remove sold coins that are not in the recommended list
-      this.TradesDao.getList(TradeState.SOLD)
+      this.tradesDao
+        .getList(TradeState.SOLD)
         .filter((tm) => !this.isRecommended(recommended, tm))
-        .forEach((tm) => tradeActions.drop(tm.getCoinName()))
+        .forEach((tm) => this.tradeActions.drop(tm.getCoinName()))
 
       // cancel buying coins that are no longer in the recommended list
-      this.TradesDao.getList(TradeState.BUY)
+      this.tradesDao
+        .getList(TradeState.BUY)
         .filter((tm) => !this.isRecommended(recommended, tm))
-        .forEach((tm) => tradeActions.cancel(tm.getCoinName()))
+        .forEach((tm) => this.tradeActions.cancel(tm.getCoinName()))
     }
   }
 
