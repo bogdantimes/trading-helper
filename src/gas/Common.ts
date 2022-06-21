@@ -41,21 +41,22 @@ export class Log {
   private static readonly debugLog = []
   private static readonly errLog: Error[] = []
   private static readonly alerts: string[] = []
+  static #prefix = ``
 
   static alert(msg: string) {
-    this.alerts.push(msg)
+    this.alerts.push(`${this.#prefix} ${msg}`)
   }
 
   static info(msg: string) {
-    this.infoLog.push(msg)
+    this.infoLog.push(`${this.#prefix} ${msg}`)
   }
 
   static debug(arg) {
-    this.debugLog.push(JSON.stringify(arg))
+    this.debugLog.push(`${this.#prefix} ${JSON.stringify(arg)}`)
   }
 
   static error(err: Error) {
-    this.errLog.push(new Error(`${err.stack.slice(0, 1000)}`))
+    this.errLog.push(new Error(`${this.#prefix} ${err.stack.slice(0, 1000)}`))
   }
 
   static print(): string {
@@ -81,6 +82,10 @@ ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
         GmailApp.createDraft(email, subject, this.print())
       }
     }
+  }
+
+  static setPrefix(s: string) {
+    this.#prefix = s
   }
 }
 

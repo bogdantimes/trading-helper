@@ -37,6 +37,7 @@ export class Process {
       const cache = new CacheProxy(profile)
       const statistics = new Statistics(store)
       const trader = new DefaultTrader(store, cache, exchange, priceProvider, statistics)
+      Log.setPrefix(`[${profile.name}]`)
 
       store.getTradesList().forEach((trade) => {
         try {
@@ -75,5 +76,7 @@ export class Process {
 
       store.dumpChanges()
     })
+
+    Log.setPrefix(``)
   }
 }
