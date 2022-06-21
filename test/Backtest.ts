@@ -55,6 +55,7 @@ async function test(startDate: Date, endDate: Date) {
   const scores = new Scores(store, priceProvider, config)
 
   config.StableCoin = stableCoin
+  config.AutoTradeBestScores = AutoTradeBestScores.TOP5
 
   configDao.set(config)
 
