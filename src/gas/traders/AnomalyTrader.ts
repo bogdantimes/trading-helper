@@ -44,14 +44,13 @@ export class AnomalyTrader {
     // Performance improvement: populating cache map once for all
     this.#getAllCache(prices)
 
-    const anomalies = Object.keys(prices).map((coin: CoinName) => {
-      return { coin, anomaly: this.#checkAnomaly(coin, prices[coin]) }
+    Object.keys(prices).forEach((coin: CoinName) => {
+      const anomaly = this.#checkAnomaly(coin, prices[coin])
+      this.#handleAnomaly(coin, anomaly)
     })
 
     // Performance improvement: update cache once for all
     this.#updateAllCache()
-
-    anomalies.forEach(({ coin, anomaly }) => this.#handleAnomaly(coin, anomaly))
   }
 
   #handleAnomaly(coin: string, anomaly: PriceAnomaly) {
@@ -136,5 +135,7 @@ export class AnomalyTrader {
   #updateAllCache(): void {
     this.cache.putAll(this.#cachePutAll)
     this.cache.removeAll(this.#cacheRemoveAll)
+    this.#cachePutAll = {}
+    this.#cacheRemoveAll = []
   }
 }
