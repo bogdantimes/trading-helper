@@ -73,7 +73,7 @@ export class Process {
 
     stopWatch.start(`Anomalies check`)
     try {
-      new AnomalyTrader(store, CacheProxy, priceProvider).trade()
+      new AnomalyTrader(tradesDao, config, CacheProxy, priceProvider).trade()
     } catch (e) {
       Log.alert(`Failed to trade price anomalies`)
       Log.error(e)

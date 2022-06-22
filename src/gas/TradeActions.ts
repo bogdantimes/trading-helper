@@ -21,13 +21,13 @@ export class TradeActions {
   static default(): TradeActions {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config)
-    return new TradeActions(DefaultStore, config, PriceProvider.getInstance(exchange, CacheProxy))
+    return new TradeActions(new TradesDao(DefaultStore), config, PriceProvider.getInstance(exchange, CacheProxy))
   }
 
-  constructor(store: IStore, config: Config, priceProvider: IPriceProvider) {
+  constructor(tradesDao: TradesDao, config: Config, priceProvider: IPriceProvider) {
     this.config = config
     this.priceProvider = priceProvider
-    this.tradesDao = new TradesDao(store)
+    this.tradesDao = tradesDao
   }
 
   buy(coinName: string): void {

@@ -5,6 +5,7 @@ import { isNode } from "browser-or-node"
 
 export class TradesDao {
   private readonly store: IStore
+  private memCache: { [p: string]: TradeMemo }
 
   constructor(store: IStore) {
     this.store = store
@@ -52,12 +53,20 @@ export class TradesDao {
   }
 
   get(): { [p: string]: TradeMemo } {
+    if (isNode && this.memCache) {
+      // performance optimization for back-testing
+      return this.memCache
+    }
+
     const trades = this.store.getOrSet(`Trades`, {})
     // Convert raw trades to TradeMemo objects
-    return Object.keys(trades).reduce((acc, key) => {
+    const tradeMemos = Object.keys(trades).reduce((acc, key) => {
       acc[key] = TradeMemo.fromObject(trades[key])
       return acc
     }, {} as { [p: string]: TradeMemo })
+
+    this.memCache = tradeMemos
+    return tradeMemos
   }
 
   getList(state?: TradeState): TradeMemo[] {
