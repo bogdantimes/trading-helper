@@ -15,8 +15,8 @@ export class Binance implements IExchange {
   private readonly serverIds: number[]
 
   constructor(config: Config) {
-    this.key = config.KEY
-    this.secret = config.SECRET
+    this.key = config.KEY ?? ``
+    this.secret = config.SECRET ?? ``
     this.defaultReqOpts = { headers: { "X-MBX-APIKEY": this.key }, muteHttpExceptions: true }
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts)
     this.serverIds = this.shuffleServerIds()
@@ -35,7 +35,7 @@ export class Binance implements IExchange {
         spotPrice && (acc[p.symbol] = +p.price)
         return acc
       }, {})
-    } catch (e) {
+    } catch (e: any) {
       throw new Error(`Failed to get prices: ${e.message}`)
     }
   }
@@ -47,7 +47,7 @@ export class Binance implements IExchange {
       const ticker = this.fetch(() => `${resource}?${query}`, this.defaultReqOpts)
       Log.debug(ticker)
       return +ticker.price
-    } catch (e) {
+    } catch (e: any) {
       throw new Error(`Failed to get price for ${symbol}: ${e.message}`)
     }
   }
@@ -64,11 +64,11 @@ export class Binance implements IExchange {
           this.defaultReqOpts,
         )
         CacheProxy.put(`AccountData`, JSON.stringify(accountData), 30) // 30 seconds
-      } catch (e) {
+      } catch (e: any) {
         throw new Error(`Failed to get available ${assetName}: ${e.message}`)
       }
     }
-    const assetVal = accountData.balances.find((balance) => balance.asset == assetName)
+    const assetVal = accountData.balances.find((balance: any) => balance.asset == assetName)
     return assetVal ? +assetVal.free : 0
   }
 
@@ -87,7 +87,7 @@ export class Binance implements IExchange {
       tradeResult.paid = tradeResult.cost
       Log.alert(tradeResult.toTradeString())
       return tradeResult
-    } catch (e) {
+    } catch (e: any) {
       if (e.message.includes(`Market is closed`)) {
         return new TradeResult(symbol, `Market is closed for ${symbol}.`)
       }
@@ -109,7 +109,7 @@ export class Binance implements IExchange {
       tradeResult.soldPrice = tradeResult.price
       Log.alert(tradeResult.toTradeString())
       return tradeResult
-    } catch (e) {
+    } catch (e: any) {
       if (e.message.includes(`Account has insufficient balance`)) {
         return new TradeResult(symbol, `Account has no ${quantity} of ${symbol.quantityAsset}`)
       }
@@ -137,12 +137,12 @@ export class Binance implements IExchange {
       tradeResult.fromExchange = true
       tradeResult.commission = commission
       return tradeResult
-    } catch (e) {
+    } catch (e: any) {
       throw new Error(`Failed to trade ${symbol}: ${e.message}`)
     }
   }
 
-  private getCommission(fills = []): number {
+  private getCommission(fills: any[] = []): number {
     let commission = 0
     fills.forEach((f) => {
       if (f.commissionAsset != `BNB`) {
@@ -179,7 +179,7 @@ export class Binance implements IExchange {
         if (resp.getResponseCode() === 200) {
           try {
             return JSON.parse(resp.getContentText())
-          } catch (e) {
+          } catch (e: any) {
             throw new Error(`Failed to parse response from Binance: ${resp.getContentText()}`)
           }
         }
@@ -209,7 +209,7 @@ export class Binance implements IExchange {
 
   private getNextServerIndex(): number {
     // take first server from the list and move it to the end
-    const index = this.serverIds.shift()
+    const index = this.serverIds.shift() as number
     this.serverIds.push(index)
     return index
   }

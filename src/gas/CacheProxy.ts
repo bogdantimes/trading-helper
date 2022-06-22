@@ -8,14 +8,12 @@ function byteCount(s: string): number {
   return encodeURI(s).split(/%..|./).length - 1
 }
 
-const MAX_EXPIRATION = SECONDS_IN_HOUR * 6
+export const MAX_EXPIRATION = SECONDS_IN_HOUR * 6
 
 export type Entries = { [key: string]: any }
 export type ExpirationEntries = { [key: string]: { value: string; expiration?: Integer } }
 
 export class DefaultCacheProxy implements ICacheProxy {
-  readonly StableCoins = `StableCoins`
-
   get(key: string): string | null {
     return CacheService.getScriptCache().get(key)
   }
@@ -34,7 +32,7 @@ export class DefaultCacheProxy implements ICacheProxy {
     })
     // put all values into cache
     Object.keys(map).forEach((expiration) => {
-      CacheService.getScriptCache().putAll(map[expiration], +expiration)
+      CacheService.getScriptCache().putAll(map[+expiration], +expiration)
     })
   }
 

@@ -21,12 +21,12 @@ export class ConfigDao {
 
   get(): Config {
     const defaultConfig: Config = {
-      BuyQuantity: 10,
+      BuyQuantity: 15,
       StableCoin: StableUSDCoin.USDT,
       StopLimit: 0.05,
       ProfitLimit: 0.1,
-      SellAtStopLimit: false,
-      SellAtProfitLimit: true,
+      SellAtStopLimit: true,
+      SellAtProfitLimit: false,
       SwingTradeEnabled: false,
       PriceProvider: PriceProvider.Binance,
       AveragingDown: false,

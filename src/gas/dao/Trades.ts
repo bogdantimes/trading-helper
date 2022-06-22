@@ -1,6 +1,7 @@
 import { TradeMemo, TradeState } from "trading-helper-lib"
 import { IStore } from "../Store"
 import { execute } from "../Common"
+import { isNode } from "browser-or-node"
 
 export class TradesDao {
   private readonly store: IStore
@@ -56,7 +57,7 @@ export class TradesDao {
     return Object.keys(trades).reduce((acc, key) => {
       acc[key] = TradeMemo.fromObject(trades[key])
       return acc
-    }, {})
+    }, {} as { [p: string]: TradeMemo })
   }
 
   getList(state?: TradeState): TradeMemo[] {
@@ -77,6 +78,10 @@ export class TradesDao {
   }
 
   #acquireTradeLock(coinName: string): GoogleAppsScript.Lock.Lock {
+    if (isNode) {
+      return lockMock
+    }
+
     const lock = LockService.getScriptLock()
     try {
       execute({
@@ -85,8 +90,23 @@ export class TradesDao {
         runnable: () => lock.waitLock(5000), // 5 seconds
       })
       return lock
-    } catch (e) {
-      throw new Error(`Failed to acquire lock for ${coinName}: ${e.message}`)
+    } catch (e: any) {
+      throw new Error(`Failed to acquire lock for ${coinName}: ${e?.message}`)
     }
   }
+}
+
+const lockMock = {
+  hasLock(): boolean {
+    return false
+  },
+  tryLock(): boolean {
+    return true
+  },
+  waitLock(): void {
+    // do nothing
+  },
+  releaseLock() {
+    // do nothing
+  },
 }

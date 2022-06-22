@@ -10,6 +10,7 @@ import { PriceProvider } from "./PriceProvider"
 import { AnomalyTrader } from "./traders/AnomalyTrader"
 import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
+import { TradeActions } from "./TradeActions"
 
 export class Process {
   static tick() {
@@ -63,7 +64,7 @@ export class Process {
 
     stopWatch.start(`Recommended coins check`)
     try {
-      new ScoreTrader(store, CacheProxy, scores).trade()
+      new ScoreTrader(store, scores, TradeActions.default()).trade()
     } catch (e) {
       Log.alert(`Failed to trade recommended coins`)
       Log.error(e)

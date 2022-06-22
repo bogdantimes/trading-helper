@@ -24,7 +24,7 @@ export class TradeActions {
     return new TradeActions(DefaultStore, config, PriceProvider.getInstance(exchange, CacheProxy))
   }
 
-  private constructor(store: IStore, config: Config, priceProvider: IPriceProvider) {
+  constructor(store: IStore, config: Config, priceProvider: IPriceProvider) {
     this.config = config
     this.priceProvider = priceProvider
     this.tradesDao = new TradesDao(store)
