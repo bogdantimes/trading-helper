@@ -88,19 +88,23 @@ export class AnomalyTrader {
     const startPriceKey = `${coin}-start-price`
     const anomalyStartPrice = this.#cacheGetAll[startPriceKey]
 
-    if (tracking || ph.priceGoesStrongUp() || ph.priceGoesStrongDown()) {
-      // If price STRONG move repeats within 3 minutes, we keep tracking the anomaly
+    const strongMove = ph.priceGoesStrongUp() || ph.priceGoesStrongDown()
+    if (strongMove) {
+      // If price strong move repeats within 3 minutes - refresh expirations and continue tracking
       const trackingDuration = SECONDS_IN_MIN * 3
       this.#cachePutAll[trackingKey] = { value: `true`, expiration: trackingDuration }
       // Saving the max or min price of the anomaly depending on the direction
       const minMaxPrice = ph.priceGoesStrongUp() ? Math.min(...ph.prices) : Math.max(...ph.prices)
       this.#cachePutAll[startPriceKey] = {
-        value: `${anomalyStartPrice || minMaxPrice}`,
+        value: tracking ? `${anomalyStartPrice}` : `${minMaxPrice}`,
         expiration: trackingDuration * 2,
       }
       return PriceAnomaly.TRACKING
     }
-
+    if (tracking) {
+      // no strong move, but still tracking
+      return PriceAnomaly.TRACKING
+    }
     if (!anomalyStartPrice) {
       return PriceAnomaly.NONE
     }
