@@ -92,7 +92,7 @@ export class AnomalyTrader {
     const strongMove = ph.priceGoesStrongUp() || ph.priceGoesStrongDown()
     if (strongMove) {
       // If price strong move continues - refresh expirations and continue tracking
-      const anomalyWindowDuration = SECONDS_IN_MIN
+      const anomalyWindowDuration = SECONDS_IN_MIN*1.5
       this.#cachePutAll[trackingKey] = { value: `true`, expiration: anomalyWindowDuration }
       // Saving the max or min price of the anomaly depending on the direction
       const minMaxPrice = ph.priceGoesStrongUp() ? Math.min(...ph.prices) : Math.max(...ph.prices)
