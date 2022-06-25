@@ -105,7 +105,7 @@ function initialSetup(params: InitialSetupParams): string {
     config.SECRET = params.binanceSecretKey || config.SECRET
     if (config.KEY && config.SECRET) {
       Log.alert(`Checking if Binance is reachable`)
-      new Exchange(config).getFreeAsset(config.StableCoin)
+      new Exchange(config.KEY, config.SECRET).getFreeAsset(config.StableCoin)
       Log.alert(`Connected to Binance`)
       startTicker()
     }
@@ -196,7 +196,7 @@ function getStatistics(): Stats {
 function getScores(): ScoresData {
   return catchError(() => {
     const config = new ConfigDao(DefaultStore).get()
-    const exchange = new Exchange(config)
+    const exchange = new Exchange(config.KEY, config.SECRET)
     const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
     const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
     return scores.get()
@@ -206,7 +206,7 @@ function getScores(): ScoresData {
 function resetScores(): void {
   return catchError(() => {
     const config = new ConfigDao(DefaultStore).get()
-    const exchange = new Exchange(config)
+    const exchange = new Exchange(config.KEY, config.SECRET)
     const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
     const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
     return scores.reset()
@@ -216,7 +216,7 @@ function resetScores(): void {
 function getCoinNames(): CoinName[] {
   return catchError(() => {
     const config = new ConfigDao(DefaultStore).get()
-    const exchange = new Exchange(config)
+    const exchange = new Exchange(config.KEY, config.SECRET)
     const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
     return priceProvider.getCoinNames(config.StableCoin)
   })

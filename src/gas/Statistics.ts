@@ -25,4 +25,8 @@ export class Statistics {
     statistics.TotalProfit = statistics.TotalProfit || 0
     return statistics
   }
+
+  get totalProfit(): number {
+    return this.getAll().TotalProfit
+  }
 }

@@ -57,7 +57,7 @@
     "react-error-boundary": "3.1.4",
     "react-vis": "1.11.7",
     "react-window": "1.8.7",
-    "trading-helper-lib": "0.1.26-cjs",
+    "trading-helper-lib": "0.1.28",
     "browser-or-node": "^2.0.0"
   }
 }

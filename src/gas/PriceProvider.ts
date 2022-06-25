@@ -26,7 +26,7 @@ export class PriceProvider implements IPriceProvider {
     return PriceProvider.#instance
   }
 
-  private constructor(exchange: IExchange, cache: ICacheProxy) {
+  constructor(exchange: IExchange, cache: ICacheProxy) {
     this.#exchange = exchange
     this.#cache = cache
     this.#priceMaps = this.#getPriceMapsFromCache()

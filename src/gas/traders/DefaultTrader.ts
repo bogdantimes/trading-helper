@@ -3,11 +3,13 @@ import { IExchange } from "../Exchange"
 import { Log, StableCoins } from "../Common"
 import {
   Coin,
+  CoinName,
   Config,
   ExchangeSymbol,
   f2,
-  PriceHoldersMap,
+  IPriceProvider,
   PriceMove,
+  PricesHolder,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
@@ -19,38 +21,47 @@ import { IStore } from "../Store"
 import { ConfigDao } from "../dao/Config"
 
 export class DefaultTrader {
-  private readonly config: Config
-  private readonly exchange: IExchange
-  private readonly stats: Statistics
-  private readonly prices: PriceHoldersMap
-  private readonly trades: TradesDao
+  readonly #tradesDao: TradesDao
+  readonly #configDao: ConfigDao
+  readonly #exchange: IExchange
+  readonly #priceProvider: IPriceProvider
+  readonly #stats: Statistics
 
+  #config: Config
   /**
    * Used when {@link ProfitBasedStopLimit} is enabled.
    */
-  private totalProfit = 0
-  /**
-   * Used when {@link ProfitBasedStopLimit} is enabled.
-   */
-  private numberOfBoughtAssets = 0
+  #numberOfBoughtAssets = 0
 
-  #store: IStore
-
-  constructor(store: IStore, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
-    this.config = new ConfigDao(store).get()
-    this.prices = priceProvider.get(this.config.StableCoin)
-    this.exchange = exchange
-    this.stats = stats
-    this.trades = new TradesDao(store)
-    this.#store = store
-
-    if (this.config.ProfitBasedStopLimit) {
-      this.totalProfit = stats.getAll().TotalProfit
-      this.numberOfBoughtAssets = this.trades.getList(TradeState.BOUGHT).length
-    }
+  constructor(tradesDao: TradesDao, configDao: ConfigDao, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
+    this.#priceProvider = priceProvider
+    this.#exchange = exchange
+    this.#stats = stats
+    this.#tradesDao = tradesDao
+    this.#configDao = configDao
   }
 
-  tickerCheck(tm: TradeMemo): TradeMemo {
+  trade(): void {
+    const trades = this.#tradesDao.getList()
+
+    // get current config
+    this.#config = this.#configDao.get()
+
+    if (this.#config.ProfitBasedStopLimit) {
+      this.#numberOfBoughtAssets = trades.filter(t => t.stateIs(TradeState.BOUGHT)).length
+    }
+
+    trades.forEach((trade) => {
+      try {
+        this.#tradesDao.update(trade.getCoinName(), (tm) => this.#checkTrade(tm))
+      } catch (e) {
+        Log.alert(`Failed to trade ${trade.getCoinName()}: ${e.message}`)
+        Log.error(e)
+      }
+    })
+  }
+
+  #checkTrade(tm: TradeMemo): TradeMemo {
     this.pushNewPrice(tm)
 
     if (tm.stateIs(TradeState.BOUGHT)) {
@@ -69,20 +80,20 @@ export class DefaultTrader {
     } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
       // buy only if price stopped going down
       // this allows to wait if price continues to fall
-      this.buy(tm, this.config.BuyQuantity)
+      this.buy(tm, this.#config.BuyQuantity)
     }
     return tm
   }
 
   private processSoldState(tm: TradeMemo): void {
-    if (!this.config.SwingTradeEnabled) {
+    if (!this.#config.SwingTradeEnabled) {
       return
     }
     // Swing trade enabled.
     // Checking if price dropped below max observed price minus x2 profit limit percentage,
     // and we can buy again
     const symbol = tm.tradeResult.symbol
-    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.config.ProfitLimit * 2)
+    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.#config.ProfitLimit * 2)
     if (priceDropped) {
       Log.alert(`ℹ️ ${symbol} will be bought again as price dropped sufficiently`)
       tm.setState(TradeState.BUY)
@@ -96,18 +107,18 @@ export class DefaultTrader {
 
     if (tm.stopLimitCrossedDown()) {
       Log.alert(`ℹ️ ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
-      this.config.SellAtStopLimit && tm.setState(TradeState.SELL)
-    } else if (tm.profitLimitCrossedUp(this.config.ProfitLimit)) {
+      this.#config.SellAtStopLimit && tm.setState(TradeState.SELL)
+    } else if (tm.profitLimitCrossedUp(this.#config.ProfitLimit)) {
       Log.alert(`ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
-      this.config.SellAtProfitLimit && tm.setState(TradeState.SELL)
+      this.#config.SellAtProfitLimit && tm.setState(TradeState.SELL)
     } else if (tm.entryPriceCrossedUp()) {
       // Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
     }
   }
 
   private updateStopLimit(tm: TradeMemo) {
-    if (this.config.ProfitBasedStopLimit) {
-      const allowedLossPerAsset = this.totalProfit / this.numberOfBoughtAssets
+    if (this.#config.ProfitBasedStopLimit) {
+      const allowedLossPerAsset = this.#stats.totalProfit / this.#numberOfBoughtAssets
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
     } else {
       // The stop limit price is the price at which the trade will be sold if the price drops below it.
@@ -116,8 +127,8 @@ export class DefaultTrader {
       // 2. Multiply the average price by K, where: 1 - StopLimit <= K <= 0.99,
       //    K -> 0.99 proportionally to the current profit.
       //    The closer the current profit to the ProfitLimit, the closer K is to 0.99.
-      const SL = this.config.StopLimit
-      const PL = this.config.ProfitLimit
+      const SL = this.#config.StopLimit
+      const PL = this.#config.ProfitLimit
       const P = tm.profitPercent() / 100
       const K = Math.min(0.99, 1 - SL + (P * SL) / PL)
 
@@ -135,22 +146,31 @@ export class DefaultTrader {
   }
 
   private pushNewPrice(tm: TradeMemo): void {
-    const priceHolder = this.prices[tm.getCoinName()]
+    const priceHolder = this.#getPrices(tm.getCoinName())
+    const symbol = `${tm.getCoinName()}${this.#config.StableCoin}`
     if (priceHolder) {
       tm.pushPrice(priceHolder.currentPrice)
     } else if (tm.tradeResult.quantity) {
       // no price available, but we have quantity, which means we bought something earlier
-      throw Error(`Exchange does not have price for ${tm.getCoinName()}${this.config.StableCoin}`)
+      Log.alert(`Exchange does not have price for ${symbol}.`)
+      if (!tm.hodl) {
+        tm.hodl = true
+        Log.alert(`The ${tm.getCoinName()} asset is marked HODL. Please, resolve the issue manually.`)
+      }
     } else {
       // no price available, and no quantity, which means we haven't bought anything yet
       // could be a non-existing symbol, or not yet published in the exchange
-      Log.info(`Exchange does not have price for ${tm.getCoinName()}${this.config.StableCoin}`)
+      Log.info(`Exchange does not have price for ${symbol}`)
     }
+  }
+
+  #getPrices(coinName: CoinName): PricesHolder {
+    return this.#priceProvider.get(this.#config.StableCoin)[coinName]
   }
 
   private buy(tm: TradeMemo, cost: number): void {
     const symbol = tm.tradeResult.symbol
-    const tradeResult = this.exchange.marketBuy(symbol, cost)
+    const tradeResult = this.#exchange.marketBuy(symbol, cost)
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
@@ -176,8 +196,8 @@ export class DefaultTrader {
   }
 
   private sell(memo: TradeMemo): void {
-    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.config.StableCoin)
-    const tradeResult = this.exchange.marketSell(symbol, memo.tradeResult.quantity)
+    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.#config.StableCoin)
+    const tradeResult = this.#exchange.marketSell(symbol, memo.tradeResult.quantity)
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to SOLD in the end
       try {
@@ -206,7 +226,7 @@ export class DefaultTrader {
       Log.alert(tradeResult.toString())
     }
 
-    if (memo.stateIs(TradeState.SOLD) && this.config.AveragingDown) {
+    if (memo.stateIs(TradeState.SOLD) && this.#config.AveragingDown) {
       try {
         this.averageDown(tradeResult)
       } catch (e) {
@@ -220,7 +240,7 @@ export class DefaultTrader {
     // find a trade with the lowest profit percentage
     const byProfitPercentDesc = (t1: TradeMemo, t2: TradeMemo) =>
       t1.profitPercent() < t2.profitPercent() ? -1 : 1
-    const lowestPLTrade = this.trades
+    const lowestPLTrade = this.#tradesDao
       .getList(TradeState.BOUGHT)
       .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
       .sort(byProfitPercentDesc)[0]
@@ -229,7 +249,7 @@ export class DefaultTrader {
       Log.alert(
         `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
       )
-      this.trades.update(lowestPLTrade.getCoinName(), (tm) => {
+      this.#tradesDao.update(lowestPLTrade.getCoinName(), (tm) => {
         this.buy(tm, tradeResult.gained)
         return tm
       })
@@ -238,7 +258,7 @@ export class DefaultTrader {
 
   private updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
     if (StableUSDCoin[gainedCoin]) {
-      this.stats.addProfit(profit)
+      this.#stats.addProfit(profit)
       Log.info(`P/L added to statistics: ` + profit)
     }
   }
@@ -261,13 +281,13 @@ export class DefaultTrader {
   }
 
   private getBNBCommissionCost(commission: number): number {
-    const bnbPriceHolder = this.prices[`BNB`]
+    const bnbPriceHolder = this.#getPrices(`BNB`)
     return bnbPriceHolder ? commission * bnbPriceHolder.currentPrice : 0
   }
 
   private updateBNBBalance(quantity: number): boolean {
     let updated = false
-    this.trades.update(`BNB`, (tm) => {
+    this.#tradesDao.update(`BNB`, (tm) => {
       // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
       // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
       tm.tradeResult.addQuantity(quantity, 0)
@@ -278,12 +298,12 @@ export class DefaultTrader {
     return updated
   }
 
-  updateStableCoinsBalance() {
+  updateStableCoinsBalance(store: IStore) {
     const stableCoins: any[] = []
     Object.keys(StableUSDCoin).forEach((coin) => {
-      const balance = this.exchange.getFreeAsset(coin)
+      const balance = this.#exchange.getFreeAsset(coin)
       balance && stableCoins.push(new Coin(coin, balance))
     })
-    this.#store.set(StableCoins, stableCoins)
+    store.set(StableCoins, stableCoins)
   }
 }

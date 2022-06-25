@@ -11,7 +11,6 @@ import {
 } from "trading-helper-lib"
 import { TradeActions } from "../TradeActions"
 import { TradesDao } from "../dao/Trades"
-import { IStore } from "../Store"
 import { ConfigDao } from "../dao/Config"
 
 export enum PriceAnomaly {
@@ -25,25 +24,33 @@ export class AnomalyTrader {
   readonly #cache: DefaultCacheProxy
   readonly #priceProvider: IPriceProvider
   readonly #tradesDao: TradesDao
-  readonly #config: Config
+  readonly #configDao: ConfigDao
   readonly #tradeActions: TradeActions
 
   #cacheGetAll: Entries = {}
   #cachePutAll: ExpirationEntries = {}
   #cacheRemoveAll: string[] = []
+  #config: Config
 
-  constructor(tradesDao: TradesDao, config: Config, cache: DefaultCacheProxy, priceProvider: IPriceProvider) {
+  constructor(tradesDao: TradesDao, configDao: ConfigDao, cache: DefaultCacheProxy, priceProvider: IPriceProvider,
+              tradeActions: TradeActions) {
     this.#cache = cache
     this.#priceProvider = priceProvider
     this.#tradesDao = tradesDao
-    this.#config = config
-    this.#tradeActions = new TradeActions(this.#tradesDao, this.#config, priceProvider)
+    this.#configDao = configDao
+    this.#tradeActions = tradeActions
   }
 
   trade(): void {
+    // Get current config
+    this.#config = this.#configDao.get()
+
+    if (!this.#config.SellPumps && !this.#config.BuyDumps) {
+      return
+    }
+
     const prices = this.#priceProvider.get(this.#config.StableCoin)
 
-    // Performance improvement: populating cache map once for all
     this.#getAllCache(prices)
 
     Object.keys(prices).forEach((coin: CoinName) => {
@@ -51,7 +58,6 @@ export class AnomalyTrader {
       this.#handleAnomaly(coin, anomaly)
     })
 
-    // Performance improvement: update cache once for all
     this.#updateAllCache()
   }
 
@@ -92,7 +98,7 @@ export class AnomalyTrader {
     const strongMove = ph.priceGoesStrongUp() || ph.priceGoesStrongDown()
     if (strongMove) {
       // If price strong move continues - refresh expirations and continue tracking
-      const anomalyWindowDuration = SECONDS_IN_MIN*1.5
+      const anomalyWindowDuration = SECONDS_IN_MIN * 1.5
       this.#cachePutAll[trackingKey] = { value: `true`, expiration: anomalyWindowDuration }
       // Saving the max or min price of the anomaly depending on the direction
       const minMaxPrice = ph.priceGoesStrongUp() ? Math.min(...ph.prices) : Math.max(...ph.prices)

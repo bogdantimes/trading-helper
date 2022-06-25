@@ -47,7 +47,7 @@ export class ConfigDao {
     if (config.ScoreUpdateThreshold) {
       config.ScoreSelectivity = ScoreSelectivity[
         config.ScoreUpdateThreshold
-      ] as ScoreSelectivityKeys
+        ] as ScoreSelectivityKeys
       delete config.ScoreUpdateThreshold
     }
 

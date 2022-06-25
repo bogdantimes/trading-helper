@@ -72,10 +72,10 @@ export class Log {
   static print(): string {
     return `${this.alerts.length > 0 ? `${this.alerts.join(`\n`)}\n` : ``}
 ${
-  this.errLog.length > 0
-    ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
-    : ``
-}
+      this.errLog.length > 0
+        ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
+        : ``
+    }
 ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``}
 ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
 `

@@ -1,20 +1,19 @@
 import { TradeActions } from "../TradeActions"
-import { CoinScore, Config, ICacheProxy, TradeMemo, TradeState } from "trading-helper-lib"
+import { AutoTradeBestScores, CoinScore, TradeMemo, TradeState } from "trading-helper-lib"
 import { IScores } from "../Scores"
 import { TradesDao } from "../dao/Trades"
-import { IStore } from "../Store"
 import { ConfigDao } from "../dao/Config"
 
 export class ScoreTrader {
-  private readonly config: Config
+  private readonly configDao: ConfigDao
   private readonly scores: IScores
   private readonly tradesDao: TradesDao
   private readonly tradeActions: TradeActions
 
-  constructor(store: IStore, scores: IScores, tradeActions: TradeActions) {
+  constructor(configDap: ConfigDao, tradesDao: TradesDao, scores: IScores, tradeActions: TradeActions) {
     this.scores = scores
-    this.config = new ConfigDao(store).get()
-    this.tradesDao = new TradesDao(store)
+    this.configDao = configDap
+    this.tradesDao = tradesDao
     this.tradeActions = tradeActions
   }
 
@@ -24,8 +23,9 @@ export class ScoreTrader {
    * Coins that are sold and not in the recommended list are removed from the portfolio.
    */
   trade(): void {
-    const tradeBestScores = this.config.AutoTradeBestScores
-    if (tradeBestScores) {
+    const config = this.configDao.get()
+    const tradeBestScores = config.AutoTradeBestScores
+    if (tradeBestScores > AutoTradeBestScores.OFF) {
       const scoresData = this.scores.get()
       if (!scoresData.realData) return
 

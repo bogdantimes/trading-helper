@@ -1,12 +1,5 @@
-import { DefaultStore, IStore } from "./Store"
-import {
-  Config,
-  ExchangeSymbol,
-  IPriceProvider,
-  TradeMemo,
-  TradeResult,
-  TradeState,
-} from "trading-helper-lib"
+import { DefaultStore } from "./Store"
+import { ExchangeSymbol, IPriceProvider, StableUSDCoin, TradeMemo, TradeResult, TradeState } from "trading-helper-lib"
 import { Exchange } from "./Exchange"
 import { PriceProvider } from "./PriceProvider"
 import { CacheProxy } from "./CacheProxy"
@@ -14,24 +7,27 @@ import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
 
 export class TradeActions {
-  private readonly config: Config
+  private readonly stableCoin: StableUSDCoin
   private readonly priceProvider: IPriceProvider
   private readonly tradesDao: TradesDao
 
   static default(): TradeActions {
     const config = new ConfigDao(DefaultStore).get()
-    const exchange = new Exchange(config)
-    return new TradeActions(new TradesDao(DefaultStore), config, PriceProvider.getInstance(exchange, CacheProxy))
+    const exchange = new Exchange(config.KEY, config.SECRET)
+    return new TradeActions(
+      new TradesDao(DefaultStore),
+      config.StableCoin,
+      PriceProvider.getInstance(exchange, CacheProxy))
   }
 
-  constructor(tradesDao: TradesDao, config: Config, priceProvider: IPriceProvider) {
-    this.config = config
+  constructor(tradesDao: TradesDao, stableCoin: StableUSDCoin, priceProvider: IPriceProvider) {
+    this.stableCoin = stableCoin
     this.priceProvider = priceProvider
     this.tradesDao = tradesDao
   }
 
   buy(coinName: string): void {
-    const stableCoin = this.config.StableCoin
+    const stableCoin = this.stableCoin
     const symbol = new ExchangeSymbol(coinName, stableCoin)
     this.tradesDao.update(
       coinName,

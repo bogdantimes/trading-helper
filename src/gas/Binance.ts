@@ -1,7 +1,7 @@
 import { IExchange } from "./Exchange"
 import { CacheProxy } from "./CacheProxy"
 import { execute, Log } from "./Common"
-import { Config, ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
+import { ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
 
 export class Binance implements IExchange {
@@ -14,9 +14,9 @@ export class Binance implements IExchange {
   private readonly tradeReqOpts: URLFetchRequestOptions
   private readonly serverIds: number[]
 
-  constructor(config: Config) {
-    this.key = config.KEY ?? ``
-    this.secret = config.SECRET ?? ``
+  constructor(key: string, secret: string) {
+    this.key = key ?? ``
+    this.secret = secret ?? ``
     this.defaultReqOpts = { headers: { "X-MBX-APIKEY": this.key }, muteHttpExceptions: true }
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts)
     this.serverIds = this.shuffleServerIds()

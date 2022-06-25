@@ -1,5 +1,5 @@
 import { Binance } from "./Binance"
-import { Config, ExchangeSymbol, PriceMap, StableUSDCoin, TradeResult } from "trading-helper-lib"
+import { ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
 
 export interface IExchange {
   getFreeAsset(assetName: string): number
@@ -15,11 +15,9 @@ export interface IExchange {
 
 export class Exchange implements IExchange {
   private readonly exchange: Binance
-  private readonly stableCoin: StableUSDCoin
 
-  constructor(config: Config) {
-    this.exchange = new Binance(config)
-    this.stableCoin = config.StableCoin
+  constructor(key: string, secret: string) {
+    this.exchange = new Binance(key, secret)
   }
 
   getFreeAsset(assetName: string): number {

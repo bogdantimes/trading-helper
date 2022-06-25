@@ -21,63 +21,64 @@ export class Process {
     const configDao = new ConfigDao(store)
 
     const config = configDao.get()
-    const exchange = new Exchange(config)
+    const exchange = new Exchange(config.KEY, config.SECRET)
     const statistics = new Statistics(store)
     const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
+    const tradeActions = new TradeActions(tradesDao, config.StableCoin, priceProvider)
+    const defaultTrader = new DefaultTrader(tradesDao, configDao, exchange, priceProvider, statistics)
+    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
+    const scoreTrader = new ScoreTrader(configDao, tradesDao, scores, tradeActions)
+    const anomalyTrader = new AnomalyTrader(tradesDao, configDao, CacheProxy, priceProvider, tradeActions)
 
+    // Updating prices every tick
+    // This should be the only place to call `update` on the price provider.
     stopWatch.start(`Prices update`)
-    // Update prices every tick. This should the only place to call `update` on the price provider.
     priceProvider.update()
     stopWatch.stop()
 
-    const trader = new DefaultTrader(store, exchange, priceProvider, statistics)
-
-    stopWatch.start(`Trades check`)
-    tradesDao.getList().forEach((trade) => {
-      try {
-        tradesDao.update(trade.getCoinName(), (tm) => trader.tickerCheck(tm))
-      } catch (e) {
-        Log.error(e)
-      }
-    })
-    stopWatch.stop()
-
-    stopWatch.start(`Stable Coins update`)
     try {
-      trader.updateStableCoinsBalance()
+      stopWatch.start(`Trades check`)
+      defaultTrader.trade()
+      stopWatch.stop()
     } catch (e) {
-      Log.alert(`Failed to read stable coins balance`)
+      Log.alert(`Failed to trade: ${e.message}`)
       Log.error(e)
     }
-    stopWatch.stop()
 
-    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
-
-    stopWatch.start(`Scores update`)
     try {
+      stopWatch.start(`Stable Coins update`)
+      defaultTrader.updateStableCoinsBalance(store)
+      stopWatch.stop()
+    } catch (e) {
+      Log.alert(`Failed to update stable coins balance: ${e.message}`)
+      Log.error(e)
+    }
+
+    try {
+      stopWatch.start(`Scores update`)
       scores.update()
+      stopWatch.stop()
     } catch (e) {
-      Log.alert(`Failed to update scores`)
+      Log.alert(`Failed to update scores: ${e.message}`)
       Log.error(e)
     }
-    stopWatch.stop()
 
-    stopWatch.start(`Recommended coins check`)
     try {
-      new ScoreTrader(store, scores, TradeActions.default()).trade()
+      stopWatch.start(`Recommended coins check`)
+      scoreTrader.trade()
+      stopWatch.stop()
     } catch (e) {
-      Log.alert(`Failed to trade recommended coins`)
+      Log.alert(`Failed to trade recommended coins: ${e.message}`)
       Log.error(e)
     }
-    stopWatch.stop()
 
-    stopWatch.start(`Anomalies check`)
     try {
-      new AnomalyTrader(tradesDao, config, CacheProxy, priceProvider).trade()
+      stopWatch.start(`Anomalies check`)
+      anomalyTrader.trade()
+      stopWatch.stop()
     } catch (e) {
-      Log.alert(`Failed to trade price anomalies`)
+      Log.alert(`Failed to trade price anomalies: ${e.message}`)
       Log.error(e)
     }
-    stopWatch.stop()
   }
 }
