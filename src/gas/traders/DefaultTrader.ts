@@ -19,6 +19,7 @@ import { PriceProvider } from "../PriceProvider"
 import { TradesDao } from "../dao/Trades"
 import { IStore } from "../Store"
 import { ConfigDao } from "../dao/Config"
+import { isNode } from "browser-or-node"
 
 export class DefaultTrader {
   readonly #tradesDao: TradesDao
@@ -153,7 +154,11 @@ export class DefaultTrader {
     } else if (tm.tradeResult.quantity) {
       // no price available, but we have quantity, which means we bought something earlier
       Log.alert(`Exchange does not have price for ${symbol}.`)
-      if (!tm.hodl) {
+      if (isNode) {
+        // Only for back-testing, force selling this asset
+        // The back-testing exchange mock will use the previous price
+        this.sell(tm)
+      } else if (!tm.hodl) {
         tm.hodl = true
         Log.alert(`The ${tm.getCoinName()} asset is marked HODL. Please, resolve the issue manually.`)
       }
