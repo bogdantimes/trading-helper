@@ -34,7 +34,13 @@ export class DefaultTrader {
    */
   #numberOfBoughtAssets = 0
 
-  constructor(tradesDao: TradesDao, configDao: ConfigDao, exchange: IExchange, priceProvider: PriceProvider, stats: Statistics) {
+  constructor(
+    tradesDao: TradesDao,
+    configDao: ConfigDao,
+    exchange: IExchange,
+    priceProvider: PriceProvider,
+    stats: Statistics,
+  ) {
     this.#priceProvider = priceProvider
     this.#exchange = exchange
     this.#stats = stats
@@ -49,7 +55,7 @@ export class DefaultTrader {
     this.#config = this.#configDao.get()
 
     if (this.#config.ProfitBasedStopLimit) {
-      this.#numberOfBoughtAssets = trades.filter(t => t.stateIs(TradeState.BOUGHT)).length
+      this.#numberOfBoughtAssets = trades.filter((t) => t.stateIs(TradeState.BOUGHT)).length
     }
 
     trades.forEach((trade) => {
@@ -74,8 +80,9 @@ export class DefaultTrader {
     const priceMove = tm.getPriceMove()
 
     // take action after processing
-    if (tm.stateIs(TradeState.SELL) && priceMove < PriceMove.UP) {
-      // sell if price does not go up anymore
+    if (tm.stateIs(TradeState.SELL) && (tm.stopLimitCrossedDown() || priceMove < PriceMove.UP)) {
+      // sell if price stop limit crossed down
+      // or the price does not go up anymore
       // this allows to wait if price continues to go up
       this.sell(tm)
     } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
@@ -160,7 +167,9 @@ export class DefaultTrader {
         this.sell(tm)
       } else if (!tm.hodl) {
         tm.hodl = true
-        Log.alert(`The ${tm.getCoinName()} asset is marked HODL. Please, resolve the issue manually.`)
+        Log.alert(
+          `The ${tm.getCoinName()} asset is marked HODL. Please, resolve the issue manually.`,
+        )
       }
     } else {
       // no price available, and no quantity, which means we haven't bought anything yet
@@ -201,7 +210,10 @@ export class DefaultTrader {
   }
 
   private sell(memo: TradeMemo): void {
-    const symbol = new ExchangeSymbol(memo.tradeResult.symbol.quantityAsset, this.#config.StableCoin)
+    const symbol = new ExchangeSymbol(
+      memo.tradeResult.symbol.quantityAsset,
+      this.#config.StableCoin,
+    )
     const tradeResult = this.#exchange.marketSell(symbol, memo.tradeResult.quantity)
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to SOLD in the end
