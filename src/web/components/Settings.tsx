@@ -188,7 +188,6 @@ export function Settings({
           </Select>
         </Stack>
         {switchers(config, setConfig)}
-        {autonomousTrading(config, setConfig)}
         {scoreThresholdSelector(config, setConfig)}
         <TextField
           value={newFbURL}
@@ -284,28 +283,6 @@ function scoreThresholdSelector(config: Config, setConfig: (config: Config) => v
           />
         ))}
       </RadioGroup>
-    </FormControl>
-  )
-}
-
-function autonomousTrading(config: Config, setConfig: (config: Config) => void) {
-  return (
-    <FormControl sx={{ paddingRight: `28px` }}>
-      <FormLabel>Autonomous Trading</FormLabel>
-      <Slider
-        sx={{ marginLeft: `10px` }}
-        value={config.AutoTradeBestScores}
-        onChange={(e, value) =>
-          setConfig({ ...config, AutoTradeBestScores: value as AutoTradeBestScores })
-        }
-        step={null}
-        min={0}
-        max={10}
-        marks={enumKeys<string>(AutoTradeBestScores).map((key) => ({
-          value: AutoTradeBestScores[key],
-          label: capitalizeWord(key),
-        }))}
-      />
     </FormControl>
   )
 }

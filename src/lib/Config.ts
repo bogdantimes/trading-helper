@@ -49,11 +49,6 @@ export interface Config {
    */
   ScoreSelectivity?: keyof typeof ScoreSelectivity
   /**
-   * AutoTradeBestScores - when enabled, the tool will trade the "Scores" recommended coins automatically.
-   * If the coin falls out of the recommended list, it will be removed from the assets once it is sold.
-   */
-  AutoTradeBestScores?: AutoTradeBestScores
-  /**
    * ChannelSize - defines the percentage between the upper and lower bounds of a price channel.
    */
   ChannelSize: number

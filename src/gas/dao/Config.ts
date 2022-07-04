@@ -33,7 +33,6 @@ export class ConfigDao {
       ProfitBasedStopLimit: false,
       PriceAnomalyAlert: 5,
       ScoreSelectivity: `MODERATE`,
-      AutoTradeBestScores: AutoTradeBestScores.OFF,
       ChannelSize: 0,
       ChannelWindowMins: 0,
     }

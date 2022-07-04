@@ -3,7 +3,6 @@ import { Exchange } from "./Exchange"
 import { Statistics } from "./Statistics"
 import { DefaultStore } from "./Store"
 import { Log, StopWatch } from "./Common"
-import { ScoreTrader } from "./traders/ScoreTrader"
 import { CacheProxy } from "./CacheProxy"
 import { Scores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
@@ -34,7 +33,6 @@ export class Process {
       statistics,
     )
     const scores = new Scores(DefaultStore, priceProvider, config)
-    const scoreTrader = new ScoreTrader(configDao, tradesDao, scores, tradeActions)
     const pdTrader = new PDTrader(tradesDao, configDao, CacheProxy, priceProvider, tradeActions)
 
     // Updating prices every tick
@@ -67,15 +65,6 @@ export class Process {
       stopWatch.stop()
     } catch (e) {
       Log.alert(`Failed to update scores: ${e.message}`)
-      Log.error(e)
-    }
-
-    try {
-      stopWatch.start(`Recommended coins check`)
-      scoreTrader.trade()
-      stopWatch.stop()
-    } catch (e) {
-      Log.alert(`Failed to trade recommended coins: ${e.message}`)
       Log.error(e)
     }
 

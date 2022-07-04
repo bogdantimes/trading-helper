@@ -1,7 +1,6 @@
 import * as React from "react"
 import { useEffect } from "react"
 import {
-  Alert,
   Box,
   Button,
   List,
@@ -9,19 +8,17 @@ import {
   ListItemAvatar,
   ListItemText,
   Stack,
-  Theme,
   Typography,
   useTheme,
 } from "@mui/material"
 import {
-  capitalizeWord,
   cardWidth,
   circularProgress,
   confirmBuy,
   growthIconMap,
   selectivityColorMap,
 } from "./Common"
-import { AutoTradeBestScores, CoinScore, Config, f2, PriceMove, ScoresData } from "../../lib"
+import { CoinScore, Config, f2, PriceMove, ScoresData } from "../../lib"
 
 export function Scores({ config }: { config: Config }) {
   const [scoresData, setScoresData] = React.useState<ScoresData>(null)
@@ -83,7 +80,6 @@ export function Scores({ config }: { config: Config }) {
 function recommendedList(scoresData: ScoresData, buy: (coinName: string) => void, config: Config) {
   const theme = useTheme()
 
-  const autoTrade = config.AutoTradeBestScores
   const selectivity = config.ScoreSelectivity
   const selectivityMark = (
     <Typography variant={`caption`} color={theme.palette[selectivityColorMap[selectivity]].main}>
@@ -102,19 +98,13 @@ function recommendedList(scoresData: ScoresData, buy: (coinName: string) => void
       )}
       {!!scoresData.recommended.length && (
         <Stack>
-          {getAlert(autoTrade)}
           <List sx={{ padding: 0, marginTop: 0, width: cardWidth }}>
             {scoresData.recommended.map((rJson, i) => {
               const cs = CoinScore.fromObject(rJson)
               const order = i + 1
               return (
                 <ListItem
-                  sx={{
-                    padding: `0 0 6px 40px`,
-                    borderBottomLeftRadius: autoTrade == order ? theme.shape.borderRadius : 0,
-                    borderBottomRightRadius: autoTrade == order ? theme.shape.borderRadius : 0,
-                    backgroundColor: autoTrade >= order && getAlertBackgroundColor(theme),
-                  }}
+                  sx={{ padding: `0 0 6px 40px` }}
                   key={cs.coinName}
                   disablePadding={true}
                   secondaryAction={
@@ -158,31 +148,5 @@ function marketMoveBlock(scores: ScoresData) {
           )}
       </Stack>
     </>
-  )
-}
-
-function getAlertBackgroundColor(theme: Theme) {
-  return theme.palette.mode == `dark` ? `#071318` : `#e5f6fd`
-}
-
-function getAlert(autoTrade: AutoTradeBestScores) {
-  const theme = useTheme()
-  return (
-    <Alert
-      severity={`info`}
-      sx={{
-        margin: 0,
-        padding: `4px 16px`,
-        borderBottomLeftRadius: autoTrade ? 0 : theme.shape.borderRadius,
-        borderBottomRightRadius: autoTrade ? 0 : theme.shape.borderRadius,
-        backgroundColor: getAlertBackgroundColor(theme),
-        justifyContent: `center`,
-        "& div": { padding: 0 },
-      }}
-    >
-      <Typography marginTop={0} alignSelf={`center`} variant={`caption`}>
-        Autonomous trading: {capitalizeWord(AutoTradeBestScores[autoTrade])}
-      </Typography>
-    </Alert>
   )
 }
