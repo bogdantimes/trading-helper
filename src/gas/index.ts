@@ -2,7 +2,6 @@ import { DefaultStore, FirebaseStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
-import { Scores } from "./Scores"
 import { Log, SECONDS_IN_MIN, StableCoins, TICK_INTERVAL_MIN } from "./Common"
 import {
   AssetsResponse,
@@ -10,11 +9,10 @@ import {
   CoinName,
   Config,
   InitialSetupParams,
-  ScoresData,
-  Stats,
-  TradeMemo,
   IStore,
   PriceChannelsDataResponse,
+  Stats,
+  TradeMemo,
 } from "../lib"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
@@ -196,26 +194,6 @@ function getStatistics(): Stats {
   return catchError(() => new Statistics(DefaultStore).getAll())
 }
 
-function getScores(): ScoresData {
-  return catchError(() => {
-    const config = new ConfigDao(DefaultStore).get()
-    const exchange = new Exchange(config.KEY, config.SECRET)
-    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
-    const scores = new Scores(DefaultStore, priceProvider, config)
-    return scores.get()
-  })
-}
-
-function resetScores(): void {
-  return catchError(() => {
-    const config = new ConfigDao(DefaultStore).get()
-    const exchange = new Exchange(config.KEY, config.SECRET)
-    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
-    const scores = new Scores(DefaultStore, priceProvider, config)
-    return scores.reset()
-  })
-}
-
 function getCoinNames(): CoinName[] {
   return catchError(() => {
     const config = new ConfigDao(DefaultStore).get()
@@ -267,8 +245,6 @@ global.getStableCoins = getStableCoins
 global.getConfig = getConfig
 global.setConfig = setConfig
 global.getStatistics = getStatistics
-global.getScores = getScores
-global.resetScores = resetScores
 global.getCoinNames = getCoinNames
 global.getFirebaseURL = getFirebaseURL
 global.setFirebaseURL = setFirebaseURL

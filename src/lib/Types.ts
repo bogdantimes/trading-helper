@@ -1,4 +1,3 @@
-import { CoinScore } from "./CoinScore"
 import Integer = GoogleAppsScript.Integer
 
 export enum StableUSDCoin {
@@ -90,20 +89,6 @@ export interface MarketMove {
   [PriceMove.NEUTRAL]: number
   [PriceMove.UP]: number
   [PriceMove.STRONG_UP]: number
-}
-
-export enum ScoreSelectivity {
-  EXTREME = 0.005,
-  HIGH = 0.01,
-  MODERATE = 0.03,
-  MINIMAL = 0.07,
-}
-
-export type ScoreSelectivityKeys = keyof typeof ScoreSelectivity
-
-export interface ScoresData {
-  recommended: CoinScore[]
-  marketMove: MarketMove
 }
 
 export interface InitialSetupParams {

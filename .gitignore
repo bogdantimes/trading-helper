@@ -12,8 +12,3 @@ yarn.lock
 # IDE setting
 .idea
 .vscode
-
-# Test data
-*prices.csv
-*scores.json
-*.log

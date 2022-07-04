@@ -1,4 +1,4 @@
-import { AutoTradeBestScores, PriceProvider, ScoreSelectivity, StableUSDCoin } from "./Types"
+import { PriceProvider, StableUSDCoin } from "./Types"
 
 export interface Config {
   KEY?: string
@@ -41,14 +41,6 @@ export interface Config {
    */
   SellPumps?: boolean
   /**
-   * Sets the maximum percentage of all market currencies that should gain or lose price, to be
-   * considered as those which scores have to be recalculated. For example:
-   * if the value is 0.01, this means, that if 1% percent of all market currencies gain or lose price,
-   * while 99% of all market currencies do not change or go in the opposite direction,
-   * the scores will be recalculated for that 1%.
-   */
-  ScoreSelectivity?: keyof typeof ScoreSelectivity
-  /**
    * ChannelSize - defines the percentage between the upper and lower bounds of a price channel.
    */
   ChannelSize: number
@@ -58,10 +50,6 @@ export interface Config {
    */
   ChannelWindowMins: number
 
-  /**
-   * @deprecated
-   */
-  ScoreUpdateThreshold?: number
   /**
    * @deprecated
    */

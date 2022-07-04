@@ -17,7 +17,6 @@ import { Info } from "./components/Info"
 import { Assets } from "./components/Assets"
 import { TabPanel } from "./components/TabPanel"
 import { InitialSetup } from "./components/InitialSetup"
-import { Scores } from "./components/Scores"
 import { Config } from "../lib"
 import { Channels } from "./components/Channels"
 
@@ -107,10 +106,7 @@ export default function App() {
           <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
             <Tabs value={value} onChange={handleChange} centered>
               <Tab label="Assets" {...a11yProps(i++)} />
-              <Tab label="Scores" {...a11yProps(i++)} />
-              {config.ChannelWindowMins && config.ChannelSize && (
-                <Tab label="Channels" {...a11yProps(i++)} />
-              )}
+              <Tab label="Channels" {...a11yProps(i++)} />
               <Tab sx={{ minWidth: `50px` }} label="Info" {...a11yProps(i++)} />
               <Tab label="Settings" {...a11yProps(i++)} />
             </Tabs>
@@ -119,13 +115,8 @@ export default function App() {
             <Assets config={config} />
           </TabPanel>
           <TabPanel value={value} index={y++}>
-            <Scores config={config} />
+            <Channels config={config} />
           </TabPanel>
-          {config.ChannelWindowMins && config.ChannelSize && (
-            <TabPanel value={value} index={y++}>
-              <Channels config={config} />
-            </TabPanel>
-          )}
           <TabPanel value={value} index={y++}>
             <Info />
           </TabPanel>

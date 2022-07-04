@@ -1,12 +1,4 @@
-import {
-  AutoTradeBestScores,
-  Config,
-  PriceProvider,
-  ScoreSelectivity,
-  ScoreSelectivityKeys,
-  StableUSDCoin,
-  IStore,
-} from "../../lib"
+import { Config, IStore, PriceProvider, StableUSDCoin } from "../../lib"
 
 export class ConfigDao {
   private readonly store: IStore
@@ -32,25 +24,12 @@ export class ConfigDao {
       AveragingDown: false,
       ProfitBasedStopLimit: false,
       PriceAnomalyAlert: 5,
-      ScoreSelectivity: `MODERATE`,
       ChannelSize: 0,
       ChannelWindowMins: 0,
     }
     let config: Config = this.store.getOrSet(`Config`, defaultConfig)
     // apply existing config on top of default one
     config = Object.assign(defaultConfig, config)
-
-    if (config.ScoreUpdateThreshold === 0.05) {
-      // 0.05 used to be a default value, no it's not
-      config.ScoreUpdateThreshold = defaultConfig.ScoreUpdateThreshold
-    }
-
-    if (config.ScoreUpdateThreshold) {
-      config.ScoreSelectivity = ScoreSelectivity[
-        config.ScoreUpdateThreshold
-      ] as ScoreSelectivityKeys
-      delete config.ScoreUpdateThreshold
-    }
 
     if (config.TakeProfit) {
       config.ProfitLimit = config.TakeProfit

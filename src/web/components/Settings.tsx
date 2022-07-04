@@ -14,22 +14,12 @@ import {
   Radio,
   RadioGroup,
   Select,
-  Slider,
   Stack,
   Switch,
   TextField,
-  Typography,
 } from "@mui/material"
-import { capitalizeWord, cardWidth, circularProgress, selectivityColorMap } from "./Common"
-import {
-  AutoTradeBestScores,
-  Config,
-  enumKeys,
-  f2,
-  ScoreSelectivityKeys,
-  StableUSDCoin,
-  ScoreSelectivity,
-} from "../../lib"
+import { circularProgress } from "./Common"
+import { Config, f2, StableUSDCoin } from "../../lib"
 
 export function Settings({
   config,
@@ -188,7 +178,6 @@ export function Settings({
           </Select>
         </Stack>
         {switchers(config, setConfig)}
-        {scoreThresholdSelector(config, setConfig)}
         <TextField
           value={newFbURL}
           label={`Firebase URL`}
@@ -248,41 +237,5 @@ function switchers(
         label="Averaging down"
       />
     </Stack>
-  )
-}
-
-const scoreSelectorCaption: { [key in ScoreSelectivityKeys]: string } = {
-  EXTREME: `Best for manual trading. Reliable score starts at ~15 points.`,
-  HIGH: `Best for manual or supervised autonomous trading. Reliable score starts at ~30 points.`,
-  MODERATE: `Best for unsupervised fully-autonomous trading. Reliable score starts at ~90 points.`,
-  MINIMAL: `Best for manual or supervised autonomous trading. Reliable score starts at ~210 points.`,
-}
-
-function scoreThresholdSelector(config: Config, setConfig: (config: Config) => void) {
-  return (
-    <FormControl sx={{ maxWidth: cardWidth }}>
-      <FormLabel>Score Selectivity</FormLabel>
-      <RadioGroup
-        value={config.ScoreSelectivity}
-        onChange={(e) =>
-          setConfig({ ...config, ScoreSelectivity: e.target.value as ScoreSelectivityKeys })
-        }
-      >
-        {enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((key) => (
-          <FormControlLabel
-            key={key}
-            labelPlacement="end"
-            value={key}
-            control={<Radio size={`small`} color={selectivityColorMap[key]} />}
-            label={
-              <Box sx={{ lineHeight: `1` }}>
-                <Typography marginBottom={`-4px`}>{capitalizeWord(key)}</Typography>
-                <Typography variant={`caption`}>{scoreSelectorCaption[key]}</Typography>
-              </Box>
-            }
-          />
-        ))}
-      </RadioGroup>
-    </FormControl>
   )
 }

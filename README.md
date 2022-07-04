@@ -24,7 +24,6 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 * Swing trading: automatically buy low and sell high during the rally.
 * Averaging down: automatically re-invest gains into most unprofitable coins to buy them at discount prices.
 * Your statistics: see how much you have made and how much you have lost on a daily basis.
-* Scores: the recommendation engine which tracks coins that statistically show an up-move when the market goes opposite.
 
 ### Available for Patrons only
 
@@ -34,9 +33,9 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 
 ![assets.png](img/assets.png)
 
-### Scores
+### Channels
 
-![scores.png](img/scores.png)
+TODO
 
 ### Info
 

@@ -4,7 +4,6 @@ import { Statistics } from "./Statistics"
 import { DefaultStore } from "./Store"
 import { Log, StopWatch } from "./Common"
 import { CacheProxy } from "./CacheProxy"
-import { Scores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
 import { PDTrader } from "./traders/PDTrader"
 import { TradesDao } from "./dao/Trades"
@@ -32,7 +31,6 @@ export class Process {
       priceProvider,
       statistics,
     )
-    const scores = new Scores(DefaultStore, priceProvider, config)
     const pdTrader = new PDTrader(tradesDao, configDao, CacheProxy, priceProvider, tradeActions)
 
     // Updating prices every tick
@@ -56,15 +54,6 @@ export class Process {
       stopWatch.stop()
     } catch (e) {
       Log.alert(`Failed to update stable coins balance: ${e.message}`)
-      Log.error(e)
-    }
-
-    try {
-      stopWatch.start(`Scores update`)
-      scores.update()
-      stopWatch.stop()
-    } catch (e) {
-      Log.alert(`Failed to update scores: ${e.message}`)
       Log.error(e)
     }
 
