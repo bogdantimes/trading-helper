@@ -6,7 +6,7 @@ import {
   PriceHoldersMap,
   PricesHolder,
   StableUSDCoin,
-} from "trading-helper-lib"
+} from "../lib"
 import { IExchange } from "./Exchange"
 import { SECONDS_IN_MIN, StableCoinMatcher, TICK_INTERVAL_MIN } from "./Common"
 

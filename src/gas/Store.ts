@@ -1,21 +1,6 @@
 import { CacheProxy, DefaultCacheProxy } from "./CacheProxy"
 import { isNode } from "browser-or-node"
-
-export interface IStore {
-  get(key: string): any
-
-  getKeys(): string[]
-
-  set(key: string, value: any): any
-
-  getOrSet(key: string, value: any): any
-
-  delete(key: string): void
-
-  isConnected(): boolean
-
-  connect(dbURL: string): void
-}
+import { IStore } from "../lib/index"
 
 export class ScriptStore implements IStore {
   delete(key: string): void {
@@ -50,15 +35,7 @@ export class ScriptStore implements IStore {
 }
 
 export class FirebaseStore implements IStore {
-  private source: object | null = null
-
-  constructor() {
-    const url = FirebaseStore.url
-    if (url) {
-      // @ts-ignore
-      this.source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken())
-    }
-  }
+  #source: object | null = null
 
   static get url(): string | null {
     return PropertiesService.getScriptProperties().getProperty(`dbURL`)
@@ -70,6 +47,21 @@ export class FirebaseStore implements IStore {
     } else {
       PropertiesService.getScriptProperties().deleteProperty(`dbURL`)
     }
+  }
+
+  private get source(): object | null {
+    if (!this.#source) {
+      const url = FirebaseStore.url
+      if (url) {
+        // @ts-ignore
+        this.#source = FirebaseApp.getDatabaseByUrl(url, ScriptApp.getOAuthToken())
+      }
+    }
+    return this.#source
+  }
+
+  private set source(source: object | null) {
+    this.#source = source
   }
 
   connect(dbURL: string): void {

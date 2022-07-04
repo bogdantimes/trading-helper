@@ -28,8 +28,8 @@ import {
   f2,
   ScoreSelectivityKeys,
   StableUSDCoin,
-} from "trading-helper-lib"
-import { ScoreSelectivity } from "trading-helper-lib/dist/Types"
+  ScoreSelectivity,
+} from "../../lib"
 
 export function Settings({
   config,
@@ -43,6 +43,7 @@ export function Settings({
 
   const [stopLimit, setLossLimit] = useState(f2(config.StopLimit * 100).toString())
   const [profitLimit, setProfitLimit] = useState(f2(config.ProfitLimit * 100).toString())
+  const [channelSize, setChannelSize] = useState(f2(config.ChannelSize * 100).toString())
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString())
 
   const [initialFbURL, setInitialFbURL] = useState(``)
@@ -74,6 +75,7 @@ export function Settings({
 
     isFinite(+stopLimit) && (config.StopLimit = +stopLimit / 100)
     isFinite(+profitLimit) && (config.ProfitLimit = +profitLimit / 100)
+    isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100)
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity))
     setConfig(config)
     setIsSaving(true)
@@ -146,6 +148,20 @@ export function Settings({
               label="Auto-sell"
             />
           </Stack>
+        </Stack>
+        <Stack spacing={2}>
+          <TextField
+            value={channelSize}
+            label={`Price Channel Size`}
+            onChange={(e) => setChannelSize(e.target.value)}
+            InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
+          />
+          <TextField
+            value={config.ChannelWindowMins}
+            label={`Channel Window (minutes)`}
+            onChange={(e) => setConfig({ ...config, ChannelWindowMins: +e.target.value })}
+            InputProps={{ startAdornment: <InputAdornment position="start">min.</InputAdornment> }}
+          />
         </Stack>
         <Stack spacing={1}>
           <TextField

@@ -4,7 +4,6 @@ import {
   Alert,
   Box,
   Button,
-  Link,
   List,
   ListItem,
   ListItemAvatar,
@@ -22,14 +21,7 @@ import {
   growthIconMap,
   selectivityColorMap,
 } from "./Common"
-import {
-  AutoTradeBestScores,
-  CoinScore,
-  Config,
-  f2,
-  PriceMove,
-  ScoresData,
-} from "trading-helper-lib"
+import { AutoTradeBestScores, CoinScore, Config, f2, PriceMove, ScoresData } from "../../lib"
 
 export function Scores({ config }: { config: Config }) {
   const [scoresData, setScoresData] = React.useState<ScoresData>(null)
@@ -56,8 +48,7 @@ export function Scores({ config }: { config: Config }) {
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       {!scoresData && circularProgress}
-      {scoresData && !scoresData.realData && featureDisabledInfo()}
-      {scoresData && scoresData.realData && (
+      {scoresData && (
         <Stack spacing={2}>
           {marketMoveBlock(scoresData)}
           {recommendedList(scoresData, buy, config)}
@@ -191,26 +182,6 @@ function getAlert(autoTrade: AutoTradeBestScores) {
     >
       <Typography marginTop={0} alignSelf={`center`} variant={`caption`}>
         Autonomous trading: {capitalizeWord(AutoTradeBestScores[autoTrade])}
-      </Typography>
-    </Alert>
-  )
-}
-
-function featureDisabledInfo() {
-  return (
-    <Alert severity="info">
-      <Typography variant="body1">
-        <Link
-          href="https://www.patreon.com/bePatron?u=52791105"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Become a Patron!
-        </Link>
-        {` `}to unlock the {`"Scores"`} functionality.
-      </Typography>
-      <Typography variant="caption">
-        <b>Important: use the same Google account in Patreon.</b>
       </Typography>
     </Alert>
   )

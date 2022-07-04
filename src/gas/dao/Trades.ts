@@ -1,5 +1,4 @@
-import { TradeMemo, TradeState } from "trading-helper-lib"
-import { IStore } from "../Store"
+import { TradeMemo, TradeState, IStore } from "../../lib"
 import { execute } from "../Common"
 import { isNode } from "browser-or-node"
 

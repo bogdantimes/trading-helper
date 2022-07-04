@@ -20,15 +20,15 @@ Buy me a coffee, to support this project. It will not evolve without your suppor
 * Settings for manual, semi-autonomous or fully-autonomous trading style.
 * Set up your profit and stop limits to automatically sell coins when the limits are crossed.
 * A moving stop-limit, which goes up together with the price, or fixed, based on a total profit of the tool.
-* Price anomalies detection (pump or dump) with an option to auto-buy when price drops.
+* Price pump and dump detection with an option to auto-buy when price drops.
 * Swing trading: automatically buy low and sell high during the rally.
 * Averaging down: automatically re-invest gains into most unprofitable coins to buy them at discount prices.
 * Your statistics: see how much you have made and how much you have lost on a daily basis.
+* Scores: the recommendation engine which tracks coins that statistically show an up-move when the market goes opposite.
 
 ### Available for Patrons only
 
-* __Scores__: the recommendations engine which finds best/rare opportunities and enables a truly fully-autonomous
-  trading.
+* __Channels__: tracks currencies that stay within specified price channel and buys when they break an upper bound.
 
 ### Assets
 

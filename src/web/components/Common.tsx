@@ -1,6 +1,6 @@
-import { CircularProgress } from "@mui/material"
+import { Alert, CircularProgress, Link, Typography } from "@mui/material"
 import * as React from "react"
-import { Config, PriceMove, ScoreSelectivityKeys } from "trading-helper-lib"
+import { Config, PriceMove, ScoreSelectivityKeys } from "../../lib"
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
@@ -56,4 +56,24 @@ export const selectivityColorMap: { [key in ScoreSelectivityKeys]: AlertColor } 
   HIGH: `warning`,
   MODERATE: `info`,
   MINIMAL: `success`,
+}
+
+export function featureDisabledInfo() {
+  return (
+    <Alert severity="info">
+      <Typography variant="body1">
+        <Link
+          href="https://www.patreon.com/bePatron?u=52791105"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Become a Patron!
+        </Link>
+        {` `}to unlock the functionality.
+      </Typography>
+      <Typography variant="caption">
+        <b>Important: use the same Google account in Patreon.</b>
+      </Typography>
+    </Alert>
+  )
 }

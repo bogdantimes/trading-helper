@@ -3,7 +3,7 @@ import { useEffect } from "react"
 import { Alert, Box, ListItem, ListItemAvatar, ListItemText, Stack } from "@mui/material"
 import { FixedSizeList } from "react-window"
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material"
-import { Stats } from "trading-helper-lib"
+import { Stats } from "../../lib"
 import { cardWidth } from "./Common"
 
 export function Info() {

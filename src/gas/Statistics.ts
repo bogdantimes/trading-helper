@@ -1,5 +1,4 @@
-import { f2, Stats } from "trading-helper-lib"
-import { IStore } from "./Store"
+import { f2, Stats, IStore } from "../lib"
 
 export class Statistics {
   private readonly store: IStore

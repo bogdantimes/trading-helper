@@ -1,26 +1,20 @@
 import { DefaultCacheProxy, Entries, ExpirationEntries } from "../CacheProxy"
-import { Log, SECONDS_IN_MIN } from "../Common"
+import { CoinCacheKeys, Log, SECONDS_IN_MIN } from "../Common"
 import {
   absPercentageChange,
   CoinName,
   Config,
   IPriceProvider,
+  PriceAnomaly,
   PriceHoldersMap,
   PricesHolder,
   TradeState,
-} from "trading-helper-lib"
+} from "../../lib"
 import { TradeActions } from "../TradeActions"
 import { TradesDao } from "../dao/Trades"
 import { ConfigDao } from "../dao/Config"
 
-export enum PriceAnomaly {
-  NONE,
-  PUMP,
-  DUMP,
-  TRACKING,
-}
-
-export class AnomalyTrader {
+export class PDTrader {
   readonly #cache: DefaultCacheProxy
   readonly #priceProvider: IPriceProvider
   readonly #tradesDao: TradesDao
@@ -32,8 +26,13 @@ export class AnomalyTrader {
   #cacheRemoveAll: string[] = []
   #config: Config
 
-  constructor(tradesDao: TradesDao, configDao: ConfigDao, cache: DefaultCacheProxy, priceProvider: IPriceProvider,
-              tradeActions: TradeActions) {
+  constructor(
+    tradesDao: TradesDao,
+    configDao: ConfigDao,
+    cache: DefaultCacheProxy,
+    priceProvider: IPriceProvider,
+    tradeActions: TradeActions,
+  ) {
     this.#cache = cache
     this.#priceProvider = priceProvider
     this.#tradesDao = tradesDao
@@ -54,7 +53,7 @@ export class AnomalyTrader {
     this.#getAllCache(prices)
 
     Object.keys(prices).forEach((coin: CoinName) => {
-      const anomaly = this.#checkAnomaly(coin, prices[coin])
+      const anomaly = this.#checkPumpDump(coin, prices[coin])
       this.#handleAnomaly(coin, anomaly)
     })
 
@@ -76,36 +75,52 @@ export class AnomalyTrader {
           return tm
         }
       })
-      return
     }
   }
 
   #getAllCache(prices: PriceHoldersMap): void {
-    const cacheKeys: string[] = []
-    Object.keys(prices).forEach((coin) => {
-      cacheKeys.push(`${coin}-pump-dump-tracking`)
-      cacheKeys.push(`${coin}-start-price`)
-    })
-    this.#cacheGetAll = this.#cache.getAll(cacheKeys)
+    const keys: string[] = []
+    for (const keyFn of Object.values(CoinCacheKeys)) {
+      keys.push(...Object.keys(prices).map(keyFn))
+    }
+    this.#cacheGetAll = this.#cache.getAll(keys)
   }
 
-  #checkAnomaly(coin: CoinName, ph: PricesHolder): PriceAnomaly {
-    const trackingKey = `${coin}-pump-dump-tracking`
-    const tracking = this.#cacheGetAll[trackingKey]
-    const startPriceKey = `${coin}-start-price`
-    const anomalyStartPrice = this.#cacheGetAll[startPriceKey]
+  #getCache(coin: CoinName, key: keyof typeof CoinCacheKeys): any {
+    return this.#cacheGetAll[CoinCacheKeys[key](coin)]
+  }
+
+  #putCache(
+    coin: CoinName,
+    key: keyof typeof CoinCacheKeys,
+    value: { expiration?: number; value: string },
+  ): void {
+    this.#cachePutAll[CoinCacheKeys[key](coin)] = value
+  }
+
+  #removeFromCache(coin: CoinName, key: keyof typeof CoinCacheKeys): void {
+    this.#cacheRemoveAll.push(CoinCacheKeys[key](coin))
+  }
+
+  #checkPumpDump(coin: string, ph: PricesHolder) {
+    if (!this.#config.SellPumps && !this.#config.BuyDumps) {
+      return PriceAnomaly.NONE
+    }
+
+    const tracking = this.#getCache(coin, `PD_TRACKING`)
+    const anomalyStartPrice = this.#getCache(coin, `START_PRICE`)
 
     const strongMove = ph.priceGoesStrongUp() || ph.priceGoesStrongDown()
     if (strongMove) {
       // If price strong move continues - refresh expirations and continue tracking
-      const anomalyWindowDuration = SECONDS_IN_MIN * 1.5
-      this.#cachePutAll[trackingKey] = { value: `true`, expiration: anomalyWindowDuration }
+      const anomalyWindow = SECONDS_IN_MIN * 1.5
+      this.#putCache(coin, `PD_TRACKING`, { value: `true`, expiration: anomalyWindow })
       // Saving the max or min price of the anomaly depending on the direction
       const minMaxPrice = ph.priceGoesStrongUp() ? Math.min(...ph.prices) : Math.max(...ph.prices)
-      this.#cachePutAll[startPriceKey] = {
+      this.#putCache(coin, `START_PRICE`, {
         value: tracking ? `${anomalyStartPrice}` : `${minMaxPrice}`,
-        expiration: anomalyWindowDuration * 2,
-      }
+        expiration: anomalyWindow * 2,
+      })
       return PriceAnomaly.TRACKING
     }
     if (tracking) {
@@ -116,7 +131,7 @@ export class AnomalyTrader {
       return PriceAnomaly.NONE
     }
 
-    this.#cacheRemoveAll.push(startPriceKey)
+    this.#removeFromCache(coin, `START_PRICE`)
     const percent = absPercentageChange(+anomalyStartPrice, ph.currentPrice)
 
     if (this.#config.PriceAnomalyAlert && percent < this.#config.PriceAnomalyAlert) {

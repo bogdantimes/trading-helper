@@ -1,4 +1,4 @@
-import { CoinName, enumKeys, StableUSDCoin } from "trading-helper-lib"
+import { CoinName, enumKeys, StableUSDCoin } from "../lib"
 
 export const SECONDS_IN_MIN = 60
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60
@@ -72,10 +72,10 @@ export class Log {
   static print(): string {
     return `${this.alerts.length > 0 ? `${this.alerts.join(`\n`)}\n` : ``}
 ${
-      this.errLog.length > 0
-        ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
-        : ``
-    }
+  this.errLog.length > 0
+    ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
+    : ``
+}
 ${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``}
 ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
 `
@@ -146,4 +146,9 @@ export class StopWatch {
   getElapsedTime() {
     return this.stopTime - this.startTime
   }
+}
+
+export const CoinCacheKeys = {
+  PD_TRACKING: (coin) => `${coin}-pump-dump-tracking`,
+  START_PRICE: (coin) => `${coin}-start-price`,
 }

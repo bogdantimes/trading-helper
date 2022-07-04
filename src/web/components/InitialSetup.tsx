@@ -2,7 +2,7 @@ import * as React from "react"
 import { useState } from "react"
 import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material"
 import { circularProgress } from "./Common"
-import { Config, InitialSetupParams } from "trading-helper-lib"
+import { Config, InitialSetupParams } from "../../lib"
 
 enum Step {
   DbConnect,

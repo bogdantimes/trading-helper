@@ -15,13 +15,14 @@ import StableCoin from "./StableCoin"
 import { capitalizeWord, cardWidth, circularProgress, confirmBuy } from "./Common"
 import {
   AssetsResponse,
-  Coin, CoinName,
+  Coin,
+  CoinName,
   Config,
   ExchangeSymbol,
   StableUSDCoin,
   TradeMemo,
   TradeState,
-} from "trading-helper-lib"
+} from "../../lib"
 import { Add } from "@mui/icons-material"
 import { TradeEditDialog } from "./TradeEditDialog"
 

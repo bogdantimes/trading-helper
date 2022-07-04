@@ -14,10 +14,10 @@ import {
   TradeMemo,
   TradeResult,
   TradeState,
-} from "trading-helper-lib"
+  IStore,
+} from "../../lib"
 import { PriceProvider } from "../PriceProvider"
 import { TradesDao } from "../dao/Trades"
-import { IStore } from "../Store"
 import { ConfigDao } from "../dao/Config"
 import { isNode } from "browser-or-node"
 
@@ -250,6 +250,9 @@ export class DefaultTrader {
         Log.error(e)
       }
     }
+
+    // Delete if it was sold and swing trading is disabled
+    memo.deleted = memo.stateIs(TradeState.SOLD) && !this.#config.SwingTradeEnabled
   }
 
   private averageDown(tradeResult: TradeResult) {

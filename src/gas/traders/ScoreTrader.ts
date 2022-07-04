@@ -1,16 +1,21 @@
 import { TradeActions } from "../TradeActions"
-import { AutoTradeBestScores, CoinScore, TradeMemo, TradeState } from "trading-helper-lib"
-import { IScores } from "../Scores"
+import { AutoTradeBestScores, CoinScore, TradeMemo, TradeState } from "../../lib"
+import { Scores } from "../Scores"
 import { TradesDao } from "../dao/Trades"
 import { ConfigDao } from "../dao/Config"
 
 export class ScoreTrader {
   private readonly configDao: ConfigDao
-  private readonly scores: IScores
+  private readonly scores: Scores
   private readonly tradesDao: TradesDao
   private readonly tradeActions: TradeActions
 
-  constructor(configDap: ConfigDao, tradesDao: TradesDao, scores: IScores, tradeActions: TradeActions) {
+  constructor(
+    configDap: ConfigDao,
+    tradesDao: TradesDao,
+    scores: Scores,
+    tradeActions: TradeActions,
+  ) {
     this.scores = scores
     this.configDao = configDap
     this.tradesDao = tradesDao
@@ -27,7 +32,6 @@ export class ScoreTrader {
     const tradeBestScores = config.AutoTradeBestScores
     if (tradeBestScores > AutoTradeBestScores.OFF) {
       const scoresData = this.scores.get()
-      if (!scoresData.realData) return
 
       const recommended = scoresData.recommended.slice(0, tradeBestScores)
 

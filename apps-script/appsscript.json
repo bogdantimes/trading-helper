@@ -8,10 +8,9 @@
         "version": "30"
       },
       {
-        "userSymbol": "TradingHelperScores",
-        "version": "10",
-        "libraryId": "1ePSsOk0NIf_IyHfgxbRM-Uq7muXvnKB4MIUUi8lnS1VA_LjEnt1X6D8W",
-        "developmentMode": false
+        "userSymbol": "TradingHelperLibrary",
+        "libraryId": "1HVyGwXDWhXhrJ53E_hc-uzV001f96XfA6dDuLXExYjEkg5r-NqZVtwo9",
+        "version": "1"
       }
     ]
   },

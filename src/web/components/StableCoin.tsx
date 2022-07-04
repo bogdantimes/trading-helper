@@ -2,7 +2,7 @@ import * as React from "react"
 import Card from "@mui/material/Card"
 import CardContent from "@mui/material/CardContent"
 import Typography from "@mui/material/Typography"
-import { f2 } from "trading-helper-lib"
+import { f2 } from "../../lib"
 import { cardWidth } from "./Common"
 
 type StableCoinProps = {

@@ -1,5 +1,5 @@
 import { Binance } from "./Binance"
-import { ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
+import { ExchangeSymbol, PriceMap, TradeResult } from "../lib"
 
 export interface IExchange {
   getFreeAsset(assetName: string): number

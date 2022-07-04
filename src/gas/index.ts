@@ -1,8 +1,8 @@
-import { DefaultStore, FirebaseStore, IStore } from "./Store"
+import { DefaultStore, FirebaseStore } from "./Store"
 import { TradeActions } from "./TradeActions"
 import { Statistics } from "./Statistics"
 import { Exchange } from "./Exchange"
-import { IScores } from "./Scores"
+import { Scores } from "./Scores"
 import { Log, SECONDS_IN_MIN, StableCoins, TICK_INTERVAL_MIN } from "./Common"
 import {
   AssetsResponse,
@@ -13,12 +13,15 @@ import {
   ScoresData,
   Stats,
   TradeMemo,
-} from "trading-helper-lib"
+  IStore,
+  PriceChannelsDataResponse,
+} from "../lib"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
 import { PriceProvider } from "./PriceProvider"
 import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
+import { PriceChannelDataKey } from "./traders/pro/api"
 
 function doGet() {
   return catchError(() => {
@@ -198,7 +201,7 @@ function getScores(): ScoresData {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config.KEY, config.SECRET)
     const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
+    const scores = new Scores(DefaultStore, priceProvider, config)
     return scores.get()
   })
 }
@@ -208,7 +211,7 @@ function resetScores(): void {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config.KEY, config.SECRET)
     const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
-    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
+    const scores = new Scores(DefaultStore, priceProvider, config)
     return scores.reset()
   })
 }
@@ -240,6 +243,12 @@ function setFirebaseURL(url: string): string {
   })
 }
 
+function getPriceChannelsData(): PriceChannelsDataResponse {
+  return catchError(() => {
+    return DefaultStore.get(PriceChannelDataKey) || {}
+  })
+}
+
 global.doGet = doGet
 global.doPost = doPost
 global.tick = tick
@@ -263,3 +272,4 @@ global.resetScores = resetScores
 global.getCoinNames = getCoinNames
 global.getFirebaseURL = getFirebaseURL
 global.setFirebaseURL = setFirebaseURL
+global.getPriceChannelsData = getPriceChannelsData

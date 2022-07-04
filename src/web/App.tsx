@@ -18,7 +18,8 @@ import { Assets } from "./components/Assets"
 import { TabPanel } from "./components/TabPanel"
 import { InitialSetup } from "./components/InitialSetup"
 import { Scores } from "./components/Scores"
-import { Config } from "trading-helper-lib"
+import { Config } from "../lib"
+import { Channels } from "./components/Channels"
 
 function a11yProps(index: number) {
   return {
@@ -81,6 +82,8 @@ export default function App() {
       .getConfig()
   }
 
+  let i = 0,
+    y = 0
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -103,23 +106,31 @@ export default function App() {
         <Box sx={{ width: `100%` }}>
           <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
             <Tabs value={value} onChange={handleChange} centered>
-              <Tab label="Assets" {...a11yProps(0)} />
-              <Tab label="Scores" {...a11yProps(1)} />
-              <Tab sx={{ minWidth: `50px` }} label="Info" {...a11yProps(2)} />
-              <Tab label="Settings" {...a11yProps(3)} />
+              <Tab label="Assets" {...a11yProps(i++)} />
+              <Tab label="Scores" {...a11yProps(i++)} />
+              {config.ChannelWindowMins && config.ChannelSize && (
+                <Tab label="Channels" {...a11yProps(i++)} />
+              )}
+              <Tab sx={{ minWidth: `50px` }} label="Info" {...a11yProps(i++)} />
+              <Tab label="Settings" {...a11yProps(i++)} />
             </Tabs>
           </Box>
-          <TabPanel value={value} index={0}>
+          <TabPanel value={value} index={y++}>
             <Assets config={config} />
           </TabPanel>
-          <TabPanel value={value} index={1}>
+          <TabPanel value={value} index={y++}>
             <Scores config={config} />
           </TabPanel>
-          <TabPanel value={value} index={2}>
+          {config.ChannelWindowMins && config.ChannelSize && (
+            <TabPanel value={value} index={y++}>
+              <Channels config={config} />
+            </TabPanel>
+          )}
+          <TabPanel value={value} index={y++}>
             <Info />
           </TabPanel>
-          <TabPanel value={value} index={3}>
-            <Settings config={config} setConfig={setConfig}/>
+          <TabPanel value={value} index={y++}>
+            <Settings config={config} setConfig={setConfig} />
           </TabPanel>
         </Box>
       )}

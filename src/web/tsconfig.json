@@ -6,5 +6,8 @@
     ],
     "jsx": "react",
     "esModuleInterop": true
-  }
+  },
+  "include": [
+    "./**/*"
+  ],
 }

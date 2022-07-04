@@ -1,5 +1,12 @@
 import { DefaultStore } from "./Store"
-import { ExchangeSymbol, IPriceProvider, StableUSDCoin, TradeMemo, TradeResult, TradeState } from "trading-helper-lib"
+import {
+  ExchangeSymbol,
+  IPriceProvider,
+  StableUSDCoin,
+  TradeMemo,
+  TradeResult,
+  TradeState,
+} from "../lib"
 import { Exchange } from "./Exchange"
 import { PriceProvider } from "./PriceProvider"
 import { CacheProxy } from "./CacheProxy"
@@ -17,7 +24,8 @@ export class TradeActions {
     return new TradeActions(
       new TradesDao(DefaultStore),
       config.StableCoin,
-      PriceProvider.getInstance(exchange, CacheProxy))
+      PriceProvider.getInstance(exchange, CacheProxy),
+    )
   }
 
   constructor(tradesDao: TradesDao, stableCoin: StableUSDCoin, priceProvider: IPriceProvider) {

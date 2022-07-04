@@ -1,4 +1,3 @@
-import { IStore } from "../Store"
 import {
   AutoTradeBestScores,
   Config,
@@ -6,7 +5,8 @@ import {
   ScoreSelectivity,
   ScoreSelectivityKeys,
   StableUSDCoin,
-} from "trading-helper-lib"
+  IStore,
+} from "../../lib"
 
 export class ConfigDao {
   private readonly store: IStore
@@ -34,6 +34,8 @@ export class ConfigDao {
       PriceAnomalyAlert: 5,
       ScoreSelectivity: `MODERATE`,
       AutoTradeBestScores: AutoTradeBestScores.OFF,
+      ChannelSize: 0,
+      ChannelWindowMins: 0,
     }
     let config: Config = this.store.getOrSet(`Config`, defaultConfig)
     // apply existing config on top of default one
@@ -47,7 +49,7 @@ export class ConfigDao {
     if (config.ScoreUpdateThreshold) {
       config.ScoreSelectivity = ScoreSelectivity[
         config.ScoreUpdateThreshold
-        ] as ScoreSelectivityKeys
+      ] as ScoreSelectivityKeys
       delete config.ScoreUpdateThreshold
     }
 

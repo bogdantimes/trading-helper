@@ -5,12 +5,13 @@ import { DefaultStore } from "./Store"
 import { Log, StopWatch } from "./Common"
 import { ScoreTrader } from "./traders/ScoreTrader"
 import { CacheProxy } from "./CacheProxy"
-import { IScores } from "./Scores"
+import { Scores } from "./Scores"
 import { PriceProvider } from "./PriceProvider"
-import { AnomalyTrader } from "./traders/AnomalyTrader"
+import { PDTrader } from "./traders/PDTrader"
 import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
 import { TradeActions } from "./TradeActions"
+import { TraderPlugin, TradingContext } from "./traders/pro/api"
 
 export class Process {
   static tick() {
@@ -25,10 +26,16 @@ export class Process {
     const statistics = new Statistics(store)
     const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
     const tradeActions = new TradeActions(tradesDao, config.StableCoin, priceProvider)
-    const defaultTrader = new DefaultTrader(tradesDao, configDao, exchange, priceProvider, statistics)
-    const scores = global.TradingHelperScores.create(DefaultStore, priceProvider, config) as IScores
+    const defaultTrader = new DefaultTrader(
+      tradesDao,
+      configDao,
+      exchange,
+      priceProvider,
+      statistics,
+    )
+    const scores = new Scores(DefaultStore, priceProvider, config)
     const scoreTrader = new ScoreTrader(configDao, tradesDao, scores, tradeActions)
-    const anomalyTrader = new AnomalyTrader(tradesDao, configDao, CacheProxy, priceProvider, tradeActions)
+    const pdTrader = new PDTrader(tradesDao, configDao, CacheProxy, priceProvider, tradeActions)
 
     // Updating prices every tick
     // This should be the only place to call `update` on the price provider.
@@ -73,11 +80,27 @@ export class Process {
     }
 
     try {
-      stopWatch.start(`Anomalies check`)
-      anomalyTrader.trade()
+      stopWatch.start(`PDTrader check`)
+      pdTrader.trade()
       stopWatch.stop()
     } catch (e) {
-      Log.alert(`Failed to trade price anomalies: ${e.message}`)
+      Log.alert(`Failed to trade pump dump anomalies: ${e.message}`)
+      Log.error(e)
+    }
+
+    try {
+      stopWatch.start(`Library check`)
+      const context: TradingContext = {
+        store,
+        priceProvider,
+        configDao,
+        tradeActions,
+      }
+      const libTrader: TraderPlugin = global.TradingHelperLibrary
+      libTrader.trade(context)
+      stopWatch.stop()
+    } catch (e) {
+      Log.alert(`Failed to trade channel anomalies: ${e.message}`)
       Log.error(e)
     }
   }
