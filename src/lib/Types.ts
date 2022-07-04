@@ -101,14 +101,6 @@ export enum ScoreSelectivity {
 
 export type ScoreSelectivityKeys = keyof typeof ScoreSelectivity
 
-export enum AutoTradeBestScores {
-  OFF = 0,
-  TOP1 = 1,
-  TOP3 = 3,
-  TOP5 = 5,
-  TOP10 = 10,
-}
-
 export interface ScoresData {
   recommended: CoinScore[]
   marketMove: MarketMove
