@@ -26,18 +26,12 @@ export class PDTrader {
   #cacheRemoveAll: string[] = []
   #config: Config
 
-  constructor(
-    tradesDao: TradesDao,
-    configDao: ConfigDao,
-    cache: DefaultCacheProxy,
-    priceProvider: IPriceProvider,
-    tradeActions: TradeActions,
-  ) {
+  constructor(cache: DefaultCacheProxy, tradeActions: TradeActions) {
     this.#cache = cache
-    this.#priceProvider = priceProvider
-    this.#tradesDao = tradesDao
-    this.#configDao = configDao
     this.#tradeActions = tradeActions
+    this.#priceProvider = tradeActions.priceProvider
+    this.#tradesDao = tradeActions.tradesDao
+    this.#configDao = tradeActions.configDao
   }
 
   trade(): void {

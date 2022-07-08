@@ -18,7 +18,7 @@ import {
 } from "../../lib"
 import { PriceProvider } from "../PriceProvider"
 import { TradesDao } from "../dao/Trades"
-import { ConfigDao } from "../dao/Config"
+import { ConfigDao, DefaultConfig } from "../dao/Config"
 import { isNode } from "browser-or-node"
 
 export class DefaultTrader {
@@ -88,7 +88,14 @@ export class DefaultTrader {
     } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
       // buy only if price stopped going down
       // this allows to wait if price continues to fall
-      this.buy(tm, this.#config.BuyQuantity)
+      const stableCoin = tm.tradeResult.symbol.priceAsset
+      const qty = this.#config.InvestRatio
+        ? Math.max(
+            DefaultConfig().BuyQuantity,
+            Math.floor(this.#exchange.getFreeAsset(stableCoin) / this.#config.InvestRatio),
+          )
+        : this.#config.BuyQuantity
+      this.buy(tm, qty)
     }
     return tm
   }
@@ -207,6 +214,15 @@ export class DefaultTrader {
       Log.debug(tm)
       tm.resetState()
     }
+  }
+
+  sellNow(coinName: CoinName): void {
+    this.#tradesDao.update(coinName, (trade) => {
+      if (trade.stateIs(TradeState.BOUGHT)) {
+        this.sell(trade)
+      }
+      return trade
+    })
   }
 
   private sell(memo: TradeMemo): void {

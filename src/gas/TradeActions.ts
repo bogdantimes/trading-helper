@@ -1,41 +1,41 @@
 import { DefaultStore } from "./Store"
-import {
-  ExchangeSymbol,
-  IPriceProvider,
-  StableUSDCoin,
-  TradeMemo,
-  TradeResult,
-  TradeState,
-} from "../lib"
-import { Exchange } from "./Exchange"
+import { ExchangeSymbol, IPriceProvider, TradeMemo, TradeResult, TradeState } from "../lib"
+import { Exchange, IExchange } from "./Exchange"
 import { PriceProvider } from "./PriceProvider"
 import { CacheProxy } from "./CacheProxy"
 import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
+import { DefaultTrader } from "./traders/DefaultTrader"
+import { Statistics } from "./Statistics"
 
 export class TradeActions {
-  private readonly stableCoin: StableUSDCoin
-  private readonly priceProvider: IPriceProvider
-  private readonly tradesDao: TradesDao
-
   static default(): TradeActions {
-    const config = new ConfigDao(DefaultStore).get()
+    const configDao = new ConfigDao(DefaultStore)
+    const config = configDao.get()
     const exchange = new Exchange(config.KEY, config.SECRET)
-    return new TradeActions(
-      new TradesDao(DefaultStore),
-      config.StableCoin,
-      PriceProvider.getInstance(exchange, CacheProxy),
+    const statistics = new Statistics(DefaultStore)
+    const tradesDao = new TradesDao(DefaultStore)
+    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
+    const defaultTrader = new DefaultTrader(
+      tradesDao,
+      configDao,
+      exchange,
+      priceProvider,
+      statistics,
     )
+    return new TradeActions(tradesDao, configDao, priceProvider, defaultTrader, exchange)
   }
 
-  constructor(tradesDao: TradesDao, stableCoin: StableUSDCoin, priceProvider: IPriceProvider) {
-    this.stableCoin = stableCoin
-    this.priceProvider = priceProvider
-    this.tradesDao = tradesDao
-  }
+  constructor(
+    readonly tradesDao: TradesDao,
+    readonly configDao: ConfigDao,
+    readonly priceProvider: IPriceProvider,
+    readonly defaultTrader: DefaultTrader,
+    readonly exchange: IExchange,
+  ) {}
 
   buy(coinName: string): void {
-    const stableCoin = this.stableCoin
+    const stableCoin = this.configDao.get().StableCoin
     const symbol = new ExchangeSymbol(coinName, stableCoin)
     this.tradesDao.update(
       coinName,
@@ -60,6 +60,10 @@ export class TradeActions {
       }
       return trade
     })
+  }
+
+  sellNow(coinName: string): void {
+    this.defaultTrader.sellNow(coinName)
   }
 
   setHold(coinName: string, value: boolean): void {

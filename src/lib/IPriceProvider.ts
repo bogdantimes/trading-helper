@@ -27,6 +27,10 @@ export class PricesHolder {
     return this.p[this.p.length - 1];
   }
 
+  get previousPrice(): number {
+    return this.p[this.p.length - 2];
+  }
+
   pushPrice(price: number): void {
     if (!this.p.length || this.p[0] === 0) {
       this.p = new Array(PricesHolder.PRICES_MAX_CAP).fill(price);

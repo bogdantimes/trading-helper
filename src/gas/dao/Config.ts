@@ -1,5 +1,22 @@
 import { Config, IStore, PriceProvider, StableUSDCoin } from "../../lib"
 
+export const DefaultConfig: () => Config = () => ({
+  InvestRatio: 1,
+  BuyQuantity: 15,
+  StableCoin: StableUSDCoin.USDT,
+  StopLimit: 0.05,
+  ProfitLimit: 0.1,
+  SellAtStopLimit: true,
+  SellAtProfitLimit: false,
+  SwingTradeEnabled: false,
+  PriceProvider: PriceProvider.Binance,
+  AveragingDown: false,
+  ProfitBasedStopLimit: false,
+  PriceAnomalyAlert: 5,
+  ChannelSize: 0,
+  ChannelWindowMins: 0,
+})
+
 export class ConfigDao {
   private readonly store: IStore
 
@@ -12,21 +29,7 @@ export class ConfigDao {
   }
 
   get(): Config {
-    const defaultConfig: Config = {
-      BuyQuantity: 15,
-      StableCoin: StableUSDCoin.USDT,
-      StopLimit: 0.05,
-      ProfitLimit: 0.1,
-      SellAtStopLimit: true,
-      SellAtProfitLimit: false,
-      SwingTradeEnabled: false,
-      PriceProvider: PriceProvider.Binance,
-      AveragingDown: false,
-      ProfitBasedStopLimit: false,
-      PriceAnomalyAlert: 5,
-      ChannelSize: 0,
-      ChannelWindowMins: 0,
-    }
+    const defaultConfig = DefaultConfig()
     let config: Config = this.store.getOrSet(`Config`, defaultConfig)
     // apply existing config on top of default one
     config = Object.assign(defaultConfig, config)

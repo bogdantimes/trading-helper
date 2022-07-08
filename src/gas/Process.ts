@@ -1,13 +1,8 @@
-import { DefaultTrader } from "./traders/DefaultTrader"
-import { Exchange } from "./Exchange"
-import { Statistics } from "./Statistics"
 import { DefaultStore } from "./Store"
 import { Log, StopWatch } from "./Common"
 import { CacheProxy } from "./CacheProxy"
 import { PriceProvider } from "./PriceProvider"
 import { PDTrader } from "./traders/PDTrader"
-import { TradesDao } from "./dao/Trades"
-import { ConfigDao } from "./dao/Config"
 import { TradeActions } from "./TradeActions"
 import { TraderPlugin, TradingContext } from "./traders/pro/api"
 
@@ -16,22 +11,9 @@ export class Process {
     const stopWatch = new StopWatch((...args) => Log.debug(...args))
 
     const store = DefaultStore
-    const tradesDao = new TradesDao(store)
-    const configDao = new ConfigDao(store)
-
-    const config = configDao.get()
-    const exchange = new Exchange(config.KEY, config.SECRET)
-    const statistics = new Statistics(store)
-    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
-    const tradeActions = new TradeActions(tradesDao, config.StableCoin, priceProvider)
-    const defaultTrader = new DefaultTrader(
-      tradesDao,
-      configDao,
-      exchange,
-      priceProvider,
-      statistics,
-    )
-    const pdTrader = new PDTrader(tradesDao, configDao, CacheProxy, priceProvider, tradeActions)
+    const tradeActions = TradeActions.default()
+    const priceProvider = PriceProvider.getInstance(tradeActions.exchange, CacheProxy)
+    const pdTrader = new PDTrader(CacheProxy, tradeActions)
 
     // Updating prices every tick
     // This should be the only place to call `update` on the price provider.
@@ -41,7 +23,7 @@ export class Process {
 
     try {
       stopWatch.start(`Trades check`)
-      defaultTrader.trade()
+      tradeActions.defaultTrader.trade()
       stopWatch.stop()
     } catch (e) {
       Log.alert(`Failed to trade: ${e.message}`)
@@ -50,7 +32,7 @@ export class Process {
 
     try {
       stopWatch.start(`Stable Coins update`)
-      defaultTrader.updateStableCoinsBalance(store)
+      tradeActions.defaultTrader.updateStableCoinsBalance(store)
       stopWatch.stop()
     } catch (e) {
       Log.alert(`Failed to update stable coins balance: ${e.message}`)
@@ -70,8 +52,6 @@ export class Process {
       stopWatch.start(`Library check`)
       const context: TradingContext = {
         store,
-        priceProvider,
-        configDao,
         tradeActions,
       }
       const libTrader: TraderPlugin = global.TradingHelperLibrary

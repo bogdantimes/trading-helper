@@ -5,6 +5,12 @@ export interface Config {
   SECRET?: string
   StableCoin: StableUSDCoin
   BuyQuantity: number
+  /**
+   * InvestRatio when provided overrides the BuyQuantity and instead invests according to the ratio.
+   * BuyQuantity in this case is calculated as Math.floor(freeAsset/InvestRatio),
+   * but not less than DefaultConfig.BuyQuantity.
+   */
+  InvestRatio?: number
   StopLimit: number
   /**
    * When ProfitBasedStopLimit is true - a stop limit for each asset is calculated based on the total profit of the tool.
