@@ -97,7 +97,13 @@ export function Settings({
           </RadioGroup>
         </FormControl>
         <TextField
+          value={config.InvestRatio}
+          label={`Invest Ratio`}
+          onChange={(e) => setConfig({ ...config, InvestRatio: Math.floor(+e.target.value) })}
+        />
+        <TextField
           value={buyQuantity}
+          disabled={config.InvestRatio > 0}
           label={`Buy Quantity`}
           onChange={(e) => setBuyQuantity(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}

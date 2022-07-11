@@ -33,6 +33,7 @@ export class DefaultTrader {
    * Used when {@link ProfitBasedStopLimit} is enabled.
    */
   #numberOfBoughtAssets = 0
+  #canInvest = -1
 
   constructor(
     tradesDao: TradesDao,
@@ -46,13 +47,16 @@ export class DefaultTrader {
     this.#stats = stats
     this.#tradesDao = tradesDao
     this.#configDao = configDao
+
+    // get current config
+    this.#config = this.#configDao.get()
+    if (this.#config.InvestRatio > 0) {
+      this.#canInvest = this.#config.InvestRatio
+    }
   }
 
   trade(): void {
     const trades = this.#tradesDao.getList()
-
-    // get current config
-    this.#config = this.#configDao.get()
 
     if (this.#config.ProfitBasedStopLimit) {
       this.#numberOfBoughtAssets = trades.filter((t) => t.stateIs(TradeState.BOUGHT)).length
@@ -89,15 +93,27 @@ export class DefaultTrader {
       // buy only if price stopped going down
       // this allows to wait if price continues to fall
       const stableCoin = tm.tradeResult.symbol.priceAsset
-      const qty = this.#config.InvestRatio
-        ? Math.max(
-            DefaultConfig().BuyQuantity,
-            Math.floor(this.#exchange.getFreeAsset(stableCoin) / this.#config.InvestRatio),
-          )
-        : this.#config.BuyQuantity
-      this.buy(tm, qty)
+      const howMuch = this.#calculateQuantity(stableCoin)
+      if (howMuch > 0) {
+        this.buy(tm, howMuch)
+      } else {
+        Log.alert(`ℹ️ Can't buy ${tm.getCoinName()} - invest ratio would be exceeded`)
+        tm.resetState()
+      }
     }
     return tm
+  }
+
+  #calculateQuantity(stableCoin: string): number {
+    if (this.#canInvest < 0) {
+      return this.#config.BuyQuantity
+    }
+    let qty = 0
+    if (this.#canInvest > 0) {
+      const balance = this.#exchange.getFreeAsset(stableCoin)
+      qty = Math.max(DefaultConfig().BuyQuantity, Math.floor(balance / this.#canInvest))
+    }
+    return qty
   }
 
   private processSoldState(tm: TradeMemo): void {
@@ -195,6 +211,7 @@ export class DefaultTrader {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
+        this.#canInvest--
         // flatten out prices to make them not cross any limits right after the trade
         tm.prices = [tradeResult.price]
         // join existing trade result quantity, commission, paid price, etc. with the new one
@@ -234,6 +251,7 @@ export class DefaultTrader {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to SOLD in the end
       try {
+        this.#canInvest++
         const fee = this.processSellFee(memo, tradeResult)
         const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
