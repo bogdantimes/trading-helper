@@ -8,13 +8,13 @@ import {
   ExchangeSymbol,
   f2,
   IPriceProvider,
+  IStore,
   PriceMove,
   PricesHolder,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
   TradeState,
-  IStore,
 } from "../../lib"
 import { PriceProvider } from "../PriceProvider"
 import { TradesDao } from "../dao/Trades"
@@ -51,7 +51,8 @@ export class DefaultTrader {
     // get current config
     this.#config = this.#configDao.get()
     if (this.#config.InvestRatio > 0) {
-      this.#canInvest = this.#config.InvestRatio
+      const alreadyBoughCount = this.#tradesDao.getList(TradeState.BOUGHT).length
+      this.#canInvest = Math.max(0, this.#config.InvestRatio - alreadyBoughCount)
     }
   }
 
