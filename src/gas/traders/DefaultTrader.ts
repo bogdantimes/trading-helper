@@ -51,7 +51,9 @@ export class DefaultTrader {
     // get current config
     this.#config = this.#configDao.get()
     if (this.#config.InvestRatio > 0) {
-      const alreadyBoughCount = this.#tradesDao.getList(TradeState.BOUGHT).length
+      const alreadyBoughCount = this.#tradesDao
+        .getList(TradeState.BOUGHT)
+        .filter((tm) => !tm.hodl).length
       this.#canInvest = Math.max(0, this.#config.InvestRatio - alreadyBoughCount)
     }
   }
