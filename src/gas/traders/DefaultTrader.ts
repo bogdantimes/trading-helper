@@ -32,7 +32,7 @@ export class DefaultTrader {
   /**
    * Used when {@link ProfitBasedStopLimit} is enabled.
    */
-  #numberOfBoughtAssets = 0
+  #boughtStateCount = 0
   #canInvest = -1
 
   constructor(
@@ -47,22 +47,19 @@ export class DefaultTrader {
     this.#stats = stats
     this.#tradesDao = tradesDao
     this.#configDao = configDao
-
-    // get current config
-    this.#config = this.#configDao.get()
-    if (this.#config.InvestRatio > 0) {
-      const alreadyBoughCount = this.#tradesDao
-        .getList(TradeState.BOUGHT)
-        .filter((tm) => !tm.hodl).length
-      this.#canInvest = Math.max(0, this.#config.InvestRatio - alreadyBoughCount)
-    }
   }
 
   trade(): void {
-    const trades = this.#tradesDao.getList()
+    // Get current config
+    this.#config = this.#configDao.get()
+    // Randomize the order of trades to avoid biases
+    const trades = this.#tradesDao.getList().sort(() => Math.random() - 0.5)
+    const bought = trades.filter((t) => t.stateIs(TradeState.BOUGHT))
+    this.#boughtStateCount = bought.length
 
-    if (this.#config.ProfitBasedStopLimit) {
-      this.#numberOfBoughtAssets = trades.filter((t) => t.stateIs(TradeState.BOUGHT)).length
+    if (this.#config.InvestRatio > 0) {
+      const invested = bought.filter((tm) => !tm.hodl).length
+      this.#canInvest = Math.max(0, this.#config.InvestRatio - invested)
     }
 
     trades.forEach((trade) => {
@@ -152,7 +149,7 @@ export class DefaultTrader {
 
   private updateStopLimit(tm: TradeMemo) {
     if (this.#config.ProfitBasedStopLimit) {
-      const allowedLossPerAsset = this.#stats.totalProfit / this.#numberOfBoughtAssets
+      const allowedLossPerAsset = this.#stats.totalProfit / this.#boughtStateCount
       tm.stopLimitPrice = (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity
     } else {
       // The stop limit price is the price at which the trade will be sold if the price drops below it.
