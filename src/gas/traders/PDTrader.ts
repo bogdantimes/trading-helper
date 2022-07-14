@@ -101,6 +101,7 @@ export class PDTrader {
       return PriceAnomaly.NONE
     }
 
+    const threshold = this.#config.PriceAnomalyAlert
     const tracking = this.#getCache(coin, `PD_TRACKING`)
     const anomalyStartPrice = this.#getCache(coin, `START_PRICE`)
 
@@ -111,10 +112,9 @@ export class PDTrader {
       this.#putCache(coin, `PD_TRACKING`, { value: `true`, expiration: anomalyWindow })
       // Saving the max or min price of the anomaly depending on the direction
       const minMaxPrice = ph.priceGoesStrongUp() ? Math.min(...ph.prices) : Math.max(...ph.prices)
-      this.#putCache(coin, `START_PRICE`, {
-        value: tracking ? `${anomalyStartPrice}` : `${minMaxPrice}`,
-        expiration: anomalyWindow * 2,
-      })
+      const value = tracking ? `${anomalyStartPrice}` : `${minMaxPrice}`
+      this.#putCache(coin, `START_PRICE`, { value, expiration: anomalyWindow * 2 })
+      this.#notifyDetection(+value, threshold, ph, coin)
       return PriceAnomaly.TRACKING
     }
     if (tracking) {
@@ -128,7 +128,7 @@ export class PDTrader {
     this.#removeFromCache(coin, `START_PRICE`)
     const percent = absPercentageChange(+anomalyStartPrice, ph.currentPrice)
 
-    if (this.#config.PriceAnomalyAlert && percent < this.#config.PriceAnomalyAlert) {
+    if (threshold && percent < threshold) {
       return PriceAnomaly.NONE
     }
 
@@ -147,6 +147,17 @@ export class PDTrader {
     }
 
     return PriceAnomaly.NONE
+  }
+
+  #notifyDetection(value: number, threshold: number, ph: PricesHolder, coin: CoinName) {
+    const calcPercent = (price) => absPercentageChange(+value, price)
+    if (
+      threshold &&
+      calcPercent(ph.currentPrice) >= threshold &&
+      calcPercent(ph.previousPrice) < threshold
+    ) {
+      Log.alert(`ℹ️ ${coin}: Price anomaly detected`)
+    }
   }
 
   #updateAllCache(): void {
