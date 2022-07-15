@@ -75,7 +75,7 @@ export class DefaultTrader {
   #checkTrade(tm: TradeMemo): TradeMemo {
     this.pushNewPrice(tm)
 
-    if (tm.stateIs(TradeState.BOUGHT)) {
+    if (tm.tradeResult.quantity > 0) {
       this.processBoughtState(tm)
     } else if (tm.stateIs(TradeState.SOLD)) {
       this.processSoldState(tm)
