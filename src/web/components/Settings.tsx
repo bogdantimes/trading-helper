@@ -35,6 +35,8 @@ export function Settings({
   const [profitLimit, setProfitLimit] = useState(f2(config.ProfitLimit * 100).toString())
   const [channelSize, setChannelSize] = useState(f2(config.ChannelSize * 100).toString())
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString())
+  const [investRatio, setInvestRatio] = useState(config.InvestRatio.toString())
+  const [chDuration, setChDuration] = useState(config.ChannelWindowMins.toString())
 
   const [initialFbURL, setInitialFbURL] = useState(``)
   const [newFbURL, setNewFbURL] = useState(``)
@@ -67,6 +69,8 @@ export function Settings({
     isFinite(+profitLimit) && (config.ProfitLimit = +profitLimit / 100)
     isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100)
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity))
+    isFinite(+investRatio) && (config.InvestRatio = Math.floor(+investRatio))
+    isFinite(+chDuration) && (config.ChannelWindowMins = Math.floor(+chDuration))
     setConfig(config)
     setIsSaving(true)
     google.script.run
@@ -97,13 +101,13 @@ export function Settings({
           </RadioGroup>
         </FormControl>
         <TextField
-          value={config.InvestRatio}
+          value={investRatio}
           label={`Invest Ratio`}
-          onChange={(e) => setConfig({ ...config, InvestRatio: Math.floor(+e.target.value) })}
+          onChange={(e) => setInvestRatio(e.target.value)}
         />
         <TextField
           value={buyQuantity}
-          disabled={config.InvestRatio > 0}
+          disabled={+investRatio > 0}
           label={`Buy Quantity`}
           onChange={(e) => setBuyQuantity(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
@@ -153,9 +157,9 @@ export function Settings({
             InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
           />
           <TextField
-            value={config.ChannelWindowMins}
+            value={chDuration}
             label={`Channel Window (minutes)`}
-            onChange={(e) => setConfig({ ...config, ChannelWindowMins: +e.target.value })}
+            onChange={(e) => setChDuration(e.target.value)}
             InputProps={{ startAdornment: <InputAdornment position="start">min.</InputAdornment> }}
           />
         </Stack>
