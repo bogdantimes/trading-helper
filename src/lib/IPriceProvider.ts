@@ -60,6 +60,20 @@ export class PricesHolder {
   getPriceMove(): PriceMove {
     return getPriceMove(PricesHolder.PRICES_MAX_CAP, this.p);
   }
+
+  getMinMax(): { min: number, max: number } {
+    let min = Number.MAX_VALUE;
+    let max = 0;
+    this.p.forEach((p) => {
+      if (p < min) {
+        min = p;
+      }
+      if (p > max) {
+        max = p;
+      }
+    });
+    return { min, max };
+  }
 }
 
 export type CoinName = string;

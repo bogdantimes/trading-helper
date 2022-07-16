@@ -131,10 +131,23 @@ export enum Key {
   DURATION,
   MIN,
   MAX,
+  S0,
+  S1,
+  S2
+}
+
+export enum ChannelState {
+  NONE,
+  BOTTOM,
+  MIDDLE,
+  TOP,
 }
 
 export interface PriceChannelData {
   [Key.DURATION]: number
   [Key.MIN]: number
   [Key.MAX]: number
+  [Key.S0]: ChannelState
+  [Key.S1]: ChannelState
+  [Key.S2]: ChannelState
 }
