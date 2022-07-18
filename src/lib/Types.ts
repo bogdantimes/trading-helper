@@ -127,13 +127,15 @@ export interface IStore {
   connect(dbURL: string): void
 }
 
+
 export enum Key {
   DURATION,
   MIN,
   MAX,
   S0,
   S1,
-  S2
+  S2,
+  SIZE
 }
 
 export enum ChannelState {
@@ -147,6 +149,7 @@ export interface PriceChannelData {
   [Key.DURATION]: number
   [Key.MIN]: number
   [Key.MAX]: number
+  [Key.SIZE]: number
   [Key.S0]: ChannelState
   [Key.S1]: ChannelState
   [Key.S2]: ChannelState
