@@ -161,7 +161,7 @@ export class DefaultTrader {
       const SL = this.#config.StopLimit
       const PL = this.#config.ProfitLimit
       const P = tm.profitPercent() / 100
-      const K = Math.min(0.99, 1 - SL + Math.min(0, (P * SL) / PL))
+      const K = Math.min(0.99, 1 - SL + Math.max(0, (P * SL) / PL))
 
       const lastN = 3
       const avePrice = tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN
