@@ -1,5 +1,4 @@
 import { IExchange } from "./Exchange"
-import { CacheProxy } from "./CacheProxy"
 import { execute, Log } from "./Common"
 import { ExchangeSymbol, PriceMap, TradeResult } from "../lib"
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
@@ -13,6 +12,7 @@ export class Binance implements IExchange {
   private readonly defaultReqOpts: URLFetchRequestOptions
   private readonly tradeReqOpts: URLFetchRequestOptions
   private readonly serverIds: number[]
+  readonly #balances: { [coinName: string]: number } = {}
 
   constructor(key: string, secret: string) {
     this.key = key ?? ``
@@ -52,28 +52,33 @@ export class Binance implements IExchange {
     }
   }
 
-  getFreeAsset(assetName: string): number {
-    const accountDataJson = CacheProxy.get(`AccountData`)
-    let accountData = accountDataJson ? JSON.parse(accountDataJson) : null
-    if (!accountData) {
-      const resource = `account`
-      const query = ``
-      try {
-        accountData = this.fetch(
-          () => `${resource}?${this.addSignature(query)}`,
-          this.defaultReqOpts,
-        )
-        CacheProxy.put(`AccountData`, JSON.stringify(accountData), 30) // 30 seconds
-      } catch (e: any) {
-        throw new Error(`Failed to get available ${assetName}: ${e.message}`)
-      }
+  getBalance(coinName: string): number {
+    if (this.#balances[coinName]) {
+      return this.#balances[coinName]
     }
-    const assetVal = accountData.balances.find((balance: any) => balance.asset == assetName)
-    return assetVal ? +assetVal.free : 0
+    const resource = `account`
+    const query = ``
+    try {
+      const accountData = this.fetch(
+        () => `${resource}?${this.addSignature(query)}`,
+        this.defaultReqOpts,
+      )
+      accountData.balances.forEach((balance: any) => {
+        this.#balances[balance.asset] = +(balance.free || 0)
+      })
+    } catch (e: any) {
+      throw new Error(`Failed to get available ${coinName}: ${e.message}`)
+    }
+    return +(this.#balances[coinName] || 0)
+  }
+
+  #updateBalance(coinName: string, amount: number): void {
+    const balance = this.#balances[coinName] || 0
+    this.#balances[coinName] = balance + amount
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
-    const moneyAvailable = this.getFreeAsset(symbol.priceAsset)
+    const moneyAvailable = this.getBalance(symbol.priceAsset)
     if (moneyAvailable < cost) {
       return new TradeResult(
         symbol,
@@ -85,6 +90,7 @@ export class Binance implements IExchange {
     try {
       const tradeResult = this.marketTrade(symbol, query)
       tradeResult.paid = tradeResult.cost
+      this.#updateBalance(symbol.priceAsset, -tradeResult.cost)
       Log.alert(tradeResult.toTradeString())
       return tradeResult
     } catch (e: any) {
@@ -107,6 +113,7 @@ export class Binance implements IExchange {
       const tradeResult = this.marketTrade(symbol, query)
       tradeResult.gained = tradeResult.cost
       tradeResult.soldPrice = tradeResult.price
+      this.#updateBalance(symbol.priceAsset, tradeResult.cost)
       Log.alert(tradeResult.toTradeString())
       return tradeResult
     } catch (e: any) {

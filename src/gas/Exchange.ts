@@ -2,7 +2,7 @@ import { Binance } from "./Binance"
 import { ExchangeSymbol, PriceMap, TradeResult } from "../lib"
 
 export interface IExchange {
-  getFreeAsset(assetName: string): number
+  getBalance(assetName: string): number
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult
 
@@ -20,8 +20,8 @@ export class Exchange implements IExchange {
     this.exchange = new Binance(key, secret)
   }
 
-  getFreeAsset(assetName: string): number {
-    return this.exchange.getFreeAsset(assetName)
+  getBalance(assetName: string): number {
+    return this.exchange.getBalance(assetName)
   }
 
   getPrice(symbol: ExchangeSymbol): number {

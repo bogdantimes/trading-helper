@@ -106,7 +106,7 @@ function initialSetup(params: InitialSetupParams): string {
     config.SECRET = params.binanceSecretKey || config.SECRET
     if (config.KEY && config.SECRET) {
       Log.alert(`Checking if Binance is reachable`)
-      new Exchange(config.KEY, config.SECRET).getFreeAsset(config.StableCoin)
+      new Exchange(config.KEY, config.SECRET).getBalance(config.StableCoin)
       Log.alert(`Connected to Binance`)
       startTicker()
     }

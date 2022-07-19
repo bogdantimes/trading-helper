@@ -22,6 +22,15 @@ export class Process {
     stopWatch.stop()
 
     try {
+      stopWatch.start(`Stable Coins update`)
+      tradeActions.defaultTrader.updateStableCoinsBalance(store)
+      stopWatch.stop()
+    } catch (e) {
+      Log.alert(`Failed to update stable coins balance: ${e.message}`)
+      Log.error(e)
+    }
+
+    try {
       stopWatch.start(`PDTrader check`)
       pdTrader.trade()
       stopWatch.stop()
@@ -50,15 +59,6 @@ export class Process {
       stopWatch.stop()
     } catch (e) {
       Log.alert(`Failed to trade: ${e.message}`)
-      Log.error(e)
-    }
-
-    try {
-      stopWatch.start(`Stable Coins update`)
-      tradeActions.defaultTrader.updateStableCoinsBalance(store)
-      stopWatch.stop()
-    } catch (e) {
-      Log.alert(`Failed to update stable coins balance: ${e.message}`)
       Log.error(e)
     }
   }

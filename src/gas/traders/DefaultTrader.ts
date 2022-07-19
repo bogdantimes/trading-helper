@@ -111,7 +111,7 @@ export class DefaultTrader {
       // Return 0 if we can't invest anymore or if we already bought this coin
       return 0
     }
-    const balance = this.#exchange.getFreeAsset(tm.tradeResult.symbol.priceAsset)
+    const balance = this.#exchange.getBalance(tm.tradeResult.symbol.priceAsset)
     return Math.max(DefaultConfig().BuyQuantity, Math.floor(balance / this.#canInvest))
   }
 
@@ -354,7 +354,7 @@ export class DefaultTrader {
   updateStableCoinsBalance(store: IStore) {
     const stableCoins: any[] = []
     Object.keys(StableUSDCoin).forEach((coin) => {
-      const balance = this.#exchange.getFreeAsset(coin)
+      const balance = this.#exchange.getBalance(coin)
       balance && stableCoins.push(new Coin(coin, balance))
     })
     store.set(StableCoins, stableCoins)
