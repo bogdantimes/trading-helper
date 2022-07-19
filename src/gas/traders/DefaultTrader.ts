@@ -177,7 +177,7 @@ export class DefaultTrader {
   }
 
   private pushNewPrice(tm: TradeMemo): void {
-    const priceHolder = this.#getPrices(tm.getCoinName())
+    const priceHolder = this.#getPrices(tm.tradeResult.symbol)
     const symbol = `${tm.getCoinName()}${this.#config.StableCoin}`
     if (priceHolder) {
       tm.pushPrice(priceHolder.currentPrice)
@@ -201,8 +201,8 @@ export class DefaultTrader {
     }
   }
 
-  #getPrices(coinName: CoinName): PricesHolder {
-    return this.#priceProvider.get(this.#config.StableCoin)[coinName]
+  #getPrices(symbol: ExchangeSymbol): PricesHolder {
+    return this.#priceProvider.get(symbol.priceAsset as StableUSDCoin)[symbol.quantityAsset]
   }
 
   private buy(tm: TradeMemo, cost: number): void {
@@ -335,7 +335,7 @@ export class DefaultTrader {
   }
 
   private getBNBCommissionCost(commission: number): number {
-    const bnbPriceHolder = this.#getPrices(`BNB`)
+    const bnbPriceHolder = this.#getPrices(new ExchangeSymbol(`BNB`, this.#config.StableCoin))
     return bnbPriceHolder ? commission * bnbPriceHolder.currentPrice : 0
   }
 
