@@ -92,8 +92,7 @@ export class DefaultTrader {
     } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
       // buy only if price stopped going down
       // this allows to wait if price continues to fall
-      const stableCoin = tm.tradeResult.symbol.priceAsset
-      const howMuch = this.#calculateQuantity(stableCoin)
+      const howMuch = this.#calculateQuantity(tm)
       if (howMuch > 0) {
         this.buy(tm, howMuch)
       } else {
@@ -104,16 +103,16 @@ export class DefaultTrader {
     return tm
   }
 
-  #calculateQuantity(stableCoin: string): number {
+  #calculateQuantity(tm: TradeMemo): number {
     if (this.#canInvest < 0) {
       return this.#config.BuyQuantity
     }
-    let qty = 0
-    if (this.#canInvest > 0) {
-      const balance = this.#exchange.getFreeAsset(stableCoin)
-      qty = Math.max(DefaultConfig().BuyQuantity, Math.floor(balance / this.#canInvest))
+    if (this.#canInvest <= 0 || tm.tradeResult.quantity > 0) {
+      // Return 0 if we can't invest anymore or if we already bought this coin
+      return 0
     }
-    return qty
+    const balance = this.#exchange.getFreeAsset(tm.tradeResult.symbol.priceAsset)
+    return Math.max(DefaultConfig().BuyQuantity, Math.floor(balance / this.#canInvest))
   }
 
   private processSoldState(tm: TradeMemo): void {
