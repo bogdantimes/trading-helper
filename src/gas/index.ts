@@ -227,6 +227,13 @@ function getPriceChannelsData(): PriceChannelsDataResponse {
   })
 }
 
+function setPriceChannelsData(data: PriceChannelsDataResponse): string {
+  return catchError(() => {
+    DefaultStore.set(PriceChannelDataKey, data)
+    return `OK`
+  })
+}
+
 global.doGet = doGet
 global.doPost = doPost
 global.tick = tick
@@ -249,3 +256,4 @@ global.getCoinNames = getCoinNames
 global.getFirebaseURL = getFirebaseURL
 global.setFirebaseURL = setFirebaseURL
 global.getPriceChannelsData = getPriceChannelsData
+global.setPriceChannelsData = setPriceChannelsData

@@ -1,9 +1,63 @@
 import * as React from "react"
 import { useEffect } from "react"
-import { Box, List, ListItem, ListItemAvatar, ListItemText, Stack, Typography } from "@mui/material"
+import {
+  Box,
+  Button,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material"
 import { cardWidth, circularProgress, growthIconMap } from "./Common"
 import { ChannelState, Config, f8, Key, PriceChannelsDataResponse, PriceMove } from "../../lib"
-import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material"
+import { Save } from "@mui/icons-material"
+
+function uploadData(
+  priceChannelsData: PriceChannelsDataResponse,
+  setPriceChannelsData: (
+    value:
+      | ((prevState: PriceChannelsDataResponse) => PriceChannelsDataResponse)
+      | PriceChannelsDataResponse,
+  ) => void,
+) {
+  return (
+    <>
+      <TextField
+        id="file-selector"
+        helperText="Select Price Channel Data JSON file"
+        type="file"
+        inputProps={{ accept: `.json` }}
+        onChange={(e) => {
+          const file = (e.target as HTMLInputElement).files[0]
+          if (file) {
+            const reader = new FileReader()
+            reader.onload = (re) => {
+              const data = JSON.parse(re.target.result as string)
+              setPriceChannelsData(data)
+            }
+            reader.readAsText(file)
+          }
+        }}
+      />
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<Save />}
+        onClick={() => {
+          google.script.run
+            .withSuccessHandler(alert)
+            .withFailureHandler(alert)
+            .setPriceChannelsData(priceChannelsData as any)
+        }}
+      >
+        Upload
+      </Button>
+    </>
+  )
+}
 
 export function Channels({ config }: { config: Config }) {
   const [priceChannelsData, setPriceChannelsData] = React.useState<PriceChannelsDataResponse>(null)
@@ -21,7 +75,12 @@ export function Channels({ config }: { config: Config }) {
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       {!priceChannelsData && circularProgress}
-      {priceChannelsData && <Stack spacing={2}>{list(priceChannelsData, config)}</Stack>}
+      {priceChannelsData && (
+        <Stack spacing={2}>
+          {list(priceChannelsData, config)}
+          {uploadData(priceChannelsData, setPriceChannelsData)}
+        </Stack>
+      )}
     </Box>
   )
 }
