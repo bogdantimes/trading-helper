@@ -133,6 +133,8 @@ export class DefaultTrader {
   private processBoughtState(tm: TradeMemo): void {
     this.updateStopLimit(tm)
 
+    isFinite(tm.ttl) && tm.ttl++
+
     if (tm.hodl) return
 
     if (tm.stopLimitCrossedDown()) {
@@ -141,8 +143,16 @@ export class DefaultTrader {
     } else if (tm.profitLimitCrossedUp(this.#config.ProfitLimit)) {
       Log.alert(`ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`)
       this.#config.SellAtProfitLimit && tm.setState(TradeState.SELL)
-    } else if (tm.entryPriceCrossedUp()) {
-      // Log.alert(`ℹ️ ${tm.getCoinName()} entry price crossed up at ${tm.currentPrice}`)
+    }
+
+    if (
+      this.#config.TTL &&
+      isFinite(tm.ttl) &&
+      tm.ttl > this.#config.TTL &&
+      tm.profitPercent() > 0.1 &&
+      tm.profitPercent() < 5
+    ) {
+      tm.setState(TradeState.SELL)
     }
   }
 
@@ -224,6 +234,7 @@ export class DefaultTrader {
         Log.error(e)
       } finally {
         tm.setState(TradeState.BOUGHT)
+        tm.ttl = 0
       }
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`)
@@ -265,6 +276,7 @@ export class DefaultTrader {
         memo.tradeResult = tradeResult
         Log.debug(memo)
         memo.setState(TradeState.SOLD)
+        memo.ttl = 0
       }
     } else {
       Log.debug(memo)

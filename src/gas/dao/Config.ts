@@ -15,6 +15,7 @@ export const DefaultConfig: () => Config = () => ({
   PriceAnomalyAlert: 5,
   ChannelSize: 0,
   ChannelWindowMins: 0,
+  TTL: 60 * 24 * 3, // 3 days
 })
 
 export class ConfigDao {

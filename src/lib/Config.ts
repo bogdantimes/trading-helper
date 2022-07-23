@@ -1,6 +1,7 @@
 import { PriceProvider, StableUSDCoin } from "./Types"
 
 export interface Config {
+  TTL: number
   KEY?: string
   SECRET?: string
   StableCoin: StableUSDCoin

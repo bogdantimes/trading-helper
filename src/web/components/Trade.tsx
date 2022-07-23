@@ -204,7 +204,8 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
           {tm.tradeResult.quantity ? (
             <Typography marginLeft={`16px`} variant="body2" color="text.secondary">
               <div>
-                Qty: {tm.tradeResult.quantity} Paid: {f2(tm.tradeResult.paid)}
+                Qty: {tm.tradeResult.quantity} Paid: {f2(tm.tradeResult.paid)} TTL:{` `}
+                {config.TTL - tm.ttl}
               </div>
               <div>
                 {tm.profit() >= 0 ? `Profit` : `Loss`}: {f2(tm.profit())} ({f2(tm.profitPercent())}

@@ -37,6 +37,7 @@ export function Settings({
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString())
   const [investRatio, setInvestRatio] = useState(config.InvestRatio.toString())
   const [chDuration, setChDuration] = useState(config.ChannelWindowMins.toString())
+  const [ttl, setTTL] = useState(config.TTL.toString())
 
   const [initialFbURL, setInitialFbURL] = useState(``)
   const [newFbURL, setNewFbURL] = useState(``)
@@ -71,6 +72,7 @@ export function Settings({
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity))
     isFinite(+investRatio) && (config.InvestRatio = Math.floor(+investRatio))
     isFinite(+chDuration) && (config.ChannelWindowMins = Math.floor(+chDuration))
+    isFinite(+ttl) && +ttl >= 0 && (config.TTL = Math.floor(+ttl))
     setConfig(config)
     setIsSaving(true)
     google.script.run
@@ -105,6 +107,7 @@ export function Settings({
           label={`Invest Ratio`}
           onChange={(e) => setInvestRatio(e.target.value)}
         />
+        <TextField value={ttl} label={`TTL`} onChange={(e) => setTTL(e.target.value)} />
         <TextField
           value={buyQuantity}
           disabled={+investRatio > 0}
