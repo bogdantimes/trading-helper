@@ -231,24 +231,6 @@ function switchers(
         }
         label="P/L based Stop Limit"
       />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={config.SwingTradeEnabled}
-            onChange={(e) => setConfig({ ...config, SwingTradeEnabled: e.target.checked })}
-          />
-        }
-        label="Swing trading"
-      />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={config.AveragingDown}
-            onChange={(e) => setConfig({ ...config, AveragingDown: e.target.checked })}
-          />
-        }
-        label="Averaging down"
-      />
     </Stack>
   )
 }

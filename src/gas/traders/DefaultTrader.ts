@@ -77,8 +77,6 @@ export class DefaultTrader {
 
     if (tm.tradeResult.quantity > 0) {
       this.processBoughtState(tm)
-    } else if (tm.stateIs(TradeState.SOLD)) {
-      this.processSoldState(tm)
     }
 
     const priceMove = tm.getPriceMove()
@@ -113,21 +111,6 @@ export class DefaultTrader {
     }
     const balance = this.#exchange.getBalance(tm.tradeResult.symbol.priceAsset)
     return Math.max(DefaultConfig().BuyQuantity, Math.floor(balance / this.#canInvest))
-  }
-
-  private processSoldState(tm: TradeMemo): void {
-    if (!this.#config.SwingTradeEnabled) {
-      return
-    }
-    // Swing trade enabled.
-    // Checking if price dropped below max observed price minus x2 profit limit percentage,
-    // and we can buy again
-    const symbol = tm.tradeResult.symbol
-    const priceDropped = tm.currentPrice < tm.maxObservedPrice * (1 - this.#config.ProfitLimit * 2)
-    if (priceDropped) {
-      Log.alert(`ℹ️ ${symbol} will be bought again as price dropped sufficiently`)
-      tm.setState(TradeState.BUY)
-    }
   }
 
   private processBoughtState(tm: TradeMemo): void {
@@ -288,37 +271,7 @@ export class DefaultTrader {
       Log.alert(tradeResult.toString())
     }
 
-    if (memo.stateIs(TradeState.SOLD) && this.#config.AveragingDown) {
-      try {
-        this.averageDown(tradeResult)
-      } catch (e) {
-        Log.error(e)
-      }
-    }
-
-    // Delete if it was sold and swing trading is disabled
-    memo.deleted = memo.stateIs(TradeState.SOLD) && !this.#config.SwingTradeEnabled
-  }
-
-  private averageDown(tradeResult: TradeResult) {
-    // all gains are reinvested to most unprofitable asset
-    // find a trade with the lowest profit percentage
-    const byProfitPercentDesc = (t1: TradeMemo, t2: TradeMemo) =>
-      t1.profitPercent() < t2.profitPercent() ? -1 : 1
-    const lowestPLTrade = this.#tradesDao
-      .getList(TradeState.BOUGHT)
-      .filter((t) => t.getCoinName() != tradeResult.symbol.quantityAsset)
-      .sort(byProfitPercentDesc)[0]
-    if (lowestPLTrade && lowestPLTrade.profit() < 0) {
-      Log.alert(`ℹ️ Averaging down is enabled`)
-      Log.alert(
-        `All gains from selling ${tradeResult.symbol} are being invested to ${lowestPLTrade.tradeResult.symbol}`,
-      )
-      this.#tradesDao.update(lowestPLTrade.getCoinName(), (tm) => {
-        this.buy(tm, tradeResult.gained)
-        return tm
-      })
-    }
+    memo.deleted = memo.stateIs(TradeState.SOLD)
   }
 
   private updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {

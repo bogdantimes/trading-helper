@@ -1,4 +1,4 @@
-import { Config, IStore, PriceProvider, StableUSDCoin } from "../../lib"
+import { Config, IStore, StableUSDCoin } from "../../lib"
 
 export const DefaultConfig: () => Config = () => ({
   InvestRatio: 1,
@@ -8,9 +8,6 @@ export const DefaultConfig: () => Config = () => ({
   ProfitLimit: 0.1,
   SellAtStopLimit: true,
   SellAtProfitLimit: false,
-  SwingTradeEnabled: false,
-  PriceProvider: PriceProvider.Binance,
-  AveragingDown: false,
   ProfitBasedStopLimit: false,
   PriceAnomalyAlert: 5,
   ChannelSize: 0,
@@ -34,27 +31,6 @@ export class ConfigDao {
     let config: Config = this.store.getOrSet(`Config`, defaultConfig)
     // apply existing config on top of default one
     config = Object.assign(defaultConfig, config)
-
-    if (config.TakeProfit) {
-      config.ProfitLimit = config.TakeProfit
-      delete config.TakeProfit
-    }
-
-    if (config.SellAtTakeProfit) {
-      config.SellAtProfitLimit = config.SellAtTakeProfit
-      delete config.SellAtTakeProfit
-    }
-
-    if (config.LossLimit) {
-      config.StopLimit = config.LossLimit
-      delete config.LossLimit
-    }
-
-    if (config.PriceAsset) {
-      config.StableCoin = <StableUSDCoin>config.PriceAsset
-      delete config.PriceAsset
-    }
-
     return config
   }
 

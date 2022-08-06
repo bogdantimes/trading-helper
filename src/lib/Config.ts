@@ -1,4 +1,4 @@
-import { PriceProvider, StableUSDCoin } from "./Types"
+import { StableUSDCoin } from "./Types"
 
 export interface Config {
   TTL: number
@@ -23,18 +23,6 @@ export interface Config {
   ProfitLimit: number
   SellAtStopLimit: boolean
   SellAtProfitLimit: boolean
-  SwingTradeEnabled: boolean
-  PriceProvider: PriceProvider
-  /**
-   * When averaging down is enabled, all the money gained from selling is used to buy more your existing
-   * most unprofitable (in percentage) asset.
-   * If you have assets A, B (-10% loss) and C(-15% loss) and A is sold, the tool will buy more
-   * of C, and C loss will be averaged down, for example to -7%.
-   * Next time, if C turns profitable and is sold, the tool will buy more of B.
-   * This way, **if the price decline is temporary** for all of your assets,
-   * the tool will gradually sell all assets without loss.
-   */
-  AveragingDown: boolean
   /**
    * When price suddenly pumps or dumps for more than or equal percentage - an alert is sent.
    */
@@ -56,21 +44,4 @@ export interface Config {
    * it breaks out of the channel and an anomaly event is sent.
    */
   ChannelWindowMins: number
-
-  /**
-   * @deprecated
-   */
-  PriceAsset?: string
-  /**
-   * @deprecated
-   */
-  TakeProfit?: number
-  /**
-   * @deprecated
-   */
-  LossLimit?: number
-  /**
-   * @deprecated
-   */
-  SellAtTakeProfit?: boolean
 }

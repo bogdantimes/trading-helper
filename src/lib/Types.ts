@@ -24,11 +24,6 @@ export interface Stats {
   DailyProfit: PriceMap
 }
 
-export enum PriceProvider {
-  Binance = `Binance`,
-  CoinStats = `CoinStats`,
-}
-
 export class ExchangeSymbol {
   readonly quantityAsset: string
   readonly priceAsset: string
