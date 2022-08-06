@@ -92,10 +92,11 @@ export class TradesDao {
 
     const lock = LockService.getScriptLock()
     try {
+      // It has up to 10 seconds to acquire the lock (4 attempts, 2 sec each).
       execute({
         attempts: 4,
-        interval: 1000, // 1 second
-        runnable: () => lock.waitLock(5000), // 5 seconds
+        interval: 500, // 500 ms
+        runnable: () => lock.waitLock(2000), // 2 seconds
       })
       return lock
     } catch (e: any) {
