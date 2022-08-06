@@ -132,8 +132,8 @@ export class DefaultTrader {
       this.#config.TTL &&
       isFinite(tm.ttl) &&
       tm.ttl > this.#config.TTL &&
-      tm.profitPercent() > 0.1 &&
-      tm.profitPercent() < 5
+      tm.profitPercent() > -3 &&
+      tm.profitPercent() < 3
     ) {
       tm.setState(TradeState.SELL)
     }
