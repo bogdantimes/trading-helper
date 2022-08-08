@@ -1,48 +1,19 @@
 import * as React from "react"
 import { useEffect, useState } from "react"
 import Trade from "./Trade"
-import {
-  Autocomplete,
-  Button,
-  Chip,
-  Divider,
-  Grid,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material"
+import { Chip, Divider, Grid, Typography } from "@mui/material"
 import StableCoin from "./StableCoin"
-import { capitalizeWord, cardWidth, circularProgress, confirmBuy } from "./Common"
-import {
-  AssetsResponse,
-  Coin,
-  CoinName,
-  Config,
-  StableUSDCoin,
-  TradeMemo,
-  TradeState,
-} from "../../lib"
+import { capitalizeWord, circularProgress } from "./Common"
+import { AssetsResponse, Coin, Config, StableUSDCoin, TradeMemo, TradeState } from "../../lib"
 
 export function Assets({ config }: { config: Config }) {
   const [assets, setAssets] = React.useState<AssetsResponse>(null)
-  const [coinName, setCoinName] = React.useState(`BTC`)
-  const [coinNames, setCoinNames] = React.useState<CoinName[]>([])
 
   useEffect(() => {
     google.script.run.withSuccessHandler(setAssets).getAssets()
     const interval = setInterval(google.script.run.withSuccessHandler(setAssets).getAssets, 15000) // 15 seconds
     return () => clearInterval(interval)
   }, [])
-
-  useEffect(() => {
-    google.script.run.withSuccessHandler(setCoinNames).getCoinNames()
-  }, [])
-
-  function buy() {
-    if (confirmBuy(coinName, config)) {
-      google.script.run.withSuccessHandler(alert).buyCoin(coinName)
-    }
-  }
 
   const tradesMap =
     assets &&
@@ -55,26 +26,6 @@ export function Assets({ config }: { config: Config }) {
   return (
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
-        <Grid item xs={12}>
-          <Grid container justifyContent="center" spacing={2}>
-            <Grid item>
-              <Stack sx={{ width: cardWidth }} direction={`row`} spacing={2}>
-                <Autocomplete
-                  selectOnFocus={false}
-                  value={coinName}
-                  fullWidth={true}
-                  options={coinNames}
-                  onChange={(e, val) => setCoinName(val)}
-                  disableClearable={true}
-                  renderInput={(params) => <TextField {...params} label={`Coin Name`} />}
-                />
-                <Button variant="contained" onClick={buy}>
-                  Buy
-                </Button>
-              </Stack>
-            </Grid>
-          </Grid>
-        </Grid>
         {!assets && (
           <Grid item xs={12}>
             {circularProgress}

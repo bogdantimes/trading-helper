@@ -1,6 +1,6 @@
 import { Alert, CircularProgress, Link, Typography } from "@mui/material"
 import * as React from "react"
-import { Config, PriceMove } from "../../lib"
+import { PriceMove } from "../../lib"
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
@@ -32,15 +32,8 @@ map.set(
 )
 map.set(PriceMove.UP, <KeyboardArrowUp htmlColor={`green`} />)
 map.set(PriceMove.STRONG_UP, <KeyboardDoubleArrowUp htmlColor={`green`} />)
+
 export const growthIconMap = map
-
-export const confirmBuy = (coinName: string, config: Config) =>
-  confirm(`Are you sure you want to buy ${coinName} for ${config.StableCoin}?`)
-
-export const confirmSell = (coinName: string, config: Config) =>
-  confirm(
-    `Are you sure you want to sell ${coinName} and get ${config.StableCoin}?`,
-  )
 
 export const capitalizeWord = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
 
