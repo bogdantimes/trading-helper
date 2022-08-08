@@ -14,8 +14,6 @@ export function TradeEditDialog(props: {
   coinNames: string[]
 }) {
   const { tradeMemo, onClose, onCancel, onSave, coinNames } = props
-  const [quantity, setQuantity] = useState(tradeMemo.tradeResult.quantity)
-  const [paid, setPaid] = useState(tradeMemo.tradeResult.paid)
   const [coinName, setCoinName] = useState(tradeMemo.getCoinName())
   const [stableName, setStableName] = useState(tradeMemo.tradeResult.symbol.priceAsset)
   const [stopLimit, setStopLimit] = useState(tradeMemo.stopLimitPrice)
@@ -26,9 +24,6 @@ export function TradeEditDialog(props: {
     setIsSaving(true)
     const newTm = TradeMemo.copy(tradeMemo)
     newTm.tradeResult.symbol = new ExchangeSymbol(coinName, stableName)
-    newTm.tradeResult.quantity = quantity
-    newTm.tradeResult.paid = paid
-    newTm.tradeResult.cost = paid
     newTm.stopLimitPrice = stopLimit
 
     onSave(newTm)
@@ -64,22 +59,6 @@ export function TradeEditDialog(props: {
           renderInput={(params) => (
             <TextField {...params} fullWidth margin="dense" label={`Stable Coin`} />
           )}
-        />
-        <TextField
-          margin="dense"
-          label="Quantity"
-          type="number"
-          fullWidth
-          value={quantity}
-          onChange={(e) => setQuantity(parseFloat(e.target.value))}
-        />
-        <TextField
-          margin="dense"
-          label="Paid"
-          type="number"
-          fullWidth
-          value={paid}
-          onChange={(e) => setPaid(parseFloat(e.target.value))}
         />
         <TextField
           margin="dense"

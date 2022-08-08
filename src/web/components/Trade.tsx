@@ -16,11 +16,10 @@ import {
 import { Box, Stack, Theme, ToggleButton, useTheme } from "@mui/material"
 import { circularProgress } from "./Common"
 import { TradeTitle } from "./TradeTitle"
-import { TradeEditDialog } from "./TradeEditDialog"
 import { Config, f2, TradeMemo, TradeState } from "../../lib"
 
-export default function Trade(props: { data: TradeMemo; config: Config; coinNames: string[] }) {
-  const { data: tm, config, coinNames } = props
+export default function Trade(props: { data: TradeMemo; config: Config }) {
+  const { data: tm, config } = props
   const coinName = tm.getCoinName()
 
   const chartContainerRef = useRef()
@@ -148,14 +147,12 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
     }
   }
 
-  const [editMode, setEditMode] = useState(false)
-
   return (
     <>
       {!removed && (
         <Card elevation={2}>
           <CardContent>
-            <TradeTitle tradeMemo={tm} onEdit={() => setEditMode(true)} onDelete={onDelete} />
+            <TradeTitle tradeMemo={tm} onDelete={onDelete} />
             <Box
               sx={chartStyle(theme)}
               width={chartOpts.width}
@@ -205,28 +202,6 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
             </Stack>
           </CardActions>
         </Card>
-      )}
-      {editMode && (
-        <TradeEditDialog
-          coinNames={coinNames}
-          tradeMemo={tm}
-          onClose={() => setEditMode(false)}
-          onCancel={() => setEditMode(false)}
-          onSave={(newTm) =>
-            new Promise((resolve, reject) => {
-              google.script.run
-                .withSuccessHandler((resp) => {
-                  alert(resp)
-                  resolve(resp)
-                })
-                .withFailureHandler((err) => {
-                  reject(err)
-                })
-                // @ts-ignore
-                .editTrade(tm.getCoinName(), newTm)
-            })
-          }
-        />
       )}
     </>
   )

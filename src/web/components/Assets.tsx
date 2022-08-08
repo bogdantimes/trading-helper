@@ -179,7 +179,7 @@ function getTradeViews(
                 ?.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
                 .map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <Trade coinNames={coinNames} data={t} config={config} />
+                    <Trade data={t} config={config} />
                   </Grid>
                 ))}
             </Grid>
