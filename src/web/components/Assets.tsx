@@ -18,19 +18,15 @@ import {
   Coin,
   CoinName,
   Config,
-  ExchangeSymbol,
   StableUSDCoin,
   TradeMemo,
   TradeState,
 } from "../../lib"
-import { Add } from "@mui/icons-material"
-import { TradeEditDialog } from "./TradeEditDialog"
 
 export function Assets({ config }: { config: Config }) {
   const [assets, setAssets] = React.useState<AssetsResponse>(null)
   const [coinName, setCoinName] = React.useState(`BTC`)
   const [coinNames, setCoinNames] = React.useState<CoinName[]>([])
-  const [addCoin, setAddCoin] = useState(false)
 
   useEffect(() => {
     google.script.run.withSuccessHandler(setAssets).getAssets()
@@ -75,9 +71,6 @@ export function Assets({ config }: { config: Config }) {
                 <Button variant="contained" onClick={buy}>
                   Buy
                 </Button>
-                <Button variant="outlined" onClick={() => setAddCoin(true)}>
-                  <Add />
-                </Button>
               </Stack>
             </Grid>
           </Grid>
@@ -89,31 +82,9 @@ export function Assets({ config }: { config: Config }) {
         )}
         {getStableCoinViews(assets?.stableCoins)}
         {[TradeState.BUY, TradeState.SELL, TradeState.BOUGHT, TradeState.SOLD].map((s) =>
-          getTradeViews(s, tradesMap?.get(s), config, coinNames),
+          getTradeViews(s, tradesMap?.get(s), config),
         )}
       </Grid>
-      {addCoin && (
-        <TradeEditDialog
-          coinNames={coinNames}
-          tradeMemo={TradeMemo.newManual(new ExchangeSymbol(coinName, config.StableCoin))}
-          onClose={() => setAddCoin(false)}
-          onCancel={() => setAddCoin(false)}
-          onSave={(newTm) =>
-            new Promise((resolve, reject) => {
-              google.script.run
-                .withSuccessHandler((resp) => {
-                  alert(resp)
-                  resolve(resp)
-                })
-                .withFailureHandler((err) => {
-                  reject(err)
-                })
-                // @ts-ignore
-                .editTrade(newTm.getCoinName(), newTm)
-            })
-          }
-        />
-      )}
     </>
   )
 }
@@ -152,12 +123,7 @@ function getStableCoinViews(stableCoins?: Coin[]) {
   )
 }
 
-function getTradeViews(
-  state: TradeState,
-  elems?: TradeMemo[],
-  config?: Config,
-  coinNames?: string[],
-) {
+function getTradeViews(state: TradeState, elems?: TradeMemo[], config?: Config) {
   // hide Sold trades by default, others visible by default
   const [hide, setHide] = useState(state === TradeState.SOLD)
   return (
