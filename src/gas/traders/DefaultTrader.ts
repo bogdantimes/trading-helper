@@ -155,7 +155,7 @@ export class DefaultTrader {
       const P = tm.profitPercent() / 100
       const K = Math.min(0.99, 1 - SL + Math.max(0, (P * SL) / PL))
 
-      const lastN = 2
+      const lastN = 3
       const avePrice = tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN
       // new stop limit cannot be higher than current price
       const newStopLimit = Math.min(K * avePrice, tm.currentPrice)
