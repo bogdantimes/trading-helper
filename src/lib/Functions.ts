@@ -1,5 +1,20 @@
 import { PriceMove } from "./Types"
 
+export function getPrecision(a: number): number {
+  if (!isFinite(a)) return 0
+  let e = 1,
+    p = 0
+  while (Math.round(a * e) / e !== a) {
+    e *= 10
+    p++
+  }
+  return p
+}
+
+export function floor(value: number, decimals: number): number {
+  return +(Math.floor(Number(value + `e+` + decimals)) + `e-` + decimals)
+}
+
 export function sumWithMaxPrecision(a: number, b: number): number {
   const aSplit = `${a}`.split(`.`)
   const bSplit = `${b}`.split(`.`)

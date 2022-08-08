@@ -1,7 +1,11 @@
 import { IExchange } from "./Exchange"
 import { execute, Log } from "./Common"
-import { ExchangeSymbol, PriceMap, TradeResult } from "../lib"
+import { ExchangeSymbol, getPrecision, PriceMap, floor, TradeResult } from "../lib"
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
+
+type ExchangeInfo = {
+  symbols: [{ symbol: string; filters: [{ filterType: `LOT_SIZE`; stepSize: string }] }]
+}
 
 export class Binance implements IExchange {
   private readonly key: string
@@ -13,6 +17,8 @@ export class Binance implements IExchange {
   private readonly tradeReqOpts: URLFetchRequestOptions
   private readonly serverIds: number[]
   readonly #balances: { [coinName: string]: number } = {}
+
+  #exchangeInfo: ExchangeInfo
 
   constructor(key: string, secret: string) {
     this.key = key ?? ``
@@ -107,8 +113,9 @@ export class Binance implements IExchange {
    * @param quantity
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
-    const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`
-    Log.alert(`➖ Selling ${quantity} ${symbol.quantityAsset} for ${symbol.priceAsset}`)
+    const qty = this.#qtyForLotStepSize(symbol, quantity)
+    const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${qty}`
+    Log.alert(`➖ Selling ${qty} ${symbol.quantityAsset} for ${symbol.priceAsset}`)
     try {
       const tradeResult = this.marketTrade(symbol, query)
       tradeResult.gained = tradeResult.cost
@@ -118,7 +125,7 @@ export class Binance implements IExchange {
       return tradeResult
     } catch (e: any) {
       if (e.message.includes(`Account has insufficient balance`)) {
-        return new TradeResult(symbol, `Account has no ${quantity} of ${symbol.quantityAsset}`)
+        return new TradeResult(symbol, `Account has no ${qty} of ${symbol.quantityAsset}`)
       }
       if (e.message.includes(`Market is closed`)) {
         return new TradeResult(symbol, `Market is closed for ${symbol}.`)
@@ -133,32 +140,45 @@ export class Binance implements IExchange {
     }
   }
 
+  #qtyForLotStepSize(symbol: ExchangeSymbol, quantity: number) {
+    if (!this.#exchangeInfo) {
+      this.#exchangeInfo = this.fetch(() => `exchangeInfo`, this.defaultReqOpts)
+    }
+
+    const stepSize = this.#exchangeInfo.symbols
+      .find((s) => s.symbol === symbol.toString())
+      ?.filters.find((f) => f.filterType === `LOT_SIZE`)?.stepSize
+    const precision = stepSize ? getPrecision(+stepSize) : 0
+
+    return floor(quantity, precision)
+  }
+
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
     try {
       const order = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
       Log.debug(order)
       const tradeResult = new TradeResult(symbol)
-      const commission = this.getCommission(order.fills)
-      tradeResult.quantity = +order.origQty
+      const fees = this.#getFees(order.fills)
+      tradeResult.quantity = +order.origQty - fees.Orig
       tradeResult.cost = +order.cummulativeQuoteQty
       tradeResult.fromExchange = true
-      tradeResult.commission = commission
+      tradeResult.commission = fees.BNB
       return tradeResult
     } catch (e: any) {
       throw new Error(`Failed to trade ${symbol}: ${e.message}`)
     }
   }
 
-  private getCommission(fills: any[] = []): number {
-    let commission = 0
+  #getFees(fills: any[] = []): { BNB: number; Orig: number } {
+    const fees = { BNB: 0, Orig: 0 }
     fills.forEach((f) => {
-      if (f.commissionAsset != `BNB`) {
-        Log.alert(`ℹ️ Commission is ${f.commissionAsset} instead of BNB`)
+      if (f.commissionAsset == `BNB`) {
+        fees.BNB += +f.commission
       } else {
-        commission += +f.commission
+        fees.Orig += +f.commission
       }
     })
-    return commission
+    return fees
   }
 
   private addSignature(data: string) {
