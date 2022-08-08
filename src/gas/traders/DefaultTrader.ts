@@ -58,7 +58,7 @@ export class DefaultTrader {
     this.#boughtStateCount = bought.length
 
     if (this.#config.InvestRatio > 0) {
-      const invested = bought.filter((tm) => !tm.hodl).length
+      const invested = bought.filter((tm) => !this.#config.HODL.includes(tm.getCoinName())).length
       this.#canInvest = Math.max(0, this.#config.InvestRatio - invested)
     }
 
@@ -118,7 +118,7 @@ export class DefaultTrader {
 
     isFinite(tm.ttl) && tm.ttl++
 
-    if (tm.hodl) return
+    if (this.#config.HODL.includes(tm.getCoinName())) return
 
     if (tm.stopLimitCrossedDown()) {
       Log.alert(`ℹ️ ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`)
@@ -180,8 +180,8 @@ export class DefaultTrader {
         // Only for back-testing, force selling this asset
         // The back-testing exchange mock will use the previous price
         this.sell(tm)
-      } else if (!tm.hodl) {
-        tm.hodl = true
+      } else if (!this.#config.HODL.includes(tm.getCoinName())) {
+        this.#config.HODL.push(tm.getCoinName())
         Log.alert(
           `The ${tm.getCoinName()} asset is marked HODL. Please, resolve the issue manually.`,
         )
@@ -263,7 +263,7 @@ export class DefaultTrader {
       }
     } else {
       Log.debug(memo)
-      memo.hodl = true
+      this.#config.HODL.push(memo.getCoinName())
       memo.setState(TradeState.BOUGHT)
       Log.alert(
         `An issue happened while selling ${symbol}. The asset is marked HODL. Please, resolve it manually.`,

@@ -67,10 +67,13 @@ export class TradeActions {
   }
 
   setHold(coinName: string, value: boolean): void {
-    this.tradesDao.update(coinName, (trade) => {
-      trade.hodl = !!value
-      return trade
-    })
+    const config = this.configDao.get()
+    if (value) {
+      config.HODL.push(coinName)
+    } else {
+      config.HODL = config.HODL.filter((c) => c != coinName)
+    }
+    this.configDao.set(config)
   }
 
   drop(coinName: string): void {

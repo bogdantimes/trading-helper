@@ -5,10 +5,6 @@ import { PricesHolder } from "./IPriceProvider"
 export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult
   /**
-   * Marks the asset for holding even if price drops.
-   */
-  hodl = false
-  /**
    * TTL is within how many ticks (minutes) the trade must exceed 5% profit. Otherwise, it is automatically sold.
    */
   ttl = 0
@@ -18,7 +14,7 @@ export class TradeMemo extends PricesHolder {
   deleted: boolean
   /**
    * The price at which the asset should be sold automatically if {@link SellAtStopLimit}
-   * is true, and {@link TradeMemo.hodl} is false.
+   * is true, and {@link Config.HODL} does not include the coin name.
    */
   private stopLimit = 0
   /**

@@ -13,6 +13,7 @@ export const DefaultConfig: () => Config = () => ({
   ChannelSize: 0,
   ChannelWindowMins: 0,
   TTL: 60 * 24 * 3, // 3 days
+  HODL: [],
 })
 
 export class ConfigDao {

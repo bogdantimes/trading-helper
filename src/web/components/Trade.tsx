@@ -87,7 +87,7 @@ export default function Trade(props: { data: TradeMemo; config: Config }) {
     if (limitLine) {
       limitLine.applyOptions({
         // hide if HODLing or no stop limit price
-        visible: !!tm.stopLimitPrice && !tm.hodl,
+        visible: !!tm.stopLimitPrice && !config.HODL.includes(coinName),
         // make dashed if config SellAtStopLimit is false
         lineStyle: !config.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
       })
@@ -103,7 +103,7 @@ export default function Trade(props: { data: TradeMemo; config: Config }) {
       profitLine.applyOptions({
         color: profitLineColor,
         // hide if HODLing or no quantity
-        visible: !!tm.tradeResult.quantity && !tm.hodl,
+        visible: !!tm.tradeResult.quantity && !config.HODL.includes(coinName),
         // make dashed if config SellAtProfitLimit is false
         lineStyle: !config.SellAtProfitLimit ? LineStyle.Dashed : LineStyle.Solid,
       })
@@ -118,9 +118,9 @@ export default function Trade(props: { data: TradeMemo; config: Config }) {
   }, [theme, tm, config, priceLine, profitLine, limitLine, orderLine])
 
   const [isHodlSwitching, setIsHodlSwitching] = useState(false)
-  const [isHodl, setIsHodl] = useState(tm.hodl)
+  const [isHodl, setIsHodl] = useState(config.HODL.includes(coinName))
 
-  useEffect(() => setIsHodl(tm.hodl), [tm.hodl])
+  useEffect(() => setIsHodl(config.HODL.includes(coinName)), [config.HODL])
 
   function flipHodl() {
     setIsHodlSwitching(true)

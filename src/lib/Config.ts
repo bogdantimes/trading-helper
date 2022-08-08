@@ -44,4 +44,6 @@ export interface Config {
    * it breaks out of the channel and an anomaly event is sent.
    */
   ChannelWindowMins: number
+
+  HODL: string[]
 }
