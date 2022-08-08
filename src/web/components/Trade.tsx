@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react"
 import Card from "@mui/material/Card"
 import CardActions from "@mui/material/CardActions"
 import CardContent from "@mui/material/CardContent"
-import Button from "@mui/material/Button"
 import Typography from "@mui/material/Typography"
 import {
   ChartOptions,
@@ -15,14 +14,13 @@ import {
   PriceScaleMode,
 } from "lightweight-charts"
 import { Box, Stack, Theme, ToggleButton, useTheme } from "@mui/material"
-import { circularProgress, confirmBuy, confirmSell } from "./Common"
+import { circularProgress } from "./Common"
 import { TradeTitle } from "./TradeTitle"
 import { TradeEditDialog } from "./TradeEditDialog"
 import { Config, f2, TradeMemo, TradeState } from "../../lib"
 
 export default function Trade(props: { data: TradeMemo; config: Config; coinNames: string[] }) {
   const { data: tm, config, coinNames } = props
-  const tradeNotAllowed = !coinNames.includes(tm.getCoinName())
   const coinName = tm.getCoinName()
 
   const chartContainerRef = useRef()
@@ -120,41 +118,6 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
     }
   }, [theme, tm, config, priceLine, profitLine, limitLine, orderLine])
 
-  const [isSelling, setIsSelling] = useState(false)
-
-  function onSell() {
-    if (confirmSell(coinName, config)) {
-      setIsSelling(true)
-      const handle = (resp) => {
-        alert(resp.toString())
-        setIsSelling(false)
-      }
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).sellCoin(coinName)
-    }
-  }
-
-  const [isBuying, setIsBuying] = useState(false)
-
-  function onBuy() {
-    if (confirmBuy(coinName, config)) {
-      setIsBuying(true)
-      const handle = (resp) => {
-        alert(resp.toString())
-        setIsBuying(false)
-      }
-      google.script.run.withSuccessHandler(handle).withFailureHandler(handle).buyCoin(coinName)
-    }
-  }
-
-  const [actionCanceled, setActionCanceled] = useState(false)
-
-  function onCancel() {
-    if (confirm(`Are you sure you want to cancel the action on ${coinName}?`)) {
-      const handle = () => setActionCanceled(true)
-      google.script.run.withSuccessHandler(handle).withFailureHandler(alert).cancelAction(coinName)
-    }
-  }
-
   const [isHodlSwitching, setIsHodlSwitching] = useState(false)
   const [isHodl, setIsHodl] = useState(tm.hodl)
 
@@ -225,21 +188,6 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
           <CardActions>
             <Stack direction={`row`} spacing={1} sx={{ marginLeft: `auto`, marginRight: `auto` }}>
               {tm.stateIs(TradeState.BOUGHT) && (
-                <Button
-                  sx={{ minWidth: 20 }}
-                  size="small"
-                  disabled={isSelling || tradeNotAllowed}
-                  onClick={onSell}
-                >
-                  {isSelling ? `...` : `Sell`}
-                </Button>
-              )}
-              {[TradeState.BOUGHT, TradeState.SOLD].includes(tm.getState()) && (
-                <Button size="small" disabled={isBuying || tradeNotAllowed} onClick={onBuy}>
-                  {isBuying ? `...` : `Buy ${tm.stateIs(TradeState.BOUGHT) ? `More` : `Again`}`}
-                </Button>
-              )}
-              {tm.stateIs(TradeState.BOUGHT) && (
                 <Box sx={{ position: `relative` }}>
                   <ToggleButton
                     size="small"
@@ -253,11 +201,6 @@ export default function Trade(props: { data: TradeMemo; config: Config; coinName
                   </ToggleButton>
                   {isHodlSwitching && circularProgress}
                 </Box>
-              )}
-              {[TradeState.BUY, TradeState.SELL].includes(tm.getState()) && (
-                <Button size="small" disabled={actionCanceled} onClick={onCancel}>
-                  Cancel
-                </Button>
               )}
             </Stack>
           </CardActions>

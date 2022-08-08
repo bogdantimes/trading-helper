@@ -1,5 +1,4 @@
-import { TradeMemo, TradeState, IStore } from "../../lib"
-import { execute } from "../Common"
+import { IStore, TradeMemo, TradeState } from "../../lib"
 import { isNode } from "browser-or-node"
 
 export class TradesDao {
@@ -36,18 +35,13 @@ export class TradesDao {
     notFoundFn?: () => TradeMemo | undefined,
   ): void {
     coinName = coinName.toUpperCase()
-    const lock = this.#acquireTradeLock(coinName)
-    try {
-      const trade = this.get()[coinName]
-      // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
-      // otherwise changedTrade is null.
-      const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
+    const trade = this.get()[coinName]
+    // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
+    // otherwise changedTrade is null.
+    const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
 
-      if (changedTrade) {
-        changedTrade.deleted ? this.#delete(changedTrade) : this.#set(changedTrade)
-      }
-    } finally {
-      lock.releaseLock()
+    if (changedTrade) {
+      changedTrade.deleted ? this.#delete(changedTrade) : this.#set(changedTrade)
     }
   }
 
@@ -84,38 +78,4 @@ export class TradesDao {
     delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
     this.store.set(`Trades`, trades)
   }
-
-  #acquireTradeLock(coinName: string): GoogleAppsScript.Lock.Lock {
-    if (isNode) {
-      return lockMock
-    }
-
-    const lock = LockService.getScriptLock()
-    try {
-      // It has up to 10 seconds to acquire the lock (4 attempts, 2 sec each).
-      execute({
-        attempts: 4,
-        interval: 500, // 500 ms
-        runnable: () => lock.waitLock(2000), // 2 seconds
-      })
-      return lock
-    } catch (e: any) {
-      throw new Error(`Failed to acquire lock for ${coinName}: ${e?.message}`)
-    }
-  }
-}
-
-const lockMock = {
-  hasLock(): boolean {
-    return false
-  },
-  tryLock(): boolean {
-    return true
-  },
-  waitLock(): void {
-    // do nothing
-  },
-  releaseLock() {
-    // do nothing
-  },
 }
