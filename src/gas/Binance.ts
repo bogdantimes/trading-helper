@@ -158,24 +158,29 @@ export class Binance implements IExchange {
       const order = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
       Log.debug(order)
       const tradeResult = new TradeResult(symbol)
-      const fees = this.#getFees(order.fills)
-      tradeResult.quantity = +order.origQty - fees.Orig
-      tradeResult.cost = +order.cummulativeQuoteQty
-      tradeResult.fromExchange = true
+      const fees = this.#getFees(symbol, order.fills)
+      tradeResult.quantity = +order.origQty - fees.origQty
+      tradeResult.cost = +order.cummulativeQuoteQty - fees.quoteQty
       tradeResult.commission = fees.BNB
+      tradeResult.fromExchange = true
       return tradeResult
     } catch (e: any) {
       throw new Error(`Failed to trade ${symbol}: ${e.message}`)
     }
   }
 
-  #getFees(fills: any[] = []): { BNB: number; Orig: number } {
-    const fees = { BNB: 0, Orig: 0 }
+  #getFees(
+    symbol: ExchangeSymbol,
+    fills: any[] = [],
+  ): { BNB: number; origQty: number; quoteQty: number } {
+    const fees = { BNB: 0, origQty: 0, quoteQty: 0 }
     fills.forEach((f) => {
       if (f.commissionAsset == `BNB`) {
         fees.BNB += +f.commission
-      } else {
-        fees.Orig += +f.commission
+      } else if (f.commissionAsset == symbol.quantityAsset) {
+        fees.origQty += +f.commission
+      } else if (f.commissionAsset == symbol.priceAsset) {
+        fees.quoteQty += +f.commission
       }
     })
     return fees
