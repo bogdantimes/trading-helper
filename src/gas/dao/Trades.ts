@@ -42,6 +42,16 @@ export class TradesDao {
     }
   }
 
+  iterate(mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
+    const trades = this.get()
+    Object.values(trades).forEach((tm) => {
+      const changedTrade = mutateFn(tm)
+      if (changedTrade) {
+        changedTrade.deleted ? this.#delete(changedTrade) : this.#set(changedTrade)
+      }
+    })
+  }
+
   get(): { [p: string]: TradeMemo } {
     if (isNode && this.memCache) {
       // performance optimization for back-testing
