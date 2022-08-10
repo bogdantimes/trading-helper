@@ -32,6 +32,25 @@ export default function Trade(props: { data: TradeMemo; config: Config }) {
   const [orderLine, setOrderLine] = useState<ISeriesApi<`Line`>>(null)
   const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<`Line`>>(null)
 
+  const [isHodlSwitching, setIsHodlSwitching] = useState(false)
+  const [isHodl, setIsHodl] = useState(config.HODL.includes(coinName))
+
+  useEffect(() => setIsHodl(config.HODL.includes(coinName)), [config.HODL])
+
+  function flipHodl() {
+    setIsHodlSwitching(true)
+    google.script.run
+      .withSuccessHandler(() => {
+        setIsHodl(!isHodl)
+        setIsHodlSwitching(false)
+      })
+      .withFailureHandler((resp) => {
+        alert(resp.toString())
+        setIsHodlSwitching(false)
+      })
+      .setHold(coinName, !isHodl)
+  }
+
   const map = (prices: number[], mapFn: (v: number) => number) => {
     return prices.map((v, i) => ({ time: `${2000 + i}-01-01`, value: mapFn(v) }))
   }
@@ -103,7 +122,7 @@ export default function Trade(props: { data: TradeMemo; config: Config }) {
       profitLine.applyOptions({
         color: profitLineColor,
         // hide if HODLing or no quantity
-        visible: !!tm.tradeResult.quantity && !config.HODL.includes(coinName),
+        visible: !!tm.tradeResult.quantity && !isHodl,
         // make dashed if config SellAtProfitLimit is false
         lineStyle: !config.SellAtProfitLimit ? LineStyle.Dashed : LineStyle.Solid,
       })
@@ -115,26 +134,17 @@ export default function Trade(props: { data: TradeMemo; config: Config }) {
       soldPriceLine.applyOptions({ visible: tm.stateIs(TradeState.SOLD) })
       soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice))
     }
-  }, [theme, tm, config, priceLine, profitLine, limitLine, orderLine])
-
-  const [isHodlSwitching, setIsHodlSwitching] = useState(false)
-  const [isHodl, setIsHodl] = useState(config.HODL.includes(coinName))
-
-  useEffect(() => setIsHodl(config.HODL.includes(coinName)), [config.HODL])
-
-  function flipHodl() {
-    setIsHodlSwitching(true)
-    google.script.run
-      .withSuccessHandler(() => {
-        setIsHodl(!isHodl)
-        setIsHodlSwitching(false)
-      })
-      .withFailureHandler((resp) => {
-        alert(resp.toString())
-        setIsHodlSwitching(false)
-      })
-      .setHold(coinName, !isHodl)
-  }
+  }, [
+    theme,
+    tm,
+    config.SellAtProfitLimit,
+    config.ProfitLimit,
+    isHodl,
+    priceLine,
+    profitLine,
+    limitLine,
+    orderLine,
+  ])
 
   const [removed, setRemoved] = useState(false)
 
