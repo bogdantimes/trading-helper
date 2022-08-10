@@ -28,8 +28,8 @@ function a11yProps(index: number) {
 }
 
 export default function App() {
-  const [value, setValue] = React.useState(0)
-  const handleChange = (e: React.SyntheticEvent, v: number) => setValue(v)
+  const [tab, setTab] = React.useState(0)
+  const changeTab = (e: React.SyntheticEvent, v: number) => setTab(v)
 
   const mode = useMediaQuery(`(prefers-color-scheme: dark)`)
   const theme = React.useMemo(
@@ -75,14 +75,16 @@ export default function App() {
   }
 
   function reFetchData() {
+    if (tab === TabId.SettingsTab) {
+      // do not re-fetch config when on Settings tab
+      return
+    }
     google.script.run
       .withSuccessHandler(handleConfig)
       .withFailureHandler((resp) => setFetchDataError(resp.toString()))
       .getConfig()
   }
 
-  let i = 0,
-    y = 0
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -104,27 +106,34 @@ export default function App() {
       {!fetchingData && !initialSetup && (
         <Box sx={{ width: `100%` }}>
           <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
-            <Tabs value={value} onChange={handleChange} centered>
-              <Tab label="Assets" {...a11yProps(i++)} />
-              <Tab label="Channels" {...a11yProps(i++)} />
-              <Tab sx={{ minWidth: `50px` }} label="Info" {...a11yProps(i++)} />
-              <Tab label="Settings" {...a11yProps(i++)} />
+            <Tabs value={tab} onChange={changeTab} centered>
+              <Tab label="Assets" {...a11yProps(TabId.AssetsTab)} />
+              <Tab label="Channels" {...a11yProps(TabId.ChannelsTab)} />
+              <Tab sx={{ minWidth: `50px` }} label="Info" {...a11yProps(TabId.InfoTab)} />
+              <Tab label="Settings" {...a11yProps(TabId.SettingsTab)} />
             </Tabs>
           </Box>
-          <TabPanel value={value} index={y++}>
+          <TabPanel value={tab} index={TabId.AssetsTab}>
             <Assets config={config} />
           </TabPanel>
-          <TabPanel value={value} index={y++}>
+          <TabPanel value={tab} index={TabId.ChannelsTab}>
             <Channels config={config} />
           </TabPanel>
-          <TabPanel value={value} index={y++}>
+          <TabPanel value={tab} index={TabId.InfoTab}>
             <Info />
           </TabPanel>
-          <TabPanel value={value} index={y++}>
+          <TabPanel value={tab} index={TabId.SettingsTab}>
             <Settings config={config} setConfig={setConfig} />
           </TabPanel>
         </Box>
       )}
     </ThemeProvider>
   )
+}
+
+enum TabId {
+  AssetsTab,
+  ChannelsTab,
+  InfoTab,
+  SettingsTab,
 }
