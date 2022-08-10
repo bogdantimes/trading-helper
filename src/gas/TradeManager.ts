@@ -81,7 +81,7 @@ export class TradeManager {
       })
 
     // Randomize the order of trades to avoid biases
-    const trades = this.tradesDao.getList() // .sort(() => Math.random() - 0.5)
+    const trades = this.tradesDao.getList().sort(() => Math.random() - 0.5)
     const bought = trades.filter((t) => t.stateIs(TradeState.BOUGHT))
     this.#boughtStateCount = bought.length
 
