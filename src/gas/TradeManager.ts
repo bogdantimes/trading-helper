@@ -31,7 +31,7 @@ export class TradeManager {
    * Used when {@link ProfitBasedStopLimit} is enabled.
    */
   #boughtStateCount = 0
-  #canInvest = -1
+  #canInvest = 0
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore)
@@ -90,11 +90,17 @@ export class TradeManager {
       this.#canInvest = Math.max(0, this.#config.InvestRatio - invested)
     }
 
-    trades.forEach((trade) => {
+    const tms = [
+      // First process existing trades (some might get sold and free up space to buy new ones)
+      ...trades.filter((tm) => !tm.stateIs(TradeState.BUY)),
+      // Now process those which were requested to buy
+      ...trades.filter((tm) => tm.stateIs(TradeState.BUY)),
+    ]
+    tms.forEach((tm) => {
       try {
-        this.tradesDao.update(trade.getCoinName(), (tm) => this.#checkTrade(tm))
+        this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t))
       } catch (e) {
-        Log.alert(`Failed to trade ${trade.getCoinName()}: ${e.message}`)
+        Log.alert(`Failed to trade ${tm.getCoinName()}: ${e.message}`)
         Log.error(e)
       }
     })
@@ -157,7 +163,7 @@ export class TradeManager {
   }
 
   #calculateQuantity(tm: TradeMemo): number {
-    if (this.#canInvest < 0) {
+    if (this.#config.InvestRatio <= 0) {
       return this.#config.BuyQuantity
     }
     if (this.#canInvest <= 0 || tm.tradeResult.quantity > 0) {
@@ -262,7 +268,7 @@ export class TradeManager {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
-        this.#canInvest--
+        this.#canInvest = Math.max(0, this.#canInvest - 1)
         // flatten out prices to make them not cross any limits right after the trade
         tm.prices = [tradeResult.price]
         // join existing trade result quantity, commission, paid price, etc. with the new one
@@ -303,7 +309,7 @@ export class TradeManager {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to SOLD in the end
       try {
-        this.#canInvest++
+        this.#canInvest = Math.min(this.#config.InvestRatio, this.#canInvest + 1)
         const fee = this.processSellFee(memo, tradeResult)
         const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee)
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid))
