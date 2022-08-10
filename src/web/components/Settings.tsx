@@ -83,6 +83,24 @@ export function Settings({
       .setConfig(config as any)
   }
 
+  const [isSellingAll, setIsSellingAll] = useState(false)
+
+  function onSellAll() {
+    if (confirm(`Are you sure you want to sell all your assets? The operation cannot be undone.`)) {
+      setIsSellingAll(true)
+      google.script.run
+        .withSuccessHandler(() => {
+          setIsSellingAll(false)
+          alert(`All assets are being sold. Please wait for the operation to complete.`)
+        })
+        .withFailureHandler((r) => {
+          setIsSellingAll(false)
+          setError(r)
+        })
+        .sellAll()
+    }
+  }
+
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} divider={<Divider />}>
@@ -156,6 +174,12 @@ export function Settings({
           sx={{ maxWidth: `389px` }}
           helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. Your data won't be lost.`}
         />
+        <Box alignSelf={`center`} sx={{ position: `relative` }}>
+          <Button variant="contained" color="warning" onClick={onSellAll} disabled={isSellingAll}>
+            !! Sell All !!
+          </Button>
+          {isSellingAll && circularProgress}
+        </Box>
         <Box alignSelf={`center`} sx={{ position: `relative` }}>
           <Button
             variant="contained"

@@ -137,6 +137,13 @@ function sellCoin(coinName: string): string {
   })
 }
 
+function sellAll(): string {
+  return catchError(() => {
+    TradeManager.default().sellAll()
+    return `Selling all`
+  })
+}
+
 function setHold(coinName: string, value: boolean): string {
   return catchError(() => {
     TradeActions.default().setHold(coinName, value)
@@ -244,6 +251,7 @@ global.initialSetup = initialSetup
 global.buyCoin = buyCoin
 global.cancelAction = cancelAction
 global.sellCoin = sellCoin
+global.sellAll = sellAll
 global.setHold = setHold
 global.dropCoin = dropCoin
 global.editTrade = editTrade

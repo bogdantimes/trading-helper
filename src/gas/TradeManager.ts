@@ -125,11 +125,21 @@ export class TradeManager {
   }
 
   sell(coinName: string): void {
-    this.tradesDao.update(coinName, (trade) => {
-      if (trade.stateIs(TradeState.BOUGHT)) {
-        trade.setState(TradeState.SELL)
+    this.tradesDao.update(coinName, (tm) => {
+      if (tm.tradeResult.quantity > 0) {
+        tm.setState(TradeState.SELL)
       }
-      return trade
+      return tm
+    })
+  }
+
+  sellAll(): void {
+    this.tradesDao.getList().forEach((tm) => {
+      if (tm.tradeResult.quantity > 0) {
+        tm.setState(TradeState.SELL)
+      } else {
+        tm.resetState()
+      }
     })
   }
 
@@ -289,15 +299,6 @@ export class TradeManager {
       Log.debug(tm)
       tm.resetState()
     }
-  }
-
-  sellNow(coinName: CoinName): void {
-    this.tradesDao.update(coinName, (trade) => {
-      if (trade.stateIs(TradeState.BOUGHT)) {
-        this.#sell(trade)
-      }
-      return trade
-    })
   }
 
   #sell(memo: TradeMemo): void {
