@@ -6,9 +6,9 @@ import {
   PriceHoldersMap,
   PricesHolder,
   StableUSDCoin,
-} from "../lib"
-import { IExchange } from "./Exchange"
-import { SECONDS_IN_MIN, StableCoinMatcher, TICK_INTERVAL_MIN } from "./Common"
+} from "../../lib/index"
+import { IExchange } from "../Exchange"
+import { SECONDS_IN_MIN, StableCoinMatcher, TICK_INTERVAL_MIN } from "../Common"
 
 type StableCoinKeys = keyof typeof StableUSDCoin
 type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap }
@@ -21,7 +21,7 @@ export class PriceProvider implements IPriceProvider {
 
   #priceMaps: PriceMaps
 
-  static getInstance(exchange: IExchange, cache: ICacheProxy): PriceProvider {
+  static default(exchange: IExchange, cache: ICacheProxy): PriceProvider {
     PriceProvider.#instance = PriceProvider.#instance || new PriceProvider(exchange, cache)
     return PriceProvider.#instance
   }

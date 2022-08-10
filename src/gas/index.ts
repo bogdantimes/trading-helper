@@ -16,10 +16,11 @@ import {
 } from "../lib"
 import { Process } from "./Process"
 import { CacheProxy } from "./CacheProxy"
-import { PriceProvider } from "./PriceProvider"
+import { PriceProvider } from "./priceprovider/PriceProvider"
 import { TradesDao } from "./dao/Trades"
 import { ConfigDao } from "./dao/Config"
-import { PriceChannelDataKey } from "./traders/pro/api"
+import { ChannelsDao } from "./dao/Channels"
+import { TradeManager } from "./TradeManager"
 
 function doGet() {
   return catchError(() => {
@@ -117,7 +118,7 @@ function initialSetup(params: InitialSetupParams): string {
 
 function buyCoin(coinName: string): string {
   return catchError(() => {
-    TradeActions.default().buy(coinName)
+    TradeManager.default().buy(coinName)
     return `Buying ${coinName}`
   })
 }
@@ -131,7 +132,7 @@ function cancelAction(coinName: string): string {
 
 function sellCoin(coinName: string): string {
   return catchError(() => {
-    TradeActions.default().sell(coinName)
+    TradeManager.default().sell(coinName)
     return `Selling ${coinName}`
   })
 }
@@ -198,7 +199,7 @@ function getCoinNames(): CoinName[] {
   return catchError(() => {
     const config = new ConfigDao(DefaultStore).get()
     const exchange = new Exchange(config.KEY, config.SECRET)
-    const priceProvider = PriceProvider.getInstance(exchange, CacheProxy)
+    const priceProvider = PriceProvider.default(exchange, CacheProxy)
     return priceProvider.getCoinNames(config.StableCoin)
   })
 }
@@ -223,13 +224,13 @@ function setFirebaseURL(url: string): string {
 
 function getPriceChannelsData(): PriceChannelsDataResponse {
   return catchError(() => {
-    return DefaultStore.get(PriceChannelDataKey) || {}
+    return new ChannelsDao(DefaultStore).getAll()
   })
 }
 
 function setPriceChannelsData(data: PriceChannelsDataResponse): string {
   return catchError(() => {
-    DefaultStore.set(PriceChannelDataKey, data)
+    new ChannelsDao(DefaultStore).setAll(data)
     return `OK`
   })
 }

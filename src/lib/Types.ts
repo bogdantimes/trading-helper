@@ -98,12 +98,9 @@ export interface ICacheProxy {
   remove: (key: string) => void
 }
 
-export enum PriceAnomaly {
+export enum PriceAction {
   NONE,
-  PUMP,
-  DUMP,
-  TRACKING,
-  CHANNEL_UP,
+  DOUBLE_TOP,
 }
 
 export interface IStore {
@@ -122,7 +119,6 @@ export interface IStore {
   connect(dbURL: string): void
 }
 
-
 export enum Key {
   DURATION,
   MIN,
@@ -130,7 +126,7 @@ export enum Key {
   S0,
   S1,
   S2,
-  SIZE
+  SIZE,
 }
 
 export enum ChannelState {

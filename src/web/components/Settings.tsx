@@ -10,10 +10,8 @@ import {
   FormControlLabel,
   FormLabel,
   InputAdornment,
-  MenuItem,
   Radio,
   RadioGroup,
-  Select,
   Stack,
   Switch,
   TextField,
@@ -31,7 +29,6 @@ export function Settings({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  const [stopLimit, setLossLimit] = useState(f2(config.StopLimit * 100).toString())
   const [profitLimit, setProfitLimit] = useState(f2(config.ProfitLimit * 100).toString())
   const [channelSize, setChannelSize] = useState(f2(config.ChannelSize * 100).toString())
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString())
@@ -66,7 +63,6 @@ export function Settings({
     }
     setError(null)
 
-    isFinite(+stopLimit) && (config.StopLimit = +stopLimit / 100)
     isFinite(+profitLimit) && (config.ProfitLimit = +profitLimit / 100)
     isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100)
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity))
@@ -133,62 +129,24 @@ export function Settings({
               label="Auto-sell"
             />
           </Stack>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              disabled={config.ProfitBasedStopLimit}
-              value={stopLimit}
-              label={`Stop Limit`}
-              onChange={(e) => setLossLimit(e.target.value)}
-              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.SellAtStopLimit}
-                  onChange={(e) => setConfig({ ...config, SellAtStopLimit: e.target.checked })}
-                />
-              }
-              label="Auto-sell"
-            />
-          </Stack>
         </Stack>
         <Stack spacing={2}>
-          <TextField
-            value={channelSize}
-            label={`Price Channel Size`}
-            onChange={(e) => setChannelSize(e.target.value)}
-            InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-          />
-          <TextField
-            value={chDuration}
-            label={`Channel Window (minutes)`}
-            onChange={(e) => setChDuration(e.target.value)}
-            InputProps={{ startAdornment: <InputAdornment position="start">min.</InputAdornment> }}
-          />
-        </Stack>
-        <Stack spacing={1}>
-          <TextField
-            value={config.PriceAnomalyAlert}
-            label={`Price Anomaly Alert`}
-            onChange={(e) => setConfig({ ...config, PriceAnomalyAlert: +e.target.value })}
-            InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-          />
-          <Select
-            value={[!!config.BuyDumps, !!config.SellPumps].toString()}
-            onChange={(e) => {
-              const [buyDumps, sellPumps] = e.target.value.split(`,`)
-              setConfig({
-                ...config,
-                BuyDumps: buyDumps === `true`,
-                SellPumps: sellPumps === `true`,
-              })
-            }}
-          >
-            <MenuItem value={[false, false].toString()}>No Action</MenuItem>
-            <MenuItem value={[true, false].toString()}>Buy Dumps</MenuItem>
-            <MenuItem value={[false, true].toString()}>Sell Pumps</MenuItem>
-            <MenuItem value={[true, true].toString()}>Buy Dumps & Sell Pumps</MenuItem>
-          </Select>
+          <Stack direction="row" spacing={2}>
+            <TextField
+              value={channelSize}
+              label={`Price Channel Size`}
+              onChange={(e) => setChannelSize(e.target.value)}
+              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
+            />
+            <TextField
+              value={chDuration}
+              label={`Channel Window (minutes)`}
+              onChange={(e) => setChDuration(e.target.value)}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">min.</InputAdornment>,
+              }}
+            />
+          </Stack>
         </Stack>
         {switchers(config, setConfig)}
         <TextField
@@ -230,6 +188,15 @@ function switchers(
           />
         }
         label="P/L based Stop Limit"
+      />
+      <FormControlLabel
+        control={
+          <Switch
+            checked={config.SellAtStopLimit}
+            onChange={(e) => setConfig({ ...config, SellAtStopLimit: e.target.checked })}
+          />
+        }
+        label="Sell At Stop limit"
       />
     </Stack>
   )

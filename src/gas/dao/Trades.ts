@@ -2,12 +2,9 @@ import { IStore, TradeMemo, TradeState } from "../../lib"
 import { isNode } from "browser-or-node"
 
 export class TradesDao {
-  private readonly store: IStore
   private memCache: { [p: string]: TradeMemo }
 
-  constructor(store: IStore) {
-    this.store = store
-  }
+  constructor(private readonly store: IStore) {}
 
   has(coinName: string): boolean {
     return !!this.get()[coinName]

@@ -1,16 +1,23 @@
-import { IStore } from "../../../lib/index"
-import { TradeActions } from "../../TradeActions"
-
-export const PriceChannelDataKey = `ChannelData`
+import { CoinName, Config } from "../../../lib/index"
+import { ChannelsDao } from "../../dao/Channels"
+import { PriceProvider } from "../../priceprovider/PriceProvider"
 
 export interface TraderPlugin {
-  trade(context: TradingContext): void
+  trade(context: TradingContext): TradeRequest[]
 }
 
 export interface TradingContext {
-  store: IStore
-  tradeActions: TradeActions
+  config: Config
+  priceProvider: PriceProvider
+  channelsDao: ChannelsDao
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface TradingResult {}
+export interface TradeRequest {
+  coin: CoinName
+  action: TradeAction
+}
+
+export enum TradeAction {
+  Buy,
+  Sell,
+}
