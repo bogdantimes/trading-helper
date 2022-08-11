@@ -140,8 +140,8 @@ export class TradeManager {
   sellAll(keepHodls = true, sellNow = false): void {
     const hodls = keepHodls ? new ConfigDao(DefaultStore).get().HODL : [];
     this.tradesDao.iterate((tm) => {
-      if (tm.getCoinName() in hodls) {
-        return null
+      if (hodls.includes(tm.getCoinName())) {
+        return null;
       }
       tm.resetState();
       if (tm.tradeResult.quantity > 0) {
