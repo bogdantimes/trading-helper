@@ -26,5 +26,5 @@
       "version": "detect"
     }
   },
-  "ignorePatterns": ["*.js"]
+  "ignorePatterns": ["*.js", "*.html"]
 }
