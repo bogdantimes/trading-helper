@@ -11,7 +11,7 @@ export class Binance implements IExchange {
   private readonly key: string
   private readonly secret: string
   private readonly attempts: number = 5
-  private readonly interval: number = 100
+  private readonly interval: number = 10
   private readonly numberOfAPIServers = 5 // 5 distinct addresses were verified.
   private readonly defaultReqOpts: URLFetchRequestOptions
   private readonly tradeReqOpts: URLFetchRequestOptions
@@ -19,6 +19,7 @@ export class Binance implements IExchange {
   readonly #balances: { [coinName: string]: number } = {}
 
   #exchangeInfo: ExchangeInfo
+  #curServerId: number
 
   constructor(key: string, secret: string) {
     this.key = key ?? ``
@@ -26,6 +27,7 @@ export class Binance implements IExchange {
     this.defaultReqOpts = { headers: { "X-MBX-APIKEY": this.key }, muteHttpExceptions: true }
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts)
     this.serverIds = this.shuffleServerIds()
+    this.#curServerId = this.serverIds[0]
   }
 
   getPrices(): PriceMap {
@@ -204,8 +206,7 @@ export class Binance implements IExchange {
       interval: this.interval,
       attempts: this.attempts,
       runnable: () => {
-        const index = this.getNextServerIndex()
-        const server = `https://api${index}.binance.com/api/v3`
+        const server = `https://api${this.#curServerId}.binance.com/api/v3`
         const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options)
 
         if (resp.getResponseCode() === 200) {
@@ -215,6 +216,8 @@ export class Binance implements IExchange {
             throw new Error(`Failed to parse response from Binance: ${resp.getContentText()}`)
           }
         }
+
+        this.#rotateServer()
 
         if (resp.getResponseCode() === 418 || resp.getResponseCode() === 429) {
           Log.debug(`Limit reached on server ` + server)
@@ -239,10 +242,8 @@ export class Binance implements IExchange {
       .sort(() => Math.random() - 0.5)
   }
 
-  private getNextServerIndex(): number {
-    // take first server from the list and move it to the end
-    const index = this.serverIds.shift() as number
-    this.serverIds.push(index)
-    return index
+  #rotateServer() {
+    this.#curServerId = this.serverIds.shift()
+    this.serverIds.push(this.#curServerId)
   }
 }
