@@ -243,7 +243,7 @@ export class Binance implements IExchange {
           try {
             return JSON.parse(resp.getContentText());
           } catch (e: any) {
-            throw new Error(`Failed to parse response from Binance: ${resp.getContentText()}`)
+            Log.debug(`Failed to parse response from Binance: ${e.message}`);
           }
         }
 
