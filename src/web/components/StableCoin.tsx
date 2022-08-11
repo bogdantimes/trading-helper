@@ -1,16 +1,19 @@
-import * as React from "react"
-import Card from "@mui/material/Card"
-import CardContent from "@mui/material/CardContent"
-import Typography from "@mui/material/Typography"
-import { f2 } from "../../lib"
-import { cardWidth } from "./Common"
+import * as React from "react";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import { f2 } from "../../lib";
+import { cardWidth } from "./Common";
 
-type StableCoinProps = {
-  name: string
-  balance: number
+interface StableCoinProps {
+  name: string;
+  balance: number;
 }
 
-export default function StableCoin({ name, balance }: StableCoinProps) {
+export default function StableCoin({
+  name,
+  balance,
+}: StableCoinProps): JSX.Element {
   return (
     <>
       <Card sx={{ width: cardWidth }}>
@@ -22,5 +25,5 @@ export default function StableCoin({ name, balance }: StableCoinProps) {
         </CardContent>
       </Card>
     </>
-  )
+  );
 }

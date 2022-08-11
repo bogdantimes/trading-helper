@@ -1,8 +1,8 @@
-import * as React from "react"
-import { useEffect } from "react"
-import Tabs from "@mui/material/Tabs"
-import Tab from "@mui/material/Tab"
-import Box from "@mui/material/Box"
+import * as React from "react";
+import { useEffect } from "react";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Box from "@mui/material/Box";
 import {
   Alert,
   createTheme,
@@ -11,78 +11,80 @@ import {
   ThemeProvider,
   Typography,
   useMediaQuery,
-} from "@mui/material"
-import { Settings } from "./components/Settings"
-import { Info } from "./components/Info"
-import { Assets } from "./components/Assets"
-import { TabPanel } from "./components/TabPanel"
-import { InitialSetup } from "./components/InitialSetup"
-import { Config } from "../lib"
-import { Channels } from "./components/Channels"
+} from "@mui/material";
+import { Settings } from "./components/Settings";
+import { Info } from "./components/Info";
+import { Assets } from "./components/Assets";
+import { TabPanel } from "./components/TabPanel";
+import { InitialSetup } from "./components/InitialSetup";
+import { Config } from "../lib";
+import { Channels } from "./components/Channels";
 
-function a11yProps(index: number) {
+function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
   return {
     id: `simple-tab-${index}`,
     "aria-controls": `simple-tabpanel-${index}`,
-  }
+  };
 }
 
-export default function App() {
-  const [value, setValue] = React.useState(0)
-  const handleChange = (e: React.SyntheticEvent, v: number) => setValue(v)
+export default function App(): JSX.Element {
+  const [tab, setTab] = React.useState(0);
+  const changeTab = (e: React.SyntheticEvent, v: number): void => setTab(v);
 
-  const mode = useMediaQuery(`(prefers-color-scheme: dark)`)
+  const mode = useMediaQuery(`(prefers-color-scheme: dark)`);
   const theme = React.useMemo(
     () => createTheme({ palette: { mode: mode ? `dark` : `light` } }),
-    [mode],
-  )
+    [mode]
+  );
 
-  const [config, setConfig] = React.useState(null)
+  const [config, setConfig] = React.useState(null);
 
-  const [initialSetup, setInitialSetup] = React.useState(true)
-  const [fetchingData, setFetchingData] = React.useState(true)
-  const [fetchDataError, setFetchDataError] = React.useState(null)
+  const [initialSetup, setInitialSetup] = React.useState(true);
+  const [fetchingData, setFetchingData] = React.useState(true);
+  const [fetchDataError, setFetchDataError] = React.useState(null);
 
-  useEffect(initialFetch, [])
+  useEffect(initialFetch, []);
   useEffect(() => {
     // re-fetch config from time to time just to synchronize it in case changes
     // were made in different browser tabs, etc.
-    const interval = setInterval(() => !initialSetup && reFetchData(), 60000) // 60 seconds
-    return () => clearInterval(interval)
-  }, [initialSetup])
+    const interval = setInterval(() => !initialSetup && reFetchData(), 60000); // 60 seconds
+    return () => clearInterval(interval);
+  }, [initialSetup]);
 
-  function initialFetch() {
-    setFetchingData(true)
+  function initialFetch(): void {
+    setFetchingData(true);
     google.script.run
       .withSuccessHandler(handleConfig)
       .withFailureHandler((resp) => {
-        setFetchingData(false)
-        setInitialSetup(true)
-        setFetchDataError(resp.toString())
+        setFetchingData(false);
+        setInitialSetup(true);
+        setFetchDataError(resp.message);
       })
-      .getConfig()
+      .getConfig();
   }
 
-  function handleConfig(cfg: Config) {
-    setFetchingData(false)
-    setFetchDataError(null)
+  function handleConfig(cfg: Config): void {
+    setFetchingData(false);
+    setFetchDataError(null);
     if (!cfg || !cfg.KEY || !cfg.SECRET) {
-      setInitialSetup(true)
+      setInitialSetup(true);
     } else {
-      setInitialSetup(false)
+      setInitialSetup(false);
     }
-    setConfig(cfg)
+    setConfig(cfg);
   }
 
-  function reFetchData() {
+  function reFetchData(): void {
+    if (tab === TabId.SettingsTab) {
+      // do not re-fetch config when on Settings tab
+      return;
+    }
     google.script.run
       .withSuccessHandler(handleConfig)
-      .withFailureHandler((resp) => setFetchDataError(resp.toString()))
-      .getConfig()
+      .withFailureHandler((resp) => setFetchDataError(resp.message))
+      .getConfig();
   }
 
-  let i = 0,
-    y = 0
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -95,36 +97,49 @@ export default function App() {
         <Alert severity="error">
           <Typography variant="caption">{fetchDataError}</Typography>
           <Typography variant="caption">
-            {` `}Please check your network connection and that Google Apps Script application is
-            deployed and try again.
+            {` `}Please check your network connection and that Google Apps
+            Script application is deployed and try again.
           </Typography>
         </Alert>
       )}
-      {!fetchingData && initialSetup && <InitialSetup config={config} onConnect={initialFetch} />}
+      {!fetchingData && initialSetup && (
+        <InitialSetup config={config} onConnect={initialFetch} />
+      )}
       {!fetchingData && !initialSetup && (
         <Box sx={{ width: `100%` }}>
           <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
-            <Tabs value={value} onChange={handleChange} centered>
-              <Tab label="Assets" {...a11yProps(i++)} />
-              <Tab label="Channels" {...a11yProps(i++)} />
-              <Tab sx={{ minWidth: `50px` }} label="Info" {...a11yProps(i++)} />
-              <Tab label="Settings" {...a11yProps(i++)} />
+            <Tabs value={tab} onChange={changeTab} centered>
+              <Tab label="Assets" {...a11yProps(TabId.AssetsTab)} />
+              <Tab label="Channels" {...a11yProps(TabId.ChannelsTab)} />
+              <Tab
+                sx={{ minWidth: `50px` }}
+                label="Info"
+                {...a11yProps(TabId.InfoTab)}
+              />
+              <Tab label="Settings" {...a11yProps(TabId.SettingsTab)} />
             </Tabs>
           </Box>
-          <TabPanel value={value} index={y++}>
+          <TabPanel value={tab} index={TabId.AssetsTab}>
             <Assets config={config} />
           </TabPanel>
-          <TabPanel value={value} index={y++}>
+          <TabPanel value={tab} index={TabId.ChannelsTab}>
             <Channels config={config} />
           </TabPanel>
-          <TabPanel value={value} index={y++}>
+          <TabPanel value={tab} index={TabId.InfoTab}>
             <Info />
           </TabPanel>
-          <TabPanel value={value} index={y++}>
+          <TabPanel value={tab} index={TabId.SettingsTab}>
             <Settings config={config} setConfig={setConfig} />
           </TabPanel>
         </Box>
       )}
     </ThemeProvider>
-  )
+  );
+}
+
+enum TabId {
+  AssetsTab,
+  ChannelsTab,
+  InfoTab,
+  SettingsTab,
 }
