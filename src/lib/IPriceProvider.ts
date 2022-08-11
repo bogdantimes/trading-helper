@@ -61,7 +61,7 @@ export class PricesHolder {
     return getPriceMove(PricesHolder.PRICES_MAX_CAP, this.p);
   }
 
-  getMinMax(): { min: number, max: number } {
+  getMinMax(): { min: number; max: number } {
     let min = Number.MAX_VALUE;
     let max = 0;
     this.p.forEach((p) => {

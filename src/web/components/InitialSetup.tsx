@@ -1,49 +1,62 @@
-import * as React from "react"
-import { useState } from "react"
-import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material"
-import { circularProgress } from "./Common"
-import { Config, InitialSetupParams } from "../../lib"
+import * as React from "react";
+import { useState } from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { circularProgress } from "./Common";
+import { Config, InitialSetupParams } from "../../lib";
 
 enum Step {
   DbConnect,
   BinanceConnect,
 }
 
-export function InitialSetup({ config, onConnect }: { config: Config; onConnect: () => void }) {
-  const [step, setStep] = useState(Step.DbConnect)
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [error, setError] = useState(``)
+export function InitialSetup({
+  config,
+  onConnect,
+}: {
+  config: Config;
+  onConnect: () => void;
+}): JSX.Element {
+  const [step, setStep] = useState(Step.DbConnect);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState(``);
 
   const [params, setParams] = useState<InitialSetupParams>({
     dbURL: ``,
     binanceAPIKey: config?.KEY,
     binanceSecretKey: config?.SECRET,
-  })
+  });
 
-  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setParams({ ...params, [e.target.name]: e.target.value })
+  function onChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setParams({ ...params, [e.target.name]: e.target.value });
   }
 
-  function onClickConnect() {
-    setIsConnecting(true)
+  function onClickConnect(): void {
+    setIsConnecting(true);
     google.script.run
       .withSuccessHandler(() => {
-        setIsConnecting(false)
-        onConnect()
+        setIsConnecting(false);
+        onConnect();
       })
       .withFailureHandler((resp) => {
-        setIsConnecting(false)
-        setError(resp.toString())
+        setIsConnecting(false);
+        setError(resp.message);
       })
-      .initialSetup(params as any)
+      .initialSetup(params as any);
   }
 
-  const welcomeTitle = `Welcome to the Trading Helper!`
+  const welcomeTitle = `Welcome to the Trading Helper!`;
   const welcomeTxt = `You can connect Firebase Realtime Database as a permanent storage now or do this later in the settings. 
- Firebase allows to upgrade the tool and maintain your data when a new version of Trading Helper is available.`
+ Firebase allows to upgrade the tool and maintain your data when a new version of Trading Helper is available.`;
 
-  const step2Title = `Almost done!`
-  const step2Txt = `Setup API key and secret to connect Binance.`
+  const step2Title = `Almost done!`;
+  const step2Txt = `Setup API key and secret to connect Binance.`;
 
   return (
     <Stack
@@ -98,8 +111,8 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
           <Button
             color="primary"
             onClick={() => {
-              setParams({ ...params, dbURL: `` })
-              setStep(Step.BinanceConnect)
+              setParams({ ...params, dbURL: `` });
+              setStep(Step.BinanceConnect);
             }}
           >
             Skip
@@ -119,5 +132,5 @@ export function InitialSetup({ config, onConnect }: { config: Config; onConnect:
       </Stack>
       {error && <Alert severity="error">{error.toString()}</Alert>}
     </Stack>
-  )
+  );
 }

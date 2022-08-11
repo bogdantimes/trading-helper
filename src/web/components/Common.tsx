@@ -1,12 +1,12 @@
-import { Alert, CircularProgress, Link, Typography } from "@mui/material"
-import * as React from "react"
-import { PriceMove } from "../../lib"
+import { Alert, CircularProgress, Link, Typography } from "@mui/material";
+import * as React from "react";
+import { PriceMove } from "../../lib";
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
   KeyboardDoubleArrowDown,
   KeyboardDoubleArrowUp,
-} from "@mui/icons-material"
+} from "@mui/icons-material";
 
 export const circularProgress = (
   <>
@@ -21,25 +21,29 @@ export const circularProgress = (
       }}
     />
   </>
-)
+);
 
-const map = new Map<PriceMove, JSX.Element>()
-map.set(PriceMove.STRONG_DOWN, <KeyboardDoubleArrowDown htmlColor={`red`} />)
-map.set(PriceMove.DOWN, <KeyboardArrowDown htmlColor={`red`} />)
+const map = new Map<PriceMove, JSX.Element>();
+map.set(PriceMove.STRONG_DOWN, <KeyboardDoubleArrowDown htmlColor={`red`} />);
+map.set(PriceMove.DOWN, <KeyboardArrowDown htmlColor={`red`} />);
 map.set(
   PriceMove.NEUTRAL,
-  <KeyboardArrowUp htmlColor={`lightblue`} sx={{ transform: `rotate(90deg)` }} />,
-)
-map.set(PriceMove.UP, <KeyboardArrowUp htmlColor={`green`} />)
-map.set(PriceMove.STRONG_UP, <KeyboardDoubleArrowUp htmlColor={`green`} />)
+  <KeyboardArrowUp
+    htmlColor={`lightblue`}
+    sx={{ transform: `rotate(90deg)` }}
+  />
+);
+map.set(PriceMove.UP, <KeyboardArrowUp htmlColor={`green`} />);
+map.set(PriceMove.STRONG_UP, <KeyboardDoubleArrowUp htmlColor={`green`} />);
 
-export const growthIconMap = map
+export const growthIconMap = map;
 
-export const capitalizeWord = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+export const capitalizeWord = (s: string): string =>
+  s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
-export const cardWidth = `332px`
+export const cardWidth = `332px`;
 
-export function featureDisabledInfo() {
+export function featureDisabledInfo(): JSX.Element {
   return (
     <Alert severity="info">
       <Typography variant="body1">
@@ -56,5 +60,5 @@ export function featureDisabledInfo() {
         <b>Important: use the same Google account in Patreon.</b>
       </Typography>
     </Alert>
-  )
+  );
 }

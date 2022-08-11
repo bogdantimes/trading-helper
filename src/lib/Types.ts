@@ -1,4 +1,4 @@
-import Integer = GoogleAppsScript.Integer
+import Integer = GoogleAppsScript.Integer;
 
 export enum StableUSDCoin {
   USDT = `USDT`,
@@ -16,35 +16,38 @@ export enum OtherStableCoins {
 }
 
 export interface PriceMap {
-  [key: string]: number
+  [key: string]: number;
 }
 
 export interface Stats {
-  TotalProfit: number
-  DailyProfit: PriceMap
+  TotalProfit: number;
+  DailyProfit: PriceMap;
 }
 
 export class ExchangeSymbol {
-  readonly quantityAsset: string
-  readonly priceAsset: string
+  readonly quantityAsset: string;
+  readonly priceAsset: string;
 
   constructor(quantityAsset: string, priceAsset: string) {
     if (!quantityAsset) {
-      throw Error(`Invalid quantityAsset: "${quantityAsset}"`)
+      throw Error(`Invalid quantityAsset: "${quantityAsset}"`);
     }
     if (!priceAsset) {
-      throw Error(`Invalid priceAsset: "${priceAsset}"`)
+      throw Error(`Invalid priceAsset: "${priceAsset}"`);
     }
-    this.quantityAsset = quantityAsset.toUpperCase()
-    this.priceAsset = priceAsset.toUpperCase()
+    this.quantityAsset = quantityAsset.toUpperCase();
+    this.priceAsset = priceAsset.toUpperCase();
   }
 
-  static fromObject(object: { quantityAsset: string; priceAsset: string }): ExchangeSymbol {
-    return new ExchangeSymbol(object.quantityAsset, object.priceAsset)
+  static fromObject(object: {
+    quantityAsset: string;
+    priceAsset: string;
+  }): ExchangeSymbol {
+    return new ExchangeSymbol(object.quantityAsset, object.priceAsset);
   }
 
   toString(): string {
-    return this.quantityAsset + this.priceAsset
+    return this.quantityAsset + this.priceAsset;
   }
 }
 
@@ -56,17 +59,17 @@ export enum TradeState {
 }
 
 export class Coin {
-  readonly name: string
-  readonly balance: number
+  readonly name: string;
+  readonly balance: number;
 
   constructor(name: string, balance = 0) {
-    if (!name) throw new Error(`Invalid coin name: "${name}"`)
-    this.name = name.toUpperCase()
-    this.balance = Math.max(balance, 0)
+    if (!name) throw new Error(`Invalid coin name: "${name}"`);
+    this.name = name.toUpperCase();
+    this.balance = Math.max(balance, 0);
   }
 
   isStable(): boolean {
-    return Object.keys(StableUSDCoin).includes(this.name)
+    return Object.keys(StableUSDCoin).includes(this.name);
   }
 }
 
@@ -79,23 +82,23 @@ export enum PriceMove {
 }
 
 export interface MarketMove {
-  [PriceMove.STRONG_DOWN]: number
-  [PriceMove.DOWN]: number
-  [PriceMove.NEUTRAL]: number
-  [PriceMove.UP]: number
-  [PriceMove.STRONG_UP]: number
+  [PriceMove.STRONG_DOWN]: number;
+  [PriceMove.DOWN]: number;
+  [PriceMove.NEUTRAL]: number;
+  [PriceMove.UP]: number;
+  [PriceMove.STRONG_UP]: number;
 }
 
 export interface InitialSetupParams {
-  dbURL: string
-  binanceAPIKey: string
-  binanceSecretKey: string
+  dbURL: string;
+  binanceAPIKey: string;
+  binanceSecretKey: string;
 }
 
 export interface ICacheProxy {
-  get: (key: string) => string | null
-  put: (key: string, value: string, expirationInSeconds?: Integer) => void
-  remove: (key: string) => void
+  get: (key: string) => string | null;
+  put: (key: string, value: string, expirationInSeconds?: Integer) => void;
+  remove: (key: string) => void;
 }
 
 export enum PriceAction {
@@ -104,19 +107,19 @@ export enum PriceAction {
 }
 
 export interface IStore {
-  get(key: string): any
+  get: (key: string) => any;
 
-  getKeys(): string[]
+  getKeys: () => string[];
 
-  set(key: string, value: any): any
+  set: (key: string, value: any) => any;
 
-  getOrSet(key: string, value: any): any
+  getOrSet: (key: string, value: any) => any;
 
-  delete(key: string): void
+  delete: (key: string) => void;
 
-  isConnected(): boolean
+  isConnected: () => boolean;
 
-  connect(dbURL: string): void
+  connect: (dbURL: string) => void;
 }
 
 export enum Key {
@@ -137,11 +140,11 @@ export enum ChannelState {
 }
 
 export interface PriceChannelData {
-  [Key.DURATION]: number
-  [Key.MIN]: number
-  [Key.MAX]: number
-  [Key.SIZE]: number
-  [Key.S0]: ChannelState
-  [Key.S1]: ChannelState
-  [Key.S2]: ChannelState
+  [Key.DURATION]: number;
+  [Key.MIN]: number;
+  [Key.MAX]: number;
+  [Key.SIZE]: number;
+  [Key.S0]: ChannelState;
+  [Key.S1]: ChannelState;
+  [Key.S2]: ChannelState;
 }

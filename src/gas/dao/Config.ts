@@ -1,4 +1,4 @@
-import { Config, IStore, StableUSDCoin } from "../../lib"
+import { Config, IStore, StableUSDCoin } from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
   InvestRatio: 1,
@@ -12,28 +12,28 @@ export const DefaultConfig: () => Config = () => ({
   ChannelWindowMins: 0,
   TTL: 60 * 24 * 3, // 3 days
   HODL: [],
-})
+});
 
 export class ConfigDao {
-  private readonly store: IStore
+  private readonly store: IStore;
 
   constructor(store: IStore) {
-    this.store = store
+    this.store = store;
   }
 
   isInitialized(): boolean {
-    return !!this.store.get(`Config`)
+    return !!this.store.get(`Config`);
   }
 
   get(): Config {
-    const defaultConfig = DefaultConfig()
-    let config: Config = this.store.getOrSet(`Config`, defaultConfig)
+    const defaultConfig = DefaultConfig();
+    let config: Config = this.store.getOrSet(`Config`, defaultConfig);
     // apply existing config on top of default one
-    config = Object.assign(defaultConfig, config)
-    return config
+    config = Object.assign(defaultConfig, config);
+    return config;
   }
 
   set(config: Config): void {
-    this.store.set(`Config`, config)
+    this.store.set(`Config`, config);
   }
 }

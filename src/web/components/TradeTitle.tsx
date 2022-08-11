@@ -1,22 +1,24 @@
-import { IconButton, useTheme } from "@mui/material"
-import * as React from "react"
-import { useState } from "react"
-import { Delete } from "@mui/icons-material"
-import Typography from "@mui/material/Typography"
-import { TradeMemo } from "../../lib"
-import { growthIconMap } from "./Common"
+import { IconButton, useTheme } from "@mui/material";
+import * as React from "react";
+import { useState } from "react";
+import { Delete } from "@mui/icons-material";
+import Typography from "@mui/material/Typography";
+import { TradeMemo } from "../../lib";
+import { growthIconMap } from "./Common";
 
 export function TradeTitle({
   tradeMemo,
   onDelete,
 }: {
-  tradeMemo: TradeMemo
-  onDelete: () => void
-}) {
-  const theme = useTheme()
-  const [deleteHover, setDeleteHover] = useState(false)
+  tradeMemo: TradeMemo;
+  onDelete: () => void;
+}): JSX.Element {
+  const theme = useTheme();
+  const [deleteHover, setDeleteHover] = useState(false);
 
-  const deleteColor = deleteHover ? theme.palette.action.active : theme.palette.action.disabled
+  const deleteColor = deleteHover
+    ? theme.palette.action.active
+    : theme.palette.action.disabled;
   const deleteIcon = (
     <IconButton
       onClick={onDelete}
@@ -26,7 +28,7 @@ export function TradeTitle({
     >
       <Delete />
     </IconButton>
-  )
+  );
 
   return (
     <Typography
@@ -39,5 +41,5 @@ export function TradeTitle({
       {growthIconMap.get(tradeMemo.getPriceMove())}
       <span style={{ marginLeft: `auto` }}>{deleteIcon}</span>
     </Typography>
-  )
+  );
 }

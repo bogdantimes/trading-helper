@@ -1,13 +1,13 @@
-import { IStore, TradeMemo, TradeState } from "../../lib"
-import { isNode } from "browser-or-node"
+import { IStore, TradeMemo, TradeState } from "../../lib";
+import { isNode } from "browser-or-node";
 
 export class TradesDao {
-  private memCache: { [p: string]: TradeMemo }
+  private memCache: { [p: string]: TradeMemo };
 
   constructor(private readonly store: IStore) {}
 
   has(coinName: string): boolean {
-    return !!this.get()[coinName]
+    return !!this.get()[coinName];
   }
 
   /**
@@ -29,60 +29,71 @@ export class TradesDao {
   update(
     coinName: string,
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined,
+    notFoundFn?: () => TradeMemo | undefined
   ): void {
-    coinName = coinName.toUpperCase()
-    const trade = this.get()[coinName]
+    coinName = coinName.toUpperCase();
+    const trade = this.get()[coinName];
     // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
     // otherwise changedTrade is null.
-    const changedTrade = trade ? mutateFn(trade) : notFoundFn ? notFoundFn() : null
+    const changedTrade = trade
+      ? mutateFn(trade)
+      : notFoundFn
+      ? notFoundFn()
+      : null;
 
     if (changedTrade) {
-      changedTrade.deleted ? this.#delete(changedTrade) : this.#set(changedTrade)
+      changedTrade.deleted
+        ? this.#delete(changedTrade)
+        : this.#set(changedTrade);
     }
   }
 
   iterate(mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
-    const trades = this.get()
+    const trades = this.get();
     Object.values(trades).forEach((tm) => {
-      const changedTrade = mutateFn(tm)
+      const changedTrade = mutateFn(tm);
       if (changedTrade) {
-        changedTrade.deleted ? this.#delete(changedTrade) : this.#set(changedTrade)
+        changedTrade.deleted
+          ? this.#delete(changedTrade)
+          : this.#set(changedTrade);
       }
-    })
+    });
   }
 
   get(): { [p: string]: TradeMemo } {
     if (isNode && this.memCache) {
       // performance optimization for back-testing
-      return this.memCache
+      return this.memCache;
     }
 
-    const trades = this.store.getOrSet(`Trades`, {})
+    const trades = this.store.getOrSet(`Trades`, {});
     // Convert raw trades to TradeMemo objects
-    const tradeMemos = Object.keys(trades).reduce((acc, key) => {
-      acc[key] = TradeMemo.fromObject(trades[key])
-      return acc
-    }, {} as { [p: string]: TradeMemo })
+    const tradeMemos = Object.keys(trades).reduce<{ [p: string]: TradeMemo }>(
+      (acc, key) => {
+        acc[key] = TradeMemo.fromObject(trades[key]);
+        return acc;
+      },
+      {}
+    );
 
-    this.memCache = tradeMemos
-    return tradeMemos
+    this.memCache = tradeMemos;
+    return tradeMemos;
   }
 
   getList(state?: TradeState): TradeMemo[] {
-    const values = Object.values(this.get())
-    return state ? values.filter((trade) => trade.stateIs(state)) : values
+    const values = Object.values(this.get());
+    return state ? values.filter((trade) => trade.stateIs(state)) : values;
   }
 
-  #set(tradeMemo: TradeMemo) {
-    const trades = this.get()
-    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo
-    this.store.set(`Trades`, trades)
+  #set(tradeMemo: TradeMemo): void {
+    const trades = this.get();
+    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo;
+    this.store.set(`Trades`, trades);
   }
 
-  #delete(tradeMemo: TradeMemo) {
-    const trades = this.get()
-    delete trades[tradeMemo.tradeResult.symbol.quantityAsset]
-    this.store.set(`Trades`, trades)
+  #delete(tradeMemo: TradeMemo): void {
+    const trades = this.get();
+    delete trades[tradeMemo.tradeResult.symbol.quantityAsset];
+    this.store.set(`Trades`, trades);
   }
 }

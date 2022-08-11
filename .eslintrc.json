@@ -4,25 +4,19 @@
     "es2021": true
   },
   "extends": [
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
+    "standard-with-typescript",
+    "plugin:prettier/recommended"
   ],
-  "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
   "rules": {
-    "@typescript-eslint/ban-ts-comment": ["off"],
-    "@typescript-eslint/no-explicit-any": ["off"],
-    "@typescript-eslint/no-shadow": ["error"],
-    "camelcase": "off",
-    "array-bracket-spacing": ["error", "never"],
-    "curly": ["error", "multi-line"],
-    "no-duplicate-imports": "error",
-    "object-curly-spacing": ["error", "always"],
-    "quotes": ["error", "backtick"],
-    "react/default-props-match-prop-types": ["error"],
-    "react/sort-prop-types": ["error"],
-    "spaced-comment": "error"
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/no-extraneous-class": "off",
+    "@typescript-eslint/no-dynamic-delete": "off",
+    "quotes": ["error", "backtick"]
   },
   "settings": {
     "import/resolver": {

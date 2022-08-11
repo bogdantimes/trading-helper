@@ -1,15 +1,15 @@
-import Box from "@mui/material/Box"
-import * as React from "react"
-import { Container, Grid } from "@mui/material"
+import Box from "@mui/material/Box";
+import * as React from "react";
+import { Container, Grid } from "@mui/material";
 
 interface TabPanelProps {
-  children?: React.ReactNode
-  index: number
-  value: number
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
 
-export function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
+export function TabPanel(props: TabPanelProps): JSX.Element {
+  const { children, value, index, ...other } = props;
 
   return (
     <Container
@@ -28,5 +28,5 @@ export function TabPanel(props: TabPanelProps) {
         </Grid>
       )}
     </Container>
-  )
+  );
 }
