@@ -20,7 +20,6 @@ export interface Config {
   ProfitBasedStopLimit: boolean;
   ProfitLimit: number;
   SellAtStopLimit: boolean;
-  SellAtProfitLimit: boolean;
   /**
    * ChannelSize - defines the percentage between the upper and lower bounds of a price channel.
    */

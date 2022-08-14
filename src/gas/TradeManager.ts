@@ -217,7 +217,6 @@ export class TradeManager {
       Log.alert(
         `ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`
       );
-      this.#config.SellAtProfitLimit && tm.setState(TradeState.SELL);
     }
 
     if (

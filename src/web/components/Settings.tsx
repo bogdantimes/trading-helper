@@ -29,7 +29,7 @@ export function Settings({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const [profitLimit, setProfitLimit] = useState(
+  const [profitGoal, setProfitGoal] = useState(
     f2(config.ProfitLimit * 100).toString()
   );
   const [channelSize, setChannelSize] = useState(
@@ -69,7 +69,7 @@ export function Settings({
     }
     setError(null);
 
-    isFinite(+profitLimit) && (config.ProfitLimit = +profitLimit / 100);
+    isFinite(+profitGoal) && (config.ProfitLimit = +profitGoal / 100);
     isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100);
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity));
     isFinite(+investRatio) && (config.InvestRatio = Math.floor(+investRatio));
@@ -136,56 +136,49 @@ export function Settings({
             ))}
           </RadioGroup>
         </FormControl>
-        <TextField
-          value={investRatio}
-          label={`Invest Ratio`}
-          onChange={(e) => setInvestRatio(e.target.value)}
-        />
-        <TextField
-          value={ttl}
-          label={`TTL`}
-          onChange={(e) => setTTL(e.target.value)}
-        />
-        <TextField
-          value={buyQuantity}
-          disabled={+investRatio > 0}
-          label={`Buy Quantity`}
-          onChange={(e) => setBuyQuantity(e.target.value)}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">$</InputAdornment>,
-          }}
-        />
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              value={profitLimit}
-              label={`Profit Limit`}
-              onChange={(e) => setProfitLimit(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">%</InputAdornment>
-                ),
-              }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.SellAtProfitLimit}
-                  onChange={(e) =>
-                    setConfig({
-                      ...config,
-                      SellAtProfitLimit: e.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Auto-sell"
-            />
-          </Stack>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            fullWidth={true}
+            value={investRatio}
+            label={`Invest Ratio`}
+            onChange={(e) => setInvestRatio(e.target.value)}
+          />
+          <TextField
+            fullWidth={true}
+            value={ttl}
+            label={`TTL`}
+            onChange={(e) => setTTL(e.target.value)}
+          />
+        </Stack>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            fullWidth={true}
+            value={buyQuantity}
+            disabled={+investRatio > 0}
+            label={`Buy Quantity`}
+            onChange={(e) => setBuyQuantity(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">$</InputAdornment>
+              ),
+            }}
+          />
+          <TextField
+            fullWidth={true}
+            value={profitGoal}
+            label={`Profit Goal`}
+            onChange={(e) => setProfitGoal(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">%</InputAdornment>
+              ),
+            }}
+          />
         </Stack>
         <Stack spacing={2}>
           <Stack direction="row" spacing={2}>
             <TextField
+              fullWidth={true}
               value={channelSize}
               label={`Price Channel Size`}
               onChange={(e) => setChannelSize(e.target.value)}
@@ -196,6 +189,7 @@ export function Settings({
               }}
             />
             <TextField
+              fullWidth={true}
               value={chDuration}
               label={`Channel Window (minutes)`}
               onChange={(e) => setChDuration(e.target.value)}
@@ -212,7 +206,7 @@ export function Settings({
           value={newFbURL}
           label={`Firebase URL`}
           onChange={(e) => setNewFbURL(e.target.value)}
-          sx={{ maxWidth: `389px` }}
+          sx={{ width: `49%` }}
           helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. Your data won't be lost.`}
         />
         <Box alignSelf={`center`} sx={{ position: `relative` }}>

@@ -32,7 +32,7 @@ export default function Trade(props: {
 
   const [priceLine, setPriceLine] = useState<ISeriesApi<`Line`>>(null);
   const [profitLine, setProfitLine] = useState<ISeriesApi<`Line`>>(null);
-  const [limitLine, setLimitLine] = useState<ISeriesApi<`Line`>>(null);
+  const [stopLine, setStopLine] = useState<ISeriesApi<`Line`>>(null);
   const [orderLine, setOrderLine] = useState<ISeriesApi<`Line`>>(null);
   const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<`Line`>>(null);
 
@@ -85,7 +85,7 @@ export default function Trade(props: {
       setPriceLine(
         chart.current.addLineSeries({ color: priceLineColor, lineWidth: 1 })
       );
-      setLimitLine(chart.current.addLineSeries({ color: `red`, lineWidth: 1 }));
+      setStopLine(chart.current.addLineSeries({ color: `red`, lineWidth: 1 }));
       setProfitLine(
         chart.current.addLineSeries({ color: profitLineColor, lineWidth: 1 })
       );
@@ -121,14 +121,14 @@ export default function Trade(props: {
       priceLine.applyOptions({ color: priceLineColor });
     }
 
-    if (limitLine) {
-      limitLine.applyOptions({
+    if (stopLine) {
+      stopLine.applyOptions({
         // hide if HODLing or no stop limit price
         visible: !!tm.stopLimitPrice && !config.HODL.includes(coinName),
         // make dashed if config SellAtStopLimit is false
         lineStyle: !config.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
       });
-      limitLine.setData(map(tm.prices, () => tm.stopLimitPrice));
+      stopLine.setData(map(tm.prices, () => tm.stopLimitPrice));
     }
 
     if (orderLine) {
@@ -141,10 +141,7 @@ export default function Trade(props: {
         color: profitLineColor,
         // hide if HODLing or no quantity
         visible: !!tm.tradeResult.quantity && !isHodl,
-        // make dashed if config SellAtProfitLimit is false
-        lineStyle: !config.SellAtProfitLimit
-          ? LineStyle.Dashed
-          : LineStyle.Solid,
+        lineStyle: LineStyle.Dashed,
       });
       const profitPrice = tm.tradeResult.price * (1 + config.ProfitLimit);
       profitLine.setData(map(tm.prices, () => profitPrice));
@@ -157,12 +154,11 @@ export default function Trade(props: {
   }, [
     theme,
     tm,
-    config.SellAtProfitLimit,
     config.ProfitLimit,
     isHodl,
     priceLine,
     profitLine,
-    limitLine,
+    stopLine,
     orderLine,
   ]);
 
