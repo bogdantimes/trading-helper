@@ -124,7 +124,7 @@ export default function Trade(props: {
     if (stopLine) {
       stopLine.applyOptions({
         // hide if HODLing or no stop limit price
-        visible: !!tm.stopLimitPrice && !config.HODL.includes(coinName),
+        visible: !!tm.stopLimitPrice && !isHodl,
         // make dashed if config SellAtStopLimit is false
         lineStyle: !config.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
       });
