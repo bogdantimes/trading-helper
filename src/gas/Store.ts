@@ -167,12 +167,12 @@ export class CachedStore implements IStore {
   }
 
   set(key: string, value: any): any {
+    this.#cache.put(key, JSON.stringify(value));
     const synced = this.#cache.get(`${key}_synced`);
     if (!synced) {
       this.#store.set(key, value);
       this.#cache.put(`${key}_synced`, `true`, this.#syncIntervalSec);
     }
-    this.#cache.put(key, JSON.stringify(value));
     return value;
   }
 
