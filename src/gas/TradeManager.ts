@@ -80,12 +80,12 @@ export class TradeManager {
     const trades = this.tradesDao.getList().sort(() => Math.random() - 0.5);
 
     if (this.#config.InvestRatio > 0) {
-      const invested = trades.filter(
+      const inv = trades.filter(
         (t) =>
           t.tradeResult.quantity > 0 &&
           !this.#config.HODL.includes(t.getCoinName())
       );
-      this.#canInvest = Math.max(0, this.#config.InvestRatio - invested.length);
+      this.#canInvest = Math.max(0, this.#config.InvestRatio - inv.length);
     }
 
     const tms = [
@@ -239,7 +239,7 @@ export class TradeManager {
       //    The closer the current profit to the ProfitLimit, the closer K is to 0.99.
       const SL = this.#config.ChannelSize;
       const PL = this.#config.ProfitLimit;
-      const P = tm.profitPercent() / 100;
+      const P = tm.profit() / tm.tradeResult.paid;
       const K = Math.min(0.99, 1 - SL + Math.max(0, (P * SL) / PL));
 
       const lastN = 3;
