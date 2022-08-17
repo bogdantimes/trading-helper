@@ -6,7 +6,6 @@ export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.USDT,
   ProfitLimit: 0.1,
   SellAtStopLimit: true,
-  ProfitBasedStopLimit: false,
   ChannelSize: 0,
   ChannelWindowMins: 0,
   TTL: 60 * 24 * 3, // 3 days

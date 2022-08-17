@@ -12,12 +12,6 @@ export interface Config {
    * but not less than DefaultConfig.BuyQuantity.
    */
   InvestRatio?: number;
-  /**
-   * When ProfitBasedStopLimit is true - a stop limit for each asset is calculated based on the total profit of the tool.
-   * All profit is divided equally between all assets and this amount is how much loss is allowed for each asset.
-   * Such stop limits are always recalculated when the total profit or number of assets changes.
-   */
-  ProfitBasedStopLimit: boolean;
   ProfitLimit: number;
   SellAtStopLimit: boolean;
   /**

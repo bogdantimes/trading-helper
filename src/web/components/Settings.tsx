@@ -247,17 +247,6 @@ function switchers(
       <FormControlLabel
         control={
           <Switch
-            checked={config.ProfitBasedStopLimit}
-            onChange={(e) =>
-              setConfig({ ...config, ProfitBasedStopLimit: e.target.checked })
-            }
-          />
-        }
-        label="P/L based Stop Limit"
-      />
-      <FormControlLabel
-        control={
-          <Switch
             checked={config.SellAtStopLimit}
             onChange={(e) =>
               setConfig({ ...config, SellAtStopLimit: e.target.checked })

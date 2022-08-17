@@ -27,10 +27,6 @@ import { CacheProxy } from "./CacheProxy";
 
 export class TradeManager {
   #config: Config;
-  /**
-   * Used when {@link ProfitBasedStopLimit} is enabled.
-   */
-  #boughtStateCount = 0;
   #canInvest = 0;
 
   static default(): TradeManager {
@@ -82,14 +78,14 @@ export class TradeManager {
 
     // Randomize the order of trades to avoid biases
     const trades = this.tradesDao.getList().sort(() => Math.random() - 0.5);
-    const bought = trades.filter((t) => t.stateIs(TradeState.BOUGHT));
-    this.#boughtStateCount = bought.length;
 
     if (this.#config.InvestRatio > 0) {
-      const invested = bought.filter(
-        (tm) => !this.#config.HODL.includes(tm.getCoinName())
-      ).length;
-      this.#canInvest = Math.max(0, this.#config.InvestRatio - invested);
+      const invested = trades.filter(
+        (t) =>
+          t.tradeResult.quantity > 0 &&
+          !this.#config.HODL.includes(t.getCoinName())
+      );
+      this.#canInvest = Math.max(0, this.#config.InvestRatio - invested.length);
     }
 
     const tms = [
@@ -231,12 +227,6 @@ export class TradeManager {
   }
 
   private updateStopLimit(tm: TradeMemo): void {
-    if (this.#config.ProfitBasedStopLimit) {
-      const allowedLossPerAsset =
-        this.stats.totalProfit / this.#boughtStateCount;
-      tm.stopLimitPrice =
-        (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity;
-    }
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       tm.stopLimitPrice = ch[Key.MIN];
