@@ -37,6 +37,7 @@ export function Settings({
   );
   const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString());
   const [investRatio, setInvestRatio] = useState(config.InvestRatio.toString());
+  const [balance, setBalance] = useState(config.StableBalance.toString());
   const [chDuration, setChDuration] = useState(
     config.ChannelWindowMins.toString()
   );
@@ -73,6 +74,9 @@ export function Settings({
     isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100);
     isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity));
     isFinite(+investRatio) && (config.InvestRatio = Math.floor(+investRatio));
+    isFinite(+balance) &&
+      (+balance === -1 || +balance >= 0) &&
+      (config.StableBalance = +balance);
     isFinite(+chDuration) &&
       (config.ChannelWindowMins = Math.floor(+chDuration));
     isFinite(+ttl) && +ttl >= 0 && (config.TTL = Math.floor(+ttl));
@@ -136,6 +140,12 @@ export function Settings({
             ))}
           </RadioGroup>
         </FormControl>
+        <TextField
+          value={balance}
+          label={`Balance`}
+          onChange={(e) => setBalance(e.target.value)}
+          sx={{ width: `49%` }}
+        />
         <Stack direction="row" spacing={2}>
           <TextField
             fullWidth={true}
@@ -212,17 +222,6 @@ export function Settings({
         <Box alignSelf={`center`} sx={{ position: `relative` }}>
           <Button
             variant="contained"
-            color="warning"
-            onClick={onSellAll}
-            disabled={isSellingAll}
-          >
-            !! Sell All !!
-          </Button>
-          {isSellingAll && circularProgress}
-        </Box>
-        <Box alignSelf={`center`} sx={{ position: `relative` }}>
-          <Button
-            variant="contained"
             color="primary"
             startIcon={<SaveIcon />}
             onClick={onSave}
@@ -231,6 +230,17 @@ export function Settings({
             Save
           </Button>
           {isSaving && circularProgress}
+        </Box>
+        <Box alignSelf={`center`} sx={{ position: `relative` }}>
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={onSellAll}
+            disabled={isSellingAll}
+          >
+            !! Sell All !!
+          </Button>
+          {isSellingAll && circularProgress}
         </Box>
         {error && <Alert severity="error">{error.toString()}</Alert>}
       </Stack>

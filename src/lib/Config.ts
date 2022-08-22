@@ -5,6 +5,7 @@ export interface Config {
   KEY?: string;
   SECRET?: string;
   StableCoin: StableUSDCoin;
+  StableBalance: number;
   BuyQuantity: number;
   /**
    * InvestRatio when provided overrides the BuyQuantity and instead invests according to the ratio.

@@ -1,14 +1,17 @@
 import { Config, IStore, StableUSDCoin } from "../../lib";
 
+export const TREE_DAYS_IN_MINS = 60 * 24 * 3;
+
 export const DefaultConfig: () => Config = () => ({
-  InvestRatio: 1,
+  InvestRatio: 4,
   BuyQuantity: 15,
-  StableCoin: StableUSDCoin.USDT,
-  ProfitLimit: 0.1,
+  StableCoin: StableUSDCoin.BUSD,
+  StableBalance: -1, // -1 is to initiate using all available balance.
+  ProfitLimit: 0.07,
   SellAtStopLimit: true,
-  ChannelSize: 0,
-  ChannelWindowMins: 0,
-  TTL: 60 * 24 * 3, // 3 days
+  ChannelSize: 0.25,
+  ChannelWindowMins: 4500,
+  TTL: TREE_DAYS_IN_MINS,
   HODL: [],
 });
 

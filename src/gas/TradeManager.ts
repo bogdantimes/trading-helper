@@ -1,13 +1,11 @@
 import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
-import { Log, StableCoins } from "./Common";
+import { Log } from "./Common";
 import {
-  Coin,
   CoinName,
   Config,
   ExchangeSymbol,
   f2,
-  IStore,
   Key,
   PriceMove,
   PricesHolder,
@@ -28,6 +26,7 @@ import { CacheProxy } from "./CacheProxy";
 export class TradeManager {
   #config: Config;
   #canInvest = 0;
+  #balance = 0;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -61,6 +60,7 @@ export class TradeManager {
   trade(): void {
     // Get current config
     this.#config = this.configDao.get();
+    this.#initBalance();
 
     this.plugin
       .trade({
@@ -70,9 +70,9 @@ export class TradeManager {
       })
       .forEach(({ coin, action }) => {
         if (action === TradeAction.Buy) {
-          this.buy(coin);
+          this.#setBuyState(coin);
         } else if (action === TradeAction.Sell) {
-          this.sell(coin);
+          this.#setSellState(coin);
         }
       });
 
@@ -102,9 +102,43 @@ export class TradeManager {
         Log.error(e);
       }
     });
+    this.#persistBalance();
   }
 
-  buy(coinName: CoinName): void {
+  sellAll(keepHodls = true, sellNow = false): void {
+    const hodls = keepHodls ? new ConfigDao(DefaultStore).get().HODL : [];
+    this.tradesDao.iterate((tm) => {
+      if (hodls.includes(tm.getCoinName())) {
+        return null;
+      }
+      tm.resetState();
+      if (tm.tradeResult.quantity > 0) {
+        tm.setState(TradeState.SELL);
+        sellNow && this.#sell(tm);
+      }
+      return tm;
+    });
+    this.#persistBalance();
+  }
+
+  #initBalance(): void {
+    this.#balance = this.#config.StableBalance;
+    if (this.#balance === -1) {
+      this.#balance = this.exchange.getBalance(this.#config.StableCoin);
+    }
+  }
+
+  #persistBalance(): void {
+    const diff = this.#balance - this.#config.StableBalance;
+    if (diff !== 0) {
+      this.#config = this.configDao.get();
+      this.#config.StableBalance += diff;
+      this.#balance = this.#config.StableBalance;
+      this.configDao.set(this.#config);
+    }
+  }
+
+  #setBuyState(coinName: CoinName): void {
     const symbol = new ExchangeSymbol(coinName, this.#config.StableCoin);
     this.tradesDao.update(
       coinName,
@@ -124,25 +158,10 @@ export class TradeManager {
     );
   }
 
-  sell(coinName: string): void {
+  #setSellState(coinName: string): void {
     this.tradesDao.update(coinName, (tm) => {
       if (tm.tradeResult.quantity > 0) {
         tm.setState(TradeState.SELL);
-      }
-      return tm;
-    });
-  }
-
-  sellAll(keepHodls = true, sellNow = false): void {
-    const hodls = keepHodls ? new ConfigDao(DefaultStore).get().HODL : [];
-    this.tradesDao.iterate((tm) => {
-      if (hodls.includes(tm.getCoinName())) {
-        return null;
-      }
-      tm.resetState();
-      if (tm.tradeResult.quantity > 0) {
-        tm.setState(TradeState.SELL);
-        sellNow && this.#sell(tm);
       }
       return tm;
     });
@@ -170,11 +189,11 @@ export class TradeManager {
       // buy only if price stopped going down
       // this allows to wait if price continues to fall
       const howMuch = this.#calculateQuantity(tm);
-      if (howMuch > 0) {
+      if (howMuch > 0 && howMuch <= this.#balance) {
         this.#buy(tm, howMuch);
       } else {
-        Log.alert(
-          `ℹ️ Can't buy ${tm.getCoinName()} - invest ratio would be exceeded`
+        Log.info(
+          `ℹ️ Can't buy ${tm.getCoinName()} - not enough balance or invest ratio would be exceeded`
         );
         tm.resetState();
       }
@@ -294,6 +313,7 @@ export class TradeManager {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
         this.#canInvest = Math.max(0, this.#canInvest - 1);
+        this.#balance -= tradeResult.paid;
         // flatten out prices to make them not cross any limits right after the trade
         tm.prices = [tradeResult.price];
         // join existing trade result quantity, commission, paid price, etc. with the new one
@@ -334,6 +354,7 @@ export class TradeManager {
           this.#config.InvestRatio,
           this.#canInvest + 1
         );
+        this.#balance += tradeResult.gained;
         const fee = this.processSellFee(memo, tradeResult);
         const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee);
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid));
@@ -409,14 +430,5 @@ export class TradeManager {
       return tm;
     });
     return updated;
-  }
-
-  updateStableCoinsBalance(store: IStore): void {
-    const stableCoins: any[] = [];
-    Object.keys(StableUSDCoin).forEach((coin) => {
-      const balance = this.exchange.getBalance(coin);
-      balance && stableCoins.push(new Coin(coin, balance));
-    });
-    store.set(StableCoins, stableCoins);
   }
 }

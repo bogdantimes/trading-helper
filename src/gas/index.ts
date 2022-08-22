@@ -2,10 +2,9 @@ import { DefaultStore, FirebaseStore } from "./Store";
 import { TradeActions } from "./TradeActions";
 import { Statistics } from "./Statistics";
 import { Exchange } from "./Exchange";
-import { Log, SECONDS_IN_MIN, StableCoins, TICK_INTERVAL_MIN } from "./Common";
+import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   AssetsResponse,
-  Coin,
   CoinName,
   Config,
   InitialSetupParams,
@@ -123,27 +122,6 @@ function initialSetup(params: InitialSetupParams): string {
   });
 }
 
-function buyCoin(coinName: string): string {
-  return catchError(() => {
-    TradeManager.default().buy(coinName);
-    return `Buying ${coinName}`;
-  });
-}
-
-function cancelAction(coinName: string): string {
-  return catchError(() => {
-    TradeActions.default().cancel(coinName);
-    return `Cancelling actions on ${coinName}`;
-  });
-}
-
-function sellCoin(coinName: string): string {
-  return catchError(() => {
-    TradeManager.default().sell(coinName);
-    return `Selling ${coinName}`;
-  });
-}
-
 function sellAll(): string {
   return catchError(() => {
     TradeManager.default().sellAll();
@@ -176,17 +154,10 @@ function getTrades(): TradeMemo[] {
   return catchError(() => new TradesDao(DefaultStore).getList());
 }
 
-function getStableCoins(): Coin[] {
-  return catchError(() => {
-    return DefaultStore.get(StableCoins) || [];
-  });
-}
-
 function getAssets(): AssetsResponse {
   return catchError(() => {
     return {
       trades: getTrades(),
-      stableCoins: getStableCoins(),
     };
   });
 }
@@ -255,16 +226,12 @@ global.tick = tick;
 global.start = start;
 global.stop = stop;
 global.initialSetup = initialSetup;
-global.buyCoin = buyCoin;
-global.cancelAction = cancelAction;
-global.sellCoin = sellCoin;
 global.sellAll = sellAll;
 global.setHold = setHold;
 global.dropCoin = dropCoin;
 global.editTrade = editTrade;
 global.getTrades = getTrades;
 global.getAssets = getAssets;
-global.getStableCoins = getStableCoins;
 global.getConfig = getConfig;
 global.setConfig = setConfig;
 global.getStatistics = getStatistics;

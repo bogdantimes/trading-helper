@@ -32,13 +32,6 @@ export class TradeActions {
     });
   }
 
-  cancel(coinName: string): void {
-    this.tradesDao.update(coinName, (trade) => {
-      trade.resetState();
-      return trade;
-    });
-  }
-
   replace(coinName: string, newTrade: TradeMemo): void {
     this.tradesDao.update(
       coinName,

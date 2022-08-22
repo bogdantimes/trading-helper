@@ -3,7 +3,6 @@ import { CoinName, enumKeys, StableUSDCoin } from "../lib";
 export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60;
 export const TICK_INTERVAL_MIN = 1;
-export const StableCoins = `StableCoins`;
 
 export interface ExecParams {
   context?: any;
