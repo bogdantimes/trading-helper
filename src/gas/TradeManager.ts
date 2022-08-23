@@ -209,10 +209,9 @@ export class TradeManager {
       // Return 0 if we can't invest anymore or if we already bought this coin
       return 0;
     }
-    const balance = this.exchange.getBalance(tm.tradeResult.symbol.priceAsset);
     return Math.max(
       DefaultConfig().BuyQuantity,
-      Math.floor(balance / this.#canInvest)
+      Math.floor(this.#balance / this.#canInvest)
     );
   }
 
