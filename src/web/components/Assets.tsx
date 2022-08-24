@@ -24,13 +24,17 @@ export function Assets({ config }: { config: Config }): JSX.Element {
     return () => clearInterval(interval);
   }, []);
 
-  const tradesMap = assets?.trades.reduce((map, obj) => {
-    const tm = TradeMemo.fromObject(obj);
-    map.has(tm.getState())
-      ? map.get(tm.getState()).push(tm)
-      : map.set(tm.getState(), [tm]);
-    return map;
-  }, new Map<TradeState, TradeMemo[]>());
+  const invested: TradeMemo[] = [];
+  assets?.trades.forEach((obj) => {
+    if (obj.tradeResult.quantity > 0) {
+      invested.push(TradeMemo.fromObject(obj));
+    }
+  });
+
+  const assetsValue = invested.reduce((sum, tm) => {
+    const qty = tm.tradeResult.quantity;
+    return qty > 0 ? sum + qty * tm.currentPrice : sum;
+  }, 0);
 
   return (
     <>
@@ -40,13 +44,8 @@ export function Assets({ config }: { config: Config }): JSX.Element {
             {circularProgress}
           </Grid>
         )}
-        {getBalanceView(config.StableCoin, config.StableBalance)}
-        {[
-          TradeState.BUY,
-          TradeState.SELL,
-          TradeState.BOUGHT,
-          TradeState.SOLD,
-        ].map((s) => getTradeCards(s, tradesMap?.get(s), config))}
+        {getBalanceView(config.StableCoin, config.StableBalance, assetsValue)}
+        {getTradeCards(TradeState.BOUGHT, invested, config)}
       </Grid>
     </>
   );
@@ -54,7 +53,8 @@ export function Assets({ config }: { config: Config }): JSX.Element {
 
 function getBalanceView(
   stableCoin: StableUSDCoin,
-  balance: number
+  balance: number,
+  assetsValue: number
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
@@ -68,8 +68,20 @@ function getBalanceView(
       {!hide && (
         <Grid item xs={12}>
           <Grid container justifyContent="center" spacing={2}>
-            <Grid key={stableCoin} item>
-              <StableCoin name={stableCoin} balance={balance} />
+            <Grid key={`fee`} item>
+              <StableCoin name={stableCoin + ` (free)`} balance={balance} />
+            </Grid>
+            <Grid key={`assets`} item>
+              <StableCoin
+                name={stableCoin + ` (in assets)`}
+                balance={assetsValue}
+              />
+            </Grid>
+            <Grid key={`total`} item>
+              <StableCoin
+                name={stableCoin + ` (total)`}
+                balance={balance + assetsValue}
+              />
             </Grid>
           </Grid>
         </Grid>
