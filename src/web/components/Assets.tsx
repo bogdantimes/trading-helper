@@ -80,36 +80,34 @@ function getBalanceView(
 
 function getTradeCards(
   state: TradeState,
-  elems?: TradeMemo[],
+  elems: TradeMemo[],
   config?: Config
 ): JSX.Element {
   // hide Sold trades by default, others visible by default
   const [hide, setHide] = useState(state === TradeState.SOLD);
   return (
-    elems?.length && (
-      <>
+    <>
+      <Grid item xs={12}>
+        <Divider>
+          <Chip
+            onClick={() => setHide(!hide)}
+            label={`${capitalizeWord(state)} (${elems.length})`}
+          />
+        </Divider>
+      </Grid>
+      {!hide && (
         <Grid item xs={12}>
-          <Divider>
-            <Chip
-              onClick={() => setHide(!hide)}
-              label={`${capitalizeWord(state)} (${elems.length})`}
-            />
-          </Divider>
-        </Grid>
-        {!hide && (
-          <Grid item xs={12}>
-            <Grid container justifyContent="center" spacing={2}>
-              {elems
-                ?.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
-                .map((t) => (
-                  <Grid key={t.getCoinName()} item>
-                    <Trade data={t} config={config} />
-                  </Grid>
-                ))}
-            </Grid>
+          <Grid container justifyContent="center" spacing={2}>
+            {elems
+              .sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
+              .map((t) => (
+                <Grid key={t.getCoinName()} item>
+                  <Trade data={t} config={config} />
+                </Grid>
+              ))}
           </Grid>
-        )}
-      </>
-    )
+        </Grid>
+      )}
+    </>
   );
 }
