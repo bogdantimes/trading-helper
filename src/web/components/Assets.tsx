@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import Trade from "./Trade";
 import { Chip, Divider, Grid } from "@mui/material";
-import StableCoin from "./StableCoin";
+import Balance from "./Balance";
 import { capitalizeWord, circularProgress } from "./Common";
 import {
   AssetsResponse,
@@ -52,7 +52,7 @@ export function Assets({ config }: { config: Config }): JSX.Element {
 }
 
 function getBalanceView(
-  stableCoin: StableUSDCoin,
+  name: StableUSDCoin,
   balance: number,
   assetsValue: number
 ): JSX.Element {
@@ -68,20 +68,8 @@ function getBalanceView(
       {!hide && (
         <Grid item xs={12}>
           <Grid container justifyContent="center" spacing={2}>
-            <Grid key={`fee`} item>
-              <StableCoin name={stableCoin + ` (free)`} balance={balance} />
-            </Grid>
-            <Grid key={`assets`} item>
-              <StableCoin
-                name={stableCoin + ` (in assets)`}
-                balance={assetsValue}
-              />
-            </Grid>
-            <Grid key={`total`} item>
-              <StableCoin
-                name={stableCoin + ` (total)`}
-                balance={balance + assetsValue}
-              />
+            <Grid item>
+              <Balance {...{ name, balance, assetsValue }} />
             </Grid>
           </Grid>
         </Grid>
