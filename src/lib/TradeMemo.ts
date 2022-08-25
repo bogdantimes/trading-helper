@@ -14,7 +14,7 @@ export class TradeMemo extends PricesHolder {
   deleted: boolean;
   /**
    * The price at which the asset should be sold automatically if {@link SellAtStopLimit}
-   * is true, and {@link Config.HODL} does not include the coin name.
+   * is true.
    */
   private stopLimit = 0;
   /**

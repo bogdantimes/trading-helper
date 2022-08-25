@@ -80,11 +80,7 @@ export class TradeManager {
     const trades = this.tradesDao.getList().sort(() => Math.random() - 0.5);
 
     if (this.#config.InvestRatio > 0) {
-      const inv = trades.filter(
-        (t) =>
-          t.tradeResult.quantity > 0 &&
-          !this.#config.HODL.includes(t.getCoinName())
-      );
+      const inv = trades.filter((t) => t.tradeResult.quantity > 0);
       this.#canInvest = Math.max(0, this.#config.InvestRatio - inv.length);
     }
 
@@ -106,11 +102,7 @@ export class TradeManager {
   }
 
   sellAll(keepHodls = true, sellNow = false): void {
-    const hodls = keepHodls ? new ConfigDao(DefaultStore).get().HODL : [];
     this.tradesDao.iterate((tm) => {
-      if (hodls.includes(tm.getCoinName())) {
-        return null;
-      }
       tm.resetState();
       if (tm.tradeResult.quantity > 0) {
         tm.setState(TradeState.SELL);
@@ -220,8 +212,6 @@ export class TradeManager {
 
     isFinite(tm.ttl) && tm.ttl++;
 
-    if (this.#config.HODL.includes(tm.getCoinName())) return;
-
     if (tm.stopLimitCrossedDown()) {
       Log.alert(
         `ℹ️ ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`
@@ -286,11 +276,6 @@ export class TradeManager {
         // Only for back-testing, force selling this asset
         // The back-testing exchange mock will use the previous price
         this.#sell(tm);
-      } else if (!this.#config.HODL.includes(tm.getCoinName())) {
-        this.#config.HODL.push(tm.getCoinName());
-        Log.alert(
-          `The ${tm.getCoinName()} asset is marked HODL. Please, resolve the issue manually.`
-        );
       }
     } else {
       // no price available, and no quantity, which means we haven't bought anything yet
@@ -376,7 +361,6 @@ export class TradeManager {
       }
     } else {
       Log.debug(memo);
-      this.#config.HODL.push(memo.getCoinName());
       memo.setState(TradeState.BOUGHT);
       Log.alert(
         `An issue happened while selling ${symbol}. The asset is marked HODL. Please, resolve it manually.`

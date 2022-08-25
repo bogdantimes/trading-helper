@@ -129,13 +129,6 @@ function sellAll(): string {
   });
 }
 
-function setHold(coinName: string, value: boolean): string {
-  return catchError(() => {
-    TradeActions.default().setHold(coinName, value);
-    return `Setting HODL for ${coinName} to ${value}`;
-  });
-}
-
 function dropCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.default().drop(coinName);
@@ -227,7 +220,6 @@ global.start = start;
 global.stop = stop;
 global.initialSetup = initialSetup;
 global.sellAll = sellAll;
-global.setHold = setHold;
 global.dropCoin = dropCoin;
 global.editTrade = editTrade;
 global.getTrades = getTrades;

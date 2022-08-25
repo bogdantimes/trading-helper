@@ -12,7 +12,6 @@ export const DefaultConfig: () => Config = () => ({
   ChannelSize: 0.25,
   ChannelWindowMins: 4500,
   TTL: TREE_DAYS_IN_MINS,
-  HODL: [],
 });
 
 export class ConfigDao {

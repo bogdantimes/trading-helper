@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import {
@@ -14,8 +13,7 @@ import {
   LineStyle,
   PriceScaleMode,
 } from "lightweight-charts";
-import { Box, Stack, Theme, ToggleButton, useTheme } from "@mui/material";
-import { circularProgress } from "./Common";
+import { Box, Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
 import { Config, f2, TradeMemo, TradeState } from "../../lib";
 
@@ -35,25 +33,6 @@ export default function Trade(props: {
   const [stopLine, setStopLine] = useState<ISeriesApi<`Line`>>(null);
   const [orderLine, setOrderLine] = useState<ISeriesApi<`Line`>>(null);
   const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<`Line`>>(null);
-
-  const [isHodlSwitching, setIsHodlSwitching] = useState(false);
-  const [isHodl, setIsHodl] = useState(config.HODL.includes(coinName));
-
-  useEffect(() => setIsHodl(config.HODL.includes(coinName)), [config.HODL]);
-
-  function flipHodl(): void {
-    setIsHodlSwitching(true);
-    google.script.run
-      .withSuccessHandler(() => {
-        setIsHodl(!isHodl);
-        setIsHodlSwitching(false);
-      })
-      .withFailureHandler((resp) => {
-        alert(resp.message);
-        setIsHodlSwitching(false);
-      })
-      .setHold(coinName, !isHodl);
-  }
 
   const map = (prices: number[], mapFn: (v: number) => number): LineData[] => {
     return prices.map((v, i) => ({
@@ -123,8 +102,7 @@ export default function Trade(props: {
 
     if (stopLine) {
       stopLine.applyOptions({
-        // hide if HODLing or no stop limit price
-        visible: !!tm.stopLimitPrice && !isHodl,
+        visible: !!tm.stopLimitPrice,
         // make dashed if config SellAtStopLimit is false
         lineStyle: !config.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
       });
@@ -139,8 +117,7 @@ export default function Trade(props: {
     if (profitLine) {
       profitLine.applyOptions({
         color: profitLineColor,
-        // hide if HODLing or no quantity
-        visible: !!tm.tradeResult.quantity && !isHodl,
+        visible: !!tm.tradeResult.quantity,
         lineStyle: LineStyle.Dashed,
       });
       const profitPrice = tm.tradeResult.price * (1 + config.ProfitLimit);
@@ -155,7 +132,6 @@ export default function Trade(props: {
     theme,
     tm,
     config.ProfitLimit,
-    isHodl,
     priceLine,
     profitLine,
     stopLine,
@@ -220,29 +196,6 @@ export default function Trade(props: {
               </Typography>
             )
           )}
-          <CardActions>
-            <Stack
-              direction={`row`}
-              spacing={1}
-              sx={{ marginLeft: `auto`, marginRight: `auto` }}
-            >
-              {tm.stateIs(TradeState.BOUGHT) && (
-                <Box sx={{ position: `relative` }}>
-                  <ToggleButton
-                    size="small"
-                    value="check"
-                    selected={isHodl}
-                    color="primary"
-                    onChange={flipHodl}
-                    disabled={isHodlSwitching}
-                  >
-                    HODL
-                  </ToggleButton>
-                  {isHodlSwitching && circularProgress}
-                </Box>
-              )}
-            </Stack>
-          </CardActions>
         </Card>
       )}
     </>
