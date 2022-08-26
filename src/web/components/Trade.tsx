@@ -163,39 +163,37 @@ export default function Trade(props: {
               className="chart-container"
             />
           </CardContent>
-          {tm.tradeResult.quantity ? (
-            <Typography
-              marginLeft={`16px`}
-              variant="body2"
-              color="text.secondary"
-            >
-              <div>
-                Qty: {tm.tradeResult.quantity} Paid: {f2(tm.tradeResult.paid)}
-                {` `}
-                TTL:{` `}
-                {config.TTL - tm.ttl}
-              </div>
-              <div>
-                {tm.profit() >= 0 ? `Profit` : `Loss`}: {f2(tm.profit())} (
-                {f2(tm.profitPercent())}
-                %)
-              </div>
-              <div>
-                Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}
-                %)
-              </div>
-            </Typography>
-          ) : (
-            !!tm.soldPriceChangePercent() && (
+          <CardContent>
+            {tm.tradeResult.quantity ? (
               <Typography
                 marginLeft={`16px`}
                 variant="body2"
                 color="text.secondary"
               >
-                <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
+                <div>
+                  Paid: {f2(tm.tradeResult.paid)}
+                  {` `}
+                  TTL:{` `}
+                  {config.TTL - tm.ttl}
+                </div>
+                <div>
+                  Current value: {f2(tm.tradeResult.quantity * tm.currentPrice)}
+                  {` `}({f2(tm.profitPercent())}
+                  %)
+                </div>
               </Typography>
-            )
-          )}
+            ) : (
+              !!tm.soldPriceChangePercent() && (
+                <Typography
+                  marginLeft={`16px`}
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
+                </Typography>
+              )
+            )}
+          </CardContent>
         </Card>
       )}
     </>
