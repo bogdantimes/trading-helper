@@ -21,7 +21,7 @@ export default function Trade(props: {
   data: TradeMemo;
   config: Config;
 }): JSX.Element {
-  const { data: tm, config } = props;
+  const { data: tm, config: cfg } = props;
   const coinName = tm.getCoinName();
 
   const chartContainerRef = useRef();
@@ -104,7 +104,7 @@ export default function Trade(props: {
       stopLine.applyOptions({
         visible: !!tm.stopLimitPrice,
         // make dashed if config SellAtStopLimit is false
-        lineStyle: !config.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
+        lineStyle: !cfg.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
       });
       stopLine.setData(map(tm.prices, () => tm.stopLimitPrice));
     }
@@ -120,7 +120,7 @@ export default function Trade(props: {
         visible: !!tm.tradeResult.quantity,
         lineStyle: LineStyle.Dashed,
       });
-      const profitPrice = tm.tradeResult.price * (1 + config.ProfitLimit);
+      const profitPrice = tm.tradeResult.price * (1 + cfg.ProfitLimit);
       profitLine.setData(map(tm.prices, () => profitPrice));
     }
 
@@ -128,15 +128,7 @@ export default function Trade(props: {
       soldPriceLine.applyOptions({ visible: tm.stateIs(TradeState.SOLD) });
       soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice));
     }
-  }, [
-    theme,
-    tm,
-    config.ProfitLimit,
-    priceLine,
-    profitLine,
-    stopLine,
-    orderLine,
-  ]);
+  }, [theme, tm, cfg.ProfitLimit, priceLine, profitLine, stopLine, orderLine]);
 
   const [removed, setRemoved] = useState(false);
 
@@ -164,34 +156,19 @@ export default function Trade(props: {
             />
           </CardContent>
           <CardContent>
-            {tm.tradeResult.quantity ? (
+            {tm.tradeResult.quantity && (
               <Typography
                 marginLeft={`16px`}
                 variant="body2"
                 color="text.secondary"
               >
                 <div>
-                  Paid: {f2(tm.tradeResult.paid)}
-                  {` `}
-                  TTL:{` `}
-                  {config.TTL - tm.ttl}
+                  {`Paid: ${f2(tm.tradeResult.paid)} TTL: ${cfg.TTL - tm.ttl}`}
                 </div>
                 <div>
-                  Current value: {f2(tm.tradeResult.quantity * tm.currentPrice)}
-                  {` `}({f2(tm.profitPercent())}
-                  %)
+                  Current: {f2(tm.tradeResult.quantity * tm.currentPrice)}
                 </div>
               </Typography>
-            ) : (
-              !!tm.soldPriceChangePercent() && (
-                <Typography
-                  marginLeft={`16px`}
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
-                </Typography>
-              )
             )}
           </CardContent>
         </Card>
