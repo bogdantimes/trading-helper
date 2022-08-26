@@ -101,7 +101,10 @@ export class TradeManager {
     this.#persistBalance();
   }
 
-  sellAll(keepHodls = true, sellNow = false): void {
+  sellAll(sellNow = false): void {
+    // Get current config
+    this.#config = this.configDao.get();
+    this.#initBalance();
     this.tradesDao.iterate((tm) => {
       tm.resetState();
       if (tm.tradeResult.quantity > 0) {

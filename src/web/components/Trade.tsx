@@ -141,6 +141,8 @@ export default function Trade(props: {
     }
   }
 
+  const curVal = tm.tradeResult.quantity * tm.currentPrice;
+  const profit = tm.profit();
   return (
     <>
       {!removed && (
@@ -155,19 +157,15 @@ export default function Trade(props: {
               className="chart-container"
             />
           </CardContent>
-          <CardContent>
+          <CardContent sx={{ padding: `16px`, paddingTop: 0 }}>
             {tm.tradeResult.quantity && (
-              <Typography
-                marginLeft={`16px`}
-                variant="body2"
-                color="text.secondary"
-              >
+              <Typography variant="body2" color="text.secondary">
                 <div>
-                  {`Paid: ${f2(tm.tradeResult.paid)} TTL: ${cfg.TTL - tm.ttl}`}
+                  {`Current value: ${f2(curVal)} (${profit > 0 ? `+` : ``}${f2(
+                    profit
+                  )})`}
                 </div>
-                <div>
-                  Current: {f2(tm.tradeResult.quantity * tm.currentPrice)}
-                </div>
+                <div>{`TTL: ${cfg.TTL - tm.ttl}`}</div>
               </Typography>
             )}
           </CardContent>

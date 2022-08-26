@@ -136,13 +136,6 @@ function dropCoin(coinName: string): string {
   });
 }
 
-function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
-  return catchError(() => {
-    TradeActions.default().replace(coinName, TradeMemo.copy(newTradeMemo));
-    return `Making changes for ${coinName}`;
-  });
-}
-
 function getTrades(): TradeMemo[] {
   return catchError(() => new TradesDao(DefaultStore).getList());
 }
@@ -221,7 +214,6 @@ global.stop = stop;
 global.initialSetup = initialSetup;
 global.sellAll = sellAll;
 global.dropCoin = dropCoin;
-global.editTrade = editTrade;
 global.getTrades = getTrades;
 global.getAssets = getAssets;
 global.getConfig = getConfig;
