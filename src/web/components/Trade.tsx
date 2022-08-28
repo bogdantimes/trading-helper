@@ -165,7 +165,6 @@ export default function Trade(props: {
                     profit
                   )})`}
                 </div>
-                <div>{`TTL: ${cfg.TTL - tm.ttl}`}</div>
               </Typography>
             )}
           </CardContent>

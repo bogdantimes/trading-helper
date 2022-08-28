@@ -35,13 +35,11 @@ export function Settings({
   const [channelSize, setChannelSize] = useState(
     f2(config.ChannelSize * 100).toString()
   );
-  const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString());
   const [investRatio, setInvestRatio] = useState(config.InvestRatio.toString());
   const [balance, setBalance] = useState(config.StableBalance.toString());
   const [chDuration, setChDuration] = useState(
     config.ChannelWindowMins.toString()
   );
-  const [ttl, setTTL] = useState(config.TTL.toString());
 
   const [initialFbURL, setInitialFbURL] = useState(``);
   const [newFbURL, setNewFbURL] = useState(``);
@@ -72,14 +70,12 @@ export function Settings({
 
     isFinite(+profitGoal) && (config.ProfitLimit = +profitGoal / 100);
     isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100);
-    isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity));
     isFinite(+investRatio) && (config.InvestRatio = Math.floor(+investRatio));
     isFinite(+balance) &&
       (+balance === -1 || +balance >= 0) &&
       (config.StableBalance = +balance);
     isFinite(+chDuration) &&
       (config.ChannelWindowMins = Math.floor(+chDuration));
-    isFinite(+ttl) && +ttl >= 0 && (config.TTL = Math.floor(+ttl));
     setConfig(config);
     setIsSaving(true);
     google.script.run
@@ -140,51 +136,29 @@ export function Settings({
             ))}
           </RadioGroup>
         </FormControl>
-        <TextField
-          value={balance}
-          label={`Balance`}
-          onChange={(e) => setBalance(e.target.value)}
-          sx={{ width: `49%` }}
-        />
         <Stack direction="row" spacing={2}>
           <TextField
-            fullWidth={true}
             value={investRatio}
             label={`Invest Ratio`}
             onChange={(e) => setInvestRatio(e.target.value)}
+            fullWidth={true}
           />
           <TextField
+            value={balance}
+            label={`Balance`}
+            onChange={(e) => setBalance(e.target.value)}
             fullWidth={true}
-            value={ttl}
-            label={`TTL`}
-            onChange={(e) => setTTL(e.target.value)}
           />
         </Stack>
-        <Stack direction="row" spacing={2}>
-          <TextField
-            fullWidth={true}
-            value={buyQuantity}
-            disabled={+investRatio > 0}
-            label={`Buy Quantity`}
-            onChange={(e) => setBuyQuantity(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">$</InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            fullWidth={true}
-            value={profitGoal}
-            label={`Profit Goal`}
-            onChange={(e) => setProfitGoal(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">%</InputAdornment>
-              ),
-            }}
-          />
-        </Stack>
+        <TextField
+          sx={{ width: `49%` }}
+          value={profitGoal}
+          label={`Profit Goal`}
+          onChange={(e) => setProfitGoal(e.target.value)}
+          InputProps={{
+            startAdornment: <InputAdornment position="start">%</InputAdornment>,
+          }}
+        />
         <Stack spacing={2}>
           <Stack direction="row" spacing={2}>
             <TextField

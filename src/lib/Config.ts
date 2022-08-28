@@ -1,12 +1,10 @@
 import { StableUSDCoin } from "./Types";
 
 export interface Config {
-  TTL: number;
   KEY?: string;
   SECRET?: string;
   StableCoin: StableUSDCoin;
   StableBalance: number;
-  BuyQuantity: number;
   /**
    * InvestRatio when provided overrides the BuyQuantity and instead invests according to the ratio.
    * BuyQuantity in this case is calculated as Math.floor(freeAsset/InvestRatio),

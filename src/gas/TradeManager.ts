@@ -16,12 +16,14 @@ import {
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
-import { ConfigDao, DefaultConfig } from "./dao/Config";
+import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
 import { TradeAction, TraderPlugin } from "./traders/pro/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
+
+const MIN_BUSD_BUY = 15;
 
 export class TradeManager {
   #config: Config;
@@ -198,22 +200,23 @@ export class TradeManager {
 
   #calculateQuantity(tm: TradeMemo): number {
     if (this.#config.InvestRatio <= 0) {
-      return this.#config.BuyQuantity;
+      return 0;
     }
     if (this.#canInvest <= 0 || tm.tradeResult.quantity > 0) {
       // Return 0 if we can't invest anymore or if we already bought this coin
       return 0;
     }
-    return Math.max(
-      DefaultConfig().BuyQuantity,
-      Math.floor(this.#balance / this.#canInvest)
-    );
+    return Math.max(MIN_BUSD_BUY, Math.floor(this.#balance / this.#canInvest));
   }
 
   private processBoughtState(tm: TradeMemo): void {
-    this.updateStopLimit(tm);
+    if (isFinite(tm.ttl)) {
+      tm.ttl++;
+    } else {
+      tm.ttl = 0;
+    }
 
-    isFinite(tm.ttl) && tm.ttl++;
+    this.updateStopLimit(tm);
 
     if (tm.stopLimitCrossedDown()) {
       Log.alert(
@@ -224,16 +227,6 @@ export class TradeManager {
       Log.alert(
         `ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`
       );
-    }
-
-    if (
-      this.#config.TTL &&
-      isFinite(tm.ttl) &&
-      tm.ttl > this.#config.TTL &&
-      tm.profitPercent() > -3 &&
-      tm.profitPercent() < 3
-    ) {
-      tm.setState(TradeState.SELL);
     }
   }
 
@@ -257,12 +250,19 @@ export class TradeManager {
       const avePrice =
         tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
       // new stop limit cannot be higher than current price
-      const newStopLimit = Math.min(K * avePrice, tm.currentPrice);
+      let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
+      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+
+      // Move stop limit up to the current price proportionally to the TTL left
+      const topTTL = Math.min(tm.ttl, this.#config.ChannelWindowMins / 3);
+      const k2 = Math.min(0.99, topTTL / (this.#config.ChannelWindowMins / 3));
+      newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
     }
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {
+    tm.ttl = 0;
     tm.stopLimitPrice = 0;
     this.updateStopLimit(tm);
   }
@@ -316,7 +316,6 @@ export class TradeManager {
         Log.error(e);
       } finally {
         tm.setState(TradeState.BOUGHT);
-        tm.ttl = 0;
       }
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`);
