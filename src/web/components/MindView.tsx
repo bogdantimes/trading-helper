@@ -107,6 +107,7 @@ function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
       );
     })
     .sort((a, b) => data[b][Key.DURATION] - data[a][Key.DURATION]);
+
   const stateIcon = {
     [ChannelState.NONE]: growthIconMap.get(PriceMove.NEUTRAL),
     [ChannelState.TOP]: growthIconMap.get(PriceMove.UP),
@@ -117,7 +118,7 @@ function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
   return (
     <>
       <Typography alignSelf={`center`} variant={`subtitle1`}>
-        Candidate Coins
+        Candidates
       </Typography>
       {!candidateCoins.length && (
         <Typography alignSelf={`center`} variant={`body2`}>
