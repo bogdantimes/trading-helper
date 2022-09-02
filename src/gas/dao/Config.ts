@@ -4,10 +4,10 @@ export const DefaultConfig: () => Config = () => ({
   InvestRatio: 4,
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: -1, // -1 is to initiate using all available balance.
-  ProfitLimit: 0.07,
   SellAtStopLimit: true,
   ChannelSize: 0.25,
   ChannelWindowMins: 4500,
+  FearGreedIndex: 2,
 });
 
 export class ConfigDao {

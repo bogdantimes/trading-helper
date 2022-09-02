@@ -78,8 +78,15 @@ export class TradeManager {
         }
       });
 
-    // Randomize the order of trades to avoid biases
-    const trades = this.tradesDao.getList().sort(() => Math.random() - 0.5);
+    const trades = this.tradesDao.getList();
+
+    if (isNode) {
+      // For back-testing, sorting to ensure tests consistency
+      trades.sort((a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1));
+    } else {
+      // For production, randomizing the order to avoid biases
+      trades.sort(() => Math.random() - 0.5);
+    }
 
     if (this.#config.InvestRatio > 0) {
       const inv = trades.filter((t) => t.tradeResult.quantity > 0);
@@ -199,11 +206,12 @@ export class TradeManager {
   }
 
   #calculateQuantity(tm: TradeMemo): number {
-    if (this.#config.InvestRatio <= 0) {
-      return 0;
-    }
-    if (this.#canInvest <= 0 || tm.tradeResult.quantity > 0) {
-      // Return 0 if we can't invest anymore or if we already bought this coin
+    if (
+      this.#config.InvestRatio <= 0 ||
+      this.#canInvest <= 0 ||
+      tm.tradeResult.quantity > 0
+    ) {
+      // Return 0 if we can't invest or if we already have some coins
       return 0;
     }
     return Math.max(MIN_BUSD_BUY, Math.floor(this.#balance / this.#canInvest));
@@ -223,10 +231,6 @@ export class TradeManager {
         `ℹ️ ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`
       );
       this.#config.SellAtStopLimit && tm.setState(TradeState.SELL);
-    } else if (tm.profitLimitCrossedUp(this.#config.ProfitLimit)) {
-      Log.alert(
-        `ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`
-      );
     }
   }
 
@@ -240,11 +244,13 @@ export class TradeManager {
       // 1. Get the last N prices and calculate the average price.
       // 2. Multiply the average price by K, where: 1 - StopLimit <= K <= 0.99,
       //    K -> 0.99 proportionally to the current profit.
-      //    The closer the current profit to the ProfitLimit, the closer K is to 0.99.
-      const SL = this.#config.ChannelSize;
-      const PL = this.#config.ProfitLimit;
+      //    The closer the current profit to the current channel top range, the closer K is to 0.99.
+
+      const CS = this.#config.ChannelSize;
+      const FGI = this.#config.FearGreedIndex;
+      const PG = CS * (0.3 / FGI); // FGI is from 1 to 3, which makes profit goal 30-10% of channel size
       const P = tm.profit() / tm.tradeResult.paid;
-      const K = Math.min(0.99, 1 - SL + Math.max(0, (P * SL) / PL));
+      const K = Math.min(0.99, 1 - CS + Math.max(0, (P * CS) / PG));
 
       const lastN = 3;
       const avePrice =
@@ -254,8 +260,9 @@ export class TradeManager {
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
       // Move stop limit up to the current price proportionally to the TTL left
-      const topTTL = Math.min(tm.ttl, this.#config.ChannelWindowMins / 3);
-      const k2 = Math.min(0.99, topTTL / (this.#config.ChannelWindowMins / 3));
+      const maxTTL = this.#config.ChannelWindowMins / FGI;
+      const curTTL = Math.min(tm.ttl, maxTTL);
+      const k2 = Math.min(0.99, curTTL / maxTTL);
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
     }

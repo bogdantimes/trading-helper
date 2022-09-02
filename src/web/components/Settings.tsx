@@ -10,8 +10,11 @@ import {
   FormControlLabel,
   FormLabel,
   InputAdornment,
+  InputLabel,
+  MenuItem,
   Radio,
   RadioGroup,
+  Select,
   Stack,
   Switch,
   TextField,
@@ -28,10 +31,6 @@ export function Settings({
 }): JSX.Element {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
-
-  const [profitGoal, setProfitGoal] = useState(
-    f2(config.ProfitLimit * 100).toString()
-  );
   const [channelSize, setChannelSize] = useState(
     f2(config.ChannelSize * 100).toString()
   );
@@ -68,7 +67,6 @@ export function Settings({
     }
     setError(null);
 
-    isFinite(+profitGoal) && (config.ProfitLimit = +profitGoal / 100);
     isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100);
     isFinite(+investRatio) && (config.InvestRatio = Math.floor(+investRatio));
     isFinite(+balance) &&
@@ -150,15 +148,22 @@ export function Settings({
             fullWidth={true}
           />
         </Stack>
-        <TextField
-          sx={{ width: `49%` }}
-          value={profitGoal}
-          label={`Profit Goal`}
-          onChange={(e) => setProfitGoal(e.target.value)}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">%</InputAdornment>,
-          }}
-        />
+        <FormControl sx={{ width: `49%` }}>
+          <InputLabel id={`mkt-trend`}>Market Trend</InputLabel>
+          <Select
+            labelId="mkt-trend"
+            value={config.FearGreedIndex}
+            label="Market Trend"
+            defaultValue={2}
+            onChange={(e) =>
+              setConfig({ ...config, FearGreedIndex: +e.target.value })
+            }
+          >
+            <MenuItem value={1}>Bullish</MenuItem>
+            <MenuItem value={2}>Neutral</MenuItem>
+            <MenuItem value={3}>Bearish</MenuItem>
+          </Select>
+        </FormControl>
         <Stack spacing={2}>
           <Stack direction="row" spacing={2}>
             <TextField

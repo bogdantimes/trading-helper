@@ -162,15 +162,6 @@ export class TradeMemo extends PricesHolder {
     );
   }
 
-  profitLimitCrossedUp(profitLimit: number): boolean {
-    // all prices except the last one are lower the profit limit price
-    const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
-    return (
-      this.currentPrice > profitLimitPrice &&
-      this.prices[this.prices.length - 2] <= profitLimitPrice
-    );
-  }
-
   entryPriceCrossedUp(): boolean {
     // all prices except the last one are lower the price at which the trade was bought
     const entryPrice = this.tradeResult.price;

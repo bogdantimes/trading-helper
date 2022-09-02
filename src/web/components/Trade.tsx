@@ -120,7 +120,9 @@ export default function Trade(props: {
         visible: !!tm.tradeResult.quantity,
         lineStyle: LineStyle.Dashed,
       });
-      const profitPrice = tm.tradeResult.price * (1 + cfg.ProfitLimit);
+      // FGI is from 1 to 3, which makes profit goal 30-10% of channel size
+      const profitGoal = cfg.ChannelSize * (0.3 / cfg.FearGreedIndex);
+      const profitPrice = tm.tradeResult.price * (1 + profitGoal);
       profitLine.setData(map(tm.prices, () => profitPrice));
     }
 
@@ -128,7 +130,16 @@ export default function Trade(props: {
       soldPriceLine.applyOptions({ visible: tm.stateIs(TradeState.SOLD) });
       soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice));
     }
-  }, [theme, tm, cfg.ProfitLimit, priceLine, profitLine, stopLine, orderLine]);
+  }, [
+    theme,
+    tm,
+    cfg.ChannelSize,
+    cfg.FearGreedIndex,
+    priceLine,
+    profitLine,
+    stopLine,
+    orderLine,
+  ]);
 
   const [removed, setRemoved] = useState(false);
 
