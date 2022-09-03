@@ -130,6 +130,7 @@ export enum Key {
   S1,
   S2,
   SIZE,
+  PERCENTILE,
 }
 
 export enum ChannelState {
@@ -147,4 +148,5 @@ export interface PriceChannelData {
   [Key.S0]: ChannelState;
   [Key.S1]: ChannelState;
   [Key.S2]: ChannelState;
+  [Key.PERCENTILE]: number;
 }

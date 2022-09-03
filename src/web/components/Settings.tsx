@@ -34,7 +34,6 @@ export function Settings({
   const [channelSize, setChannelSize] = useState(
     f2(config.ChannelSize * 100).toString()
   );
-  const [investRatio, setInvestRatio] = useState(config.InvestRatio.toString());
   const [balance, setBalance] = useState(config.StableBalance.toString());
   const [chDuration, setChDuration] = useState(
     config.ChannelWindowMins.toString()
@@ -68,7 +67,6 @@ export function Settings({
     setError(null);
 
     isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100);
-    isFinite(+investRatio) && (config.InvestRatio = Math.floor(+investRatio));
     isFinite(+balance) &&
       (+balance === -1 || +balance >= 0) &&
       (config.StableBalance = +balance);
@@ -136,34 +134,28 @@ export function Settings({
         </FormControl>
         <Stack direction="row" spacing={2}>
           <TextField
-            value={investRatio}
-            label={`Invest Ratio`}
-            onChange={(e) => setInvestRatio(e.target.value)}
-            fullWidth={true}
-          />
-          <TextField
             value={balance}
             label={`Balance`}
             onChange={(e) => setBalance(e.target.value)}
             fullWidth={true}
           />
+          <FormControl fullWidth={true}>
+            <InputLabel id={`mkt-trend`}>Market Trend</InputLabel>
+            <Select
+              labelId="mkt-trend"
+              value={config.FearGreedIndex}
+              label="Market Trend"
+              defaultValue={2}
+              onChange={(e) =>
+                setConfig({ ...config, FearGreedIndex: +e.target.value })
+              }
+            >
+              <MenuItem value={1}>Bullish</MenuItem>
+              <MenuItem value={2}>Neutral</MenuItem>
+              <MenuItem value={3}>Bearish</MenuItem>
+            </Select>
+          </FormControl>
         </Stack>
-        <FormControl sx={{ width: `49%` }}>
-          <InputLabel id={`mkt-trend`}>Market Trend</InputLabel>
-          <Select
-            labelId="mkt-trend"
-            value={config.FearGreedIndex}
-            label="Market Trend"
-            defaultValue={2}
-            onChange={(e) =>
-              setConfig({ ...config, FearGreedIndex: +e.target.value })
-            }
-          >
-            <MenuItem value={1}>Bullish</MenuItem>
-            <MenuItem value={2}>Neutral</MenuItem>
-            <MenuItem value={3}>Bearish</MenuItem>
-          </Select>
-        </FormControl>
         <Stack spacing={2}>
           <Stack direction="row" spacing={2}>
             <TextField

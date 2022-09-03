@@ -145,6 +145,7 @@ function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
                 [Key.S0]: s0,
                 [Key.S1]: s1,
                 [Key.S2]: s2,
+                [Key.PERCENTILE]: percentile,
               } = data[coin];
               const dataHint = `${duration}/${config.ChannelWindowMins} | ${f8(
                 min
@@ -166,7 +167,7 @@ function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
                       <Typography
                         sx={{ display: `flex`, alignItems: `center` }}
                       >
-                        {coin + ` ✅ `}
+                        {coin + (percentile >= 0.85 ? ` ✅ ` : ``)}
                         {stateIcon[s2]} {stateIcon[s1]} {stateIcon[s0]}
                       </Typography>
                     }

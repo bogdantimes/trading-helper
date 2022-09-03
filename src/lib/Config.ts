@@ -10,11 +10,6 @@ export interface Config {
    */
   StableBalance: number;
   /**
-   * InvestRatio specifies the max number of coins/tokens to invest into.
-   * Available money are split proportionally.
-   */
-  InvestRatio: number;
-  /**
    * FearGreedIndex equal to 1 is better for a bullish market
    * (makes profit goal higher and allow to hold an asset for longer),
    * while 2 and 3, make it better for consolidation or bearish market accordingly.

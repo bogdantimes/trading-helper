@@ -29,6 +29,7 @@ export class TradeManager {
   #config: Config;
   #canInvest = 0;
   #balance = 0;
+  #optimalInvestRatio = 0;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -64,6 +65,14 @@ export class TradeManager {
     this.#config = this.configDao.get();
     this.#initBalance();
 
+    const cs = this.channelsDao.getCandidates(this.#config.ChannelWindowMins);
+    this.#optimalInvestRatio = Math.max(2, Math.min(8, Object.keys(cs).length));
+
+    // When there are no possessions, we can reset to optimal invest ratio
+    if (this.tradesDao.noInvestments()) {
+      this.#canInvest = this.#optimalInvestRatio;
+    }
+
     this.plugin
       .trade({
         config: this.#config,
@@ -86,11 +95,6 @@ export class TradeManager {
     } else {
       // For production, randomizing the order to avoid biases
       trades.sort(() => Math.random() - 0.5);
-    }
-
-    if (this.#config.InvestRatio > 0) {
-      const inv = trades.filter((t) => t.tradeResult.quantity > 0);
-      this.#canInvest = Math.max(0, this.#config.InvestRatio - inv.length);
     }
 
     const tms = [
@@ -206,11 +210,7 @@ export class TradeManager {
   }
 
   #calculateQuantity(tm: TradeMemo): number {
-    if (
-      this.#config.InvestRatio <= 0 ||
-      this.#canInvest <= 0 ||
-      tm.tradeResult.quantity > 0
-    ) {
+    if (this.#canInvest <= 0 || tm.tradeResult.quantity > 0) {
       // Return 0 if we can't invest or if we already have some coins
       return 0;
     }
@@ -344,7 +344,7 @@ export class TradeManager {
       // any actions should not affect changing the state to SOLD in the end
       try {
         this.#canInvest = Math.min(
-          this.#config.InvestRatio,
+          this.#optimalInvestRatio,
           this.#canInvest + 1
         );
         this.#balance += tradeResult.gained;

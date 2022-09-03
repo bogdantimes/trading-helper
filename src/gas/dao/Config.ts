@@ -1,7 +1,6 @@
 import { Config, IStore, StableUSDCoin } from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
-  InvestRatio: 4,
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: -1, // -1 is to initiate using all available balance.
   SellAtStopLimit: true,
