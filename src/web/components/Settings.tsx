@@ -144,15 +144,15 @@ export function Settings({
             <Select
               labelId="mkt-trend"
               value={config.FearGreedIndex}
-              label="Market Trend"
+              label="Trend"
               defaultValue={2}
               onChange={(e) =>
                 setConfig({ ...config, FearGreedIndex: +e.target.value })
               }
             >
-              <MenuItem value={1}>Bearish</MenuItem>
-              <MenuItem value={2}>Neutral</MenuItem>
-              <MenuItem value={3}>Bullish</MenuItem>
+              <MenuItem value={1}>Bear Market</MenuItem>
+              <MenuItem value={3}>Bull Market</MenuItem>
+              <MenuItem value={2}>Oscillating</MenuItem>
             </Select>
           </FormControl>
         </Stack>
