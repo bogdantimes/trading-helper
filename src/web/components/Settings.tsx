@@ -140,7 +140,7 @@ export function Settings({
             fullWidth={true}
           />
           <FormControl fullWidth={true}>
-            <InputLabel id={`mkt-trend`}>Market Trend</InputLabel>
+            <InputLabel id={`mkt-trend`}>Trend</InputLabel>
             <Select
               labelId="mkt-trend"
               value={config.FearGreedIndex}
