@@ -66,7 +66,7 @@ export class TradeManager {
     this.#initBalance();
 
     const cs = this.channelsDao.getCandidates(this.#config.ChannelWindowMins);
-    this.#optimalInvestRatio = Math.max(2, Math.min(4, Object.keys(cs).length));
+    this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
 
     // When there are no possessions, we can reset to optimal invest ratio
     if (this.tradesDao.noInvestments()) {
