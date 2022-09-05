@@ -85,13 +85,6 @@ export class TradesDao {
     return state ? values.filter((trade) => trade.stateIs(state)) : values;
   }
 
-  /**
-   * noInvestments returns true if there are no trades with quantity > 0.
-   */
-  noInvestments(): boolean {
-    return !this.getList().some((tm) => tm.tradeResult.quantity);
-  }
-
   #set(tradeMemo: TradeMemo): void {
     const trades = this.get();
     trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo;

@@ -68,11 +68,6 @@ export class TradeManager {
     const cs = this.channelsDao.getCandidates(this.#config.ChannelWindowMins);
     this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
 
-    // When there are no possessions, we can reset to optimal invest ratio
-    if (this.tradesDao.noInvestments()) {
-      this.#canInvest = this.#optimalInvestRatio;
-    }
-
     this.plugin
       .trade({
         config: this.#config,
@@ -88,6 +83,8 @@ export class TradeManager {
       });
 
     const trades = this.tradesDao.getList();
+    const inv = trades.filter((t) => t.tradeResult.quantity > 0);
+    this.#canInvest = Math.max(0, this.#optimalInvestRatio - inv.length);
 
     if (isNode) {
       // For back-testing, sorting to ensure tests consistency
