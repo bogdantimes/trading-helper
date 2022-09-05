@@ -66,7 +66,7 @@ export class TradeManager {
     this.#initBalance();
 
     const cs = this.channelsDao.getCandidates(this.#config.ChannelWindowMins);
-    this.#optimalInvestRatio = Math.max(2, Math.min(8, Object.keys(cs).length));
+    this.#optimalInvestRatio = Math.max(2, Math.min(4, Object.keys(cs).length));
 
     // When there are no possessions, we can reset to optimal invest ratio
     if (this.tradesDao.noInvestments()) {
@@ -248,7 +248,8 @@ export class TradeManager {
 
       const CS = this.#config.ChannelSize;
       const FGI = this.#config.FearGreedIndex;
-      const PG = CS * (0.3 / FGI); // FGI is from 1 to 3, which makes profit goal 30-10% of channel size
+      // FGI is from 1 (bearish) to 3 (bullish), which makes profit goal 90-30% of channel size
+      const PG = CS * (0.9 / FGI);
       const P = tm.profit() / tm.tradeResult.paid;
       const K = Math.min(0.99, 1 - CS + Math.max(0, (P * CS) / PG));
 

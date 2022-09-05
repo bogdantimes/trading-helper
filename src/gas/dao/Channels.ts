@@ -59,7 +59,7 @@ export class ChannelsDao {
       const ch = all[key];
       if (
         ch[Key.DURATION] > duration &&
-        ch[Key.PERCENTILE] >= 0.85 &&
+        ch[Key.PERCENTILE] >= 0.8 &&
         ch[Key.S0] === ChannelState.MIDDLE &&
         ch[Key.S1] === ChannelState.TOP
       ) {

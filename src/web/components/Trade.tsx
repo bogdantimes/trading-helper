@@ -121,7 +121,7 @@ export default function Trade(props: {
         lineStyle: LineStyle.Dashed,
       });
       // FGI is from 1 to 3, which makes profit goal 30-10% of channel size
-      const profitGoal = cfg.ChannelSize * (0.3 / cfg.FearGreedIndex);
+      const profitGoal = cfg.ChannelSize * (0.9 / cfg.FearGreedIndex);
       const profitPrice = tm.tradeResult.price * (1 + profitGoal);
       profitLine.setData(map(tm.prices, () => profitPrice));
     }

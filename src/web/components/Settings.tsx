@@ -150,9 +150,9 @@ export function Settings({
                 setConfig({ ...config, FearGreedIndex: +e.target.value })
               }
             >
-              <MenuItem value={1}>Bullish</MenuItem>
+              <MenuItem value={1}>Bearish</MenuItem>
               <MenuItem value={2}>Neutral</MenuItem>
-              <MenuItem value={3}>Bearish</MenuItem>
+              <MenuItem value={3}>Bullish</MenuItem>
             </Select>
           </FormControl>
         </Stack>

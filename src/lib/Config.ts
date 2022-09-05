@@ -10,9 +10,9 @@ export interface Config {
    */
   StableBalance: number;
   /**
-   * FearGreedIndex equal to 1 is better for a bullish market
+   * FearGreedIndex equal to 1 is better for a bearish market
    * (makes profit goal higher and allow to hold an asset for longer),
-   * while 2 and 3, make it better for consolidation or bearish market accordingly.
+   * while 2 and 3, make it better for consolidation and bullish market accordingly.
    */
   FearGreedIndex: number;
   /**
