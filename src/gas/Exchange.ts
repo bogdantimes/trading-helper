@@ -11,6 +11,12 @@ export interface IExchange {
   getPrices: () => PriceMap;
 
   getPrice: (symbol: ExchangeSymbol) => number;
+
+  getLatestKlineOpenPrices: (
+    symbol: ExchangeSymbol,
+    interval: string,
+    limit: number
+  ) => number[];
 }
 
 export class Exchange implements IExchange {
@@ -38,5 +44,13 @@ export class Exchange implements IExchange {
 
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     return this.exchange.marketSell(symbol, quantity);
+  }
+
+  getLatestKlineOpenPrices(
+    symbol: ExchangeSymbol,
+    interval: string,
+    limit: number
+  ): number[] {
+    return this.exchange.getLatestKlineOpenPrices(symbol, interval, limit);
   }
 }

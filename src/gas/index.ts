@@ -21,6 +21,7 @@ import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+import { FGIProvider } from "./FGIProvider";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -47,14 +48,14 @@ function tick(): void {
 }
 
 function start(): void {
-  catchError(startTicker);
+  catchError(createTriggers);
 }
 
 function stop(): void {
-  catchError(stopTicker);
+  catchError(deleteTriggers);
 }
 
-function startTicker(): void {
+function createTriggers(): void {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger(Process.tick.name)
     .timeBased()
@@ -65,7 +66,7 @@ function startTicker(): void {
   );
 }
 
-function stopTicker(): void {
+function deleteTriggers(): void {
   let deleted = false;
   ScriptApp.getProjectTriggers().forEach((t) => {
     ScriptApp.deleteTrigger(t);
@@ -115,7 +116,7 @@ function initialSetup(params: InitialSetupParams): string {
       Log.alert(`Checking if Binance is reachable`);
       new Exchange(config.KEY, config.SECRET).getBalance(config.StableCoin);
       Log.alert(`Connected to Binance`);
-      startTicker();
+      createTriggers();
     }
     configDao.set(config);
     return `OK`;
@@ -151,7 +152,18 @@ function getAssets(): AssetsResponse {
 function getConfig(): Config {
   return catchError(() => {
     const configDao = new ConfigDao(DefaultStore);
-    return configDao.isInitialized() ? configDao.get() : null;
+    if (configDao.isInitialized()) {
+      const config = configDao.get();
+      const fgi = new FGIProvider(
+        configDao,
+        new Exchange(config.KEY, config.SECRET),
+        CacheProxy
+      );
+      config.AutoFGI = fgi.get();
+      return config;
+    } else {
+      return null;
+    }
   });
 }
 

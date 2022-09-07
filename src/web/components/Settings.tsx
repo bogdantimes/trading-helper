@@ -140,16 +140,17 @@ export function Settings({
             fullWidth={true}
           />
           <FormControl fullWidth={true}>
-            <InputLabel id={`mkt-trend`}>Trend</InputLabel>
+            <InputLabel id={`mkt-trend`}>Trend ({config.AutoFGI})</InputLabel>
             <Select
               labelId="mkt-trend"
               value={config.FearGreedIndex}
-              label="Trend"
+              label={`Trend (${config.AutoFGI})`}
               defaultValue={2}
               onChange={(e) =>
                 setConfig({ ...config, FearGreedIndex: +e.target.value })
               }
             >
+              <MenuItem value={-1}>Auto Detect</MenuItem>
               <MenuItem value={1}>Bear Market</MenuItem>
               <MenuItem value={3}>Bull Market</MenuItem>
               <MenuItem value={2}>Oscillating</MenuItem>

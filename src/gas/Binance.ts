@@ -94,6 +94,27 @@ export class Binance implements IExchange {
     return +(this.#balances[coinName] || 0);
   }
 
+  getLatestKlineOpenPrices(
+    symbol: ExchangeSymbol,
+    interval: string,
+    limit: number
+  ): number[] {
+    Log.debug(
+      `Fetching latest kline open prices for ${symbol}, interval: ${interval}, limit: ${limit}`
+    );
+    const resource = `klines`;
+    const query = `symbol=${symbol}&interval=${interval}&limit=${limit}`;
+    try {
+      return this.fetch(() => `${resource}?${query}`, this.defaultReqOpts).map(
+        (kline: any) => +kline[1]
+      );
+    } catch (e: any) {
+      throw new Error(
+        `Failed to get latest kline open prices for ${symbol}: ${e.message}`
+      );
+    }
+  }
+
   #updateBalance(coinName: string, amount: number): void {
     const balance = this.#balances[coinName] || 0;
     this.#balances[coinName] = balance + amount;

@@ -6,6 +6,7 @@ import {
   Config,
   ExchangeSymbol,
   f2,
+  FGI,
   Key,
   PriceMove,
   PricesHolder,
@@ -22,6 +23,7 @@ import { TradeAction, TraderPlugin } from "./traders/pro/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
+import { FGIProvider } from "./FGIProvider";
 
 const MIN_BUSD_BUY = 15;
 
@@ -30,6 +32,7 @@ export class TradeManager {
   #canInvest = 0;
   #balance = 0;
   #optimalInvestRatio = 0;
+  #fgi: FGI;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -39,11 +42,13 @@ export class TradeManager {
     const tradesDao = new TradesDao(DefaultStore);
     const priceProvider = PriceProvider.default(exchange, CacheProxy);
     const channelsDao = new ChannelsDao(DefaultStore);
+    const fgiProvider = new FGIProvider(configDao, exchange, CacheProxy);
     return new TradeManager(
       priceProvider,
       tradesDao,
       configDao,
       channelsDao,
+      fgiProvider,
       exchange,
       statistics,
       global.TradingHelperLibrary
@@ -55,6 +60,7 @@ export class TradeManager {
     private readonly tradesDao: TradesDao,
     private readonly configDao: ConfigDao,
     private readonly channelsDao: ChannelsDao,
+    private readonly fgiProvider: FGIProvider,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
     private readonly plugin: TraderPlugin
@@ -63,6 +69,7 @@ export class TradeManager {
   trade(): void {
     // Get current config
     this.#config = this.configDao.get();
+    this.#fgi = this.fgiProvider.get();
     this.#initBalance();
 
     const cs = this.channelsDao.getCandidates(this.#config.ChannelWindowMins);
@@ -244,9 +251,7 @@ export class TradeManager {
       //    The closer the current profit to the current channel top range, the closer K is to 0.99.
 
       const CS = this.#config.ChannelSize;
-      const FGI = this.#config.FearGreedIndex;
-      // FGI is from 1 (bearish) to 3 (bullish), which makes profit goal 90-30% of channel size
-      const PG = CS * (0.9 / FGI);
+      const PG = CS * (0.9 / this.#fgi);
       const P = tm.profit() / tm.tradeResult.paid;
       const K = Math.min(0.99, 1 - CS + Math.max(0, (P * CS) / PG));
 
@@ -258,7 +263,7 @@ export class TradeManager {
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
       // Move stop limit up to the current price proportionally to the TTL left
-      const maxTTL = this.#config.ChannelWindowMins / FGI;
+      const maxTTL = this.#config.ChannelWindowMins / this.#fgi;
       const curTTL = Math.min(tm.ttl, maxTTL);
       const k2 = Math.min(0.99, curTTL / maxTTL);
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);

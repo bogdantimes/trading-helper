@@ -1,12 +1,13 @@
-import { Config, IStore, StableUSDCoin } from "../../lib";
+import { Config, FGI, IStore, StableUSDCoin } from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: -1, // -1 is to initiate using all available balance.
   SellAtStopLimit: true,
-  ChannelSize: 0.25,
-  ChannelWindowMins: 4500,
-  FearGreedIndex: 2,
+  ChannelSize: 0.13,
+  ChannelWindowMins: 8000,
+  FearGreedIndex: -1, // -1 Auto detect
+  AutoFGI: FGI.NEUTRAL,
 });
 
 export class ConfigDao {

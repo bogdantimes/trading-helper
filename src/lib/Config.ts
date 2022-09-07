@@ -1,5 +1,12 @@
 import { StableUSDCoin } from "./Types";
 
+export type AUTO_FGI = -1;
+export enum FGI {
+  BEARISH = 1,
+  NEUTRAL = 2,
+  BULLISH = 3,
+}
+
 export interface Config {
   KEY?: string;
   SECRET?: string;
@@ -10,11 +17,14 @@ export interface Config {
    */
   StableBalance: number;
   /**
-   * FearGreedIndex equal to 1 is better for a bearish market
-   * (makes profit goal higher and allow to hold an asset for longer),
-   * while 2 and 3, make it better for consolidation and bullish market accordingly.
+   * FearGreedIndex affects the profit goal and the stop limit aggressiveness.
+   * For bullish market, it makes the profit goal lower and the stop limit more aggressive.
+   * This allows to trade shorter and save profit when the market suddenly turns down.
+   * Bearish market is the opposite: higher profit goal and less aggressive stop limit.
+   * Set to -1 to auto-detect the market trend.
    */
-  FearGreedIndex: number;
+  FearGreedIndex: AUTO_FGI | FGI;
+  AutoFGI: FGI;
   /**
    * ChannelSize - defines the percentage between the upper and lower bounds of a price channel.
    */
