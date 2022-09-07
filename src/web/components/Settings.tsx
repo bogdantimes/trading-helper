@@ -5,7 +5,6 @@ import {
   Alert,
   Box,
   Button,
-  Divider,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -34,7 +33,7 @@ export function Settings({
   const [channelSize, setChannelSize] = useState(
     f2(config.ChannelSize * 100).toString()
   );
-  const [balance, setBalance] = useState(config.StableBalance.toString());
+  const [balance, setBalance] = useState(f2(config.StableBalance).toString());
   const [chDuration, setChDuration] = useState(
     config.ChannelWindowMins.toString()
   );
@@ -112,7 +111,7 @@ export function Settings({
 
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
-      <Stack spacing={2} divider={<Divider />}>
+      <Stack spacing={2} sx={{ maxWidth: `400px` }}>
         <FormControl>
           <FormLabel>Stable Coin</FormLabel>
           <RadioGroup
@@ -132,63 +131,61 @@ export function Settings({
             ))}
           </RadioGroup>
         </FormControl>
-        <Stack direction="row" spacing={2}>
-          <TextField
-            value={balance}
-            label={`Balance`}
-            onChange={(e) => setBalance(e.target.value)}
-            fullWidth={true}
-          />
-          <FormControl fullWidth={true}>
-            <InputLabel id={`mkt-trend`}>Trend ({config.AutoFGI})</InputLabel>
-            <Select
-              labelId="mkt-trend"
-              value={config.FearGreedIndex}
-              label={`Trend (${config.AutoFGI})`}
-              defaultValue={2}
+        <TextField
+          value={balance}
+          label={`Balance`}
+          onChange={(e) => setBalance(e.target.value)}
+        />
+        <FormControl>
+          <InputLabel id={`mkt-trend`}>Trend ({config.AutoFGI})</InputLabel>
+          <Select
+            labelId="mkt-trend"
+            value={config.FearGreedIndex}
+            label={`Trend (${config.AutoFGI})`}
+            defaultValue={2}
+            onChange={(e) =>
+              setConfig({ ...config, FearGreedIndex: +e.target.value })
+            }
+          >
+            <MenuItem value={-1}>Auto Detect</MenuItem>
+            <MenuItem value={1}>Bear Market</MenuItem>
+            <MenuItem value={3}>Bull Market</MenuItem>
+            <MenuItem value={2}>Oscillating</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          value={channelSize}
+          label={`Channel Size`}
+          onChange={(e) => setChannelSize(e.target.value)}
+          InputProps={{
+            startAdornment: <InputAdornment position="start">%</InputAdornment>,
+          }}
+        />
+        <TextField
+          value={chDuration}
+          label={`Channel Window (minutes)`}
+          onChange={(e) => setChDuration(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">min.</InputAdornment>
+            ),
+          }}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={config.SellAtStopLimit}
               onChange={(e) =>
-                setConfig({ ...config, FearGreedIndex: +e.target.value })
+                setConfig({ ...config, SellAtStopLimit: e.target.checked })
               }
-            >
-              <MenuItem value={-1}>Auto Detect</MenuItem>
-              <MenuItem value={1}>Bear Market</MenuItem>
-              <MenuItem value={3}>Bull Market</MenuItem>
-              <MenuItem value={2}>Oscillating</MenuItem>
-            </Select>
-          </FormControl>
-        </Stack>
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth={true}
-              value={channelSize}
-              label={`Price Channel Size`}
-              onChange={(e) => setChannelSize(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">%</InputAdornment>
-                ),
-              }}
             />
-            <TextField
-              fullWidth={true}
-              value={chDuration}
-              label={`Channel Window (minutes)`}
-              onChange={(e) => setChDuration(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">min.</InputAdornment>
-                ),
-              }}
-            />
-          </Stack>
-        </Stack>
-        {switchers(config, setConfig)}
+          }
+          label="Sell At Stop limit"
+        />
         <TextField
           value={newFbURL}
           label={`Firebase URL`}
           onChange={(e) => setNewFbURL(e.target.value)}
-          sx={{ width: `49%` }}
           helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. Your data won't be lost.`}
         />
         <Box alignSelf={`center`} sx={{ position: `relative` }}>
@@ -217,26 +214,5 @@ export function Settings({
         {error && <Alert severity="error">{error.toString()}</Alert>}
       </Stack>
     </Box>
-  );
-}
-
-function switchers(
-  config: Config,
-  setConfig: (value: ((prevState: Config) => Config) | Config) => void
-): JSX.Element {
-  return (
-    <Stack>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={config.SellAtStopLimit}
-            onChange={(e) =>
-              setConfig({ ...config, SellAtStopLimit: e.target.checked })
-            }
-          />
-        }
-        label="Sell At Stop limit"
-      />
-    </Stack>
   );
 }
