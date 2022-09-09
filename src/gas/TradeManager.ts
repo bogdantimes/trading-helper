@@ -1,13 +1,12 @@
 import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
-import { Log, StableCoins } from "./Common";
+import { Log } from "./Common";
 import {
-  Coin,
   CoinName,
   Config,
   ExchangeSymbol,
   f2,
-  IStore,
+  FGI,
   Key,
   PriceMove,
   PricesHolder,
@@ -18,20 +17,22 @@ import {
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
-import { ConfigDao, DefaultConfig } from "./dao/Config";
+import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
 import { TradeAction, TraderPlugin } from "./traders/pro/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
+import { FGIProvider } from "./FGIProvider";
+
+const MIN_BUY = 15;
 
 export class TradeManager {
   #config: Config;
-  /**
-   * Used when {@link ProfitBasedStopLimit} is enabled.
-   */
-  #boughtStateCount = 0;
   #canInvest = 0;
+  #balance = 0;
+  #optimalInvestRatio = 0;
+  #fgi: FGI;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -41,11 +42,13 @@ export class TradeManager {
     const tradesDao = new TradesDao(DefaultStore);
     const priceProvider = PriceProvider.default(exchange, CacheProxy);
     const channelsDao = new ChannelsDao(DefaultStore);
+    const fgiProvider = new FGIProvider(configDao, exchange, CacheProxy);
     return new TradeManager(
       priceProvider,
       tradesDao,
       configDao,
       channelsDao,
+      fgiProvider,
       exchange,
       statistics,
       global.TradingHelperLibrary
@@ -57,6 +60,7 @@ export class TradeManager {
     private readonly tradesDao: TradesDao,
     private readonly configDao: ConfigDao,
     private readonly channelsDao: ChannelsDao,
+    private readonly fgiProvider: FGIProvider,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
     private readonly plugin: TraderPlugin
@@ -65,6 +69,11 @@ export class TradeManager {
   trade(): void {
     // Get current config
     this.#config = this.configDao.get();
+    this.#fgi = this.fgiProvider.get();
+    this.#initBalance();
+
+    const cs = this.channelsDao.getCandidates(this.#config.ChannelWindowMins);
+    this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
 
     this.plugin
       .trade({
@@ -74,22 +83,22 @@ export class TradeManager {
       })
       .forEach(({ coin, action }) => {
         if (action === TradeAction.Buy) {
-          this.buy(coin);
+          this.#setBuyState(coin);
         } else if (action === TradeAction.Sell) {
-          this.sell(coin);
+          this.#setSellState(coin);
         }
       });
 
-    // Randomize the order of trades to avoid biases
-    const trades = this.tradesDao.getList().sort(() => Math.random() - 0.5);
-    const bought = trades.filter((t) => t.stateIs(TradeState.BOUGHT));
-    this.#boughtStateCount = bought.length;
+    const trades = this.tradesDao.getList();
+    const inv = trades.filter((t) => t.tradeResult.quantity > 0);
+    this.#canInvest = Math.max(0, this.#optimalInvestRatio - inv.length);
 
-    if (this.#config.InvestRatio > 0) {
-      const invested = bought.filter(
-        (tm) => !this.#config.HODL.includes(tm.getCoinName())
-      ).length;
-      this.#canInvest = Math.max(0, this.#config.InvestRatio - invested);
+    if (isNode) {
+      // For back-testing, sorting to ensure tests consistency
+      trades.sort((a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1));
+    } else {
+      // For production, randomizing the order to avoid biases
+      trades.sort(() => Math.random() - 0.5);
     }
 
     const tms = [
@@ -106,9 +115,42 @@ export class TradeManager {
         Log.error(e);
       }
     });
+    this.#persistBalance();
   }
 
-  buy(coinName: CoinName): void {
+  sellAll(sellNow = false): void {
+    // Get current config
+    this.#config = this.configDao.get();
+    this.#initBalance();
+    this.tradesDao.iterate((tm) => {
+      tm.resetState();
+      if (tm.tradeResult.quantity > 0) {
+        tm.setState(TradeState.SELL);
+        sellNow && this.#sell(tm);
+      }
+      return tm;
+    });
+    this.#persistBalance();
+  }
+
+  #initBalance(): void {
+    this.#balance = this.#config.StableBalance;
+    if (this.#balance === -1) {
+      this.#balance = this.exchange.getBalance(this.#config.StableCoin);
+    }
+  }
+
+  #persistBalance(): void {
+    const diff = this.#balance - this.#config.StableBalance;
+    if (diff !== 0) {
+      this.#config = this.configDao.get();
+      this.#config.StableBalance += diff;
+      this.#balance = this.#config.StableBalance;
+      this.configDao.set(this.#config);
+    }
+  }
+
+  #setBuyState(coinName: CoinName): void {
     const symbol = new ExchangeSymbol(coinName, this.#config.StableCoin);
     this.tradesDao.update(
       coinName,
@@ -128,25 +170,10 @@ export class TradeManager {
     );
   }
 
-  sell(coinName: string): void {
+  #setSellState(coinName: string): void {
     this.tradesDao.update(coinName, (tm) => {
       if (tm.tradeResult.quantity > 0) {
         tm.setState(TradeState.SELL);
-      }
-      return tm;
-    });
-  }
-
-  sellAll(keepHodls = true, sellNow = false): void {
-    const hodls = keepHodls ? new ConfigDao(DefaultStore).get().HODL : [];
-    this.tradesDao.iterate((tm) => {
-      if (hodls.includes(tm.getCoinName())) {
-        return null;
-      }
-      tm.resetState();
-      if (tm.tradeResult.quantity > 0) {
-        tm.setState(TradeState.SELL);
-        sellNow && this.#sell(tm);
       }
       return tm;
     });
@@ -173,71 +200,44 @@ export class TradeManager {
     } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
       // buy only if price stopped going down
       // this allows to wait if price continues to fall
-      const howMuch = this.#calculateQuantity(tm);
-      if (howMuch > 0) {
-        this.#buy(tm, howMuch);
+      const toInvest = this.#getMoneyToInvest(tm);
+      if (toInvest > 0) {
+        this.#buy(tm, toInvest);
       } else {
-        Log.alert(
-          `ℹ️ Can't buy ${tm.getCoinName()} - invest ratio would be exceeded`
-        );
+        Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - not enough balance`);
         tm.resetState();
       }
     }
     return tm;
   }
 
-  #calculateQuantity(tm: TradeMemo): number {
-    if (this.#config.InvestRatio <= 0) {
-      return this.#config.BuyQuantity;
-    }
+  #getMoneyToInvest(tm: TradeMemo): number {
     if (this.#canInvest <= 0 || tm.tradeResult.quantity > 0) {
-      // Return 0 if we can't invest anymore or if we already bought this coin
+      // Return 0 if we can't invest or if we already have some coins
       return 0;
     }
-    const balance = this.exchange.getBalance(tm.tradeResult.symbol.priceAsset);
-    return Math.max(
-      DefaultConfig().BuyQuantity,
-      Math.floor(balance / this.#canInvest)
-    );
+    const result = Math.floor(this.#balance / this.#canInvest);
+    return result < MIN_BUY ? 0 : result;
   }
 
   private processBoughtState(tm: TradeMemo): void {
+    if (isFinite(tm.ttl)) {
+      tm.ttl++;
+    } else {
+      tm.ttl = 0;
+    }
+
     this.updateStopLimit(tm);
-
-    isFinite(tm.ttl) && tm.ttl++;
-
-    if (this.#config.HODL.includes(tm.getCoinName())) return;
 
     if (tm.stopLimitCrossedDown()) {
       Log.alert(
         `ℹ️ ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`
       );
       this.#config.SellAtStopLimit && tm.setState(TradeState.SELL);
-    } else if (tm.profitLimitCrossedUp(this.#config.ProfitLimit)) {
-      Log.alert(
-        `ℹ️ ${tm.getCoinName()} profit limit crossed up at ${tm.currentPrice}`
-      );
-      this.#config.SellAtProfitLimit && tm.setState(TradeState.SELL);
-    }
-
-    if (
-      this.#config.TTL &&
-      isFinite(tm.ttl) &&
-      tm.ttl > this.#config.TTL &&
-      tm.profitPercent() > -3 &&
-      tm.profitPercent() < 3
-    ) {
-      tm.setState(TradeState.SELL);
     }
   }
 
   private updateStopLimit(tm: TradeMemo): void {
-    if (this.#config.ProfitBasedStopLimit) {
-      const allowedLossPerAsset =
-        this.stats.totalProfit / this.#boughtStateCount;
-      tm.stopLimitPrice =
-        (tm.tradeResult.cost - allowedLossPerAsset) / tm.tradeResult.quantity;
-    }
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       tm.stopLimitPrice = ch[Key.MIN];
@@ -247,22 +247,31 @@ export class TradeManager {
       // 1. Get the last N prices and calculate the average price.
       // 2. Multiply the average price by K, where: 1 - StopLimit <= K <= 0.99,
       //    K -> 0.99 proportionally to the current profit.
-      //    The closer the current profit to the ProfitLimit, the closer K is to 0.99.
-      const SL = this.#config.ChannelSize;
-      const PL = this.#config.ProfitLimit;
-      const P = tm.profitPercent() / 100;
-      const K = Math.min(0.99, 1 - SL + Math.max(0, (P * SL) / PL));
+      //    The closer the current profit to the current channel top range, the closer K is to 0.99.
+
+      const CS = this.#config.ChannelSize;
+      const PG = CS * (0.9 / this.#fgi);
+      const P = tm.profit() / tm.tradeResult.paid;
+      const K = Math.min(0.99, 1 - CS + Math.max(0, (P * CS) / PG));
 
       const lastN = 3;
       const avePrice =
         tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
       // new stop limit cannot be higher than current price
-      const newStopLimit = Math.min(K * avePrice, tm.currentPrice);
+      let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
+      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+
+      // Move stop limit up to the current price proportionally to the TTL left
+      const maxTTL = this.#config.ChannelWindowMins / this.#fgi;
+      const curTTL = Math.min(tm.ttl, maxTTL);
+      const k2 = Math.min(0.99, curTTL / maxTTL);
+      newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
     }
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {
+    tm.ttl = 0;
     tm.stopLimitPrice = 0;
     this.updateStopLimit(tm);
   }
@@ -279,11 +288,6 @@ export class TradeManager {
         // Only for back-testing, force selling this asset
         // The back-testing exchange mock will use the previous price
         this.#sell(tm);
-      } else if (!this.#config.HODL.includes(tm.getCoinName())) {
-        this.#config.HODL.push(tm.getCoinName());
-        Log.alert(
-          `The ${tm.getCoinName()} asset is marked HODL. Please, resolve the issue manually.`
-        );
       }
     } else {
       // no price available, and no quantity, which means we haven't bought anything yet
@@ -305,6 +309,7 @@ export class TradeManager {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
         this.#canInvest = Math.max(0, this.#canInvest - 1);
+        this.#balance -= tradeResult.paid;
         // flatten out prices to make them not cross any limits right after the trade
         tm.prices = [tradeResult.price];
         // join existing trade result quantity, commission, paid price, etc. with the new one
@@ -320,7 +325,6 @@ export class TradeManager {
         Log.error(e);
       } finally {
         tm.setState(TradeState.BOUGHT);
-        tm.ttl = 0;
       }
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`);
@@ -342,9 +346,10 @@ export class TradeManager {
       // any actions should not affect changing the state to SOLD in the end
       try {
         this.#canInvest = Math.min(
-          this.#config.InvestRatio,
+          this.#optimalInvestRatio,
           this.#canInvest + 1
         );
+        this.#balance += tradeResult.gained;
         const fee = this.processSellFee(memo, tradeResult);
         const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee);
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid));
@@ -367,7 +372,6 @@ export class TradeManager {
       }
     } else {
       Log.debug(memo);
-      this.#config.HODL.push(memo.getCoinName());
       memo.setState(TradeState.BOUGHT);
       Log.alert(
         `An issue happened while selling ${symbol}. The asset is marked HODL. Please, resolve it manually.`
@@ -420,14 +424,5 @@ export class TradeManager {
       return tm;
     });
     return updated;
-  }
-
-  updateStableCoinsBalance(store: IStore): void {
-    const stableCoins: any[] = [];
-    Object.keys(StableUSDCoin).forEach((coin) => {
-      const balance = this.exchange.getBalance(coin);
-      balance && stableCoins.push(new Coin(coin, balance));
-    });
-    store.set(StableCoins, stableCoins);
   }
 }

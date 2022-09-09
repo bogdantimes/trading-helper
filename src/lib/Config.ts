@@ -1,26 +1,30 @@
 import { StableUSDCoin } from "./Types";
 
+export type AUTO_FGI = -1;
+export enum FGI {
+  BEARISH = 1,
+  NEUTRAL = 2,
+  BULLISH = 3,
+}
+
 export interface Config {
-  TTL: number;
   KEY?: string;
   SECRET?: string;
   StableCoin: StableUSDCoin;
-  BuyQuantity: number;
   /**
-   * InvestRatio when provided overrides the BuyQuantity and instead invests according to the ratio.
-   * BuyQuantity in this case is calculated as Math.floor(freeAsset/InvestRatio),
-   * but not less than DefaultConfig.BuyQuantity.
+   * Balance of free money. If set to -1, means it should be initialized by reading from the account.
+   * Otherwise, if it is >= 0, it tells the program how much money it has and can use.
    */
-  InvestRatio?: number;
+  StableBalance: number;
   /**
-   * When ProfitBasedStopLimit is true - a stop limit for each asset is calculated based on the total profit of the tool.
-   * All profit is divided equally between all assets and this amount is how much loss is allowed for each asset.
-   * Such stop limits are always recalculated when the total profit or number of assets changes.
+   * FearGreedIndex affects the profit goal and the stop limit aggressiveness.
+   * For bullish market, it makes the profit goal lower and the stop limit more aggressive.
+   * This allows to trade shorter and save profit when the market suddenly turns down.
+   * Bearish market is the opposite: higher profit goal and less aggressive stop limit.
+   * Set to -1 to auto-detect the market trend.
    */
-  ProfitBasedStopLimit: boolean;
-  ProfitLimit: number;
-  SellAtStopLimit: boolean;
-  SellAtProfitLimit: boolean;
+  FearGreedIndex: AUTO_FGI | FGI;
+  AutoFGI: FGI;
   /**
    * ChannelSize - defines the percentage between the upper and lower bounds of a price channel.
    */
@@ -31,5 +35,5 @@ export interface Config {
    */
   ChannelWindowMins: number;
 
-  HODL: string[];
+  SellAtStopLimit: boolean;
 }

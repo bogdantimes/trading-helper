@@ -3,11 +3,11 @@ import * as React from "react";
 import { useState } from "react";
 import { Delete } from "@mui/icons-material";
 import Typography from "@mui/material/Typography";
-import { TradeMemo } from "../../lib";
+import { f2, TradeMemo } from "../../lib";
 import { growthIconMap } from "./Common";
 
 export function TradeTitle({
-  tradeMemo,
+  tradeMemo: tm,
   onDelete,
 }: {
   tradeMemo: TradeMemo;
@@ -30,6 +30,7 @@ export function TradeTitle({
     </IconButton>
   );
 
+  const profit = tm.profitPercent();
   return (
     <Typography
       sx={{ display: `flex`, alignItems: `center` }}
@@ -37,9 +38,10 @@ export function TradeTitle({
       variant="h5"
       component="div"
     >
-      {tradeMemo.getCoinName()}
-      {growthIconMap.get(tradeMemo.getPriceMove())}
-      <span style={{ marginLeft: `auto` }}>{deleteIcon}</span>
+      {tm.getCoinName()}
+      {growthIconMap.get(tm.getPriceMove())}
+      {profit > 0 ? `+` : ``}
+      {f2(profit)}%<span style={{ marginLeft: `auto` }}>{deleteIcon}</span>
     </Typography>
   );
 }

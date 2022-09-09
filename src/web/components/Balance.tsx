@@ -5,22 +5,26 @@ import Typography from "@mui/material/Typography";
 import { f2 } from "../../lib";
 import { cardWidth } from "./Common";
 
-interface StableCoinProps {
+interface BalanceProps {
   name: string;
   balance: number;
+  assetsValue: number;
 }
 
-export default function StableCoin({
+export default function Balance({
   name,
   balance,
-}: StableCoinProps): JSX.Element {
+  assetsValue,
+}: BalanceProps): JSX.Element {
   return (
     <>
       <Card sx={{ width: cardWidth }}>
         <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
-          <Typography variant="h5" display={`flex`}>
-            <span>{name}</span>
-            <span style={{ marginLeft: `auto` }}>{f2(balance)}</span>
+          <Typography variant="h5">{name}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            <div>Free: {f2(balance)}</div>
+            <div>Assets Value: {f2(assetsValue)}</div>
+            <div>Total: {f2(balance + assetsValue)}</div>
           </Typography>
         </CardContent>
       </Card>

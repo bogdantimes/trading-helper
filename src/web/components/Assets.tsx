@@ -1,12 +1,11 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import Trade from "./Trade";
-import { Chip, Divider, Grid, Typography } from "@mui/material";
-import StableCoin from "./StableCoin";
+import { Chip, Divider, Grid } from "@mui/material";
+import Balance from "./Balance";
 import { capitalizeWord, circularProgress } from "./Common";
 import {
   AssetsResponse,
-  Coin,
   Config,
   StableUSDCoin,
   TradeMemo,
@@ -25,13 +24,17 @@ export function Assets({ config }: { config: Config }): JSX.Element {
     return () => clearInterval(interval);
   }, []);
 
-  const tradesMap = assets?.trades.reduce((map, obj) => {
-    const tm = TradeMemo.fromObject(obj);
-    map.has(tm.getState())
-      ? map.get(tm.getState()).push(tm)
-      : map.set(tm.getState(), [tm]);
-    return map;
-  }, new Map<TradeState, TradeMemo[]>());
+  const invested: TradeMemo[] = [];
+  assets?.trades.forEach((obj) => {
+    if (obj.tradeResult.quantity > 0) {
+      invested.push(TradeMemo.fromObject(obj));
+    }
+  });
+
+  const assetsValue = invested.reduce((sum, tm) => {
+    const qty = tm.tradeResult.quantity;
+    return qty > 0 ? sum + qty * tm.currentPrice : sum;
+  }, 0);
 
   return (
     <>
@@ -41,46 +44,33 @@ export function Assets({ config }: { config: Config }): JSX.Element {
             {circularProgress}
           </Grid>
         )}
-        {getStableCoinsView(assets?.stableCoins)}
-        {[
-          TradeState.BUY,
-          TradeState.SELL,
-          TradeState.BOUGHT,
-          TradeState.SOLD,
-        ].map((s) => getTradeCards(s, tradesMap?.get(s), config))}
+        {getBalanceView(config.StableCoin, config.StableBalance, assetsValue)}
+        {getTradeCards(TradeState.BOUGHT, invested, config)}
       </Grid>
     </>
   );
 }
 
-function getStableCoinsView(stableCoins?: Coin[]): JSX.Element {
+function getBalanceView(
+  name: StableUSDCoin,
+  balance: number,
+  assetsValue: number
+): JSX.Element {
   const [hide, setHide] = useState(false);
-
-  const elements = stableCoins?.map((coin) => (
-    <Grid key={coin.name} item>
-      <StableCoin {...coin} />
-    </Grid>
-  ));
-  const noElements = (
-    <Grid item>
-      <Typography variant="body1">
-        No Stable Coins. First buy {Object.keys(StableUSDCoin).join(`, or `)} on
-        Binance.
-      </Typography>
-    </Grid>
-  );
 
   return (
     <>
       <Grid item xs={12}>
         <Divider>
-          <Chip onClick={() => setHide(!hide)} label="Stable Coins" />
+          <Chip onClick={() => setHide(!hide)} label="Balance" />
         </Divider>
       </Grid>
-      {!hide && elements && (
+      {!hide && (
         <Grid item xs={12}>
           <Grid container justifyContent="center" spacing={2}>
-            {elements.length ? elements : noElements}
+            <Grid item>
+              <Balance {...{ name, balance, assetsValue }} />
+            </Grid>
           </Grid>
         </Grid>
       )}
@@ -90,36 +80,34 @@ function getStableCoinsView(stableCoins?: Coin[]): JSX.Element {
 
 function getTradeCards(
   state: TradeState,
-  elems?: TradeMemo[],
+  elems: TradeMemo[],
   config?: Config
 ): JSX.Element {
   // hide Sold trades by default, others visible by default
   const [hide, setHide] = useState(state === TradeState.SOLD);
   return (
-    elems?.length && (
-      <>
+    <>
+      <Grid item xs={12}>
+        <Divider>
+          <Chip
+            onClick={() => setHide(!hide)}
+            label={`${capitalizeWord(state)} (${elems.length})`}
+          />
+        </Divider>
+      </Grid>
+      {!hide && (
         <Grid item xs={12}>
-          <Divider>
-            <Chip
-              onClick={() => setHide(!hide)}
-              label={`${capitalizeWord(state)} (${elems.length})`}
-            />
-          </Divider>
-        </Grid>
-        {!hide && (
-          <Grid item xs={12}>
-            <Grid container justifyContent="center" spacing={2}>
-              {elems
-                ?.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
-                .map((t) => (
-                  <Grid key={t.getCoinName()} item>
-                    <Trade data={t} config={config} />
-                  </Grid>
-                ))}
-            </Grid>
+          <Grid container justifyContent="center" spacing={2}>
+            {elems
+              .sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
+              .map((t) => (
+                <Grid key={t.getCoinName()} item>
+                  <Trade data={t} config={config} />
+                </Grid>
+              ))}
           </Grid>
-        )}
-      </>
-    )
+        </Grid>
+      )}
+    </>
   );
 }

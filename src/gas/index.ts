@@ -2,10 +2,9 @@ import { DefaultStore, FirebaseStore } from "./Store";
 import { TradeActions } from "./TradeActions";
 import { Statistics } from "./Statistics";
 import { Exchange } from "./Exchange";
-import { Log, SECONDS_IN_MIN, StableCoins, TICK_INTERVAL_MIN } from "./Common";
+import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   AssetsResponse,
-  Coin,
   CoinName,
   Config,
   InitialSetupParams,
@@ -22,6 +21,7 @@ import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+import { FGIProvider } from "./FGIProvider";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -48,14 +48,14 @@ function tick(): void {
 }
 
 function start(): void {
-  catchError(startTicker);
+  catchError(createTriggers);
 }
 
 function stop(): void {
-  catchError(stopTicker);
+  catchError(deleteTriggers);
 }
 
-function startTicker(): void {
+function createTriggers(): void {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger(Process.tick.name)
     .timeBased()
@@ -66,7 +66,7 @@ function startTicker(): void {
   );
 }
 
-function stopTicker(): void {
+function deleteTriggers(): void {
   let deleted = false;
   ScriptApp.getProjectTriggers().forEach((t) => {
     ScriptApp.deleteTrigger(t);
@@ -116,31 +116,10 @@ function initialSetup(params: InitialSetupParams): string {
       Log.alert(`Checking if Binance is reachable`);
       new Exchange(config.KEY, config.SECRET).getBalance(config.StableCoin);
       Log.alert(`Connected to Binance`);
-      startTicker();
+      createTriggers();
     }
     configDao.set(config);
     return `OK`;
-  });
-}
-
-function buyCoin(coinName: string): string {
-  return catchError(() => {
-    TradeManager.default().buy(coinName);
-    return `Buying ${coinName}`;
-  });
-}
-
-function cancelAction(coinName: string): string {
-  return catchError(() => {
-    TradeActions.default().cancel(coinName);
-    return `Cancelling actions on ${coinName}`;
-  });
-}
-
-function sellCoin(coinName: string): string {
-  return catchError(() => {
-    TradeManager.default().sell(coinName);
-    return `Selling ${coinName}`;
   });
 }
 
@@ -151,13 +130,6 @@ function sellAll(): string {
   });
 }
 
-function setHold(coinName: string, value: boolean): string {
-  return catchError(() => {
-    TradeActions.default().setHold(coinName, value);
-    return `Setting HODL for ${coinName} to ${value}`;
-  });
-}
-
 function dropCoin(coinName: string): string {
   return catchError(() => {
     TradeActions.default().drop(coinName);
@@ -165,28 +137,14 @@ function dropCoin(coinName: string): string {
   });
 }
 
-function editTrade(coinName: string, newTradeMemo: TradeMemo): string {
-  return catchError(() => {
-    TradeActions.default().replace(coinName, TradeMemo.copy(newTradeMemo));
-    return `Making changes for ${coinName}`;
-  });
-}
-
 function getTrades(): TradeMemo[] {
   return catchError(() => new TradesDao(DefaultStore).getList());
-}
-
-function getStableCoins(): Coin[] {
-  return catchError(() => {
-    return DefaultStore.get(StableCoins) || [];
-  });
 }
 
 function getAssets(): AssetsResponse {
   return catchError(() => {
     return {
       trades: getTrades(),
-      stableCoins: getStableCoins(),
     };
   });
 }
@@ -194,7 +152,18 @@ function getAssets(): AssetsResponse {
 function getConfig(): Config {
   return catchError(() => {
     const configDao = new ConfigDao(DefaultStore);
-    return configDao.isInitialized() ? configDao.get() : null;
+    if (configDao.isInitialized()) {
+      const config = configDao.get();
+      const fgi = new FGIProvider(
+        configDao,
+        new Exchange(config.KEY, config.SECRET),
+        CacheProxy
+      );
+      config.AutoFGI = fgi.get();
+      return config;
+    } else {
+      return null;
+    }
   });
 }
 
@@ -255,16 +224,10 @@ global.tick = tick;
 global.start = start;
 global.stop = stop;
 global.initialSetup = initialSetup;
-global.buyCoin = buyCoin;
-global.cancelAction = cancelAction;
-global.sellCoin = sellCoin;
 global.sellAll = sellAll;
-global.setHold = setHold;
 global.dropCoin = dropCoin;
-global.editTrade = editTrade;
 global.getTrades = getTrades;
 global.getAssets = getAssets;
-global.getStableCoins = getStableCoins;
 global.getConfig = getConfig;
 global.setConfig = setConfig;
 global.getStatistics = getStatistics;

@@ -14,7 +14,7 @@ export class TradeMemo extends PricesHolder {
   deleted: boolean;
   /**
    * The price at which the asset should be sold automatically if {@link SellAtStopLimit}
-   * is true, and {@link Config.HODL} does not include the coin name.
+   * is true.
    */
   private stopLimit = 0;
   /**
@@ -159,15 +159,6 @@ export class TradeMemo extends PricesHolder {
     return (
       this.currentPrice < this.stopLimitPrice &&
       this.prices[this.prices.length - 2] >= this.stopLimitPrice
-    );
-  }
-
-  profitLimitCrossedUp(profitLimit: number): boolean {
-    // all prices except the last one are lower the profit limit price
-    const profitLimitPrice = this.tradeResult.price * (1 + profitLimit);
-    return (
-      this.currentPrice > profitLimitPrice &&
-      this.prices[this.prices.length - 2] <= profitLimitPrice
     );
   }
 

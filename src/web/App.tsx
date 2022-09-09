@@ -18,7 +18,7 @@ import { Assets } from "./components/Assets";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
 import { Config } from "../lib";
-import { Channels } from "./components/Channels";
+import { MindView } from "./components/MindView";
 
 function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
   return {
@@ -110,7 +110,7 @@ export default function App(): JSX.Element {
           <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
             <Tabs value={tab} onChange={changeTab} centered>
               <Tab label="Assets" {...a11yProps(TabId.AssetsTab)} />
-              <Tab label="Channels" {...a11yProps(TabId.ChannelsTab)} />
+              <Tab label="MindView" {...a11yProps(TabId.MindViewTab)} />
               <Tab
                 sx={{ minWidth: `50px` }}
                 label="Info"
@@ -122,8 +122,8 @@ export default function App(): JSX.Element {
           <TabPanel value={tab} index={TabId.AssetsTab}>
             <Assets config={config} />
           </TabPanel>
-          <TabPanel value={tab} index={TabId.ChannelsTab}>
-            <Channels config={config} />
+          <TabPanel value={tab} index={TabId.MindViewTab}>
+            <MindView config={config} />
           </TabPanel>
           <TabPanel value={tab} index={TabId.InfoTab}>
             <Info />
@@ -139,7 +139,7 @@ export default function App(): JSX.Element {
 
 enum TabId {
   AssetsTab,
-  ChannelsTab,
+  MindViewTab,
   InfoTab,
   SettingsTab,
 }

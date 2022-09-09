@@ -14,6 +14,7 @@
     "start": "parcel src/web/index.html --dist-dir ./apps-script",
     "report": "parcel build src/web/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
     "build": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script",
+    "prod": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
     "lint": "eslint --fix --ext .ts,.tsx ./src",
     "prepare": "husky install"
   },

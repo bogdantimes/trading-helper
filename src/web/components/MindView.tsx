@@ -17,6 +17,7 @@ import {
   Config,
   f8,
   Key,
+  PriceChannelData,
   PriceChannelsDataResponse,
   PriceMove,
 } from "../../lib";
@@ -66,7 +67,7 @@ function uploadData(
   );
 }
 
-export function Channels({ config }: { config: Config }): JSX.Element {
+export function MindView({ config }: { config: Config }): JSX.Element {
   const [priceChannelsData, setPriceChannelsData] =
     React.useState<PriceChannelsDataResponse>(null);
 
@@ -96,9 +97,17 @@ export function Channels({ config }: { config: Config }): JSX.Element {
 }
 
 function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
-  const keysSortedByDuration = Object.keys(data).sort(
-    (a, b) => data[b][Key.DURATION] - data[a][Key.DURATION]
-  );
+  const candidateCoins = Object.keys(data)
+    .filter((k) => {
+      const ch: PriceChannelData = data[k];
+      return (
+        ch[Key.DURATION] > config.ChannelWindowMins &&
+        ch[Key.S1] === ChannelState.TOP &&
+        ch[Key.S0] === ChannelState.MIDDLE
+      );
+    })
+    .sort((a, b) => data[b][Key.DURATION] - data[a][Key.DURATION]);
+
   const stateIcon = {
     [ChannelState.NONE]: growthIconMap.get(PriceMove.NEUTRAL),
     [ChannelState.TOP]: growthIconMap.get(PriceMove.UP),
@@ -109,14 +118,15 @@ function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
   return (
     <>
       <Typography alignSelf={`center`} variant={`subtitle1`}>
-        Price Channels
+        Candidates
       </Typography>
-      {!keysSortedByDuration.length && (
+      {!candidateCoins.length && (
         <Typography alignSelf={`center`} variant={`body2`}>
-          Nothing to show yet.
+          Nothing to show yet. Investment candidates will appear after some{` `}
+          period of observation.
         </Typography>
       )}
-      {!!keysSortedByDuration.length && (
+      {!!candidateCoins.length && (
         <Stack>
           <List
             sx={{
@@ -127,7 +137,7 @@ function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
               maxHeight: 440,
             }}
           >
-            {keysSortedByDuration.map((coin, i) => {
+            {candidateCoins.map((coin, i) => {
               const {
                 [Key.DURATION]: duration,
                 [Key.MIN]: min,
@@ -135,6 +145,7 @@ function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
                 [Key.S0]: s0,
                 [Key.S1]: s1,
                 [Key.S2]: s2,
+                [Key.PERCENTILE]: percentile,
               } = data[coin];
               const dataHint = `${duration}/${config.ChannelWindowMins} | ${f8(
                 min
@@ -156,8 +167,7 @@ function list(data: PriceChannelsDataResponse, config: Config): JSX.Element {
                       <Typography
                         sx={{ display: `flex`, alignItems: `center` }}
                       >
-                        {coin +
-                          (duration > config.ChannelWindowMins ? ` ✅ ` : ``)}
+                        {coin + (percentile >= 0.85 ? ` ✅ ` : ``)}
                         {stateIcon[s2]} {stateIcon[s1]} {stateIcon[s0]}
                       </Typography>
                     }

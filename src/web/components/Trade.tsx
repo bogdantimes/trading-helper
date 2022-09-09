@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import {
@@ -14,8 +13,7 @@ import {
   LineStyle,
   PriceScaleMode,
 } from "lightweight-charts";
-import { Box, Stack, Theme, ToggleButton, useTheme } from "@mui/material";
-import { circularProgress } from "./Common";
+import { Box, Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
 import { Config, f2, TradeMemo, TradeState } from "../../lib";
 
@@ -23,7 +21,7 @@ export default function Trade(props: {
   data: TradeMemo;
   config: Config;
 }): JSX.Element {
-  const { data: tm, config } = props;
+  const { data: tm, config: cfg } = props;
   const coinName = tm.getCoinName();
 
   const chartContainerRef = useRef();
@@ -32,28 +30,9 @@ export default function Trade(props: {
 
   const [priceLine, setPriceLine] = useState<ISeriesApi<`Line`>>(null);
   const [profitLine, setProfitLine] = useState<ISeriesApi<`Line`>>(null);
-  const [limitLine, setLimitLine] = useState<ISeriesApi<`Line`>>(null);
+  const [stopLine, setStopLine] = useState<ISeriesApi<`Line`>>(null);
   const [orderLine, setOrderLine] = useState<ISeriesApi<`Line`>>(null);
   const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<`Line`>>(null);
-
-  const [isHodlSwitching, setIsHodlSwitching] = useState(false);
-  const [isHodl, setIsHodl] = useState(config.HODL.includes(coinName));
-
-  useEffect(() => setIsHodl(config.HODL.includes(coinName)), [config.HODL]);
-
-  function flipHodl(): void {
-    setIsHodlSwitching(true);
-    google.script.run
-      .withSuccessHandler(() => {
-        setIsHodl(!isHodl);
-        setIsHodlSwitching(false);
-      })
-      .withFailureHandler((resp) => {
-        alert(resp.message);
-        setIsHodlSwitching(false);
-      })
-      .setHold(coinName, !isHodl);
-  }
 
   const map = (prices: number[], mapFn: (v: number) => number): LineData[] => {
     return prices.map((v, i) => ({
@@ -85,7 +64,7 @@ export default function Trade(props: {
       setPriceLine(
         chart.current.addLineSeries({ color: priceLineColor, lineWidth: 1 })
       );
-      setLimitLine(chart.current.addLineSeries({ color: `red`, lineWidth: 1 }));
+      setStopLine(chart.current.addLineSeries({ color: `red`, lineWidth: 1 }));
       setProfitLine(
         chart.current.addLineSeries({ color: profitLineColor, lineWidth: 1 })
       );
@@ -121,14 +100,13 @@ export default function Trade(props: {
       priceLine.applyOptions({ color: priceLineColor });
     }
 
-    if (limitLine) {
-      limitLine.applyOptions({
-        // hide if HODLing or no stop limit price
-        visible: !!tm.stopLimitPrice && !config.HODL.includes(coinName),
+    if (stopLine) {
+      stopLine.applyOptions({
+        visible: !!tm.stopLimitPrice,
         // make dashed if config SellAtStopLimit is false
-        lineStyle: !config.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
+        lineStyle: !cfg.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
       });
-      limitLine.setData(map(tm.prices, () => tm.stopLimitPrice));
+      stopLine.setData(map(tm.prices, () => tm.stopLimitPrice));
     }
 
     if (orderLine) {
@@ -139,14 +117,12 @@ export default function Trade(props: {
     if (profitLine) {
       profitLine.applyOptions({
         color: profitLineColor,
-        // hide if HODLing or no quantity
-        visible: !!tm.tradeResult.quantity && !isHodl,
-        // make dashed if config SellAtProfitLimit is false
-        lineStyle: !config.SellAtProfitLimit
-          ? LineStyle.Dashed
-          : LineStyle.Solid,
+        visible: !!tm.tradeResult.quantity,
+        lineStyle: LineStyle.Dashed,
       });
-      const profitPrice = tm.tradeResult.price * (1 + config.ProfitLimit);
+      // FGI is from 1 to 3, which makes profit goal 30-10% of channel size
+      const profitGoal = cfg.ChannelSize * (0.9 / cfg.AutoFGI);
+      const profitPrice = tm.tradeResult.price * (1 + profitGoal);
       profitLine.setData(map(tm.prices, () => profitPrice));
     }
 
@@ -157,12 +133,11 @@ export default function Trade(props: {
   }, [
     theme,
     tm,
-    config.SellAtProfitLimit,
-    config.ProfitLimit,
-    isHodl,
+    cfg.ChannelSize,
+    cfg.AutoFGI,
     priceLine,
     profitLine,
-    limitLine,
+    stopLine,
     orderLine,
   ]);
 
@@ -177,6 +152,8 @@ export default function Trade(props: {
     }
   }
 
+  const curVal = tm.tradeResult.quantity * tm.currentPrice;
+  const profit = tm.profit();
   return (
     <>
       {!removed && (
@@ -191,62 +168,17 @@ export default function Trade(props: {
               className="chart-container"
             />
           </CardContent>
-          {tm.tradeResult.quantity ? (
-            <Typography
-              marginLeft={`16px`}
-              variant="body2"
-              color="text.secondary"
-            >
-              <div>
-                Qty: {tm.tradeResult.quantity} Paid: {f2(tm.tradeResult.paid)}
-                {` `}
-                TTL:{` `}
-                {config.TTL - tm.ttl}
-              </div>
-              <div>
-                {tm.profit() >= 0 ? `Profit` : `Loss`}: {f2(tm.profit())} (
-                {f2(tm.profitPercent())}
-                %)
-              </div>
-              <div>
-                Stop: {f2(tm.stopLimitLoss())} ({f2(tm.stopLimitLossPercent())}
-                %)
-              </div>
-            </Typography>
-          ) : (
-            !!tm.soldPriceChangePercent() && (
-              <Typography
-                marginLeft={`16px`}
-                variant="body2"
-                color="text.secondary"
-              >
-                <div>Gap: {f2(tm.soldPriceChangePercent())}%</div>
+          <CardContent sx={{ padding: `16px`, paddingTop: 0 }}>
+            {tm.tradeResult.quantity && (
+              <Typography variant="body2" color="text.secondary">
+                <div>
+                  {`Current value: ${f2(curVal)} (${profit > 0 ? `+` : ``}${f2(
+                    profit
+                  )})`}
+                </div>
               </Typography>
-            )
-          )}
-          <CardActions>
-            <Stack
-              direction={`row`}
-              spacing={1}
-              sx={{ marginLeft: `auto`, marginRight: `auto` }}
-            >
-              {tm.stateIs(TradeState.BOUGHT) && (
-                <Box sx={{ position: `relative` }}>
-                  <ToggleButton
-                    size="small"
-                    value="check"
-                    selected={isHodl}
-                    color="primary"
-                    onChange={flipHodl}
-                    disabled={isHodlSwitching}
-                  >
-                    HODL
-                  </ToggleButton>
-                  {isHodlSwitching && circularProgress}
-                </Box>
-              )}
-            </Stack>
-          </CardActions>
+            )}
+          </CardContent>
         </Card>
       )}
     </>

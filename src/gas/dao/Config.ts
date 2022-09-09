@@ -1,17 +1,13 @@
-import { Config, IStore, StableUSDCoin } from "../../lib";
+import { Config, FGI, IStore, StableUSDCoin } from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
-  InvestRatio: 1,
-  BuyQuantity: 15,
-  StableCoin: StableUSDCoin.USDT,
-  ProfitLimit: 0.1,
+  StableCoin: StableUSDCoin.BUSD,
+  StableBalance: -1, // -1 is to initiate using all available balance.
   SellAtStopLimit: true,
-  SellAtProfitLimit: false,
-  ProfitBasedStopLimit: false,
-  ChannelSize: 0,
-  ChannelWindowMins: 0,
-  TTL: 60 * 24 * 3, // 3 days
-  HODL: [],
+  ChannelSize: 0.13,
+  ChannelWindowMins: 8000,
+  FearGreedIndex: -1, // -1 Auto detect
+  AutoFGI: FGI.NEUTRAL,
 });
 
 export class ConfigDao {
