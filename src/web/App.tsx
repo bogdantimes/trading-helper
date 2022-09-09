@@ -120,7 +120,7 @@ export default function App(): JSX.Element {
             <Assets state={state} />
           </TabPanel>
           <TabPanel value={tab} index={TabId.InfoTab}>
-            <Info />
+            <Info stats={state.info} />
           </TabPanel>
           <TabPanel value={tab} index={TabId.SettingsTab}>
             <Settings
