@@ -25,7 +25,7 @@ import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
 import { FGIProvider } from "./FGIProvider";
 
-const MIN_BUSD_BUY = 15;
+const MIN_BUY = 15;
 
 export class TradeManager {
   #config: Config;
@@ -200,25 +200,24 @@ export class TradeManager {
     } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
       // buy only if price stopped going down
       // this allows to wait if price continues to fall
-      const howMuch = this.#calculateQuantity(tm);
-      if (howMuch > 0 && howMuch <= this.#balance) {
-        this.#buy(tm, howMuch);
+      const toInvest = this.#getMoneyToInvest(tm);
+      if (toInvest > 0) {
+        this.#buy(tm, toInvest);
       } else {
-        Log.info(
-          `ℹ️ Can't buy ${tm.getCoinName()} - not enough balance or invest ratio would be exceeded`
-        );
+        Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - not enough balance`);
         tm.resetState();
       }
     }
     return tm;
   }
 
-  #calculateQuantity(tm: TradeMemo): number {
+  #getMoneyToInvest(tm: TradeMemo): number {
     if (this.#canInvest <= 0 || tm.tradeResult.quantity > 0) {
       // Return 0 if we can't invest or if we already have some coins
       return 0;
     }
-    return Math.max(MIN_BUSD_BUY, Math.floor(this.#balance / this.#canInvest));
+    const result = Math.floor(this.#balance / this.#canInvest);
+    return result < MIN_BUY ? 0 : result;
   }
 
   private processBoughtState(tm: TradeMemo): void {
