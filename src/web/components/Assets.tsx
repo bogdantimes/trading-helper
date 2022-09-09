@@ -1,51 +1,42 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Trade from "./Trade";
-import { Chip, Divider, Grid } from "@mui/material";
-import Balance from "./Balance";
-import { capitalizeWord, circularProgress } from "./Common";
 import {
-  AssetsResponse,
+  Chip,
+  Divider,
+  Grid,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Typography,
+} from "@mui/material";
+import Balance from "./Balance";
+import { capitalizeWord, cardWidth, growthIconMap } from "./Common";
+import {
+  AppState,
+  ChannelState,
   Config,
+  f8,
+  Key,
+  PriceChannelsDataResponse,
+  PriceMove,
   StableUSDCoin,
   TradeMemo,
   TradeState,
 } from "../../lib";
 
-export function Assets({ config }: { config: Config }): JSX.Element {
-  const [assets, setAssets] = React.useState<AssetsResponse>(null);
-
-  useEffect(() => {
-    google.script.run.withSuccessHandler(setAssets).getAssets();
-    const interval = setInterval(
-      google.script.run.withSuccessHandler(setAssets).getAssets,
-      15000
-    ); // 15 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  const invested: TradeMemo[] = [];
-  assets?.trades.forEach((obj) => {
-    if (obj.tradeResult.quantity > 0) {
-      invested.push(TradeMemo.fromObject(obj));
-    }
-  });
-
-  const assetsValue = invested.reduce((sum, tm) => {
-    const qty = tm.tradeResult.quantity;
-    return qty > 0 ? sum + qty * tm.currentPrice : sum;
-  }, 0);
+export function Assets({ state }: { state: AppState }): JSX.Element {
+  const config = state.config;
+  const assets = state.assets.map(TradeMemo.fromObject);
+  const assetsValue = assets.reduce((sum, tm) => sum + tm.currentValue, 0);
 
   return (
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
-        {!assets && (
-          <Grid item xs={12}>
-            {circularProgress}
-          </Grid>
-        )}
         {getBalanceView(config.StableCoin, config.StableBalance, assetsValue)}
-        {getTradeCards(TradeState.BOUGHT, invested, config)}
+        {getTradeCards(TradeState.BOUGHT, assets, config)}
+        {candidates(state.candidates)}
       </Grid>
     </>
   );
@@ -105,6 +96,95 @@ function getTradeCards(
                   <Trade data={t} config={config} />
                 </Grid>
               ))}
+          </Grid>
+        </Grid>
+      )}
+    </>
+  );
+}
+
+function candidates(data: PriceChannelsDataResponse): JSX.Element {
+  const candidateCoins = Object.keys(data);
+
+  const stateIcon = {
+    [ChannelState.NONE]: growthIconMap.get(PriceMove.NEUTRAL),
+    [ChannelState.TOP]: growthIconMap.get(PriceMove.UP),
+    [ChannelState.BOTTOM]: growthIconMap.get(PriceMove.DOWN),
+    [ChannelState.MIDDLE]: growthIconMap.get(PriceMove.NEUTRAL),
+  };
+
+  const [hide, setHide] = useState(true);
+
+  return (
+    <>
+      <Grid item xs={12}>
+        <Divider>
+          <Chip
+            onClick={() => setHide(!hide)}
+            label={`Candidates (${candidateCoins.length})`}
+          />
+        </Divider>
+      </Grid>
+      {!hide && (
+        <Grid item xs={12}>
+          <Grid container justifyContent="center" spacing={2}>
+            <Grid item>
+              {!candidateCoins.length && (
+                <Typography alignSelf={`center`} variant={`body2`}>
+                  Nothing to show yet. Investment candidates will appear after
+                  some
+                  {` `}
+                  period of observation.
+                </Typography>
+              )}
+              {!!candidateCoins.length && (
+                <List
+                  sx={{
+                    padding: 0,
+                    marginTop: 0,
+                    width: cardWidth,
+                    overflow: `auto`,
+                    maxHeight: 440,
+                  }}
+                >
+                  {candidateCoins.map((coin, i) => {
+                    const {
+                      [Key.DURATION]: duration,
+                      [Key.MIN]: min,
+                      [Key.MAX]: max,
+                      [Key.S0]: s0,
+                      [Key.S1]: s1,
+                      [Key.S2]: s2,
+                    } = data[coin];
+                    return (
+                      <ListItem
+                        sx={{
+                          padding: `0 0 6px 0`,
+                        }}
+                        key={i}
+                        disablePadding={true}
+                      >
+                        <ListItemAvatar sx={{ minWidth: `48px` }}>
+                          #{i + 1}
+                        </ListItemAvatar>
+                        <ListItemText
+                          sx={{ margin: `3px 0 0 0` }}
+                          primary={
+                            <Typography
+                              sx={{ display: `flex`, alignItems: `center` }}
+                            >
+                              {coin}
+                              {stateIcon[s2]} {stateIcon[s1]} {stateIcon[s0]}
+                            </Typography>
+                          }
+                          secondary={`${duration} | ${f8(min)} | ${f8(max)}`}
+                        />
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              )}
+            </Grid>
           </Grid>
         </Grid>
       )}

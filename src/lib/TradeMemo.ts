@@ -64,6 +64,10 @@ export class TradeMemo extends PricesHolder {
     return tradeMemo;
   }
 
+  get currentValue(): number {
+    return this.currentPrice * this.tradeResult.quantity;
+  }
+
   get maxObservedPrice(): number {
     return this.maxPrice;
   }
