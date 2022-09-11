@@ -8,7 +8,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  InputAdornment,
   InputLabel,
   MenuItem,
   Radio,
@@ -30,13 +29,7 @@ export function Settings({
 }): JSX.Element {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [channelSize, setChannelSize] = useState(
-    f2(config.ChannelSize * 100).toString()
-  );
   const [balance, setBalance] = useState(f2(config.StableBalance).toString());
-  const [chDuration, setChDuration] = useState(
-    config.ChannelWindowMins.toString()
-  );
 
   const [initialFbURL, setInitialFbURL] = useState(``);
   const [newFbURL, setNewFbURL] = useState(``);
@@ -65,12 +58,9 @@ export function Settings({
     }
     setError(null);
 
-    isFinite(+channelSize) && (config.ChannelSize = +channelSize / 100);
     isFinite(+balance) &&
       (+balance === -1 || +balance >= 0) &&
       (config.StableBalance = +balance);
-    isFinite(+chDuration) &&
-      (config.ChannelWindowMins = Math.floor(+chDuration));
     setConfig(config);
     setIsSaving(true);
     google.script.run
@@ -153,24 +143,6 @@ export function Settings({
             <MenuItem value={2}>Oscillating</MenuItem>
           </Select>
         </FormControl>
-        <TextField
-          value={channelSize}
-          label={`Channel Size`}
-          onChange={(e) => setChannelSize(e.target.value)}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">%</InputAdornment>,
-          }}
-        />
-        <TextField
-          value={chDuration}
-          label={`Channel Window (minutes)`}
-          onChange={(e) => setChDuration(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">min.</InputAdornment>
-            ),
-          }}
-        />
         <FormControlLabel
           control={
             <Switch
