@@ -4,18 +4,15 @@ import { TradeManager } from "./TradeManager";
 export class Process {
   static tick(): void {
     const stopWatch = new StopWatch((...args) => Log.debug(...args));
-
     const manager = TradeManager.default();
-    const priceProvider = manager.priceProvider;
-
-    // Updating prices every tick
-    // This should be the only place to call `update` on the price provider.
-    stopWatch.start(`Prices update`);
-    priceProvider.update();
-    stopWatch.stop();
 
     try {
-      stopWatch.start(`Trades check`);
+      // Updating prices every tick
+      // This should be the only place to call `updatePrices`.
+      stopWatch.start(`Updating prices`);
+      manager.updatePrices();
+      stopWatch.stop();
+      stopWatch.start(`Trading`);
       manager.trade();
       stopWatch.stop();
     } catch (e) {

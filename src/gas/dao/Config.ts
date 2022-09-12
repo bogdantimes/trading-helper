@@ -4,8 +4,6 @@ export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: -1, // -1 is to initiate using all available balance.
   SellAtStopLimit: true,
-  ChannelSize: 0.14,
-  ChannelWindowMins: 7500,
   FearGreedIndex: -1, // -1 Auto detect
   AutoFGI: FGI.NEUTRAL,
 });

@@ -17,7 +17,7 @@ import {
   AppState,
   ChannelState,
   Config,
-  f8,
+  f2,
   Key,
   PriceChannelsDataResponse,
   PriceMove,
@@ -104,7 +104,9 @@ function getTradeCards(
 }
 
 function candidates(data: PriceChannelsDataResponse): JSX.Element {
-  const candidateCoins = Object.keys(data);
+  const candidateCoins = Object.keys(data).sort((a, b) =>
+    data[a][Key.PERCENTILE] > data[b][Key.PERCENTILE] ? -1 : 1
+  );
 
   const stateIcon = {
     [ChannelState.NONE]: growthIconMap.get(PriceMove.NEUTRAL),
@@ -149,9 +151,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                 >
                   {candidateCoins.map((coin, i) => {
                     const {
-                      [Key.DURATION]: duration,
-                      [Key.MIN]: min,
-                      [Key.MAX]: max,
+                      [Key.PERCENTILE]: percentile,
                       [Key.S0]: s0,
                       [Key.S1]: s1,
                       [Key.S2]: s2,
@@ -177,7 +177,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                               {stateIcon[s2]} {stateIcon[s1]} {stateIcon[s0]}
                             </Typography>
                           }
-                          secondary={`${duration} | ${f8(min)} | ${f8(max)}`}
+                          secondary={`Confidence: ${f2(percentile)}`}
                         />
                       </ListItem>
                     );

@@ -130,6 +130,12 @@ export enum Key {
   S2,
   SIZE,
   PERCENTILE,
+  DURATION_MET,
+}
+
+export enum Bit {
+  FALSE,
+  TRUE,
 }
 
 export enum ChannelState {
@@ -141,6 +147,7 @@ export enum ChannelState {
 
 export interface PriceChannelData {
   [Key.DURATION]: number;
+  [Key.DURATION_MET]: Bit;
   [Key.MIN]: number;
   [Key.MAX]: number;
   [Key.SIZE]: number;

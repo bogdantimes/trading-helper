@@ -18,13 +18,21 @@ export class TradeMemo extends PricesHolder {
    */
   private stopLimit = 0;
   /**
-   * Maximum price ever observed for this asset.
-   */
-  private maxPrice = 0;
-  /**
    * The current state of the asset.
    */
   private state: TradeState;
+  /**
+   * X represents the distance on the X axis (time in minutes) that was used for this particular trade.
+   * More detailed information is not available for the open source part of the project.
+   * Some default value is required for trades that existed before the introduction of this feature.
+   */
+  private x: number;
+  /**
+   * Y represents the range on the Y axis (price) that was used for this particular trade.
+   * More detailed information is not available for the open source part of the project.
+   * Some default value is required for trades that existed before the introduction of this feature.
+   */
+  private y: number;
 
   constructor(tradeResult: TradeResult) {
     super();
@@ -68,20 +76,25 @@ export class TradeMemo extends PricesHolder {
     return this.currentPrice * this.tradeResult.quantity;
   }
 
-  get maxObservedPrice(): number {
-    return this.maxPrice;
-  }
-
-  set maxObservedPrice(price: number) {
-    this.maxPrice = Math.max(0, price);
-  }
-
   get stopLimitPrice(): number {
     return this.stopLimit;
   }
 
   set stopLimitPrice(price: number) {
     this.stopLimit = Math.max(0, price);
+  }
+
+  setRequestParams({ x, y }: { x: number; y: number }): void {
+    this.x = x;
+    this.y = y;
+  }
+
+  get duration(): number {
+    return this.x ?? 7500;
+  }
+
+  get range(): number {
+    return this.y ?? 0.14;
   }
 
   getCoinName(): string {
@@ -100,7 +113,6 @@ export class TradeMemo extends PricesHolder {
 
   pushPrice(price: number): void {
     super.pushPrice(price);
-    this.maxObservedPrice = Math.max(this.maxObservedPrice, ...this.prices);
   }
 
   setState(state: TradeState): void {

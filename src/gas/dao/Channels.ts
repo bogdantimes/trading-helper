@@ -48,20 +48,17 @@ export class ChannelsDao {
 
   /** GetCandidates returns a list of coins that are candidates for trading. It is considered as
    * a candidate if:
-   * it was within the channel for the specified duration
-   * it's price is in the top 20% of the channel
+   * it was within the channel for the required duration
+   * it's price is in the top percentile of the channel
    * it's current state is ChannelMid, and it's previous state is ChannelTop
    **/
-  getCandidates(
-    duration: number,
-    percentile = 0.8
-  ): { [p: string]: PriceChannelData } {
+  getCandidates(percentile = 0.8): { [p: string]: PriceChannelData } {
     const all = this.getAll();
     const candidates: { [p: string]: PriceChannelData } = {};
     Object.keys(all).forEach((key) => {
       const ch = all[key];
       if (
-        ch[Key.DURATION] > duration &&
+        ch[Key.DURATION_MET] &&
         ch[Key.PERCENTILE] >= percentile &&
         ch[Key.S0] === ChannelState.MIDDLE &&
         ch[Key.S1] === ChannelState.TOP
