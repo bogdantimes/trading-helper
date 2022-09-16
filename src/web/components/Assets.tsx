@@ -105,11 +105,16 @@ function getTradeCards(
 }
 
 const percentileToColorMap = {
-  0.5: `#ff8000`,
-  0.6: `#ffcc00`,
-  0.7: `#ffff00`,
-  0.8: `#a2ff00`,
-  0.9: `#00ff00`,
+  // Gradient from red to green, with keys from 0.1 to 0.9 and step 0.1
+  0.1: `#ff0000`,
+  0.2: `#ff3300`,
+  0.3: `#ff6600`,
+  0.4: `#ff9900`,
+  0.5: `#ffcc00`,
+  0.6: `#ffff00`,
+  0.7: `#ccff00`,
+  0.8: `#99ff00`,
+  0.9: `#66ff00`,
 };
 
 function candidates(data: PriceChannelsDataResponse): JSX.Element {

@@ -140,7 +140,7 @@ export function Settings({
             <MenuItem value={-1}>Auto Detect</MenuItem>
             <MenuItem value={1}>Bear Market</MenuItem>
             <MenuItem value={3}>Bull Market</MenuItem>
-            <MenuItem value={2}>Oscillating</MenuItem>
+            <MenuItem value={2}>Sideways</MenuItem>
           </Select>
         </FormControl>
         <FormControlLabel

@@ -194,7 +194,7 @@ function getState(): AppState {
         .getList()
         .filter((a) => a.tradeResult.quantity > 0),
       info: new Statistics(DefaultStore).getAll(),
-      candidates: new ChannelsDao(DefaultStore).getCandidates(0.5),
+      candidates: new ChannelsDao(DefaultStore).getCandidates(0),
     };
   });
 }
