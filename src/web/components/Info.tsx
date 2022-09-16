@@ -28,8 +28,7 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
         <Alert sx={{ width: cardWidth }} severity={`info`}>
-          The summary of realised profits and losses for each day and the total
-          P/L since the beginning.
+          Balance changes since Day 1.
         </Alert>
         <FixedSizeList
           width={cardWidth}

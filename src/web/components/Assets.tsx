@@ -11,13 +11,14 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
+import SemiCircleProgressBar from "react-progressbar-semicircle";
 import Balance from "./Balance";
 import { capitalizeWord, cardWidth, growthIconMap } from "./Common";
 import {
   AppState,
   ChannelState,
   Config,
-  f2,
+  f0,
   Key,
   PriceChannelsDataResponse,
   PriceMove,
@@ -103,6 +104,14 @@ function getTradeCards(
   );
 }
 
+const percentileToColorMap = {
+  0.5: `#ff8000`,
+  0.6: `#ffcc00`,
+  0.7: `#ffff00`,
+  0.8: `#a2ff00`,
+  0.9: `#00ff00`,
+};
+
 function candidates(data: PriceChannelsDataResponse): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
     data[a][Key.PERCENTILE] > data[b][Key.PERCENTILE] ? -1 : 1
@@ -159,16 +168,21 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                     return (
                       <ListItem
                         sx={{
-                          padding: `0 0 6px 0`,
+                          padding: `0 0 6px 60px`,
                         }}
                         key={i}
                         disablePadding={true}
                       >
-                        <ListItemAvatar sx={{ minWidth: `48px` }}>
-                          #{i + 1}
+                        <ListItemAvatar>
+                          <SemiCircleProgressBar
+                            diameter={80}
+                            percentage={f0(percentile * 100)}
+                            stroke={percentileToColorMap[percentile.toFixed(1)]}
+                            strokeWidth={10}
+                          />
                         </ListItemAvatar>
                         <ListItemText
-                          sx={{ margin: `3px 0 0 0` }}
+                          sx={{ margin: `-3px 0 0 8px` }}
                           primary={
                             <Typography
                               sx={{ display: `flex`, alignItems: `center` }}
@@ -177,7 +191,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                               {stateIcon[s2]} {stateIcon[s1]} {stateIcon[s0]}
                             </Typography>
                           }
-                          secondary={`Confidence: ${f2(percentile)}`}
+                          secondary={`Confidence: ${f0(percentile * 100)}%`}
                         />
                       </ListItem>
                     );

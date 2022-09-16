@@ -34,6 +34,10 @@ export function absPercentageChange(v1: number, v2: number): number {
   return f2(Math.abs((100 * (v2 - v1)) / Math.abs(v1)));
 }
 
+export function f0(n: number): number {
+  return +n.toFixed(0);
+}
+
 export function f2(n: number): number {
   return +n.toFixed(2);
 }
