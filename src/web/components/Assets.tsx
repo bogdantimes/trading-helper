@@ -196,7 +196,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                               {stateIcon[s2]} {stateIcon[s1]} {stateIcon[s0]}
                             </Typography>
                           }
-                          secondary={`Readiness: ${f0(percentile * 100)}%`}
+                          secondary={`Strength: ${f0(percentile * 100)}`}
                         />
                       </ListItem>
                     );
