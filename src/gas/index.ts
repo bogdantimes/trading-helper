@@ -4,24 +4,20 @@ import { Statistics } from "./Statistics";
 import { Exchange } from "./Exchange";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
-  AssetsResponse,
-  CoinName,
+  AppState,
   Config,
   InitialSetupParams,
   IStore,
   PriceChannelsDataResponse,
-  Stats,
-  TradeMemo,
 } from "../lib";
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
-import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
-import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 import { FGIProvider } from "./FGIProvider";
+import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -137,53 +133,10 @@ function dropCoin(coinName: string): string {
   });
 }
 
-function getTrades(): TradeMemo[] {
-  return catchError(() => new TradesDao(DefaultStore).getList());
-}
-
-function getAssets(): AssetsResponse {
-  return catchError(() => {
-    return {
-      trades: getTrades(),
-    };
-  });
-}
-
-function getConfig(): Config {
-  return catchError(() => {
-    const configDao = new ConfigDao(DefaultStore);
-    if (configDao.isInitialized()) {
-      const config = configDao.get();
-      const fgi = new FGIProvider(
-        configDao,
-        new Exchange(config.KEY, config.SECRET),
-        CacheProxy
-      );
-      config.AutoFGI = fgi.get();
-      return config;
-    } else {
-      return null;
-    }
-  });
-}
-
 function setConfig(config): string {
   return catchError(() => {
     new ConfigDao(DefaultStore).set(config);
     return `Config updated`;
-  });
-}
-
-function getStatistics(): Stats {
-  return catchError(() => new Statistics(DefaultStore).getAll());
-}
-
-function getCoinNames(): CoinName[] {
-  return catchError(() => {
-    const config = new ConfigDao(DefaultStore).get();
-    const exchange = new Exchange(config.KEY, config.SECRET);
-    const priceProvider = PriceProvider.default(exchange, CacheProxy);
-    return priceProvider.getCoinNames(config.StableCoin);
   });
 }
 
@@ -205,16 +158,44 @@ function setFirebaseURL(url: string): string {
   });
 }
 
-function getPriceChannelsData(): PriceChannelsDataResponse {
-  return catchError(() => {
-    return new ChannelsDao(DefaultStore).getAll();
-  });
-}
-
 function setPriceChannelsData(data: PriceChannelsDataResponse): string {
   return catchError(() => {
     new ChannelsDao(DefaultStore).setAll(data);
     return `OK`;
+  });
+}
+
+function getConfig(): Config {
+  const configDao = new ConfigDao(DefaultStore);
+  if (configDao.isInitialized()) {
+    const config = configDao.get();
+    const fgi = new FGIProvider(
+      configDao,
+      new Exchange(config.KEY, config.SECRET),
+      CacheProxy
+    );
+    config.AutoFGI = fgi.get();
+    return config;
+  } else {
+    return null;
+  }
+}
+
+/**
+ * Returns the aggregated state for the UI:
+ * trades, config, statistics, candidates
+ */
+function getState(): AppState {
+  return catchError<AppState>(() => {
+    const config = getConfig();
+    return {
+      config,
+      assets: new TradesDao(DefaultStore)
+        .getList()
+        .filter((a) => a.tradeResult.quantity > 0),
+      info: new Statistics(DefaultStore).getAll(),
+      candidates: new ChannelsDao(DefaultStore).getCandidates(0),
+    };
   });
 }
 
@@ -226,13 +207,8 @@ global.stop = stop;
 global.initialSetup = initialSetup;
 global.sellAll = sellAll;
 global.dropCoin = dropCoin;
-global.getTrades = getTrades;
-global.getAssets = getAssets;
-global.getConfig = getConfig;
 global.setConfig = setConfig;
-global.getStatistics = getStatistics;
-global.getCoinNames = getCoinNames;
 global.getFirebaseURL = getFirebaseURL;
 global.setFirebaseURL = setFirebaseURL;
-global.getPriceChannelsData = getPriceChannelsData;
 global.setPriceChannelsData = setPriceChannelsData;
+global.getState = getState;

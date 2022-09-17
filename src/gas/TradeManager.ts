@@ -2,7 +2,6 @@ import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
 import { Log } from "./Common";
 import {
-  CoinName,
   Config,
   ExchangeSymbol,
   f2,
@@ -19,7 +18,7 @@ import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
-import { TradeAction, TraderPlugin } from "./traders/pro/api";
+import { TradeAction, TradeRequest, TraderPlugin } from "./traders/pro/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
@@ -56,7 +55,7 @@ export class TradeManager {
   }
 
   constructor(
-    readonly priceProvider: PriceProvider,
+    private readonly priceProvider: PriceProvider,
     private readonly tradesDao: TradesDao,
     private readonly configDao: ConfigDao,
     private readonly channelsDao: ChannelsDao,
@@ -66,26 +65,24 @@ export class TradeManager {
     private readonly plugin: TraderPlugin
   ) {}
 
-  trade(): void {
-    // Get current config
-    this.#config = this.configDao.get();
-    this.#fgi = this.fgiProvider.get();
-    this.#initBalance();
+  updatePrices(): void {
+    this.priceProvider.update();
+  }
 
-    const cs = this.channelsDao.getCandidates(this.#config.ChannelWindowMins);
-    this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
+  trade(): void {
+    this.#prepare();
 
     this.plugin
       .trade({
-        config: this.#config,
+        FGI: this.#fgi,
         channelsDao: this.channelsDao,
-        priceProvider: this.priceProvider,
+        prices: this.priceProvider.get(this.#config.StableCoin),
       })
-      .forEach(({ coin, action }) => {
-        if (action === TradeAction.Buy) {
-          this.#setBuyState(coin);
-        } else if (action === TradeAction.Sell) {
-          this.#setSellState(coin);
+      .forEach((r) => {
+        if (r.action === TradeAction.Buy) {
+          this.#setBuyState(r);
+        } else if (r.action === TradeAction.Sell) {
+          this.#setSellState(r);
         }
       });
 
@@ -93,21 +90,21 @@ export class TradeManager {
     const inv = trades.filter((t) => t.tradeResult.quantity > 0);
     this.#canInvest = Math.max(0, this.#optimalInvestRatio - inv.length);
 
-    if (isNode) {
-      // For back-testing, sorting to ensure tests consistency
-      trades.sort((a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1));
-    } else {
-      // For production, randomizing the order to avoid biases
-      trades.sort(() => Math.random() - 0.5);
-    }
+    trades.sort(
+      isNode
+        ? // For back-testing, sorting to ensure tests consistency
+          (a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1)
+        : // For production, randomizing the order to avoid biases
+          () => Math.random() - 0.5
+    );
 
-    const tms = [
+    const trs = [
       // First process existing trades (some might get sold and free up space to buy new ones)
       ...trades.filter((tm) => !tm.stateIs(TradeState.BUY)),
       // Now process those which were requested to buy
       ...trades.filter((tm) => tm.stateIs(TradeState.BUY)),
     ];
-    tms.forEach((tm) => {
+    trs.forEach((tm) => {
       try {
         this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
       } catch (e) {
@@ -115,13 +112,13 @@ export class TradeManager {
         Log.error(e);
       }
     });
-    this.#persistBalance();
+
+    this.#finalize();
   }
 
   sellAll(sellNow = false): void {
-    // Get current config
-    this.#config = this.configDao.get();
-    this.#initBalance();
+    this.#prepare();
+
     this.tradesDao.iterate((tm) => {
       tm.resetState();
       if (tm.tradeResult.quantity > 0) {
@@ -130,17 +127,22 @@ export class TradeManager {
       }
       return tm;
     });
-    this.#persistBalance();
+
+    this.#finalize();
   }
 
-  #initBalance(): void {
+  #prepare(): void {
+    this.#config = this.configDao.get();
+    this.#fgi = this.fgiProvider.get();
     this.#balance = this.#config.StableBalance;
     if (this.#balance === -1) {
       this.#balance = this.exchange.getBalance(this.#config.StableCoin);
     }
+    const cs = this.channelsDao.getCandidates();
+    this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
   }
 
-  #persistBalance(): void {
+  #finalize(): void {
     const diff = this.#balance - this.#config.StableBalance;
     if (diff !== 0) {
       this.#config = this.configDao.get();
@@ -150,10 +152,11 @@ export class TradeManager {
     }
   }
 
-  #setBuyState(coinName: CoinName): void {
-    const symbol = new ExchangeSymbol(coinName, this.#config.StableCoin);
+  #setBuyState(r: TradeRequest): void {
+    const stableCoin = this.#config.StableCoin;
+    const symbol = new ExchangeSymbol(r.coin, stableCoin);
     this.tradesDao.update(
-      coinName,
+      r.coin,
       (tm) => {
         tm.setState(TradeState.BUY);
         tm.tradeResult.symbol = symbol;
@@ -161,17 +164,16 @@ export class TradeManager {
       },
       () => {
         const tm = new TradeMemo(new TradeResult(symbol));
-        tm.prices = this.priceProvider.get(this.#config.StableCoin)[
-          tm.getCoinName()
-        ]?.prices;
+        tm.setRequestParams({ x: r.x, y: r.y });
+        tm.prices = this.priceProvider.get(stableCoin)[r.coin]?.prices;
         tm.setState(TradeState.BUY);
         return tm;
       }
     );
   }
 
-  #setSellState(coinName: string): void {
-    this.tradesDao.update(coinName, (tm) => {
+  #setSellState(r: TradeRequest): void {
+    this.tradesDao.update(r.coin, (tm) => {
       if (tm.tradeResult.quantity > 0) {
         tm.setState(TradeState.SELL);
       }
@@ -240,29 +242,23 @@ export class TradeManager {
   private updateStopLimit(tm: TradeMemo): void {
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
+      // Initiate stop limit via the channel lower boundary price
       tm.stopLimitPrice = ch[Key.MIN];
     } else {
-      // The stop limit price is the price at which the trade will be sold if the price drops below it.
-      // The stop limit price is calculated as follows:
-      // 1. Get the last N prices and calculate the average price.
-      // 2. Multiply the average price by K, where: 1 - StopLimit <= K <= 0.99,
-      //    K -> 0.99 proportionally to the current profit.
-      //    The closer the current profit to the current channel top range, the closer K is to 0.99.
-
-      const CS = this.#config.ChannelSize;
-      const PG = CS * (0.9 / this.#fgi);
-      const P = tm.profit() / tm.tradeResult.paid;
-      const K = Math.min(0.99, 1 - CS + Math.max(0, (P * CS) / PG));
-
       const lastN = 3;
       const avePrice =
         tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
-      // new stop limit cannot be higher than current price
+
+      // Step 1: bumping stop limit up proportionally to the current profit to profit goal.
+      const R = tm.range;
+      const PG = R * (0.9 / this.#fgi);
+      const P = tm.profit() / tm.tradeResult.paid;
+      const K = Math.min(0.99, 1 - R + Math.max(0, (P * R) / PG));
       let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
-      // Move stop limit up to the current price proportionally to the TTL left
-      const maxTTL = this.#config.ChannelWindowMins / this.#fgi;
+      // Step 2: bumping it up proportionally to the TTL that is left.
+      const maxTTL = tm.duration / this.#fgi;
       const curTTL = Math.min(tm.ttl, maxTTL);
       const k2 = Math.min(0.99, curTTL / maxTTL);
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);

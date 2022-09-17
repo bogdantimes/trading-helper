@@ -17,8 +17,7 @@ import { Info } from "./components/Info";
 import { Assets } from "./components/Assets";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
-import { Config } from "../lib";
-import { MindView } from "./components/MindView";
+import { AppState } from "../lib";
 
 function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
   return {
@@ -37,8 +36,7 @@ export default function App(): JSX.Element {
     [mode]
   );
 
-  const [config, setConfig] = React.useState(null);
-
+  const [state, setState] = React.useState<AppState>(null);
   const [initialSetup, setInitialSetup] = React.useState(true);
   const [fetchingData, setFetchingData] = React.useState(true);
   const [fetchDataError, setFetchDataError] = React.useState(null);
@@ -47,42 +45,42 @@ export default function App(): JSX.Element {
   useEffect(() => {
     // re-fetch config from time to time just to synchronize it in case changes
     // were made in different browser tabs, etc.
-    const interval = setInterval(() => !initialSetup && reFetchData(), 60000); // 60 seconds
+    const interval = setInterval(() => !initialSetup && reFetchState(), 60000); // 60 seconds
     return () => clearInterval(interval);
   }, [initialSetup]);
 
   function initialFetch(): void {
     setFetchingData(true);
     google.script.run
-      .withSuccessHandler(handleConfig)
+      .withSuccessHandler(handleState)
       .withFailureHandler((resp) => {
         setFetchingData(false);
         setInitialSetup(true);
         setFetchDataError(resp.message);
       })
-      .getConfig();
+      .getState();
   }
 
-  function handleConfig(cfg: Config): void {
+  function handleState(state: AppState): void {
     setFetchingData(false);
     setFetchDataError(null);
-    if (!cfg || !cfg.KEY || !cfg.SECRET) {
+    if (!state.config?.KEY || !state.config?.SECRET) {
       setInitialSetup(true);
     } else {
       setInitialSetup(false);
     }
-    setConfig(cfg);
+    setState(state);
   }
 
-  function reFetchData(): void {
+  function reFetchState(): void {
     if (tab === TabId.SettingsTab) {
-      // do not re-fetch config when on Settings tab
+      // do not re-fetch state when on Settings tab
       return;
     }
     google.script.run
-      .withSuccessHandler(handleConfig)
+      .withSuccessHandler(handleState)
       .withFailureHandler((resp) => setFetchDataError(resp.message))
-      .getConfig();
+      .getState();
   }
 
   return (
@@ -103,14 +101,13 @@ export default function App(): JSX.Element {
         </Alert>
       )}
       {!fetchingData && initialSetup && (
-        <InitialSetup config={config} onConnect={initialFetch} />
+        <InitialSetup config={state.config} onConnect={initialFetch} />
       )}
       {!fetchingData && !initialSetup && (
         <Box sx={{ width: `100%` }}>
           <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
             <Tabs value={tab} onChange={changeTab} centered>
               <Tab label="Assets" {...a11yProps(TabId.AssetsTab)} />
-              <Tab label="MindView" {...a11yProps(TabId.MindViewTab)} />
               <Tab
                 sx={{ minWidth: `50px` }}
                 label="Info"
@@ -120,16 +117,16 @@ export default function App(): JSX.Element {
             </Tabs>
           </Box>
           <TabPanel value={tab} index={TabId.AssetsTab}>
-            <Assets config={config} />
-          </TabPanel>
-          <TabPanel value={tab} index={TabId.MindViewTab}>
-            <MindView config={config} />
+            <Assets state={state} />
           </TabPanel>
           <TabPanel value={tab} index={TabId.InfoTab}>
-            <Info />
+            <Info stats={state.info} />
           </TabPanel>
           <TabPanel value={tab} index={TabId.SettingsTab}>
-            <Settings config={config} setConfig={setConfig} />
+            <Settings
+              config={state.config}
+              setConfig={(config) => setState({ ...state, config })}
+            />
           </TabPanel>
         </Box>
       )}
@@ -139,7 +136,6 @@ export default function App(): JSX.Element {
 
 enum TabId {
   AssetsTab,
-  MindViewTab,
   InfoTab,
   SettingsTab,
 }

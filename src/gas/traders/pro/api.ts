@@ -1,20 +1,21 @@
-import { CoinName, Config } from "../../../lib/index";
+import { CoinName, FGI, PriceHoldersMap } from "../../../lib/index";
 import { ChannelsDao } from "../../dao/Channels";
-import { PriceProvider } from "../../priceprovider/PriceProvider";
 
 export interface TraderPlugin {
   trade: (context: TradingContext) => TradeRequest[];
 }
 
 export interface TradingContext {
-  config: Config;
-  priceProvider: PriceProvider;
+  FGI: FGI;
+  prices: PriceHoldersMap;
   channelsDao: ChannelsDao;
 }
 
 export interface TradeRequest {
   coin: CoinName;
   action: TradeAction;
+  x: number;
+  y: number;
 }
 
 export enum TradeAction {

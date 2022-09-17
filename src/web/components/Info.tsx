@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import {
   Alert,
   Box,
@@ -13,13 +12,7 @@ import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 import { Stats } from "../../lib";
 import { cardWidth } from "./Common";
 
-export function Info(): JSX.Element {
-  const [stats, setStats] = React.useState<Stats>(null);
-
-  useEffect(() => {
-    google.script.run.withSuccessHandler(setStats).getStatistics();
-  }, []);
-
+export function Info({ stats }: { stats: Stats }): JSX.Element {
   const rows = [];
 
   if (stats) {
@@ -35,8 +28,7 @@ export function Info(): JSX.Element {
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
         <Alert sx={{ width: cardWidth }} severity={`info`}>
-          The summary of realised profits and losses for each day and the total
-          P/L since the beginning.
+          Balance changes since Day 1.
         </Alert>
         <FixedSizeList
           width={cardWidth}

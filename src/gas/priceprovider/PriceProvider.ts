@@ -1,5 +1,4 @@
 import {
-  CoinName,
   enumKeys,
   ICacheProxy,
   IPriceProvider,
@@ -43,10 +42,6 @@ export class PriceProvider implements IPriceProvider {
 
   update(): void {
     this.#priceMaps = this.#update();
-  }
-
-  getCoinNames(stableCoin: StableUSDCoin): CoinName[] {
-    return Object.keys(this.get(stableCoin));
   }
 
   #update(): PriceMaps {
