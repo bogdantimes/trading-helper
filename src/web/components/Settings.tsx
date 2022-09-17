@@ -149,7 +149,7 @@ export function Settings({
             color="primary"
             startIcon={<SaveIcon />}
             onClick={onSave}
-            disabled={isSaving}
+            disabled={isSaving || fbURLDisabled}
           >
             Save
           </Button>
