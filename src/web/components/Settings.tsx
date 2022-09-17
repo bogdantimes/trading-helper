@@ -33,11 +33,15 @@ export function Settings({
 
   const [initialFbURL, setInitialFbURL] = useState(``);
   const [newFbURL, setNewFbURL] = useState(``);
+  const [fbURLDisabled, setFbURLDisabled] = useState(true);
 
-  useEffect(() => setNewFbURL(initialFbURL), [initialFbURL]);
   useEffect(() => {
     google.script.run
-      .withSuccessHandler(setInitialFbURL)
+      .withSuccessHandler((url: string) => {
+        setInitialFbURL(url);
+        setNewFbURL(url);
+        setFbURLDisabled(false);
+      })
       .withFailureHandler(setError)
       .getFirebaseURL();
   }, []);
@@ -52,15 +56,17 @@ export function Settings({
         .setFirebaseURL(newFbURL);
     }
 
-    if (!config.StableCoin) {
-      setError(`Stable Coin is required`);
-      return;
-    }
     setError(null);
 
-    isFinite(+balance) &&
-      (+balance === -1 || +balance >= 0) &&
-      (config.StableBalance = +balance);
+    if (isFinite(+balance) && (+balance === -1 || +balance >= 0)) {
+      config.StableBalance = +balance;
+    } else {
+      setError(
+        `Balance must be a positive number or -1 to initialize with the current balance`
+      );
+      return;
+    }
+
     setConfig(config);
     setIsSaving(true);
     google.script.run
@@ -74,30 +80,6 @@ export function Settings({
       })
       .setConfig(config as any);
   };
-
-  const [isSellingAll, setIsSellingAll] = useState(false);
-
-  function onSellAll(): void {
-    if (
-      confirm(
-        `Are you sure you want to sell all your assets? The operation cannot be undone.`
-      )
-    ) {
-      setIsSellingAll(true);
-      google.script.run
-        .withSuccessHandler(() => {
-          setIsSellingAll(false);
-          alert(
-            `All assets are being sold. Please wait for the operation to complete.`
-          );
-        })
-        .withFailureHandler((r) => {
-          setIsSellingAll(false);
-          setError(r);
-        })
-        .sellAll();
-    }
-  }
 
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
@@ -158,6 +140,7 @@ export function Settings({
           value={newFbURL}
           label={`Firebase URL`}
           onChange={(e) => setNewFbURL(e.target.value)}
+          disabled={fbURLDisabled}
           helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. Your data won't be lost.`}
         />
         <Box alignSelf={`center`} sx={{ position: `relative` }}>
@@ -171,17 +154,6 @@ export function Settings({
             Save
           </Button>
           {isSaving && circularProgress}
-        </Box>
-        <Box alignSelf={`center`} sx={{ position: `relative` }}>
-          <Button
-            variant="contained"
-            color="warning"
-            onClick={onSellAll}
-            disabled={isSellingAll}
-          >
-            !! Sell All !!
-          </Button>
-          {isSellingAll && circularProgress}
         </Box>
         {error && <Alert severity="error">{error.toString()}</Alert>}
       </Stack>
