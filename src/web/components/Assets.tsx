@@ -129,7 +129,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
     [ChannelState.MIDDLE]: growthIconMap.get(PriceMove.NEUTRAL),
   };
 
-  const [hide, setHide] = useState(true);
+  const [hide, setHide] = useState(false);
 
   return (
     <>
