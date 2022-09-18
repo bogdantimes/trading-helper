@@ -52,7 +52,7 @@ export class ChannelsDao {
    * it's price is in the top percentile of the channel
    * it's current state is ChannelMid, and it's previous state is ChannelTop
    **/
-  getCandidates(percentile = 0.8): { [p: string]: PriceChannelData } {
+  getCandidates(percentile: number): { [p: string]: PriceChannelData } {
     const all = this.getAll();
     const candidates: { [p: string]: PriceChannelData } = {};
     Object.keys(all).forEach((key) => {

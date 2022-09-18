@@ -138,7 +138,8 @@ export class TradeManager {
     if (this.#balance === -1) {
       this.#balance = this.exchange.getBalance(this.#config.StableCoin);
     }
-    const cs = this.channelsDao.getCandidates();
+    const percentile = this.#fgi === FGI.BULLISH ? 0.8 : 0.85;
+    const cs = this.channelsDao.getCandidates(percentile);
     this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
   }
 
