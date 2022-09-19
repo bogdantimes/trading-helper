@@ -37,16 +37,17 @@ export class FGIProvider {
   #update(): FGI {
     const priceMoveToMarketTrend: { [p: number]: FGI } = {
       [PriceMove.STRONG_UP]: FGI.BULLISH,
-      [PriceMove.UP]: FGI.BULLISH,
+      [PriceMove.UP]: FGI.NEUTRAL,
       [PriceMove.NEUTRAL]: FGI.NEUTRAL,
-      [PriceMove.DOWN]: FGI.BEARISH,
+      [PriceMove.DOWN]: FGI.NEUTRAL,
       [PriceMove.STRONG_DOWN]: FGI.BEARISH,
     };
 
-    const limit = 3;
-    // Get last 3 BTC weekly prices and measure the PriceMove
+    const limit = 7;
+    // Get last 7 BTC 3d prices and measure the PriceMove
+    // Use PriceMove to determine the market trend and corresponding FGI
     const btc = new ExchangeSymbol(`BTC`, StableUSDCoin.BUSD);
-    const prices = this.exchange.getLatestKlineOpenPrices(btc, `1w`, limit);
+    const prices = this.exchange.getLatestKlineOpenPrices(btc, `3d`, limit);
     const exp = isNode ? 60 : MAX_EXPIRATION; // TODO: remove
     if (prices.length < limit) {
       this.cache.put(`AutoFGI`, FGI.NEUTRAL.toString(), exp);
