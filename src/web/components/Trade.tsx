@@ -173,6 +173,25 @@ export default function Trade(props: {
         <Card elevation={2}>
           <CardContent>
             <TradeTitle tradeMemo={tm} onDelete={onDelete} />
+            {tm.tradeResult.quantity && (
+              <Typography
+                margin={`-2px 0 8px`}
+                variant="body2"
+                color="text.secondary"
+                gutterBottom
+              >
+                <b>Current value: </b>
+                <CurrencyFormat
+                  value={curVal}
+                  displayType={`text`}
+                  thousandSeparator={true}
+                  decimalScale={2}
+                  fixedDecimalScale={true}
+                  prefix={`$`}
+                />
+                <span>{` (${profit > 0 ? `+` : ``}${f2(profit)})`}</span>
+              </Typography>
+            )}
             <Box
               sx={chartStyle(theme)}
               width={chartOpts.width}
@@ -180,26 +199,6 @@ export default function Trade(props: {
               ref={chartContainerRef}
               className="chart-container"
             />
-          </CardContent>
-          <CardContent
-            sx={{ paddingTop: 0, ":last-child": { paddingBottom: `16px` } }}
-          >
-            {tm.tradeResult.quantity && (
-              <Typography variant="body2" color="text.secondary">
-                <div>
-                  <b>Current value: </b>
-                  <CurrencyFormat
-                    value={curVal}
-                    displayType={`text`}
-                    thousandSeparator={true}
-                    decimalScale={2}
-                    fixedDecimalScale={true}
-                    prefix={`$`}
-                  />
-                  <span>{` (${profit > 0 ? `+` : ``}${f2(profit)})`}</span>
-                </div>
-              </Typography>
-            )}
           </CardContent>
         </Card>
       )}

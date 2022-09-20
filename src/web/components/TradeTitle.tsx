@@ -34,7 +34,6 @@ export function TradeTitle({
   return (
     <Typography
       sx={{ display: `flex`, alignItems: `center` }}
-      gutterBottom
       variant="h5"
       component="div"
     >
