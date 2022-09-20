@@ -181,11 +181,13 @@ export default function Trade(props: {
               className="chart-container"
             />
           </CardContent>
-          <CardContent sx={{ padding: `16px`, paddingTop: 0 }}>
+          <CardContent
+            sx={{ paddingTop: 0, ":last-child": { paddingBottom: `16px` } }}
+          >
             {tm.tradeResult.quantity && (
               <Typography variant="body2" color="text.secondary">
                 <div>
-                  <span>Current value: </span>
+                  <b>Current value: </b>
                   <CurrencyFormat
                     value={curVal}
                     displayType={`text`}
