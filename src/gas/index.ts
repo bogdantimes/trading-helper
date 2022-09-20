@@ -110,7 +110,12 @@ function initialSetup(params: InitialSetupParams): string {
     config.SECRET = params.binanceSecretKey || config.SECRET;
     if (config.KEY && config.SECRET) {
       Log.alert(`Checking if Binance is reachable`);
-      new Exchange(config.KEY, config.SECRET).getBalance(config.StableCoin);
+      const balance = new Exchange(config.KEY, config.SECRET).getBalance(
+        config.StableCoin
+      );
+      if (config.StableBalance === -1) {
+        config.StableBalance = balance;
+      }
       Log.alert(`Connected to Binance`);
       createTriggers();
     }
