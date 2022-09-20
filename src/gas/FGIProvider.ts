@@ -30,16 +30,16 @@ export class FGIProvider {
     try {
       return this.#update();
     } catch (e) {
-      return FGI.NEUTRAL;
+      return FGI.BALANCED;
     }
   }
 
   #update(): FGI {
     const priceMoveToMarketTrend: { [p: number]: FGI } = {
       [PriceMove.STRONG_UP]: FGI.BULLISH,
-      [PriceMove.UP]: FGI.NEUTRAL,
-      [PriceMove.NEUTRAL]: FGI.NEUTRAL,
-      [PriceMove.DOWN]: FGI.NEUTRAL,
+      [PriceMove.UP]: FGI.BALANCED,
+      [PriceMove.NEUTRAL]: FGI.BALANCED,
+      [PriceMove.DOWN]: FGI.BALANCED,
       [PriceMove.STRONG_DOWN]: FGI.BEARISH,
     };
 
@@ -50,8 +50,8 @@ export class FGIProvider {
     const prices = this.exchange.getLatestKlineOpenPrices(btc, `3d`, limit);
     const exp = isNode ? 60 : MAX_EXPIRATION; // TODO: remove
     if (prices.length < limit) {
-      this.cache.put(`AutoFGI`, FGI.NEUTRAL.toString(), exp);
-      return FGI.NEUTRAL;
+      this.cache.put(`AutoFGI`, FGI.BALANCED.toString(), exp);
+      return FGI.BALANCED;
     }
     const priceMove = getPriceMove(limit, prices);
     const fgi = priceMoveToMarketTrend[priceMove];

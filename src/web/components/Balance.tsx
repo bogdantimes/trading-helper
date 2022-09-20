@@ -2,8 +2,7 @@ import * as React from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import { f2 } from "../../lib";
-import { cardWidth } from "./Common";
+import CurrencyFormat from "react-currency-format";
 
 interface BalanceProps {
   name: string;
@@ -17,17 +16,42 @@ export default function Balance({
   assetsValue,
 }: BalanceProps): JSX.Element {
   return (
-    <>
-      <Card sx={{ width: cardWidth }}>
-        <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
-          <Typography variant="h5">{name}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            <div>Free: {f2(balance)}</div>
-            <div>Assets Value: {f2(assetsValue)}</div>
-            <div>Total: {f2(balance + assetsValue)}</div>
-          </Typography>
-        </CardContent>
-      </Card>
-    </>
+    <Card sx={{ width: `240px` }}>
+      <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
+        <Typography variant="h5">{name}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          <div>
+            <b>Free:</b>
+            <CurrencyFormat
+              style={{ float: `right` }}
+              value={balance}
+              displayType={`text`}
+              thousandSeparator={true}
+              prefix={`$`}
+            />
+          </div>
+          <div>
+            <b>Assets value:</b>
+            <CurrencyFormat
+              style={{ float: `right` }}
+              value={assetsValue}
+              displayType={`text`}
+              thousandSeparator={true}
+              prefix={`$`}
+            />
+          </div>
+          <div>
+            <b>Total:</b>
+            <CurrencyFormat
+              style={{ float: `right` }}
+              value={balance + assetsValue}
+              displayType={`text`}
+              thousandSeparator={true}
+              prefix={`$`}
+            />
+          </div>
+        </Typography>
+      </CardContent>
+    </Card>
   );
 }

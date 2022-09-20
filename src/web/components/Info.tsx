@@ -38,7 +38,8 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
           overscanCount={5}
         >
           {({ index, style }) => {
-            const up = rows[index].profit >= 0;
+            const profit = rows[index].profit;
+            const up = profit >= 0;
             const icon = up ? (
               <ArrowDropUp color={`success`} />
             ) : (
@@ -48,7 +49,7 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
               <ListItem style={style} key={index} component="div">
                 <ListItemAvatar>{icon}</ListItemAvatar>
                 <ListItemText
-                  primary={rows[index].profit}
+                  primary={profit >= 0 ? `+$${profit}` : `-$${profit * -1}`}
                   secondary={rows[index].timeFrame}
                 />
               </ListItem>

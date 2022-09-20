@@ -3,7 +3,7 @@ import { StableUSDCoin } from "./Types";
 export type AUTO_FGI = -1;
 export enum FGI {
   BEARISH = 1,
-  NEUTRAL = 2,
+  BALANCED = 2,
   BULLISH = 3,
 }
 

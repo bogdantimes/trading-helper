@@ -8,6 +8,7 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Radio,
@@ -17,8 +18,8 @@ import {
   Switch,
   TextField,
 } from "@mui/material";
-import { circularProgress } from "./Common";
-import { Config, f2, StableUSDCoin } from "../../lib";
+import { capitalizeWord, circularProgress } from "./Common";
+import { Config, enumKeys, f2, FGI, StableUSDCoin } from "../../lib";
 
 export function Settings({
   config,
@@ -81,6 +82,7 @@ export function Settings({
       .setConfig(config as any);
   };
 
+  const modeLabel = `Behavior (${capitalizeWord(FGI[config.AutoFGI])})`;
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} sx={{ maxWidth: `400px` }}>
@@ -107,22 +109,27 @@ export function Settings({
           value={balance}
           label={`Balance`}
           onChange={(e) => setBalance(e.target.value)}
+          InputProps={{
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          }}
         />
         <FormControl>
-          <InputLabel id={`mkt-trend`}>Trend ({config.AutoFGI})</InputLabel>
+          <InputLabel id={`mode`}>{modeLabel}</InputLabel>
           <Select
-            labelId="mkt-trend"
+            labelId="mode"
             value={config.FearGreedIndex}
-            label={`Trend (${config.AutoFGI})`}
-            defaultValue={2}
+            label={modeLabel}
+            defaultValue={FGI.BALANCED}
             onChange={(e) =>
               setConfig({ ...config, FearGreedIndex: +e.target.value })
             }
           >
-            <MenuItem value={-1}>Auto Detect</MenuItem>
-            <MenuItem value={1}>Bear Market</MenuItem>
-            <MenuItem value={3}>Bull Market</MenuItem>
-            <MenuItem value={2}>Sideways</MenuItem>
+            <MenuItem value={-1}>Auto</MenuItem>
+            {enumKeys<string>(FGI).map((k) => (
+              <MenuItem key={k} value={FGI[k]}>
+                {capitalizeWord(k)}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <FormControlLabel

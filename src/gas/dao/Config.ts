@@ -5,7 +5,7 @@ export const DefaultConfig: () => Config = () => ({
   StableBalance: -1, // -1 is to initiate using all available balance.
   SellAtStopLimit: true,
   FearGreedIndex: -1, // -1 Auto detect
-  AutoFGI: FGI.NEUTRAL,
+  AutoFGI: FGI.BALANCED,
 });
 
 export class ConfigDao {
