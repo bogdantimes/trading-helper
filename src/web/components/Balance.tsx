@@ -27,6 +27,8 @@ export default function Balance({
               value={balance}
               displayType={`text`}
               thousandSeparator={true}
+              decimalScale={2}
+              fixedDecimalScale={true}
               prefix={`$`}
             />
           </div>
@@ -37,6 +39,8 @@ export default function Balance({
               value={assetsValue}
               displayType={`text`}
               thousandSeparator={true}
+              decimalScale={2}
+              fixedDecimalScale={true}
               prefix={`$`}
             />
           </div>
@@ -47,6 +51,8 @@ export default function Balance({
               value={balance + assetsValue}
               displayType={`text`}
               thousandSeparator={true}
+              decimalScale={2}
+              fixedDecimalScale={true}
               prefix={`$`}
             />
           </div>

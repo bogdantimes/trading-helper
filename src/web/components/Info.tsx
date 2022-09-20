@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { FixedSizeList } from "react-window";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
+import CurrencyFormat from "react-currency-format";
 import { Stats } from "../../lib";
 import { cardWidth } from "./Common";
 
@@ -49,7 +50,16 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
               <ListItem style={style} key={index} component="div">
                 <ListItemAvatar>{icon}</ListItemAvatar>
                 <ListItemText
-                  primary={profit >= 0 ? `+$${profit}` : `-$${profit * -1}`}
+                  primary={
+                    <CurrencyFormat
+                      value={profit}
+                      displayType={`text`}
+                      thousandSeparator={true}
+                      decimalScale={2}
+                      fixedDecimalScale={true}
+                      prefix={profit >= 0 ? `+$` : `$`}
+                    />
+                  }
                   secondary={rows[index].timeFrame}
                 />
               </ListItem>

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
+import CurrencyFormat from "react-currency-format";
 import {
   ChartOptions,
   createChart,
@@ -176,9 +177,16 @@ export default function Trade(props: {
             {tm.tradeResult.quantity && (
               <Typography variant="body2" color="text.secondary">
                 <div>
-                  {`Current value: ${f2(curVal)} (${profit > 0 ? `+` : ``}${f2(
-                    profit
-                  )})`}
+                  <span>Current value: </span>
+                  <CurrencyFormat
+                    value={curVal}
+                    displayType={`text`}
+                    thousandSeparator={true}
+                    decimalScale={2}
+                    fixedDecimalScale={true}
+                    prefix={`$`}
+                  />
+                  <span>{` (${profit > 0 ? `+` : ``}${f2(profit)})`}</span>
                 </div>
               </Typography>
             )}
