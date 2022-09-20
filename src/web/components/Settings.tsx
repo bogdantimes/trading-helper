@@ -18,8 +18,8 @@ import {
   Switch,
   TextField,
 } from "@mui/material";
-import { capitalizeWord, circularProgress } from "./Common";
-import { Config, enumKeys, f2, FGI, StableUSDCoin } from "../../lib";
+import { circularProgress } from "./Common";
+import { Config, f2, MarketCycle, StableUSDCoin } from "../../lib";
 
 export function Settings({
   config,
@@ -82,7 +82,7 @@ export function Settings({
       .setConfig(config as any);
   };
 
-  const modeLabel = `Behavior (${capitalizeWord(FGI[config.AutoFGI])})`;
+  const cycle = `Market Cycle (${marketCycleLabel[config.AutoMarketCycle]})`;
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} sx={{ maxWidth: `400px` }}>
@@ -114,22 +114,26 @@ export function Settings({
           }}
         />
         <FormControl>
-          <InputLabel id={`mode`}>{modeLabel}</InputLabel>
+          <InputLabel id={`cycle`}>{cycle}</InputLabel>
           <Select
-            labelId="mode"
-            value={config.FearGreedIndex}
-            label={modeLabel}
-            defaultValue={FGI.BALANCED}
+            labelId="cycle"
+            value={config.MarketCycle}
+            label={cycle}
+            defaultValue={MarketCycle.SIDEWAYS}
             onChange={(e) =>
-              setConfig({ ...config, FearGreedIndex: +e.target.value })
+              setConfig({ ...config, MarketCycle: +e.target.value })
             }
           >
             <MenuItem value={-1}>Auto</MenuItem>
-            {enumKeys<string>(FGI).map((k) => (
-              <MenuItem key={k} value={FGI[k]}>
-                {capitalizeWord(k)}
-              </MenuItem>
-            ))}
+            <MenuItem value={MarketCycle.SIDEWAYS}>
+              {marketCycleLabel[MarketCycle.SIDEWAYS]}
+            </MenuItem>
+            <MenuItem value={MarketCycle.MARK_UP}>
+              {marketCycleLabel[MarketCycle.MARK_UP]}
+            </MenuItem>
+            <MenuItem value={MarketCycle.MARK_DOWN}>
+              {marketCycleLabel[MarketCycle.MARK_DOWN]}
+            </MenuItem>
           </Select>
         </FormControl>
         <FormControlLabel
@@ -167,3 +171,9 @@ export function Settings({
     </Box>
   );
 }
+
+const marketCycleLabel = {
+  [MarketCycle.MARK_UP]: `Mark-up`,
+  [MarketCycle.MARK_DOWN]: `Mark-down`,
+  [MarketCycle.SIDEWAYS]: `Sideways`,
+};

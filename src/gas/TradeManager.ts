@@ -5,7 +5,7 @@ import {
   Config,
   ExchangeSymbol,
   f2,
-  FGI,
+  MarketCycle,
   Key,
   PriceMove,
   PricesHolder,
@@ -22,7 +22,7 @@ import { TradeAction, TradeRequest, TraderPlugin } from "./traders/pro/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
-import { FGIProvider } from "./FGIProvider";
+import { TrendProvider } from "./TrendProvider";
 
 const MIN_BUY = 15;
 
@@ -31,7 +31,7 @@ export class TradeManager {
   #canInvest = 0;
   #balance = 0;
   #optimalInvestRatio = 0;
-  #fgi: FGI;
+  #mktCycle: MarketCycle;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -41,13 +41,13 @@ export class TradeManager {
     const tradesDao = new TradesDao(DefaultStore);
     const priceProvider = PriceProvider.default(exchange, CacheProxy);
     const channelsDao = new ChannelsDao(DefaultStore);
-    const fgiProvider = new FGIProvider(configDao, exchange, CacheProxy);
+    const trendProvider = new TrendProvider(configDao, exchange, CacheProxy);
     return new TradeManager(
       priceProvider,
       tradesDao,
       configDao,
       channelsDao,
-      fgiProvider,
+      trendProvider,
       exchange,
       statistics,
       global.TradingHelperLibrary
@@ -59,7 +59,7 @@ export class TradeManager {
     private readonly tradesDao: TradesDao,
     private readonly configDao: ConfigDao,
     private readonly channelsDao: ChannelsDao,
-    private readonly fgiProvider: FGIProvider,
+    private readonly trendProvider: TrendProvider,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
     private readonly plugin: TraderPlugin
@@ -74,7 +74,7 @@ export class TradeManager {
 
     this.plugin
       .trade({
-        FGI: this.#fgi,
+        marketCycle: this.#mktCycle,
         channelsDao: this.channelsDao,
         prices: this.priceProvider.get(this.#config.StableCoin),
       })
@@ -133,12 +133,12 @@ export class TradeManager {
 
   #prepare(): void {
     this.#config = this.configDao.get();
-    this.#fgi = this.fgiProvider.get();
+    this.#mktCycle = this.trendProvider.get();
     this.#balance = this.#config.StableBalance;
     if (this.#balance === -1) {
       this.#balance = this.exchange.getBalance(this.#config.StableCoin);
     }
-    const percentile = this.#fgi === FGI.BULLISH ? 0.8 : 0.85;
+    const percentile = this.#mktCycle === MarketCycle.MARK_UP ? 0.8 : 0.85;
     const cs = this.channelsDao.getCandidates(percentile);
     this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
   }
@@ -252,14 +252,14 @@ export class TradeManager {
 
       // Step 1: bumping stop limit up proportionally to the current profit to profit goal.
       const R = tm.range;
-      const PG = R * (0.9 / this.#fgi);
+      const PG = R * (0.9 / this.#mktCycle);
       const P = tm.profit() / tm.tradeResult.paid;
       const K = Math.min(0.99, 1 - R + Math.max(0, (P * R) / PG));
       let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
       // Step 2: bumping it up proportionally to the TTL that is left.
-      const maxTTL = tm.duration / this.#fgi;
+      const maxTTL = tm.duration / this.#mktCycle;
       const curTTL = Math.min(tm.ttl, maxTTL);
       const k2 = Math.min(0.99, curTTL / maxTTL);
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);

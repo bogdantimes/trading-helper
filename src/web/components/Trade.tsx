@@ -131,8 +131,8 @@ export default function Trade(props: {
         lineStyle: LineStyle.Dashed,
         priceFormat,
       });
-      // FGI is from 1 to 3, which makes profit goal 30-10% of channel size
-      const profitGoal = tm.range * (0.9 / cfg.AutoFGI);
+      // MarketCycle is from 1 to 3, which makes profit goal 30-10% of channel size
+      const profitGoal = tm.range * (0.9 / cfg.AutoMarketCycle);
       const profitPrice = tm.tradeResult.price * (1 + profitGoal);
       profitLine.setData(map(tm.prices, () => profitPrice));
     }
@@ -144,7 +144,15 @@ export default function Trade(props: {
       });
       soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice));
     }
-  }, [theme, tm, cfg.AutoFGI, priceLine, profitLine, stopLine, orderLine]);
+  }, [
+    theme,
+    tm,
+    cfg.AutoMarketCycle,
+    priceLine,
+    profitLine,
+    stopLine,
+    orderLine,
+  ]);
 
   const [removed, setRemoved] = useState(false);
 

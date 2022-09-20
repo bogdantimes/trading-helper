@@ -1,10 +1,10 @@
 import { StableUSDCoin } from "./Types";
 
-export type AUTO_FGI = -1;
-export enum FGI {
-  BEARISH = 1,
-  BALANCED = 2,
-  BULLISH = 3,
+export type AutoDetect = -1;
+export enum MarketCycle {
+  MARK_DOWN = 1,
+  SIDEWAYS = 2,
+  MARK_UP = 3,
 }
 
 export interface Config {
@@ -17,13 +17,13 @@ export interface Config {
    */
   StableBalance: number;
   /**
-   * FearGreedIndex affects the profit goal and the stop limit aggressiveness.
-   * For bullish market, it makes the profit goal lower and the stop limit more aggressive.
+   * MarketCycle affects the profit goal and the stop limit aggressiveness.
+   * For mark-up cycle, it makes the profit goal lower and the stop limit more aggressive.
    * This allows to trade shorter and save profit when the market suddenly turns down.
-   * Bearish market is the opposite: higher profit goal and less aggressive stop limit.
-   * Set to -1 to auto-detect the market trend.
+   * Mark-down is the opposite: higher profit goal and less aggressive stop limit.
+   * Set to -1 to auto-detect the market cycle.
    */
-  FearGreedIndex: AUTO_FGI | FGI;
-  AutoFGI: FGI;
+  MarketCycle: AutoDetect | MarketCycle;
+  AutoMarketCycle: MarketCycle;
   SellAtStopLimit: boolean;
 }

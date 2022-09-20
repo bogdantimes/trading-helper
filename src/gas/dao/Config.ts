@@ -1,11 +1,11 @@
-import { Config, FGI, IStore, StableUSDCoin } from "../../lib";
+import { Config, MarketCycle, IStore, StableUSDCoin } from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: -1, // -1 is to initiate using all available balance.
   SellAtStopLimit: true,
-  FearGreedIndex: -1, // -1 Auto detect
-  AutoFGI: FGI.BALANCED,
+  MarketCycle: -1, // -1 Auto detect
+  AutoMarketCycle: MarketCycle.SIDEWAYS,
 });
 
 export class ConfigDao {

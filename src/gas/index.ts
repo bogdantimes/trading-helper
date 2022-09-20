@@ -16,7 +16,7 @@ import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
-import { FGIProvider } from "./FGIProvider";
+import { TrendProvider } from "./TrendProvider";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -169,12 +169,12 @@ function getConfig(): Config {
   const configDao = new ConfigDao(DefaultStore);
   if (configDao.isInitialized()) {
     const config = configDao.get();
-    const fgi = new FGIProvider(
+    const trendProvider = new TrendProvider(
       configDao,
       new Exchange(config.KEY, config.SECRET),
       CacheProxy
     );
-    config.AutoFGI = fgi.get();
+    config.AutoMarketCycle = trendProvider.get();
     return config;
   } else {
     return null;

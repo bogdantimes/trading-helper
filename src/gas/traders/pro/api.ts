@@ -1,4 +1,4 @@
-import { CoinName, FGI, PriceHoldersMap } from "../../../lib/index";
+import { CoinName, MarketCycle, PriceHoldersMap } from "../../../lib/index";
 import { ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
@@ -6,7 +6,7 @@ export interface TraderPlugin {
 }
 
 export interface TradingContext {
-  FGI: FGI;
+  marketCycle: MarketCycle;
   prices: PriceHoldersMap;
   channelsDao: ChannelsDao;
 }
