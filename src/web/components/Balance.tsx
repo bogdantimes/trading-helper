@@ -22,15 +22,19 @@ export default function Balance({
         <Typography variant="body2" color="text.secondary">
           <div>
             <b>Free:</b>
-            <CurrencyFormat
-              style={{ float: `right` }}
-              value={balance}
-              displayType={`text`}
-              thousandSeparator={true}
-              decimalScale={2}
-              fixedDecimalScale={true}
-              prefix={`$`}
-            />
+            {balance === -1 ? (
+              <span> Wait...</span>
+            ) : (
+              <CurrencyFormat
+                style={{ float: `right` }}
+                value={balance}
+                displayType={`text`}
+                thousandSeparator={true}
+                decimalScale={2}
+                fixedDecimalScale={true}
+                prefix={`$`}
+              />
+            )}
           </div>
           <div>
             <b>Assets value:</b>
@@ -48,7 +52,7 @@ export default function Balance({
             <b>Total:</b>
             <CurrencyFormat
               style={{ float: `right` }}
-              value={balance + assetsValue}
+              value={balance >= 0 ? balance + assetsValue : assetsValue}
               displayType={`text`}
               thousandSeparator={true}
               decimalScale={2}
