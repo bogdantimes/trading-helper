@@ -246,6 +246,11 @@ export class TradeManager {
       // Initiate stop limit via the channel lower boundary price
       tm.stopLimitPrice = ch[Key.MIN];
     } else {
+      // There are a few independent stop limit strategies, each can bump the stop limit price up:
+      // 1. Profit goal - the closer the current price to the profit goal, the closer the stop limit to the current price
+      // 2. TTL - the less TTL left, the closer the stop limit to the current price
+      // 3. Minimal profit - once the profit reaches 4%, the stop limit is set to the order price.
+
       const lastN = 3;
       const avePrice =
         tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
@@ -264,6 +269,11 @@ export class TradeManager {
       const k2 = Math.min(0.99, curTTL / maxTTL);
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+
+      if (tm.profitPercent() > 4) {
+        // Step 3: bumping it up to the order price.
+        tm.stopLimitPrice = Math.max(tm.stopLimitPrice, tm.tradeResult.price);
+      }
     }
   }
 
