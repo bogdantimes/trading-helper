@@ -38,11 +38,11 @@ export class TrendProvider {
 
   #update(): MarketCycle {
     const priceMoveToMarketTrend: { [p: number]: MarketCycle } = {
-      [PriceMove.STRONG_UP]: MarketCycle.MARK_UP,
-      [PriceMove.UP]: MarketCycle.SIDEWAYS,
-      [PriceMove.NEUTRAL]: MarketCycle.SIDEWAYS,
-      [PriceMove.DOWN]: MarketCycle.SIDEWAYS,
       [PriceMove.STRONG_DOWN]: MarketCycle.MARK_DOWN,
+      [PriceMove.DOWN]: MarketCycle.MARK_DOWN,
+      [PriceMove.NEUTRAL]: MarketCycle.SIDEWAYS,
+      [PriceMove.UP]: MarketCycle.SIDEWAYS,
+      [PriceMove.STRONG_UP]: MarketCycle.MARK_UP,
     };
 
     const limit = 7;
