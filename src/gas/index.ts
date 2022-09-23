@@ -179,7 +179,7 @@ function getConfig(): Config {
       new Exchange(config.KEY, config.SECRET),
       CacheProxy
     );
-    config.AutoMarketCycle = trendProvider.get();
+    config.AutoMarketTrend = trendProvider.get();
     return config;
   } else {
     return null;

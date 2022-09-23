@@ -1,11 +1,11 @@
-import { Config, MarketCycle, IStore, StableUSDCoin } from "../../lib";
+import { Config, MarketTrend, IStore, StableUSDCoin } from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: -1, // -1 is to initiate using all available balance.
   SellAtStopLimit: true,
-  MarketCycle: -1, // -1 Auto detect
-  AutoMarketCycle: MarketCycle.SIDEWAYS,
+  MarketTrend: -1, // -1 Auto detect
+  AutoMarketTrend: MarketTrend.SIDEWAYS,
 });
 
 export class ConfigDao {

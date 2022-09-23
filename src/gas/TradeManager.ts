@@ -5,7 +5,7 @@ import {
   Config,
   ExchangeSymbol,
   f2,
-  MarketCycle,
+  MarketTrend,
   Key,
   PriceMove,
   PricesHolder,
@@ -31,7 +31,7 @@ export class TradeManager {
   #canInvest = 0;
   #balance = 0;
   #optimalInvestRatio = 0;
-  #mktCycle: MarketCycle;
+  #mktTrend: MarketTrend;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -74,7 +74,7 @@ export class TradeManager {
 
     this.plugin
       .trade({
-        marketCycle: this.#mktCycle,
+        marketTrend: this.#mktTrend,
         channelsDao: this.channelsDao,
         prices: this.priceProvider.get(this.#config.StableCoin),
       })
@@ -133,12 +133,12 @@ export class TradeManager {
 
   #prepare(): void {
     this.#config = this.configDao.get();
-    this.#mktCycle = this.trendProvider.get();
+    this.#mktTrend = this.trendProvider.get();
     this.#balance = this.#config.StableBalance;
     if (this.#balance === -1) {
       this.#balance = this.exchange.getBalance(this.#config.StableCoin);
     }
-    const percentile = this.#mktCycle === MarketCycle.MARK_UP ? 0.8 : 0.85;
+    const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
     const cs = this.channelsDao.getCandidates(percentile);
     this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
   }
@@ -257,14 +257,14 @@ export class TradeManager {
 
       // Step 1: bumping stop limit up proportionally to the current profit to profit goal.
       const R = tm.range;
-      const PG = R * (0.9 / this.#mktCycle);
+      const PG = R * (0.9 / this.#mktTrend);
       const P = tm.profit() / tm.tradeResult.paid;
       const K = Math.min(0.99, 1 - R + Math.max(0, (P * R) / PG));
       let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
       // Step 2: bumping it up proportionally to the TTL that is left.
-      const maxTTL = tm.duration / this.#mktCycle;
+      const maxTTL = tm.duration / this.#mktTrend;
       const curTTL = Math.min(tm.ttl, maxTTL);
       const k2 = Math.min(0.99, curTTL / maxTTL);
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);

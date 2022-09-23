@@ -1,10 +1,10 @@
 import { StableUSDCoin } from "./Types";
 
 export type AutoDetect = -1;
-export enum MarketCycle {
-  MARK_DOWN = 1,
+export enum MarketTrend {
+  DOWN = 1,
   SIDEWAYS = 2,
-  MARK_UP = 3,
+  UP = 3,
 }
 
 export interface Config {
@@ -17,13 +17,13 @@ export interface Config {
    */
   StableBalance: number;
   /**
-   * MarketCycle affects the profit goal and the stop limit aggressiveness.
-   * For mark-up cycle, it makes the profit goal lower and the stop limit more aggressive.
+   * MarketTrend affects the profit goal and the stop limit aggressiveness.
+   * For mark-up trend, it makes the profit goal lower and the stop limit more aggressive.
    * This allows to trade shorter and save profit when the market suddenly turns down.
    * Mark-down is the opposite: higher profit goal and less aggressive stop limit.
-   * Set to -1 to auto-detect the market cycle.
+   * Set to -1 to auto-detect the market trend.
    */
-  MarketCycle: AutoDetect | MarketCycle;
-  AutoMarketCycle: MarketCycle;
+  MarketTrend: AutoDetect | MarketTrend;
+  AutoMarketTrend: MarketTrend;
   SellAtStopLimit: boolean;
 }

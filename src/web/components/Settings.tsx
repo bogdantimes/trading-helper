@@ -19,7 +19,7 @@ import {
   TextField,
 } from "@mui/material";
 import { circularProgress } from "./Common";
-import { Config, f2, MarketCycle, StableUSDCoin } from "../../lib";
+import { Config, f2, MarketTrend, StableUSDCoin } from "../../lib";
 
 export function Settings({
   config,
@@ -82,7 +82,7 @@ export function Settings({
       .setConfig(config as any);
   };
 
-  const cycle = `Market Cycle (${marketCycleLabel[config.AutoMarketCycle]})`;
+  const trend = `Market Trend (${marketTrendLabel[config.AutoMarketTrend]})`;
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} sx={{ maxWidth: `400px` }}>
@@ -114,25 +114,25 @@ export function Settings({
           }}
         />
         <FormControl>
-          <InputLabel id={`cycle`}>{cycle}</InputLabel>
+          <InputLabel id={`trend`}>{trend}</InputLabel>
           <Select
-            labelId="cycle"
-            value={config.MarketCycle}
-            label={cycle}
-            defaultValue={MarketCycle.SIDEWAYS}
+            labelId="trend"
+            value={config.MarketTrend}
+            label={trend}
+            defaultValue={MarketTrend.SIDEWAYS}
             onChange={(e) =>
-              setConfig({ ...config, MarketCycle: +e.target.value })
+              setConfig({ ...config, MarketTrend: +e.target.value })
             }
           >
             <MenuItem value={-1}>Auto</MenuItem>
-            <MenuItem value={MarketCycle.SIDEWAYS}>
-              {marketCycleLabel[MarketCycle.SIDEWAYS]}
+            <MenuItem value={MarketTrend.SIDEWAYS}>
+              {marketTrendLabel[MarketTrend.SIDEWAYS]}
             </MenuItem>
-            <MenuItem value={MarketCycle.MARK_UP}>
-              {marketCycleLabel[MarketCycle.MARK_UP]}
+            <MenuItem value={MarketTrend.UP}>
+              {marketTrendLabel[MarketTrend.UP]}
             </MenuItem>
-            <MenuItem value={MarketCycle.MARK_DOWN}>
-              {marketCycleLabel[MarketCycle.MARK_DOWN]}
+            <MenuItem value={MarketTrend.DOWN}>
+              {marketTrendLabel[MarketTrend.DOWN]}
             </MenuItem>
           </Select>
         </FormControl>
@@ -172,8 +172,8 @@ export function Settings({
   );
 }
 
-const marketCycleLabel = {
-  [MarketCycle.MARK_UP]: `Mark-up`,
-  [MarketCycle.MARK_DOWN]: `Mark-down`,
-  [MarketCycle.SIDEWAYS]: `Sideways`,
+const marketTrendLabel = {
+  [MarketTrend.UP]: `Up`,
+  [MarketTrend.DOWN]: `Down`,
+  [MarketTrend.SIDEWAYS]: `Sideways`,
 };

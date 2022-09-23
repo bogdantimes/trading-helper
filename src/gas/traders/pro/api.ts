@@ -1,12 +1,12 @@
-import { CoinName, MarketCycle, PriceHoldersMap } from "../../../lib/index";
+import { CoinName, MarketTrend, PriceHoldersMap } from "../../../lib/index";
 import { ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
-  trade: (context: TradingContext) => TradeRequest[];
+  trade: (context: PluginContext) => TradeRequest[];
 }
 
-export interface TradingContext {
-  marketCycle: MarketCycle;
+export interface PluginContext {
+  marketTrend: MarketTrend;
   prices: PriceHoldersMap;
   channelsDao: ChannelsDao;
 }

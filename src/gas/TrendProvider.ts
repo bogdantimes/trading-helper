@@ -1,6 +1,6 @@
 import {
   ExchangeSymbol,
-  MarketCycle,
+  MarketTrend,
   getPriceMove,
   ICacheProxy,
   PriceMove,
@@ -20,44 +20,44 @@ export class TrendProvider {
     private readonly cache: ICacheProxy
   ) {}
 
-  get(): MarketCycle {
-    const marketCycle = this.configDao.get().MarketCycle;
-    if (marketCycle !== -1) {
-      return marketCycle;
+  get(): MarketTrend {
+    const marketTrend = this.configDao.get().MarketTrend;
+    if (marketTrend !== -1) {
+      return marketTrend;
     }
-    const autoMarketCycle = this.cache.get(cacheKey);
-    if (autoMarketCycle !== null && autoMarketCycle !== undefined) {
-      return +autoMarketCycle as MarketCycle;
+    const autoMarketTrend = this.cache.get(cacheKey);
+    if (autoMarketTrend !== null && autoMarketTrend !== undefined) {
+      return +autoMarketTrend as MarketTrend;
     }
     try {
       return this.#update();
     } catch (e) {
-      return MarketCycle.SIDEWAYS;
+      return MarketTrend.SIDEWAYS;
     }
   }
 
-  #update(): MarketCycle {
-    const priceMoveToMarketTrend: { [p: number]: MarketCycle } = {
-      [PriceMove.STRONG_DOWN]: MarketCycle.MARK_DOWN,
-      [PriceMove.DOWN]: MarketCycle.MARK_DOWN,
-      [PriceMove.NEUTRAL]: MarketCycle.SIDEWAYS,
-      [PriceMove.UP]: MarketCycle.SIDEWAYS,
-      [PriceMove.STRONG_UP]: MarketCycle.MARK_UP,
+  #update(): MarketTrend {
+    const priceMoveToMarketTrend: { [p: number]: MarketTrend } = {
+      [PriceMove.STRONG_DOWN]: MarketTrend.DOWN,
+      [PriceMove.DOWN]: MarketTrend.DOWN,
+      [PriceMove.NEUTRAL]: MarketTrend.SIDEWAYS,
+      [PriceMove.UP]: MarketTrend.SIDEWAYS,
+      [PriceMove.STRONG_UP]: MarketTrend.UP,
     };
 
     const limit = 7;
     // Get last 7 BTC 3d prices and measure the PriceMove
-    // Use PriceMove to determine the market trend and corresponding MarketCycle
+    // Use PriceMove to determine the market trend and corresponding MarketTrend
     const btc = new ExchangeSymbol(`BTC`, StableUSDCoin.BUSD);
     const prices = this.exchange.getLatestKlineOpenPrices(btc, `3d`, limit);
     const exp = isNode ? 60 : MAX_EXPIRATION; // TODO: remove
     if (prices.length < limit) {
-      this.cache.put(cacheKey, MarketCycle.SIDEWAYS.toString(), exp);
-      return MarketCycle.SIDEWAYS;
+      this.cache.put(cacheKey, MarketTrend.SIDEWAYS.toString(), exp);
+      return MarketTrend.SIDEWAYS;
     }
     const priceMove = getPriceMove(limit, prices);
-    const cycle = priceMoveToMarketTrend[priceMove];
-    this.cache.put(cacheKey, cycle.toString(), exp);
-    return cycle;
+    const trend = priceMoveToMarketTrend[priceMove];
+    this.cache.put(cacheKey, trend.toString(), exp);
+    return trend;
   }
 }
