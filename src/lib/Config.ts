@@ -26,4 +26,8 @@ export interface Config {
   MarketTrend: AutoDetect | MarketTrend;
   AutoMarketTrend: MarketTrend;
   SellAtStopLimit: boolean;
+  /**
+   * Whether the current app has the access to advanced plugin features.
+   */
+  AdvancedAccess: boolean;
 }

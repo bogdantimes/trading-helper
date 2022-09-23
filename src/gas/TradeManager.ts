@@ -18,7 +18,7 @@ import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
-import { TradeAction, TradeRequest, TraderPlugin } from "./traders/pro/api";
+import { TradeAction, TradeRequest, TraderPlugin } from "./traders/plugin/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
@@ -72,19 +72,24 @@ export class TradeManager {
   trade(): void {
     this.#prepare();
 
-    this.plugin
-      .trade({
-        marketTrend: this.#mktTrend,
-        channelsDao: this.channelsDao,
-        prices: this.priceProvider.get(this.#config.StableCoin),
-      })
-      .forEach((r) => {
-        if (r.action === TradeAction.Buy) {
-          this.#setBuyState(r);
-        } else if (r.action === TradeAction.Sell) {
-          this.#setSellState(r);
-        }
-      });
+    const { advancedAccess, requests } = this.plugin.trade({
+      marketTrend: this.#mktTrend,
+      channelsDao: this.channelsDao,
+      prices: this.priceProvider.get(this.#config.StableCoin),
+    });
+
+    if (advancedAccess !== this.#config.AdvancedAccess) {
+      this.#config.AdvancedAccess = advancedAccess;
+      this.configDao.set(this.#config);
+    }
+
+    requests.forEach((r) => {
+      if (r.action === TradeAction.Buy) {
+        this.#setBuyState(r);
+      } else if (r.action === TradeAction.Sell) {
+        this.#setSellState(r);
+      }
+    });
 
     const trades = this.tradesDao.getList();
     const inv = trades.filter((t) => t.tradeResult.quantity > 0);

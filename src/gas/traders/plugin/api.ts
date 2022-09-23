@@ -2,7 +2,18 @@ import { CoinName, MarketTrend, PriceHoldersMap } from "../../../lib/index";
 import { ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
-  trade: (context: PluginContext) => TradeRequest[];
+  trade: (context: PluginContext) => PluginResult;
+}
+
+export interface PluginResult {
+  /**
+   * Whether the current user has the access to advanced plugin features.
+   */
+  advancedAccess: boolean;
+  /**
+   * Requests to trade.
+   */
+  requests: TradeRequest[];
 }
 
 export interface PluginContext {

@@ -43,22 +43,21 @@ export const capitalizeWord = (s: string): string =>
 
 export const cardWidth = `332px`;
 
-export function featureDisabledInfo(): JSX.Element {
-  return (
-    <Alert severity="info">
-      <Typography variant="body1">
-        <Link
-          href="https://www.patreon.com/bePatron?u=52791105"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Become a Patron!
-        </Link>
-        {` `}to unlock the functionality.
-      </Typography>
-      <Typography variant="caption">
-        <b>Important: use the same Google account in Patreon.</b>
-      </Typography>
-    </Alert>
-  );
-}
+export const featureDisabledInfo = (
+  <Alert severity="info">
+    <Typography variant="body1">
+      <div>Your application is working in candidates view-only mode.</div>
+      <Link
+        href="https://www.patreon.com/bePatron?u=52791105"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Become a Patron!
+      </Link>
+      {` `}to unlock "buy" signals for fully-autonomous trading.
+    </Typography>
+    <Typography variant="caption">
+      <b>Important: use the same Google account in Patreon.</b>
+    </Typography>
+  </Alert>
+);
