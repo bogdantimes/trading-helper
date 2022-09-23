@@ -13,7 +13,12 @@ import {
 } from "@mui/material";
 import SemiCircleProgressBar from "react-progressbar-semicircle";
 import Balance from "./Balance";
-import { capitalizeWord, cardWidth, growthIconMap } from "./Common";
+import {
+  capitalizeWord,
+  cardWidth,
+  featureDisabledInfo,
+  growthIconMap,
+} from "./Common";
 import {
   AppState,
   ChannelState,
@@ -73,7 +78,7 @@ function getBalanceView(
 function getTradeCards(
   state: TradeState,
   elems: TradeMemo[],
-  config?: Config
+  config: Config
 ): JSX.Element {
   // hide Sold trades by default, others visible by default
   const [hide, setHide] = useState(state === TradeState.SOLD);
@@ -88,17 +93,26 @@ function getTradeCards(
         </Divider>
       </Grid>
       {!hide && (
-        <Grid item xs={12}>
-          <Grid container justifyContent="center" spacing={2}>
-            {elems
-              .sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
-              .map((t) => (
-                <Grid key={t.getCoinName()} item>
-                  <Trade data={t} config={config} />
-                </Grid>
-              ))}
+        <>
+          {!config.AdvancedAccess && (
+            <Grid item xs={12}>
+              <Grid container justifyContent="center" spacing={2}>
+                <Grid item>{featureDisabledInfo}</Grid>
+              </Grid>
+            </Grid>
+          )}
+          <Grid item xs={12}>
+            <Grid container justifyContent="center" spacing={2}>
+              {elems
+                .sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
+                .map((t) => (
+                  <Grid key={t.getCoinName()} item>
+                    <Trade data={t} config={config} />
+                  </Grid>
+                ))}
+            </Grid>
           </Grid>
-        </Grid>
+        </>
       )}
     </>
   );

@@ -8,6 +8,7 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Radio,
@@ -18,7 +19,7 @@ import {
   TextField,
 } from "@mui/material";
 import { circularProgress } from "./Common";
-import { Config, f2, StableUSDCoin } from "../../lib";
+import { Config, f2, MarketTrend, StableUSDCoin } from "../../lib";
 
 export function Settings({
   config,
@@ -81,6 +82,7 @@ export function Settings({
       .setConfig(config as any);
   };
 
+  const trend = `Market Trend (${marketTrendLabel[config.AutoMarketTrend]})`;
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} sx={{ maxWidth: `400px` }}>
@@ -107,22 +109,31 @@ export function Settings({
           value={balance}
           label={`Balance`}
           onChange={(e) => setBalance(e.target.value)}
+          InputProps={{
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          }}
         />
         <FormControl>
-          <InputLabel id={`mkt-trend`}>Trend ({config.AutoFGI})</InputLabel>
+          <InputLabel id={`trend`}>{trend}</InputLabel>
           <Select
-            labelId="mkt-trend"
-            value={config.FearGreedIndex}
-            label={`Trend (${config.AutoFGI})`}
-            defaultValue={2}
+            labelId="trend"
+            value={config.MarketTrend}
+            label={trend}
+            defaultValue={MarketTrend.SIDEWAYS}
             onChange={(e) =>
-              setConfig({ ...config, FearGreedIndex: +e.target.value })
+              setConfig({ ...config, MarketTrend: +e.target.value })
             }
           >
-            <MenuItem value={-1}>Auto Detect</MenuItem>
-            <MenuItem value={1}>Bear Market</MenuItem>
-            <MenuItem value={3}>Bull Market</MenuItem>
-            <MenuItem value={2}>Sideways</MenuItem>
+            <MenuItem value={-1}>Auto</MenuItem>
+            <MenuItem value={MarketTrend.SIDEWAYS}>
+              {marketTrendLabel[MarketTrend.SIDEWAYS]}
+            </MenuItem>
+            <MenuItem value={MarketTrend.UP}>
+              {marketTrendLabel[MarketTrend.UP]}
+            </MenuItem>
+            <MenuItem value={MarketTrend.DOWN}>
+              {marketTrendLabel[MarketTrend.DOWN]}
+            </MenuItem>
           </Select>
         </FormControl>
         <FormControlLabel
@@ -149,7 +160,7 @@ export function Settings({
             color="primary"
             startIcon={<SaveIcon />}
             onClick={onSave}
-            disabled={isSaving}
+            disabled={isSaving || fbURLDisabled}
           >
             Save
           </Button>
@@ -160,3 +171,9 @@ export function Settings({
     </Box>
   );
 }
+
+const marketTrendLabel = {
+  [MarketTrend.UP]: `Up`,
+  [MarketTrend.DOWN]: `Down`,
+  [MarketTrend.SIDEWAYS]: `Sideways`,
+};

@@ -16,7 +16,7 @@ import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
-import { FGIProvider } from "./FGIProvider";
+import { TrendProvider } from "./TrendProvider";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -110,7 +110,12 @@ function initialSetup(params: InitialSetupParams): string {
     config.SECRET = params.binanceSecretKey || config.SECRET;
     if (config.KEY && config.SECRET) {
       Log.alert(`Checking if Binance is reachable`);
-      new Exchange(config.KEY, config.SECRET).getBalance(config.StableCoin);
+      const balance = new Exchange(config.KEY, config.SECRET).getBalance(
+        config.StableCoin
+      );
+      if (config.StableBalance === -1) {
+        config.StableBalance = balance;
+      }
       Log.alert(`Connected to Binance`);
       createTriggers();
     }
@@ -169,12 +174,12 @@ function getConfig(): Config {
   const configDao = new ConfigDao(DefaultStore);
   if (configDao.isInitialized()) {
     const config = configDao.get();
-    const fgi = new FGIProvider(
+    const trendProvider = new TrendProvider(
       configDao,
       new Exchange(config.KEY, config.SECRET),
       CacheProxy
     );
-    config.AutoFGI = fgi.get();
+    config.AutoMarketTrend = trendProvider.get();
     return config;
   } else {
     return null;

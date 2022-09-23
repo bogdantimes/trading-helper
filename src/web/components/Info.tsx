@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { FixedSizeList } from "react-window";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
+import CurrencyFormat from "react-currency-format";
 import { Stats } from "../../lib";
 import { cardWidth } from "./Common";
 
@@ -38,7 +39,8 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
           overscanCount={5}
         >
           {({ index, style }) => {
-            const up = rows[index].profit >= 0;
+            const profit = rows[index].profit;
+            const up = profit >= 0;
             const icon = up ? (
               <ArrowDropUp color={`success`} />
             ) : (
@@ -48,7 +50,16 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
               <ListItem style={style} key={index} component="div">
                 <ListItemAvatar>{icon}</ListItemAvatar>
                 <ListItemText
-                  primary={rows[index].profit}
+                  primary={
+                    <CurrencyFormat
+                      value={profit}
+                      displayType={`text`}
+                      thousandSeparator={true}
+                      decimalScale={2}
+                      fixedDecimalScale={true}
+                      prefix={profit >= 0 ? `+$` : `$`}
+                    />
+                  }
                   secondary={rows[index].timeFrame}
                 />
               </ListItem>

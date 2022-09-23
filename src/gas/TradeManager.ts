@@ -5,7 +5,7 @@ import {
   Config,
   ExchangeSymbol,
   f2,
-  FGI,
+  MarketTrend,
   Key,
   PriceMove,
   PricesHolder,
@@ -18,11 +18,11 @@ import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
-import { TradeAction, TradeRequest, TraderPlugin } from "./traders/pro/api";
+import { TradeAction, TradeRequest, TraderPlugin } from "./traders/plugin/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
-import { FGIProvider } from "./FGIProvider";
+import { TrendProvider } from "./TrendProvider";
 
 const MIN_BUY = 15;
 
@@ -31,7 +31,7 @@ export class TradeManager {
   #canInvest = 0;
   #balance = 0;
   #optimalInvestRatio = 0;
-  #fgi: FGI;
+  #mktTrend: MarketTrend;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -41,13 +41,13 @@ export class TradeManager {
     const tradesDao = new TradesDao(DefaultStore);
     const priceProvider = PriceProvider.default(exchange, CacheProxy);
     const channelsDao = new ChannelsDao(DefaultStore);
-    const fgiProvider = new FGIProvider(configDao, exchange, CacheProxy);
+    const trendProvider = new TrendProvider(configDao, exchange, CacheProxy);
     return new TradeManager(
       priceProvider,
       tradesDao,
       configDao,
       channelsDao,
-      fgiProvider,
+      trendProvider,
       exchange,
       statistics,
       global.TradingHelperLibrary
@@ -59,7 +59,7 @@ export class TradeManager {
     private readonly tradesDao: TradesDao,
     private readonly configDao: ConfigDao,
     private readonly channelsDao: ChannelsDao,
-    private readonly fgiProvider: FGIProvider,
+    private readonly trendProvider: TrendProvider,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
     private readonly plugin: TraderPlugin
@@ -72,19 +72,24 @@ export class TradeManager {
   trade(): void {
     this.#prepare();
 
-    this.plugin
-      .trade({
-        FGI: this.#fgi,
-        channelsDao: this.channelsDao,
-        prices: this.priceProvider.get(this.#config.StableCoin),
-      })
-      .forEach((r) => {
-        if (r.action === TradeAction.Buy) {
-          this.#setBuyState(r);
-        } else if (r.action === TradeAction.Sell) {
-          this.#setSellState(r);
-        }
-      });
+    const { advancedAccess, requests } = this.plugin.trade({
+      marketTrend: this.#mktTrend,
+      channelsDao: this.channelsDao,
+      prices: this.priceProvider.get(this.#config.StableCoin),
+    });
+
+    if (advancedAccess !== this.#config.AdvancedAccess) {
+      this.#config.AdvancedAccess = advancedAccess;
+      this.configDao.set(this.#config);
+    }
+
+    requests.forEach((r) => {
+      if (r.action === TradeAction.Buy) {
+        this.#setBuyState(r);
+      } else if (r.action === TradeAction.Sell) {
+        this.#setSellState(r);
+      }
+    });
 
     const trades = this.tradesDao.getList();
     const inv = trades.filter((t) => t.tradeResult.quantity > 0);
@@ -133,12 +138,13 @@ export class TradeManager {
 
   #prepare(): void {
     this.#config = this.configDao.get();
-    this.#fgi = this.fgiProvider.get();
+    this.#mktTrend = this.trendProvider.get();
     this.#balance = this.#config.StableBalance;
     if (this.#balance === -1) {
       this.#balance = this.exchange.getBalance(this.#config.StableCoin);
     }
-    const cs = this.channelsDao.getCandidates();
+    const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
+    const cs = this.channelsDao.getCandidates(percentile);
     this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
   }
 
@@ -245,24 +251,34 @@ export class TradeManager {
       // Initiate stop limit via the channel lower boundary price
       tm.stopLimitPrice = ch[Key.MIN];
     } else {
+      // There are a few independent stop limit strategies, each can bump the stop limit price up:
+      // 1. Profit goal - the closer the current price to the profit goal, the closer the stop limit to the current price
+      // 2. TTL - the less TTL left, the closer the stop limit to the current price
+      // 3. Minimal profit - once the profit reaches 4%, the stop limit is set to the order price.
+
       const lastN = 3;
       const avePrice =
         tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
 
       // Step 1: bumping stop limit up proportionally to the current profit to profit goal.
       const R = tm.range;
-      const PG = R * (0.9 / this.#fgi);
+      const PG = R * (0.9 / this.#mktTrend);
       const P = tm.profit() / tm.tradeResult.paid;
       const K = Math.min(0.99, 1 - R + Math.max(0, (P * R) / PG));
       let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
       // Step 2: bumping it up proportionally to the TTL that is left.
-      const maxTTL = tm.duration / this.#fgi;
+      const maxTTL = tm.duration / this.#mktTrend;
       const curTTL = Math.min(tm.ttl, maxTTL);
       const k2 = Math.min(0.99, curTTL / maxTTL);
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+
+      if (tm.profitPercent() > 4) {
+        // Step 3: bumping it up to the order price.
+        tm.stopLimitPrice = Math.max(tm.stopLimitPrice, tm.tradeResult.price);
+      }
     }
   }
 

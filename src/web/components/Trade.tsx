@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
+import CurrencyFormat from "react-currency-format";
 import {
   ChartOptions,
   createChart,
@@ -15,7 +16,7 @@ import {
 } from "lightweight-charts";
 import { Box, Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
-import { Config, f2, TradeMemo, TradeState } from "../../lib";
+import { Config, f2, getPrecision, TradeMemo, TradeState } from "../../lib";
 
 export default function Trade(props: {
   data: TradeMemo;
@@ -95,9 +96,14 @@ export default function Trade(props: {
     // change chart theme according to the current theme
     changeChartTheme(chart.current, theme);
 
+    // Setting price series min move to number of digits after decimal point
+    const precision = getPrecision(tm.currentPrice);
+    const minMove = 1 / 10 ** precision;
+    const priceFormat = { precision, minMove };
+
     if (priceLine) {
       priceLine.setData(map(tm.prices, (v) => v));
-      priceLine.applyOptions({ color: priceLineColor });
+      priceLine.applyOptions({ color: priceLineColor, priceFormat });
     }
 
     if (stopLine) {
@@ -105,12 +111,16 @@ export default function Trade(props: {
         visible: !!tm.stopLimitPrice,
         // make dashed if config SellAtStopLimit is false
         lineStyle: !cfg.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
+        priceFormat,
       });
       stopLine.setData(map(tm.prices, () => tm.stopLimitPrice));
     }
 
     if (orderLine) {
-      orderLine.applyOptions({ visible: !!tm.tradeResult.quantity });
+      orderLine.applyOptions({
+        visible: !!tm.tradeResult.quantity,
+        priceFormat,
+      });
       orderLine.setData(map(tm.prices, () => tm.tradeResult.price));
     }
 
@@ -119,18 +129,30 @@ export default function Trade(props: {
         color: profitLineColor,
         visible: !!tm.tradeResult.quantity,
         lineStyle: LineStyle.Dashed,
+        priceFormat,
       });
-      // FGI is from 1 to 3, which makes profit goal 30-10% of channel size
-      const profitGoal = tm.range * (0.9 / cfg.AutoFGI);
+      // MarketTrend is from 1 to 3, which makes profit goal 30-10% of channel size
+      const profitGoal = tm.range * (0.9 / cfg.AutoMarketTrend);
       const profitPrice = tm.tradeResult.price * (1 + profitGoal);
       profitLine.setData(map(tm.prices, () => profitPrice));
     }
 
     if (soldPriceLine) {
-      soldPriceLine.applyOptions({ visible: tm.stateIs(TradeState.SOLD) });
+      soldPriceLine.applyOptions({
+        visible: tm.stateIs(TradeState.SOLD),
+        priceFormat,
+      });
       soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice));
     }
-  }, [theme, tm, cfg.AutoFGI, priceLine, profitLine, stopLine, orderLine]);
+  }, [
+    theme,
+    tm,
+    cfg.AutoMarketTrend,
+    priceLine,
+    profitLine,
+    stopLine,
+    orderLine,
+  ]);
 
   const [removed, setRemoved] = useState(false);
 
@@ -151,6 +173,25 @@ export default function Trade(props: {
         <Card elevation={2}>
           <CardContent>
             <TradeTitle tradeMemo={tm} onDelete={onDelete} />
+            {tm.tradeResult.quantity && (
+              <Typography
+                margin={`-2px 0 8px`}
+                variant="body2"
+                color="text.secondary"
+                gutterBottom
+              >
+                <b>Current value: </b>
+                <CurrencyFormat
+                  value={curVal}
+                  displayType={`text`}
+                  thousandSeparator={true}
+                  decimalScale={2}
+                  fixedDecimalScale={true}
+                  prefix={`$`}
+                />
+                <span>{` (${profit > 0 ? `+` : ``}${f2(profit)})`}</span>
+              </Typography>
+            )}
             <Box
               sx={chartStyle(theme)}
               width={chartOpts.width}
@@ -158,17 +199,6 @@ export default function Trade(props: {
               ref={chartContainerRef}
               className="chart-container"
             />
-          </CardContent>
-          <CardContent sx={{ padding: `16px`, paddingTop: 0 }}>
-            {tm.tradeResult.quantity && (
-              <Typography variant="body2" color="text.secondary">
-                <div>
-                  {`Current value: ${f2(curVal)} (${profit > 0 ? `+` : ``}${f2(
-                    profit
-                  )})`}
-                </div>
-              </Typography>
-            )}
           </CardContent>
         </Card>
       )}
