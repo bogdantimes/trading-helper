@@ -16,7 +16,14 @@ import {
 } from "lightweight-charts";
 import { Box, Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
-import { Config, f2, getPrecision, TradeMemo, TradeState } from "../../lib";
+import {
+  Config,
+  f2,
+  getPrecision,
+  ProfitGoalMap,
+  TradeMemo,
+  TradeState,
+} from "../../lib";
 
 export default function Trade(props: {
   data: TradeMemo;
@@ -131,8 +138,7 @@ export default function Trade(props: {
         lineStyle: LineStyle.Dashed,
         priceFormat,
       });
-      // MarketTrend is from 1 to 3, which makes profit goal 30-10% of channel size
-      const profitGoal = tm.range * (0.9 / cfg.AutoMarketTrend);
+      const profitGoal = tm.range * ProfitGoalMap[cfg.AutoMarketTrend];
       const profitPrice = tm.tradeResult.price * (1 + profitGoal);
       profitLine.setData(map(tm.prices, () => profitPrice));
     }

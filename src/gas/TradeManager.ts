@@ -13,6 +13,7 @@ import {
   TradeMemo,
   TradeResult,
   TradeState,
+  ProfitGoalMap,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -261,11 +262,7 @@ export class TradeManager {
         tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
 
       // Step 1: bumping stop limit up proportionally to the current profit to profit goal.
-      const PG = {
-        [MarketTrend.DOWN]: 0.6,
-        [MarketTrend.SIDEWAYS]: 0.45,
-        [MarketTrend.UP]: 0.3,
-      }[this.#mktTrend];
+      const PG = ProfitGoalMap[this.#mktTrend];
       const R = tm.range;
       const P = tm.profit() / tm.tradeResult.paid;
       const K = Math.min(0.99, 1 - R + Math.max(0, P / PG));
