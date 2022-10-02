@@ -386,9 +386,7 @@ export class TradeManager {
     } else {
       Log.debug(memo);
       memo.setState(TradeState.BOUGHT);
-      Log.alert(
-        `An issue happened while selling ${symbol}. The asset is marked HODL. Please, resolve it manually.`
-      );
+      Log.alert(`An issue happened while selling ${symbol}.`);
       Log.alert(tradeResult.toString());
     }
 
