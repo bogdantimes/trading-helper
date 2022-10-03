@@ -6,6 +6,7 @@ export const DefaultConfig: () => Config = () => ({
   SellAtStopLimit: true,
   MarketTrend: -1, // -1 Auto detect
   AutoMarketTrend: MarketTrend.SIDEWAYS,
+  AdvancedAccess: false,
 });
 
 export class ConfigDao {

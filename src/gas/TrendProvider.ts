@@ -50,13 +50,9 @@ export class TrendProvider {
     // Use PriceMove to determine the market trend and corresponding MarketTrend
     const btc = new ExchangeSymbol(`BTC`, StableUSDCoin.BUSD);
     const prices = this.exchange.getLatestKlineOpenPrices(btc, `3d`, limit);
-    const exp = isNode ? 60 : MAX_EXPIRATION; // TODO: remove
-    if (prices.length < limit) {
-      this.cache.put(cacheKey, MarketTrend.SIDEWAYS.toString(), exp);
-      return MarketTrend.SIDEWAYS;
-    }
     const priceMove = getPriceMove(limit, prices);
     const trend = priceMoveToMarketTrend[priceMove];
+    const exp = isNode ? 60 : MAX_EXPIRATION; // TODO: remove
     this.cache.put(cacheKey, trend.toString(), exp);
     return trend;
   }

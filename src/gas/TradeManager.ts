@@ -13,6 +13,7 @@ import {
   TradeMemo,
   TradeResult,
   TradeState,
+  ProfitGoalMap,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -261,10 +262,10 @@ export class TradeManager {
         tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
 
       // Step 1: bumping stop limit up proportionally to the current profit to profit goal.
+      const PG = ProfitGoalMap[this.#mktTrend];
       const R = tm.range;
-      const PG = R * (0.9 / this.#mktTrend);
       const P = tm.profit() / tm.tradeResult.paid;
-      const K = Math.min(0.99, 1 - R + Math.max(0, (P * R) / PG));
+      const K = Math.min(0.99, 1 - R + Math.max(0, P / PG));
       let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
@@ -385,9 +386,7 @@ export class TradeManager {
     } else {
       Log.debug(memo);
       memo.setState(TradeState.BOUGHT);
-      Log.alert(
-        `An issue happened while selling ${symbol}. The asset is marked HODL. Please, resolve it manually.`
-      );
+      Log.alert(`An issue happened while selling ${symbol}.`);
       Log.alert(tradeResult.toString());
     }
 
