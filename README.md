@@ -26,17 +26,10 @@ To support this project:
 * Fully-autonomous trading on Binance Spot without manual interventions whatsoever.
 * Info page with balance changes since Day 1.
 
-### Assets
+### Screeshots
 
 ![assets-1.png](img/assets-1.png)
 ![assets-2.png](img/assets-2.png)
-
-### Info
-
-![info.png](img/info.png)
-
-### Settings
-
 ![settings.png](img/settings.png)
 
 ## How to
