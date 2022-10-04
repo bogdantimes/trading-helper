@@ -1,8 +1,14 @@
-import { CoinName, MarketTrend, PriceHoldersMap } from "../../../lib/index";
+import {
+  CoinName,
+  MarketTrend,
+  PriceHoldersMap,
+  PriceMap,
+} from "../../../lib/index";
 import { ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
   trade: (context: PluginContext) => PluginResult;
+  getPrices: () => PriceMap;
 }
 
 export interface PluginResult {

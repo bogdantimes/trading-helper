@@ -1,5 +1,5 @@
 import { Binance } from "./Binance";
-import { ExchangeSymbol, PriceMap, TradeResult } from "../lib";
+import { ExchangeSymbol, TradeResult } from "../lib";
 
 export interface IExchange {
   getBalance: (assetName: string) => number;
@@ -7,10 +7,6 @@ export interface IExchange {
   marketBuy: (symbol: ExchangeSymbol, cost: number) => TradeResult;
 
   marketSell: (symbol: ExchangeSymbol, quantity: number) => TradeResult;
-
-  getPrices: () => PriceMap;
-
-  getPrice: (symbol: ExchangeSymbol) => number;
 
   getLatestKlineOpenPrices: (
     symbol: ExchangeSymbol,
@@ -28,14 +24,6 @@ export class Exchange implements IExchange {
 
   getBalance(assetName: string): number {
     return this.exchange.getBalance(assetName);
-  }
-
-  getPrice(symbol: ExchangeSymbol): number {
-    return this.getPrices()[symbol.toString()];
-  }
-
-  getPrices(): PriceMap {
-    return this.exchange.getPrices();
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {

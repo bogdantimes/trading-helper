@@ -64,6 +64,12 @@ export function InitialSetup({
           and maintain your data when a new version of Trading Helper is
           available.
         </Typography>
+        <TextField
+          value={params.dbURL}
+          label={`Firebase Database URL`}
+          onChange={onChange}
+          name="dbURL"
+        />
         <Stack direction={`row`} spacing={2}>
           <Button
             color="primary"

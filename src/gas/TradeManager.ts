@@ -8,12 +8,12 @@ import {
   MarketTrend,
   Key,
   PriceMove,
-  PricesHolder,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
   TradeState,
   ProfitGoalMap,
+  PricesHolder,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -40,7 +40,7 @@ export class TradeManager {
     const exchange = new Exchange(config.KEY, config.SECRET);
     const statistics = new Statistics(DefaultStore);
     const tradesDao = new TradesDao(DefaultStore);
-    const priceProvider = PriceProvider.default(exchange, CacheProxy);
+    const priceProvider = PriceProvider.default();
     const channelsDao = new ChannelsDao(DefaultStore);
     const trendProvider = new TrendProvider(configDao, exchange, CacheProxy);
     return new TradeManager(

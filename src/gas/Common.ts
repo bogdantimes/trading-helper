@@ -4,43 +4,6 @@ export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60;
 export const TICK_INTERVAL_MIN = 1;
 
-export interface ExecParams {
-  context?: any;
-  runnable: (arg0: any) => any;
-  interval?: number;
-  attempts?: number;
-}
-
-export const INTERRUPT = `INTERRUPT`;
-export const SERVICE_LIMIT = `Service invoked too many times`;
-
-export function execute({
-  context,
-  runnable,
-  interval = 500,
-  attempts = 5,
-}: ExecParams): any {
-  let err: Error | any;
-  do {
-    try {
-      err = null;
-      return runnable(context);
-    } catch (e: any) {
-      err = e;
-      if (e.message.includes(INTERRUPT) || e.message.includes(SERVICE_LIMIT)) {
-        break;
-      }
-    }
-    if (attempts > 0) {
-      Utilities.sleep(interval);
-    }
-  } while (--attempts > 0);
-
-  if (err) {
-    throw err;
-  }
-}
-
 export enum LogLevel {
   NONE,
   ALERT,
@@ -156,8 +119,3 @@ export class StopWatch {
     return this.stopTime - this.startTime;
   }
 }
-
-export const CoinCacheKeys = {
-  PD_TRACKING: (coin) => `${coin}-pump-dump-tracking`,
-  START_PRICE: (coin) => `${coin}-start-price`,
-};

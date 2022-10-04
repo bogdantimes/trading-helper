@@ -1,9 +1,9 @@
-import { execute, Log } from "./Common";
+import { Log } from "./Common";
 import {
   ExchangeSymbol,
+  execute,
   floor,
   getPrecision,
-  PriceMap,
   TradeResult,
 } from "../lib";
 import { IExchange } from "./Exchange";
@@ -39,39 +39,6 @@ export class Binance implements IExchange {
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts);
     this.serverIds = this.shuffleServerIds();
     this.#curServerId = this.serverIds[0];
-  }
-
-  getPrices(): PriceMap {
-    Log.debug(`Fetching prices from Binance`);
-    try {
-      const prices: Array<{ symbol: string; price: string }> = this.fetch(
-        () => `ticker/price`,
-        this.defaultReqOpts
-      );
-      Log.debug(`Got ${prices.length} prices`);
-      return prices.reduce<PriceMap>((acc, p) => {
-        const spotPrice = !p.symbol.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/);
-        spotPrice && (acc[p.symbol] = +p.price);
-        return acc;
-      }, {});
-    } catch (e: any) {
-      throw new Error(`Failed to get prices: ${e.message}`);
-    }
-  }
-
-  getPrice(symbol: ExchangeSymbol): number {
-    const resource = `ticker/price`;
-    const query = `symbol=${symbol}`;
-    try {
-      const ticker = this.fetch(
-        () => `${resource}?${query}`,
-        this.defaultReqOpts
-      );
-      Log.debug(ticker);
-      return +ticker.price;
-    } catch (e: any) {
-      throw new Error(`Failed to get price for ${symbol}: ${e.message}`);
-    }
   }
 
   getBalance(coinName: string): number {
