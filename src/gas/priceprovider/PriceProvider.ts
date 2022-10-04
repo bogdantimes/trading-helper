@@ -40,8 +40,9 @@ export class PriceProvider implements IPriceProvider {
     return this.#priceMaps[stableCoin] || {};
   }
 
-  update(): void {
+  update(): boolean {
     this.#priceMaps = this.#update();
+    return !!this.cache.get(`PriceProvider.updated`);
   }
 
   #update(): PriceMaps {

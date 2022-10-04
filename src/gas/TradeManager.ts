@@ -66,8 +66,8 @@ export class TradeManager {
     private readonly plugin: TraderPlugin
   ) {}
 
-  updatePrices(): void {
-    this.priceProvider.update();
+  updatePrices(): boolean {
+    return this.priceProvider.update();
   }
 
   trade(): void {

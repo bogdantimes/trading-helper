@@ -76,46 +76,11 @@ export class StableCoinMatcher {
     );
   }
 
-  get matched(): boolean {
-    return !!this.match;
-  }
-
   get coinName(): CoinName | null {
     return this.match ? this.match[1] : null;
   }
 
   get stableCoin(): StableUSDCoin | null {
     return this.match ? (this.match[2] as StableUSDCoin) : null;
-  }
-}
-
-export class StopWatch {
-  private startTime: number;
-  private stopTime: number;
-  private prefix = ``;
-  private readonly printer?: (msg: string) => void;
-
-  constructor(printer?: (msg: string) => void) {
-    this.startTime = 0;
-    this.stopTime = 0;
-    this.printer = printer;
-  }
-
-  start(prefix: string): void {
-    this.prefix = prefix;
-    this.startTime = new Date().getTime();
-  }
-
-  stop(): void {
-    this.stopTime = new Date().getTime();
-    this.printer?.(this.printElapsed());
-  }
-
-  printElapsed(): string {
-    return `${this.prefix} took ${this.getElapsedTime()}ms`;
-  }
-
-  getElapsedTime(): number {
-    return this.stopTime - this.startTime;
   }
 }
