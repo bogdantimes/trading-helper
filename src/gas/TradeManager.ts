@@ -324,7 +324,7 @@ export class TradeManager {
         this.#canInvest = Math.max(0, this.#canInvest - 1);
         this.#balance -= tradeResult.paid;
         // flatten out prices to make them not cross any limits right after the trade
-        tm.prices = [tradeResult.price];
+        tm.prices = [tm.currentPrice];
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
         // set the stop limit according to the current settings

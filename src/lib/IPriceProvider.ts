@@ -32,10 +32,14 @@ export class PricesHolder {
   }
 
   get precision(): number {
-    const p1 = getPrecision(this.currentPrice);
-    const p2 = getPrecision(this.previousPrice);
-    const p3 = getPrecision(this.prices[0]);
-    return Math.max(p1, p2, p3);
+    let precision = 0;
+    this.prices.forEach((price) => {
+      const p = getPrecision(price);
+      if (p > precision) {
+        precision = p;
+      }
+    });
+    return precision;
   }
 
   pushPrice(price: number): void {
