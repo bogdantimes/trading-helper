@@ -277,8 +277,15 @@ export class TradeManager {
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
-      // Stick stop limit to grid by flooring it's last digit
-      tm.stopLimitPrice = floorLastDigit(tm.stopLimitPrice, tm.precision);
+      // Stick stop limit to grid
+      if (tm.stopLimitPrice < tm.tradeResult.price) {
+        tm.stopLimitPrice = floorLastDigit(tm.stopLimitPrice, tm.precision);
+      } else {
+        tm.stopLimitPrice = quantize(
+          tm.stopLimitPrice,
+          5 * Math.pow(10, -tm.precision)
+        );
+      }
     }
   }
 
@@ -435,4 +442,9 @@ export class TradeManager {
     });
     return updated;
   }
+}
+
+// Q(x) = delta * floor((x+delta/2)/delta)
+function quantize(x: number, delta: number): number {
+  return delta * Math.floor((x + delta / 2) / delta);
 }
