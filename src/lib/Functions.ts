@@ -15,6 +15,13 @@ export function floor(value: number, decimals: number): number {
   return +`${Math.floor(Number(`${value}e+${decimals}`))}e-${decimals}`;
 }
 
+export function floorLastDigit(value: number, precision: number): number {
+  if (precision > 0) {
+    return floor(value, precision - 1);
+  }
+  return Math.floor(value / 10) * 10;
+}
+
 export function sumWithMaxPrecision(a: number, b: number): number {
   const aSplit = `${a}`.split(`.`);
   const bSplit = `${b}`.split(`.`);

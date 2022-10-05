@@ -14,6 +14,7 @@ import {
   TradeState,
   ProfitGoalMap,
   PricesHolder,
+  floorLastDigit,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -250,7 +251,7 @@ export class TradeManager {
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
-      tm.stopLimitPrice = ch[Key.MIN];
+      tm.stopLimitPrice = floorLastDigit(ch[Key.MIN], tm.precision);
     } else {
       // There are a few independent stop limit strategies, each can bump the stop limit price up:
       // 1. Profit goal - the closer the current price to the profit goal, the closer the stop limit to the current price
@@ -276,10 +277,8 @@ export class TradeManager {
       newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
-      if (tm.profitPercent() > 4) {
-        // Step 3: bumping it up to the order price.
-        tm.stopLimitPrice = Math.max(tm.stopLimitPrice, tm.tradeResult.price);
-      }
+      // Stick stop limit to grid by flooring it's last digit
+      tm.stopLimitPrice = floorLastDigit(tm.stopLimitPrice, tm.precision);
     }
   }
 

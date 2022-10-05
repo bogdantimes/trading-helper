@@ -10,11 +10,9 @@ export class Process {
       // This should be the only place to call `updatePrices`.
       if (manager.updatePrices()) {
         manager.trade();
-      } else {
-        Log.alert(`Prices are not updated`);
       }
     } catch (e) {
-      Log.alert(`Failed to trade: ${e.message}`);
+      Log.alert(`Process tick failed: ${e.message}`);
       Log.error(e);
     }
   }
