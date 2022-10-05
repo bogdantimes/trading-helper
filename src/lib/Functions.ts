@@ -16,10 +16,7 @@ export function floor(value: number, decimals: number): number {
 }
 
 export function floorLastDigit(value: number, precision: number): number {
-  if (precision > 0) {
-    return floor(value, precision - 1);
-  }
-  return Math.floor(value / 10) * 10;
+  return floor(value, precision - 1);
 }
 
 export function sumWithMaxPrecision(a: number, b: number): number {

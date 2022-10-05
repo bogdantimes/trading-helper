@@ -278,8 +278,7 @@ export class TradeManager {
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
       // Stick stop limit to grid by flooring it's last digit
-      const gridSL = floorLastDigit(tm.stopLimitPrice, tm.precision);
-      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, gridSL);
+      tm.stopLimitPrice = floorLastDigit(tm.stopLimitPrice, tm.precision);
     }
   }
 
