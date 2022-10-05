@@ -18,9 +18,6 @@ interface ExchangeInfo {
 export class Binance implements IExchange {
   private readonly key: string;
   private readonly secret: string;
-  private readonly attempts: number = 5;
-  private readonly interval: number = 10;
-  private readonly numberOfAPIServers = 5; // 5 distinct addresses were verified.
   private readonly defaultReqOpts: URLFetchRequestOptions;
   private readonly tradeReqOpts: URLFetchRequestOptions;
   private readonly serverIds: number[];
@@ -37,7 +34,7 @@ export class Binance implements IExchange {
       muteHttpExceptions: true,
     };
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts);
-    this.serverIds = this.shuffleServerIds();
+    this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
   }
 
@@ -221,8 +218,8 @@ export class Binance implements IExchange {
     options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
   ): any {
     return execute({
-      interval: this.interval,
-      attempts: this.attempts,
+      interval: 10,
+      attempts: this.serverIds.length * 3,
       runnable: () => {
         const server = `https://api${this.#curServerId}.binance.com/api/v3`;
         const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options);
@@ -254,10 +251,9 @@ export class Binance implements IExchange {
     });
   }
 
-  private shuffleServerIds(): number[] {
-    return Array.from(Array(this.numberOfAPIServers).keys())
-      .map((i) => i + 1)
-      .sort(() => Math.random() - 0.5);
+  #shuffleServerIds(): number[] {
+    // 3 distinct addresses were verified.
+    return [1, 2, 3].sort(() => Math.random() - 0.5);
   }
 
   #rotateServer(): void {
