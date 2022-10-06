@@ -12,7 +12,8 @@ export function getPrecision(a: number): number {
 }
 
 export function floor(value: number, decimals: number): number {
-  return +`${Math.floor(Number(`${value}e+${decimals}`))}e-${decimals}`;
+  const ratio = Math.pow(10, decimals);
+  return Math.floor(value * ratio) / ratio;
 }
 
 export function floorLastDigit(value: number, precision: number): number {
