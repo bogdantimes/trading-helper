@@ -252,6 +252,7 @@ export class TradeManager {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
       tm.stopLimitPrice = floorLastDigit(ch[Key.MIN], tm.precision);
+      return;
     }
 
     const profitGoal = tm.range * ProfitGoalMap[this.#mktTrend];
@@ -270,7 +271,7 @@ export class TradeManager {
     let c2 = curTTL / maxTTL;
 
     // if the stop limit is above the entry price, we don't want to apply TTL stop limit
-    if (tm.stopLimitPrice > tm.tradeResult.price) {
+    if (tm.stopLimitPrice >= tm.tradeResult.price) {
       c2 = 0;
     }
 
