@@ -149,6 +149,15 @@ export class TradeMemo extends PricesHolder {
     );
   }
 
+  /**
+   * Takes last 3 prices and calculates the average profit
+   */
+  aveProfit(): number {
+    const lastPrices = this.prices.slice(-3);
+    const avePrice = lastPrices.reduce((a, b) => a + b, 0) / lastPrices.length;
+    return avePrice * this.tradeResult.quantity - this.tradeResult.paid;
+  }
+
   profitPercent(): number {
     return (this.profit() / this.tradeResult.paid) * 100;
   }

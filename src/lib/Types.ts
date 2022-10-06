@@ -159,7 +159,7 @@ export interface PriceChannelData {
 }
 
 export const ProfitGoalMap = {
-  [MarketTrend.DOWN]: 0.6,
+  [MarketTrend.DOWN]: 0.9,
   [MarketTrend.SIDEWAYS]: 0.45,
   [MarketTrend.UP]: 0.3,
 };

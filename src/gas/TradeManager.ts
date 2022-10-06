@@ -252,41 +252,38 @@ export class TradeManager {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
       tm.stopLimitPrice = floorLastDigit(ch[Key.MIN], tm.precision);
-    } else {
-      // There are a few independent stop limit strategies, each can bump the stop limit price up:
-      // 1. Profit goal - the closer the current price to the profit goal, the closer the stop limit to the current price
-      // 2. TTL - the less TTL left, the closer the stop limit to the current price
-      // 3. Minimal profit - once the profit reaches 4%, the stop limit is set to the order price.
-
-      const lastN = 3;
-      const avePrice =
-        tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
-
-      // Step 1: bumping stop limit up proportionally to the current profit to profit goal.
-      const PG = ProfitGoalMap[this.#mktTrend];
-      const R = tm.range;
-      const P = tm.profit() / tm.tradeResult.paid;
-      const K = Math.min(0.99, 1 - R + Math.max(0, P / PG));
-      let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
-      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
-
-      // Step 2: bumping it up proportionally to the TTL that is left.
-      const maxTTL = tm.duration / this.#mktTrend;
-      const curTTL = Math.min(tm.ttl, maxTTL);
-      const k2 = Math.min(0.99, curTTL / maxTTL);
-      newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
-      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
-
-      // Stick stop limit to grid
-      if (tm.stopLimitPrice < tm.tradeResult.price) {
-        tm.stopLimitPrice = floorLastDigit(tm.stopLimitPrice, tm.precision);
-      } else {
-        tm.stopLimitPrice = quantize(
-          tm.stopLimitPrice,
-          5 * Math.pow(10, -tm.precision)
-        );
-      }
     }
+
+    const profitGoal = tm.range * ProfitGoalMap[this.#mktTrend];
+    const goalPrice = tm.tradeResult.price * (1 + profitGoal);
+    const bottomPrice = tm.tradeResult.price * (1 - tm.range);
+
+    // c1 is the percentage of the profit goal completion
+    // c1 is used to move the stop limit up in the "bottom price" - "goal price" range to the same level
+    const aveProfit = tm.aveProfit() / tm.tradeResult.paid;
+    const c1 = aveProfit / profitGoal;
+
+    // c2 is the percentage of the TTL completion
+    // c2 is used to move the stop limit up in the "bottom price" - "goal price" range to the same level
+    const maxTTL = tm.duration / this.#mktTrend;
+    const curTTL = Math.min(tm.ttl, maxTTL);
+    let c2 = curTTL / maxTTL;
+
+    // if the stop limit is above the entry price, we don't want to apply TTL stop limit
+    if (tm.stopLimitPrice > tm.tradeResult.price) {
+      c2 = 0;
+    }
+
+    // apply max of c1 and c2 to the stop limit price
+    const c = Math.max(c1, c2);
+    let newStopLimit = bottomPrice + (goalPrice - bottomPrice) * c;
+    // keep the stop limit lower than the current price
+    newStopLimit = Math.min(newStopLimit, tm.currentPrice);
+
+    // quantize stop limit to stick it to the grid
+    newStopLimit = floorLastDigit(newStopLimit, tm.precision);
+    // update the stop limit price if it's higher than the current one
+    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {
@@ -442,9 +439,4 @@ export class TradeManager {
     });
     return updated;
   }
-}
-
-// Q(x) = delta * floor((x+delta/2)/delta)
-function quantize(x: number, delta: number): number {
-  return delta * Math.floor((x + delta / 2) / delta);
 }
