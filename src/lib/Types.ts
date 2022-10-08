@@ -132,6 +132,7 @@ export enum Key {
   SIZE,
   PERCENTILE,
   DURATION_MET,
+  MAX_PERCENTILE,
 }
 
 export enum Bit {

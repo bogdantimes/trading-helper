@@ -90,7 +90,7 @@ export class TradeMemo extends PricesHolder {
   }
 
   get duration(): number {
-    return this.x ?? 7500;
+    return this.x ?? 7000;
   }
 
   get range(): number {

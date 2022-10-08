@@ -147,7 +147,7 @@ export class TradeManager {
     }
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
     const cs = this.channelsDao.getCandidates(percentile);
-    this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
+    this.#optimalInvestRatio = Math.max(1, Math.min(3, Object.keys(cs).length));
   }
 
   #finalize(): void {
