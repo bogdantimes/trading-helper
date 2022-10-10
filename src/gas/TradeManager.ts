@@ -12,7 +12,6 @@ import {
   TradeMemo,
   TradeResult,
   TradeState,
-  ProfitGoalMap,
   PricesHolder,
   floorLastDigit,
 } from "../lib/index";
@@ -255,14 +254,9 @@ export class TradeManager {
       return;
     }
 
-    const profitGoal = tm.range * ProfitGoalMap[this.#mktTrend];
-    const goalPrice = tm.tradeResult.price * (1 + profitGoal);
-    const bottomPrice = tm.tradeResult.price * (1 - tm.range);
-
     // c1 is the percentage of the profit goal completion
     // c1 is used to move the stop limit up in the "bottom price" - "goal price" range to the same level
-    const aveProfit = tm.aveProfit() / tm.tradeResult.paid;
-    const c1 = aveProfit / profitGoal;
+    const c1 = tm.profitPercent() / (tm.profitGoal * 100);
 
     // c2 is the percentage of the TTL completion
     // c2 is used to move the stop limit up in the "bottom price" - "goal price" range to the same level
@@ -277,7 +271,8 @@ export class TradeManager {
 
     // apply max of c1 and c2 to the stop limit price
     const c = Math.max(c1, c2);
-    let newStopLimit = bottomPrice + (goalPrice - bottomPrice) * c;
+    const bottomPrice = tm.stopLimitBottomPrice;
+    let newStopLimit = bottomPrice + (tm.profitGoalPrice() - bottomPrice) * c;
     // keep the stop limit lower than the current price
     newStopLimit = Math.min(newStopLimit, tm.currentPrice);
 

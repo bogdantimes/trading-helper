@@ -31,3 +31,6 @@ export interface Config {
    */
   AdvancedAccess: boolean;
 }
+
+export const DefaultRange = 0.14;
+export const DefaultDuration = 4000;

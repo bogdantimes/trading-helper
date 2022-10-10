@@ -1,5 +1,4 @@
 import Integer = GoogleAppsScript.Integer;
-import { MarketTrend } from "./Config";
 
 export enum StableUSDCoin {
   BUSD = `BUSD`,
@@ -158,9 +157,3 @@ export interface PriceChannelData {
   [Key.S2]: ChannelState;
   [Key.PERCENTILE]: number;
 }
-
-export const ProfitGoalMap = {
-  [MarketTrend.DOWN]: 0.9,
-  [MarketTrend.SIDEWAYS]: 0.45,
-  [MarketTrend.UP]: 0.3,
-};

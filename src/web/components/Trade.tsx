@@ -16,14 +16,7 @@ import {
 } from "lightweight-charts";
 import { Box, Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
-import {
-  Config,
-  f2,
-  getPrecision,
-  ProfitGoalMap,
-  TradeMemo,
-  TradeState,
-} from "../../lib";
+import { Config, f2, getPrecision, TradeMemo, TradeState } from "../../lib";
 
 export default function Trade(props: {
   data: TradeMemo;
@@ -138,8 +131,7 @@ export default function Trade(props: {
         lineStyle: LineStyle.Dashed,
         priceFormat,
       });
-      const profitGoal = tm.range * ProfitGoalMap[cfg.AutoMarketTrend];
-      const profitPrice = tm.tradeResult.price * (1 + profitGoal);
+      const profitPrice = tm.profitGoalPrice();
       profitLine.setData(map(tm.prices, () => profitPrice));
     }
 
