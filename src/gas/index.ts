@@ -5,9 +5,11 @@ import { Exchange } from "./Exchange";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   AppState,
+  CoinName,
   Config,
   InitialSetupParams,
   IStore,
+  MASK,
   PriceChannelsDataResponse,
 } from "../lib";
 import { Process } from "./Process";
@@ -109,14 +111,6 @@ function initialSetup(params: InitialSetupParams): string {
     config.KEY = params.binanceAPIKey || config.KEY;
     config.SECRET = params.binanceSecretKey || config.SECRET;
     if (config.KEY && config.SECRET) {
-      Log.alert(`Checking if Binance is reachable`);
-      const balance = new Exchange(config.KEY, config.SECRET).getBalance(
-        config.StableCoin
-      );
-      if (config.StableBalance === -1) {
-        config.StableBalance = balance;
-      }
-      Log.alert(`Connected to Binance`);
       createTriggers();
     }
     configDao.set(config);
@@ -180,6 +174,8 @@ function getConfig(): Config {
       CacheProxy
     );
     config.AutoMarketTrend = trendProvider.get();
+    config.KEY = config.KEY ? MASK : ``;
+    config.SECRET = config.SECRET ? MASK : ``;
     return config;
   } else {
     return null;
@@ -204,6 +200,20 @@ function getState(): AppState {
   });
 }
 
+function manualBuy(coin: CoinName): string {
+  return catchError(() => {
+    TradeManager.default().buy(coin.toUpperCase());
+    return `${coin} was added to the buying queue`;
+  });
+}
+
+function manualSell(coin: CoinName): string {
+  return catchError(() => {
+    TradeManager.default().sell(coin.toUpperCase());
+    return `${coin} was added to the selling queue`;
+  });
+}
+
 global.doGet = doGet;
 global.doPost = doPost;
 global.tick = tick;
@@ -217,3 +227,5 @@ global.getFirebaseURL = getFirebaseURL;
 global.setFirebaseURL = setFirebaseURL;
 global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
+global.manualBuy = manualBuy;
+global.manualSell = manualSell;

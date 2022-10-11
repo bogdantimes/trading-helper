@@ -218,8 +218,8 @@ export class Binance implements IExchange {
     options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
   ): any {
     return execute({
-      interval: 10,
-      attempts: this.serverIds.length * 3,
+      interval: 200,
+      attempts: this.serverIds.length * 4,
       runnable: () => {
         const server = `https://api${this.#curServerId}.binance.com/api/v3`;
         const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options);

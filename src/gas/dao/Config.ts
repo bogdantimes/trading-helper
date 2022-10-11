@@ -1,4 +1,4 @@
-import { Config, MarketTrend, IStore, StableUSDCoin } from "../../lib";
+import { Config, IStore, MarketTrend, MASK, StableUSDCoin } from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
@@ -7,6 +7,7 @@ export const DefaultConfig: () => Config = () => ({
   MarketTrend: -1, // -1 Auto detect
   AutoMarketTrend: MarketTrend.SIDEWAYS,
   AdvancedAccess: false,
+  ViewOnly: false,
 });
 
 export class ConfigDao {
@@ -29,6 +30,11 @@ export class ConfigDao {
   }
 
   set(config: Config): void {
+    if (config.KEY === MASK || config.SECRET === MASK) {
+      const curCfg = this.get();
+      config.KEY = config.KEY === MASK ? curCfg.KEY : config.KEY;
+      config.SECRET = config.SECRET === MASK ? curCfg.SECRET : config.SECRET;
+    }
     this.store.set(`Config`, config);
   }
 }

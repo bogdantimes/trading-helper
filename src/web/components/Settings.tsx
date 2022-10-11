@@ -136,16 +136,43 @@ export function Settings({
             </MenuItem>
           </Select>
         </FormControl>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={config.SellAtStopLimit}
-              onChange={(e) =>
-                setConfig({ ...config, SellAtStopLimit: e.target.checked })
-              }
-            />
-          }
-          label="Sell At Stop limit"
+        <Stack direction={`row`} spacing={2}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={config.SellAtStopLimit}
+                onChange={(e) =>
+                  setConfig({ ...config, SellAtStopLimit: e.target.checked })
+                }
+              />
+            }
+            label="Sell At Stop limit"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={config.ViewOnly}
+                onChange={(e) =>
+                  setConfig({ ...config, ViewOnly: e.target.checked })
+                }
+              />
+            }
+            label="View Only"
+          />
+        </Stack>
+        <TextField
+          type={`password`}
+          value={config.KEY}
+          label={`Binance API Key`}
+          onChange={(e) => setConfig({ ...config, KEY: e.target.value })}
+          name="binanceAPIKey"
+        />
+        <TextField
+          type={`password`}
+          value={config.SECRET}
+          label={`Binance Secret Key`}
+          onChange={(e) => setConfig({ ...config, SECRET: e.target.value })}
+          name="binanceSecretKey"
         />
         <TextField
           value={newFbURL}

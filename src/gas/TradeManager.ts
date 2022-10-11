@@ -2,18 +2,19 @@ import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
 import { Log } from "./Common";
 import {
+  CoinName,
   Config,
   ExchangeSymbol,
   f2,
-  MarketTrend,
+  floorLastDigit,
   Key,
+  MarketTrend,
   PriceMove,
+  PricesHolder,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
   TradeState,
-  PricesHolder,
-  floorLastDigit,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -84,13 +85,15 @@ export class TradeManager {
       this.configDao.set(this.#config);
     }
 
-    requests.forEach((r) => {
-      if (r.action === TradeAction.Buy) {
-        this.#setBuyState(r);
-      } else if (r.action === TradeAction.Sell) {
-        this.#setSellState(r);
-      }
-    });
+    if (!this.#config.ViewOnly) {
+      requests.forEach((r) => {
+        if (r.action === TradeAction.Buy) {
+          this.#setBuyState(r);
+        } else if (r.action === TradeAction.Sell) {
+          this.#setSellState(r);
+        }
+      });
+    }
 
     const trades = this.tradesDao.getList();
     const inv = trades.filter((t) => t.tradeResult.quantity > 0);
@@ -120,6 +123,23 @@ export class TradeManager {
     });
 
     this.#finalize();
+  }
+
+  buy(coin: CoinName): void {
+    this.#prepare();
+    const ch = this.channelsDao.get(coin);
+    const rangePercent = 1 - ch[Key.MIN] / ch[Key.MAX];
+    this.#setBuyState({
+      action: TradeAction.Buy,
+      coin,
+      x: ch[Key.DURATION],
+      y: rangePercent,
+    });
+  }
+
+  sell(coin: CoinName): void {
+    this.#prepare();
+    this.#setSellState({ action: TradeAction.Sell, coin, x: 0, y: 0 });
   }
 
   sellAll(sellNow = false): void {
