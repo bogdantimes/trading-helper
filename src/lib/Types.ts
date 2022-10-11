@@ -157,5 +157,6 @@ export interface PriceChannelData {
   [Key.S1]: ChannelState;
   [Key.S2]: ChannelState;
   [Key.PERCENTILE]: number;
+  [Key.MAX_PERCENTILE]: number;
   [Key.PRICE_MOVE]: PriceMove;
 }
