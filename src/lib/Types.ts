@@ -132,6 +132,7 @@ export enum Key {
   PERCENTILE,
   DURATION_MET,
   MAX_PERCENTILE,
+  PRICE_MOVE,
 }
 
 export enum Bit {
@@ -156,4 +157,5 @@ export interface PriceChannelData {
   [Key.S1]: ChannelState;
   [Key.S2]: ChannelState;
   [Key.PERCENTILE]: number;
+  [Key.PRICE_MOVE]: PriceMove;
 }
