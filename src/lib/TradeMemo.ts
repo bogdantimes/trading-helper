@@ -108,6 +108,7 @@ export class TradeMemo extends PricesHolder {
     } else if (this.tradeResult.soldPrice) {
       this.setState(TradeState.SOLD);
     } else {
+      this.setState(TradeState.NONE);
       this.deleted = true;
     }
   }

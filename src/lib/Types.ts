@@ -55,6 +55,7 @@ export enum TradeState {
   BOUGHT = `bought`,
   SELL = `sell`,
   SOLD = `sold`,
+  NONE = `none`,
 }
 
 export class Coin {

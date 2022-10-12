@@ -325,6 +325,7 @@ export class TradeManager {
       // no price available, and no quantity, which means we haven't bought anything yet
       // could be a non-existing symbol, or not yet published in the exchange
       Log.info(`Exchange does not have price for ${symbol}`);
+      tm.resetState();
     }
   }
 
