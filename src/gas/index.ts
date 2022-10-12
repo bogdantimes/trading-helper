@@ -200,14 +200,14 @@ function getState(): AppState {
   });
 }
 
-function manualBuy(coin: CoinName): string {
+function buy(coin: CoinName): string {
   return catchError(() => {
     TradeManager.default().buy(coin.toUpperCase());
     return `${coin} was added to the buying queue`;
   });
 }
 
-function manualSell(coin: CoinName): string {
+function sell(coin: CoinName): string {
   return catchError(() => {
     TradeManager.default().sell(coin.toUpperCase());
     return `${coin} was added to the selling queue`;
@@ -227,5 +227,5 @@ global.getFirebaseURL = getFirebaseURL;
 global.setFirebaseURL = setFirebaseURL;
 global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
-global.manualBuy = manualBuy;
-global.manualSell = manualSell;
+global.buy = buy;
+global.sell = sell;
