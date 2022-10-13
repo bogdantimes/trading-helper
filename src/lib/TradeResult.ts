@@ -1,4 +1,4 @@
-import { f8, sumWithMaxPrecision } from "./Functions";
+import { f2, f8, sumWithMaxPrecision } from "./Functions";
 import { ExchangeSymbol } from "./Types";
 
 export class TradeResult {
@@ -28,12 +28,22 @@ export class TradeResult {
   }
 
   /**
-   * @example "Bought 21 DAR for 9.81183 BUSD. Average price: 0.46723"
+   * Format: "Entry: <date> <coin> <invested> <quantity> <price>
+   * @example "Entry: 10/13/2022 WOO 94.99776 674.0253 0.1409"
+   *
+   * Format: "Exit: <date> <price> <gained> <profitPercent>"
+   * @example "Exit: 10/13/2022 16.432 95.54 0.71"
    */
   toTradeString(): string {
-    return `${this.soldPrice ? `Sold` : `Bought`} ${this.quantity} ${
-      this.symbol.quantityAsset
-    } for ${this.cost} ${this.symbol.priceAsset}. Price: ${this.price}`;
+    if (this.soldPrice) {
+      return `Exit: ${new Date().toLocaleDateString()} $${this.soldPrice} $${f2(
+        this.gained
+      )} ${f2((this.profit / this.paid) * 100)}%`;
+    } else {
+      return `Entry: ${new Date().toLocaleDateString()} ${
+        this.symbol.quantityAsset
+      } $${f2(this.paid)} ${this.quantity} $${this.price}`;
+    }
   }
 
   join(next: TradeResult): TradeResult {

@@ -100,7 +100,6 @@ export class Binance implements IExchange {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.paid = tradeResult.cost;
       this.#updateBalance(symbol.priceAsset, -tradeResult.cost);
-      Log.alert(tradeResult.toTradeString());
       return tradeResult;
     } catch (e: any) {
       if (e.message.includes(`Market is closed`)) {
@@ -126,7 +125,6 @@ export class Binance implements IExchange {
       tradeResult.gained = tradeResult.cost;
       tradeResult.soldPrice = tradeResult.price;
       this.#updateBalance(symbol.priceAsset, tradeResult.cost);
-      Log.alert(tradeResult.toTradeString());
       return tradeResult;
     } catch (e: any) {
       if (e.message.includes(`Account has insufficient balance`)) {
