@@ -28,21 +28,26 @@ export class TradeResult {
   }
 
   /**
-   * Format: "Entry: <date> <coin> <invested> <quantity> <price>
-   * @example "Entry: 10/13/2022 WOO 94.99776 674.0253 0.1409"
+   * @example "
+   * Entry Date,Coin/Token,Invested,Quantity,Entry Price
+   * 10/13/2022,WOO,94.99776,674.0253,0.1409
+   * "
    *
-   * Format: "Exit: <date> <price> <gained> <profitPercent>"
-   * @example "Exit: 10/13/2022 16.432 95.54 0.71"
+   * @example "
+   * Exit Date,Exit Price,Gained,% Profit/Loss
+   * 10/13/2022,16.432,95.54,0.71
+   * "
    */
-  toTradeString(): string {
+  toCVSString(): string {
+    const date = new Date().toLocaleDateString();
     if (this.soldPrice) {
-      return `Exit: ${new Date().toLocaleDateString()} $${this.soldPrice} $${f2(
-        this.gained
-      )} ${f2((this.profit / this.paid) * 100)}%`;
+      const profPercent = f2((this.profit / this.paid) * 100);
+      return `Entry Date,Coin/Token,Invested,Quantity,Entry Price
+${date},$${this.soldPrice},$${f2(this.gained)},${profPercent}%`;
     } else {
-      return `Entry: ${new Date().toLocaleDateString()} ${
-        this.symbol.quantityAsset
-      } $${f2(this.paid)} ${this.quantity} $${this.price}`;
+      const coin = this.symbol.quantityAsset;
+      return `Exit Date,Exit Price,Gained,% Profit/Loss
+${date},${coin},$${f2(this.paid)},${this.quantity},$${this.price}`;
     }
   }
 

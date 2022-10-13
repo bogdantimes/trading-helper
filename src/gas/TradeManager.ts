@@ -353,7 +353,7 @@ export class TradeManager {
         Log.alert(
           `${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`
         );
-        Log.info(tradeResult.toTradeString());
+        Log.info(tradeResult.toCVSString());
         Log.debug(tm);
       } catch (e) {
         Log.error(e);
@@ -396,7 +396,7 @@ export class TradeManager {
 
         tradeResult.profit = profit;
         tradeResult.paid = memo.tradeResult.paid;
-        Log.info(tradeResult.toTradeString());
+        Log.info(tradeResult.toCVSString());
         this.updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit);
       } catch (e) {
         Log.error(e);
