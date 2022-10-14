@@ -122,7 +122,8 @@ export function InitialSetup({
             <Button
               color="primary"
               onClick={() => {
-                setParams({ ...params, viewOnly: true });
+                params.viewOnly = true;
+                setParams(params);
                 onClickConnect();
               }}
               disabled={isConnecting}

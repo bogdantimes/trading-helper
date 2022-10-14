@@ -98,7 +98,6 @@ function catchError<T>(fn: () => T): T {
 
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
-    Log.alert(`✨ Initial setup`);
     let store: IStore = DefaultStore;
     if (params.dbURL) {
       const fbStore = new FirebaseStore();
@@ -115,6 +114,7 @@ function initialSetup(params: InitialSetupParams): string {
       createTriggers();
     }
     configDao.set(config);
+    Log.alert(`✨ Initial setup done.`);
     return `OK`;
   });
 }
