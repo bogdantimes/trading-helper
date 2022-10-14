@@ -1,6 +1,7 @@
 import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, TradeState } from "./Types";
 import { PricesHolder } from "./IPriceProvider";
+import { DefaultDuration, DefaultRange } from "./Config";
 
 export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult;
@@ -90,11 +91,11 @@ export class TradeMemo extends PricesHolder {
   }
 
   get duration(): number {
-    return this.x ?? 7500;
+    return this.x ?? DefaultDuration;
   }
 
   get range(): number {
-    return this.y ?? 0.14;
+    return this.y ?? DefaultRange;
   }
 
   getCoinName(): string {
@@ -107,6 +108,7 @@ export class TradeMemo extends PricesHolder {
     } else if (this.tradeResult.soldPrice) {
       this.setState(TradeState.SOLD);
     } else {
+      this.setState(TradeState.NONE);
       this.deleted = true;
     }
   }
@@ -147,6 +149,26 @@ export class TradeMemo extends PricesHolder {
     return (
       this.currentPrice * this.tradeResult.quantity - this.tradeResult.paid
     );
+  }
+
+  /**
+   * Returns the profit goal for the trade, taking into account the duration and range.
+   * Formula: price * (1 + ((duration / 2000) * range * 0.1))
+   * @example
+   * For a trade with duration 4000 and range 0.14, the profit goal is:
+   * (4000 / 2000) * 0.14 * 0.1 = 0.028 (2.8%)
+   * If price is 10, the profit goal price is 10 * (1 + 0.028) = 10.28
+   */
+  profitGoalPrice(): number {
+    return this.tradeResult.price * (1 + this.profitGoal);
+  }
+
+  get profitGoal(): number {
+    return (this.duration / 2000) * this.range * 0.1;
+  }
+
+  get stopLimitBottomPrice(): number {
+    return this.tradeResult.price * (1 - this.range);
   }
 
   profitPercent(): number {

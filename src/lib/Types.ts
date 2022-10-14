@@ -1,5 +1,4 @@
 import Integer = GoogleAppsScript.Integer;
-import { MarketTrend } from "./Config";
 
 export enum StableUSDCoin {
   BUSD = `BUSD`,
@@ -56,6 +55,7 @@ export enum TradeState {
   BOUGHT = `bought`,
   SELL = `sell`,
   SOLD = `sold`,
+  NONE = `none`,
 }
 
 export class Coin {
@@ -93,6 +93,7 @@ export interface InitialSetupParams {
   dbURL: string;
   binanceAPIKey: string;
   binanceSecretKey: string;
+  viewOnly: boolean;
 }
 
 export interface ICacheProxy {
@@ -132,6 +133,8 @@ export enum Key {
   SIZE,
   PERCENTILE,
   DURATION_MET,
+  MAX_PERCENTILE,
+  PRICE_MOVE,
 }
 
 export enum Bit {
@@ -156,10 +159,6 @@ export interface PriceChannelData {
   [Key.S1]: ChannelState;
   [Key.S2]: ChannelState;
   [Key.PERCENTILE]: number;
+  [Key.MAX_PERCENTILE]: number;
+  [Key.PRICE_MOVE]: PriceMove;
 }
-
-export const ProfitGoalMap = {
-  [MarketTrend.DOWN]: 0.6,
-  [MarketTrend.SIDEWAYS]: 0.45,
-  [MarketTrend.UP]: 0.3,
-};

@@ -21,12 +21,10 @@ import {
 } from "./Common";
 import {
   AppState,
-  ChannelState,
   Config,
   f0,
   Key,
   PriceChannelsDataResponse,
-  PriceMove,
   StableUSDCoin,
   TradeMemo,
   TradeState,
@@ -136,13 +134,6 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
     data[a][Key.PERCENTILE] > data[b][Key.PERCENTILE] ? -1 : 1
   );
 
-  const stateIcon = {
-    [ChannelState.NONE]: growthIconMap.get(PriceMove.NEUTRAL),
-    [ChannelState.TOP]: growthIconMap.get(PriceMove.UP),
-    [ChannelState.BOTTOM]: growthIconMap.get(PriceMove.DOWN),
-    [ChannelState.MIDDLE]: growthIconMap.get(PriceMove.NEUTRAL),
-  };
-
   const [hide, setHide] = useState(false);
 
   return (
@@ -180,9 +171,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                   {candidateCoins.map((coin, i) => {
                     const {
                       [Key.PERCENTILE]: percentile,
-                      [Key.S0]: s0,
-                      [Key.S1]: s1,
-                      [Key.S2]: s2,
+                      [Key.PRICE_MOVE]: priceMove,
                     } = data[coin];
                     return (
                       <ListItem
@@ -207,7 +196,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                               sx={{ display: `flex`, alignItems: `center` }}
                             >
                               {coin}
-                              {stateIcon[s2]} {stateIcon[s1]} {stateIcon[s0]}
+                              {growthIconMap.get(priceMove)}
                             </Typography>
                           }
                           secondary={`Strength: ${f0(percentile * 100)}`}

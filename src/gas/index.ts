@@ -5,9 +5,11 @@ import { Exchange } from "./Exchange";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   AppState,
+  CoinName,
   Config,
   InitialSetupParams,
   IStore,
+  MASK,
   PriceChannelsDataResponse,
 } from "../lib";
 import { Process } from "./Process";
@@ -96,7 +98,6 @@ function catchError<T>(fn: () => T): T {
 
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
-    Log.alert(`✨ Initial setup`);
     let store: IStore = DefaultStore;
     if (params.dbURL) {
       const fbStore = new FirebaseStore();
@@ -108,18 +109,12 @@ function initialSetup(params: InitialSetupParams): string {
     const config = configDao.get();
     config.KEY = params.binanceAPIKey || config.KEY;
     config.SECRET = params.binanceSecretKey || config.SECRET;
-    if (config.KEY && config.SECRET) {
-      Log.alert(`Checking if Binance is reachable`);
-      const balance = new Exchange(config.KEY, config.SECRET).getBalance(
-        config.StableCoin
-      );
-      if (config.StableBalance === -1) {
-        config.StableBalance = balance;
-      }
-      Log.alert(`Connected to Binance`);
+    config.ViewOnly = params.viewOnly;
+    if (config.ViewOnly || (config.KEY && config.SECRET)) {
       createTriggers();
     }
     configDao.set(config);
+    Log.alert(`✨ Initial setup done.`);
     return `OK`;
   });
 }
@@ -143,10 +138,6 @@ function setConfig(config): string {
     new ConfigDao(DefaultStore).set(config);
     return `Config updated`;
   });
-}
-
-function getFirebaseURL(): string {
-  return catchError(() => FirebaseStore.url);
 }
 
 function setFirebaseURL(url: string): string {
@@ -180,6 +171,8 @@ function getConfig(): Config {
       CacheProxy
     );
     config.AutoMarketTrend = trendProvider.get();
+    config.KEY = config.KEY ? MASK : ``;
+    config.SECRET = config.SECRET ? MASK : ``;
     return config;
   } else {
     return null;
@@ -200,7 +193,22 @@ function getState(): AppState {
         .filter((a) => a.tradeResult.quantity > 0),
       info: new Statistics(DefaultStore).getAll(),
       candidates: new ChannelsDao(DefaultStore).getCandidates(0),
+      firebaseURL: FirebaseStore.url,
     };
+  });
+}
+
+function buy(coin: CoinName): string {
+  return catchError(() => {
+    TradeManager.default().buy(coin.toUpperCase());
+    return `${coin} was added to the buying queue`;
+  });
+}
+
+function sell(coin: CoinName): string {
+  return catchError(() => {
+    TradeManager.default().sell(coin.toUpperCase());
+    return `${coin} was added to the selling queue`;
   });
 }
 
@@ -213,7 +221,8 @@ global.initialSetup = initialSetup;
 global.sellAll = sellAll;
 global.dropCoin = dropCoin;
 global.setConfig = setConfig;
-global.getFirebaseURL = getFirebaseURL;
 global.setFirebaseURL = setFirebaseURL;
 global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
+global.buy = buy;
+global.sell = sell;

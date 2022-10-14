@@ -1,9 +1,9 @@
-import { execute, Log } from "./Common";
+import { Log } from "./Common";
 import {
   ExchangeSymbol,
+  execute,
   floor,
   getPrecision,
-  PriceMap,
   TradeResult,
 } from "../lib";
 import { IExchange } from "./Exchange";
@@ -18,9 +18,6 @@ interface ExchangeInfo {
 export class Binance implements IExchange {
   private readonly key: string;
   private readonly secret: string;
-  private readonly attempts: number = 5;
-  private readonly interval: number = 10;
-  private readonly numberOfAPIServers = 5; // 5 distinct addresses were verified.
   private readonly defaultReqOpts: URLFetchRequestOptions;
   private readonly tradeReqOpts: URLFetchRequestOptions;
   private readonly serverIds: number[];
@@ -37,41 +34,8 @@ export class Binance implements IExchange {
       muteHttpExceptions: true,
     };
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts);
-    this.serverIds = this.shuffleServerIds();
+    this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
-  }
-
-  getPrices(): PriceMap {
-    Log.debug(`Fetching prices from Binance`);
-    try {
-      const prices: Array<{ symbol: string; price: string }> = this.fetch(
-        () => `ticker/price`,
-        this.defaultReqOpts
-      );
-      Log.debug(`Got ${prices.length} prices`);
-      return prices.reduce<PriceMap>((acc, p) => {
-        const spotPrice = !p.symbol.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/);
-        spotPrice && (acc[p.symbol] = +p.price);
-        return acc;
-      }, {});
-    } catch (e: any) {
-      throw new Error(`Failed to get prices: ${e.message}`);
-    }
-  }
-
-  getPrice(symbol: ExchangeSymbol): number {
-    const resource = `ticker/price`;
-    const query = `symbol=${symbol}`;
-    try {
-      const ticker = this.fetch(
-        () => `${resource}?${query}`,
-        this.defaultReqOpts
-      );
-      Log.debug(ticker);
-      return +ticker.price;
-    } catch (e: any) {
-      throw new Error(`Failed to get price for ${symbol}: ${e.message}`);
-    }
   }
 
   getBalance(coinName: string): number {
@@ -136,7 +100,6 @@ export class Binance implements IExchange {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.paid = tradeResult.cost;
       this.#updateBalance(symbol.priceAsset, -tradeResult.cost);
-      Log.alert(tradeResult.toTradeString());
       return tradeResult;
     } catch (e: any) {
       if (e.message.includes(`Market is closed`)) {
@@ -162,7 +125,6 @@ export class Binance implements IExchange {
       tradeResult.gained = tradeResult.cost;
       tradeResult.soldPrice = tradeResult.price;
       this.#updateBalance(symbol.priceAsset, tradeResult.cost);
-      Log.alert(tradeResult.toTradeString());
       return tradeResult;
     } catch (e: any) {
       if (e.message.includes(`Account has insufficient balance`)) {
@@ -254,8 +216,8 @@ export class Binance implements IExchange {
     options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
   ): any {
     return execute({
-      interval: this.interval,
-      attempts: this.attempts,
+      interval: 200,
+      attempts: this.serverIds.length * 4,
       runnable: () => {
         const server = `https://api${this.#curServerId}.binance.com/api/v3`;
         const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options);
@@ -287,10 +249,9 @@ export class Binance implements IExchange {
     });
   }
 
-  private shuffleServerIds(): number[] {
-    return Array.from(Array(this.numberOfAPIServers).keys())
-      .map((i) => i + 1)
-      .sort(() => Math.random() - 0.5);
+  #shuffleServerIds(): number[] {
+    // 3 distinct addresses were verified.
+    return [1, 2, 3].sort(() => Math.random() - 0.5);
   }
 
   #rotateServer(): void {

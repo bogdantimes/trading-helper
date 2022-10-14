@@ -30,4 +30,9 @@ export interface Config {
    * Whether the current app has the access to advanced plugin features.
    */
   AdvancedAccess: boolean;
+  ViewOnly: boolean;
 }
+
+export const DefaultRange = 0.14;
+export const DefaultDuration = 4000;
+export const MASK = `********`;

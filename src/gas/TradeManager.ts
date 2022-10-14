@@ -2,18 +2,19 @@ import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
 import { Log } from "./Common";
 import {
+  CoinName,
   Config,
   ExchangeSymbol,
   f2,
-  MarketTrend,
+  floorLastDigit,
   Key,
+  MarketTrend,
   PriceMove,
   PricesHolder,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
   TradeState,
-  ProfitGoalMap,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -40,7 +41,7 @@ export class TradeManager {
     const exchange = new Exchange(config.KEY, config.SECRET);
     const statistics = new Statistics(DefaultStore);
     const tradesDao = new TradesDao(DefaultStore);
-    const priceProvider = PriceProvider.default(exchange, CacheProxy);
+    const priceProvider = PriceProvider.default();
     const channelsDao = new ChannelsDao(DefaultStore);
     const trendProvider = new TrendProvider(configDao, exchange, CacheProxy);
     return new TradeManager(
@@ -66,8 +67,8 @@ export class TradeManager {
     private readonly plugin: TraderPlugin
   ) {}
 
-  updatePrices(): void {
-    this.priceProvider.update();
+  updatePrices(): boolean {
+    return this.priceProvider.update();
   }
 
   trade(): void {
@@ -76,7 +77,7 @@ export class TradeManager {
     const { advancedAccess, requests } = this.plugin.trade({
       marketTrend: this.#mktTrend,
       channelsDao: this.channelsDao,
-      prices: this.priceProvider.get(this.#config.StableCoin),
+      prices: this.priceProvider.get(StableUSDCoin.BUSD),
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
@@ -84,13 +85,15 @@ export class TradeManager {
       this.configDao.set(this.#config);
     }
 
-    requests.forEach((r) => {
-      if (r.action === TradeAction.Buy) {
-        this.#setBuyState(r);
-      } else if (r.action === TradeAction.Sell) {
-        this.#setSellState(r);
-      }
-    });
+    if (!this.#config.ViewOnly) {
+      requests.forEach((r) => {
+        if (r.action === TradeAction.Buy) {
+          this.#setBuyState(r);
+        } else if (r.action === TradeAction.Sell) {
+          this.#setSellState(r);
+        }
+      });
+    }
 
     const trades = this.tradesDao.getList();
     const inv = trades.filter((t) => t.tradeResult.quantity > 0);
@@ -122,6 +125,23 @@ export class TradeManager {
     this.#finalize();
   }
 
+  buy(coin: CoinName): void {
+    this.#prepare();
+    const ch = this.channelsDao.get(coin);
+    const rangePercent = 1 - ch[Key.MIN] / ch[Key.MAX];
+    this.#setBuyState({
+      action: TradeAction.Buy,
+      coin,
+      x: ch[Key.DURATION],
+      y: rangePercent,
+    });
+  }
+
+  sell(coin: CoinName): void {
+    this.#prepare();
+    this.#setSellState({ action: TradeAction.Sell, coin, x: 0, y: 0 });
+  }
+
   sellAll(sellNow = false): void {
     this.#prepare();
 
@@ -146,7 +166,7 @@ export class TradeManager {
     }
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
     const cs = this.channelsDao.getCandidates(percentile);
-    this.#optimalInvestRatio = Math.max(1, Math.min(8, Object.keys(cs).length));
+    this.#optimalInvestRatio = Math.max(1, Math.min(3, Object.keys(cs).length));
   }
 
   #finalize(): void {
@@ -250,37 +270,36 @@ export class TradeManager {
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
-      tm.stopLimitPrice = ch[Key.MIN];
-    } else {
-      // There are a few independent stop limit strategies, each can bump the stop limit price up:
-      // 1. Profit goal - the closer the current price to the profit goal, the closer the stop limit to the current price
-      // 2. TTL - the less TTL left, the closer the stop limit to the current price
-      // 3. Minimal profit - once the profit reaches 4%, the stop limit is set to the order price.
-
-      const lastN = 3;
-      const avePrice =
-        tm.prices.slice(-lastN).reduce((a, b) => a + b, 0) / lastN;
-
-      // Step 1: bumping stop limit up proportionally to the current profit to profit goal.
-      const PG = ProfitGoalMap[this.#mktTrend];
-      const R = tm.range;
-      const P = tm.profit() / tm.tradeResult.paid;
-      const K = Math.min(0.99, 1 - R + Math.max(0, P / PG));
-      let newStopLimit = Math.min(K * avePrice, tm.currentPrice);
-      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
-
-      // Step 2: bumping it up proportionally to the TTL that is left.
-      const maxTTL = tm.duration / this.#mktTrend;
-      const curTTL = Math.min(tm.ttl, maxTTL);
-      const k2 = Math.min(0.99, curTTL / maxTTL);
-      newStopLimit = Math.min(k2 * avePrice, tm.currentPrice);
-      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
-
-      if (tm.profitPercent() > 4) {
-        // Step 3: bumping it up to the order price.
-        tm.stopLimitPrice = Math.max(tm.stopLimitPrice, tm.tradeResult.price);
-      }
+      tm.stopLimitPrice = floorLastDigit(ch[Key.MIN], tm.precision);
+      return;
     }
+
+    // c1 is the percentage of the profit goal completion
+    // c1 is used to move the stop limit up in the "bottom price" - "goal price" range to the same level
+    const c1 = tm.profitPercent() / (tm.profitGoal * 100);
+
+    // c2 is the percentage of the TTL completion
+    // c2 is used to move the stop limit up in the "bottom price" - "goal price" range to the same level
+    const maxTTL = tm.duration / this.#mktTrend;
+    const curTTL = Math.min(tm.ttl, maxTTL);
+    let c2 = curTTL / maxTTL;
+
+    // if the stop limit is above the entry price, we don't want to apply TTL stop limit
+    if (tm.stopLimitPrice >= tm.tradeResult.price) {
+      c2 = 0;
+    }
+
+    // apply max of c1 and c2 to the stop limit price
+    const c = Math.max(c1, c2);
+    const bottomPrice = tm.stopLimitBottomPrice;
+    let newStopLimit = bottomPrice + (tm.profitGoalPrice() - bottomPrice) * c;
+    // keep the stop limit lower than the current price
+    newStopLimit = Math.min(newStopLimit, tm.currentPrice);
+
+    // quantize stop limit to stick it to the grid
+    newStopLimit = floorLastDigit(newStopLimit, tm.precision);
+    // update the stop limit price if it's higher than the current one
+    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {
@@ -306,6 +325,7 @@ export class TradeManager {
       // no price available, and no quantity, which means we haven't bought anything yet
       // could be a non-existing symbol, or not yet published in the exchange
       Log.info(`Exchange does not have price for ${symbol}`);
+      tm.resetState();
     }
   }
 
@@ -324,7 +344,7 @@ export class TradeManager {
         this.#canInvest = Math.max(0, this.#canInvest - 1);
         this.#balance -= tradeResult.paid;
         // flatten out prices to make them not cross any limits right after the trade
-        tm.prices = [tradeResult.price];
+        tm.prices = [tm.currentPrice];
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
         // set the stop limit according to the current settings
@@ -333,6 +353,7 @@ export class TradeManager {
         Log.alert(
           `${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`
         );
+        Log.info(tradeResult.toCVSString());
         Log.debug(tm);
       } catch (e) {
         Log.error(e);
@@ -368,12 +389,14 @@ export class TradeManager {
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid));
 
         Log.alert(
-          `ℹ️ ${
+          `ℹ️ Gained: $${tradeResult.gained - fee} | ${
             profit >= 0 ? `Profit` : `Loss`
-          }: ${profit} (${profitPercentage}%)`
+          }: $${profit} (${profitPercentage}%)`
         );
 
         tradeResult.profit = profit;
+        tradeResult.paid = memo.tradeResult.paid;
+        Log.info(tradeResult.toCVSString());
         this.updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit);
       } catch (e) {
         Log.error(e);

@@ -8,8 +8,9 @@ export interface PriceChannelsDataResponse {
 }
 
 export interface AppState {
-  config: Config;
+  config: Config | null;
   assets: TradeMemo[];
   candidates: PriceChannelsDataResponse;
   info: Stats;
+  firebaseURL: string;
 }

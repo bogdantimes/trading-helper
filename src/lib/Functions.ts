@@ -12,7 +12,12 @@ export function getPrecision(a: number): number {
 }
 
 export function floor(value: number, decimals: number): number {
-  return +`${Math.floor(Number(`${value}e+${decimals}`))}e-${decimals}`;
+  const ratio = Math.pow(10, decimals);
+  return Math.floor(value * ratio) / ratio;
+}
+
+export function floorLastDigit(value: number, precision: number): number {
+  return floor(value, precision - 1);
 }
 
 export function sumWithMaxPrecision(a: number, b: number): number {
@@ -82,4 +87,41 @@ export function enumKeys<T>(enumType: any): T[] {
   return Object.keys(enumType).filter((k) =>
     isNaN(Number(k))
   ) as unknown as T[];
+}
+
+export interface ExecParams {
+  context?: any;
+  runnable: (arg0: any) => any;
+  interval?: number;
+  attempts?: number;
+}
+
+export const INTERRUPT = `INTERRUPT`;
+export const SERVICE_LIMIT = `Service invoked too many times`;
+
+export function execute({
+  context,
+  runnable,
+  interval = 500,
+  attempts = 5,
+}: ExecParams): any {
+  let err: Error | any;
+  do {
+    try {
+      err = null;
+      return runnable(context);
+    } catch (e: any) {
+      err = e;
+      if (e.message.includes(INTERRUPT) || e.message.includes(SERVICE_LIMIT)) {
+        break;
+      }
+    }
+    if (attempts > 0) {
+      Utilities.sleep(interval);
+    }
+  } while (--attempts > 0);
+
+  if (err) {
+    throw err;
+  }
 }

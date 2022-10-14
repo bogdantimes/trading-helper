@@ -1,4 +1,4 @@
-import { getPriceMove } from "./Functions";
+import { getPrecision, getPriceMove } from "./Functions";
 import { PriceMove, StableUSDCoin } from "./Types";
 
 export class PricesHolder {
@@ -29,6 +29,17 @@ export class PricesHolder {
 
   get previousPrice(): number {
     return this.p[this.p.length - 2];
+  }
+
+  get precision(): number {
+    let precision = 0;
+    this.prices.forEach((price) => {
+      const p = getPrecision(price);
+      if (p > precision) {
+        precision = p;
+      }
+    });
+    return precision;
   }
 
   pushPrice(price: number): void {

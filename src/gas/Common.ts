@@ -4,43 +4,6 @@ export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60;
 export const TICK_INTERVAL_MIN = 1;
 
-export interface ExecParams {
-  context?: any;
-  runnable: (arg0: any) => any;
-  interval?: number;
-  attempts?: number;
-}
-
-export const INTERRUPT = `INTERRUPT`;
-export const SERVICE_LIMIT = `Service invoked too many times`;
-
-export function execute({
-  context,
-  runnable,
-  interval = 500,
-  attempts = 5,
-}: ExecParams): any {
-  let err: Error | any;
-  do {
-    try {
-      err = null;
-      return runnable(context);
-    } catch (e: any) {
-      err = e;
-      if (e.message.includes(INTERRUPT) || e.message.includes(SERVICE_LIMIT)) {
-        break;
-      }
-    }
-    if (attempts > 0) {
-      Utilities.sleep(interval);
-    }
-  } while (--attempts > 0);
-
-  if (err) {
-    throw err;
-  }
-}
-
 export enum LogLevel {
   NONE,
   ALERT,
@@ -113,10 +76,6 @@ export class StableCoinMatcher {
     );
   }
 
-  get matched(): boolean {
-    return !!this.match;
-  }
-
   get coinName(): CoinName | null {
     return this.match ? this.match[1] : null;
   }
@@ -125,39 +84,3 @@ export class StableCoinMatcher {
     return this.match ? (this.match[2] as StableUSDCoin) : null;
   }
 }
-
-export class StopWatch {
-  private startTime: number;
-  private stopTime: number;
-  private prefix = ``;
-  private readonly printer?: (msg: string) => void;
-
-  constructor(printer?: (msg: string) => void) {
-    this.startTime = 0;
-    this.stopTime = 0;
-    this.printer = printer;
-  }
-
-  start(prefix: string): void {
-    this.prefix = prefix;
-    this.startTime = new Date().getTime();
-  }
-
-  stop(): void {
-    this.stopTime = new Date().getTime();
-    this.printer?.(this.printElapsed());
-  }
-
-  printElapsed(): string {
-    return `${this.prefix} took ${this.getElapsedTime()}ms`;
-  }
-
-  getElapsedTime(): number {
-    return this.stopTime - this.startTime;
-  }
-}
-
-export const CoinCacheKeys = {
-  PD_TRACKING: (coin) => `${coin}-pump-dump-tracking`,
-  START_PRICE: (coin) => `${coin}-start-price`,
-};
