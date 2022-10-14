@@ -105,37 +105,42 @@ export function Settings({
             ))}
           </RadioGroup>
         </FormControl>
-        <TextField
-          value={balance}
-          label={`Balance`}
-          onChange={(e) => setBalance(e.target.value)}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">$</InputAdornment>,
-          }}
-        />
-        <FormControl>
-          <InputLabel id={`trend`}>{trend}</InputLabel>
-          <Select
-            labelId="trend"
-            value={config.MarketTrend}
-            label={trend}
-            defaultValue={MarketTrend.SIDEWAYS}
-            onChange={(e) =>
-              setConfig({ ...config, MarketTrend: +e.target.value })
-            }
-          >
-            <MenuItem value={-1}>Auto</MenuItem>
-            <MenuItem value={MarketTrend.SIDEWAYS}>
-              {marketTrendLabel[MarketTrend.SIDEWAYS]}
-            </MenuItem>
-            <MenuItem value={MarketTrend.UP}>
-              {marketTrendLabel[MarketTrend.UP]}
-            </MenuItem>
-            <MenuItem value={MarketTrend.DOWN}>
-              {marketTrendLabel[MarketTrend.DOWN]}
-            </MenuItem>
-          </Select>
-        </FormControl>
+        <Stack direction={`row`} spacing={2}>
+          <TextField
+            fullWidth
+            value={balance}
+            label={`Balance`}
+            onChange={(e) => setBalance(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">$</InputAdornment>
+              ),
+            }}
+          />
+          <FormControl fullWidth>
+            <InputLabel id={`trend`}>{trend}</InputLabel>
+            <Select
+              labelId="trend"
+              value={config.MarketTrend}
+              label={trend}
+              defaultValue={MarketTrend.SIDEWAYS}
+              onChange={(e) =>
+                setConfig({ ...config, MarketTrend: +e.target.value })
+              }
+            >
+              <MenuItem value={-1}>Auto</MenuItem>
+              <MenuItem value={MarketTrend.SIDEWAYS}>
+                {marketTrendLabel[MarketTrend.SIDEWAYS]}
+              </MenuItem>
+              <MenuItem value={MarketTrend.UP}>
+                {marketTrendLabel[MarketTrend.UP]}
+              </MenuItem>
+              <MenuItem value={MarketTrend.DOWN}>
+                {marketTrendLabel[MarketTrend.DOWN]}
+              </MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
         <Stack direction={`row`} spacing={2}>
           <FormControlLabel
             control={
@@ -157,7 +162,7 @@ export function Settings({
                 }
               />
             }
-            label="View Only"
+            label="View-only"
           />
         </Stack>
         <TextField
