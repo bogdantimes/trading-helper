@@ -93,6 +93,7 @@ export interface InitialSetupParams {
   dbURL: string;
   binanceAPIKey: string;
   binanceSecretKey: string;
+  viewOnly: boolean;
 }
 
 export interface ICacheProxy {

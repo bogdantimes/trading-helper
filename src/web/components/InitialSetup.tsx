@@ -31,6 +31,7 @@ export function InitialSetup({
     dbURL: ``,
     binanceAPIKey: config?.KEY,
     binanceSecretKey: config?.SECRET,
+    viewOnly: false,
   });
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>): void {
@@ -116,17 +117,32 @@ export function InitialSetup({
           onChange={onChange}
           name="binanceSecretKey"
         />
-        <Box sx={{ position: `relative` }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={onClickConnect}
-            disabled={isConnecting}
-          >
-            Connect
-          </Button>
-          {isConnecting && circularProgress}
-        </Box>
+        <Stack direction={`row`} spacing={2}>
+          <Box sx={{ position: `relative` }}>
+            <Button
+              color="primary"
+              onClick={() => {
+                setParams({ ...params, viewOnly: true });
+                onClickConnect();
+              }}
+              disabled={isConnecting}
+            >
+              View-only
+            </Button>
+            {params.viewOnly && isConnecting && circularProgress}
+          </Box>
+          <Box sx={{ position: `relative` }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={onClickConnect}
+              disabled={isConnecting}
+            >
+              Connect
+            </Button>
+            {!params.viewOnly && isConnecting && circularProgress}
+          </Box>
+        </Stack>
       </>
     ),
   };

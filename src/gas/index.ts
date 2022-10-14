@@ -110,7 +110,8 @@ function initialSetup(params: InitialSetupParams): string {
     const config = configDao.get();
     config.KEY = params.binanceAPIKey || config.KEY;
     config.SECRET = params.binanceSecretKey || config.SECRET;
-    if (config.KEY && config.SECRET) {
+    config.ViewOnly = params.viewOnly;
+    if (config.ViewOnly || (config.KEY && config.SECRET)) {
       createTriggers();
     }
     configDao.set(config);

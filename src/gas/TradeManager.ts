@@ -389,9 +389,9 @@ export class TradeManager {
         const profitPercentage = f2(100 * (profit / memo.tradeResult.paid));
 
         Log.alert(
-          `ℹ️ ${
+          `ℹ️ Gained: $${tradeResult.gained - fee} | ${
             profit >= 0 ? `Profit` : `Loss`
-          }: ${profit} (${profitPercentage}%)`
+          }: $${profit} (${profitPercentage}%)`
         );
 
         tradeResult.profit = profit;

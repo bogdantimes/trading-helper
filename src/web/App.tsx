@@ -65,13 +65,10 @@ export default function App(): JSX.Element {
   }
 
   function handleState(state: AppState): void {
+    const { ViewOnly, KEY, SECRET } = state.config;
     setFetchingData(false);
     setFetchDataError(null);
-    if (!state.config?.KEY || !state.config?.SECRET) {
-      setInitialSetup(true);
-    } else {
-      setInitialSetup(false);
-    }
+    setInitialSetup(!ViewOnly && !(KEY && SECRET));
     setState(state);
   }
 
