@@ -34,7 +34,7 @@ export function Home({ state }: { state: AppState }): JSX.Element {
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
         {balanceCard(config.StableCoin, config.StableBalance, assetsValue)}
         {assetsCards(assets, config)}
-        {candidatesList(state.candidates)}
+        {candidates(state.candidates)}
       </Grid>
     </>
   );
@@ -50,7 +50,8 @@ function balanceCard(
   return (
     <>
       <Grid item xs={12}>
-        <Divider>
+        {/* Invisible divider */}
+        <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
           <Chip
             onClick={() => setHide(!hide)}
             label={<Typography variant={`h6`}>💰 Balance</Typography>}
@@ -136,7 +137,7 @@ const percentileToColorMap = {
   0.9: `#66ff00`,
 };
 
-function candidatesList(data: PriceChannelsDataResponse): JSX.Element {
+function candidates(data: PriceChannelsDataResponse): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
     data[a][Key.PERCENTILE] > data[b][Key.PERCENTILE] ? -1 : 1
   );
