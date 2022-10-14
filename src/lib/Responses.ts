@@ -12,4 +12,5 @@ export interface AppState {
   assets: TradeMemo[];
   candidates: PriceChannelsDataResponse;
   info: Stats;
+  firebaseURL: string;
 }

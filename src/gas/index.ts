@@ -140,10 +140,6 @@ function setConfig(config): string {
   });
 }
 
-function getFirebaseURL(): string {
-  return catchError(() => FirebaseStore.url);
-}
-
 function setFirebaseURL(url: string): string {
   return catchError(() => {
     if (url) {
@@ -197,6 +193,7 @@ function getState(): AppState {
         .filter((a) => a.tradeResult.quantity > 0),
       info: new Statistics(DefaultStore).getAll(),
       candidates: new ChannelsDao(DefaultStore).getCandidates(0),
+      firebaseURL: FirebaseStore.url,
     };
   });
 }
@@ -224,7 +221,6 @@ global.initialSetup = initialSetup;
 global.sellAll = sellAll;
 global.dropCoin = dropCoin;
 global.setConfig = setConfig;
-global.getFirebaseURL = getFirebaseURL;
 global.setFirebaseURL = setFirebaseURL;
 global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
