@@ -42,11 +42,11 @@ export class TradeResult {
     const date = new Date().toLocaleDateString();
     if (this.soldPrice) {
       const profPercent = f2((this.profit / this.paid) * 100);
-      return `Entry Date,Coin/Token,Invested,Quantity,Entry Price
+      return `Exit Date,Exit Price,Gained,% Profit/Loss
 ${date},$${this.soldPrice},$${f2(this.gained)},${profPercent}%`;
     } else {
       const coin = this.symbol.quantityAsset;
-      return `Exit Date,Exit Price,Gained,% Profit/Loss
+      return `Entry Date,Coin/Token,Invested,Quantity,Entry Price
 ${date},${coin},$${f2(this.paid)},${this.quantity},$${this.price}`;
     }
   }
