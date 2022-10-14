@@ -161,7 +161,7 @@ export class TradeManager {
     this.#config = this.configDao.get();
     this.#mktTrend = this.trendProvider.get();
     this.#balance = this.#config.StableBalance;
-    if (this.#balance === -1) {
+    if (this.#balance === -1 && this.#config.KEY && this.#config.SECRET) {
       this.#balance = this.exchange.getBalance(this.#config.StableCoin);
     }
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
@@ -241,7 +241,11 @@ export class TradeManager {
   }
 
   #getMoneyToInvest(tm: TradeMemo): number {
-    if (this.#canInvest <= 0 || tm.tradeResult.quantity > 0) {
+    if (
+      this.#balance === -1 ||
+      this.#canInvest <= 0 ||
+      tm.tradeResult.quantity > 0
+    ) {
       // Return 0 if we can't invest or if we already have some coins
       return 0;
     }

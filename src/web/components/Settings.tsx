@@ -29,7 +29,9 @@ export function Settings(params: {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [balance, setBalance] = useState(
-    f2(params.config.StableBalance).toString()
+    params.config.StableBalance === -1
+      ? ``
+      : f2(params.config.StableBalance).toString()
   );
   const [cfg, setCfg] = useState(params.config);
 
@@ -50,9 +52,9 @@ export function Settings(params: {
 
     if (isFinite(+balance) && (+balance === -1 || +balance >= 0)) {
       cfg.StableBalance = +balance;
-    } else {
+    } else if (balance !== ``) {
       setError(
-        `Balance must be a positive number or -1 to initialize with the current balance`
+        `Balance must be a positive number or empty to auto-detect it from Binance.`
       );
       return;
     }
@@ -98,6 +100,7 @@ export function Settings(params: {
           <TextField
             fullWidth
             value={balance}
+            placeholder={`Auto-detect`}
             label={`Balance`}
             onChange={(e) => setBalance(e.target.value)}
             InputProps={{
