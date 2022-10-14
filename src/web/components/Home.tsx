@@ -13,12 +13,7 @@ import {
 } from "@mui/material";
 import SemiCircleProgressBar from "react-progressbar-semicircle";
 import Balance from "./Balance";
-import {
-  capitalizeWord,
-  cardWidth,
-  featureDisabledInfo,
-  growthIconMap,
-} from "./Common";
+import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   AppState,
   Config,
@@ -27,10 +22,9 @@ import {
   PriceChannelsDataResponse,
   StableUSDCoin,
   TradeMemo,
-  TradeState,
 } from "../../lib";
 
-export function Assets({ state }: { state: AppState }): JSX.Element {
+export function Home({ state }: { state: AppState }): JSX.Element {
   const config = state.config;
   const assets = state.assets.map(TradeMemo.fromObject);
   const assetsValue = assets.reduce((sum, tm) => sum + tm.currentValue, 0);
@@ -38,15 +32,15 @@ export function Assets({ state }: { state: AppState }): JSX.Element {
   return (
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
-        {getBalanceView(config.StableCoin, config.StableBalance, assetsValue)}
-        {getTradeCards(TradeState.BOUGHT, assets, config)}
-        {candidates(state.candidates)}
+        {balanceCard(config.StableCoin, config.StableBalance, assetsValue)}
+        {assetsCards(assets, config)}
+        {candidatesList(state.candidates)}
       </Grid>
     </>
   );
 }
 
-function getBalanceView(
+function balanceCard(
   name: StableUSDCoin,
   balance: number,
   assetsValue: number
@@ -57,7 +51,10 @@ function getBalanceView(
     <>
       <Grid item xs={12}>
         <Divider>
-          <Chip onClick={() => setHide(!hide)} label="Balance" />
+          <Chip
+            onClick={() => setHide(!hide)}
+            label={<Typography variant={`h6`}>💰 Balance</Typography>}
+          />
         </Divider>
       </Grid>
       {!hide && (
@@ -73,20 +70,17 @@ function getBalanceView(
   );
 }
 
-function getTradeCards(
-  state: TradeState,
-  elems: TradeMemo[],
-  config: Config
-): JSX.Element {
-  // hide Sold trades by default, others visible by default
-  const [hide, setHide] = useState(state === TradeState.SOLD);
+function assetsCards(elems: TradeMemo[], config: Config): JSX.Element {
+  const [hide, setHide] = useState(false);
   return (
     <>
       <Grid item xs={12}>
         <Divider>
           <Chip
             onClick={() => setHide(!hide)}
-            label={`${capitalizeWord(state)} (${elems.length})`}
+            label={
+              <Typography variant={`h6`}>🪙 Assets ({elems.length})</Typography>
+            }
           />
         </Divider>
       </Grid>
@@ -96,6 +90,19 @@ function getTradeCards(
             <Grid item xs={12}>
               <Grid container justifyContent="center" spacing={2}>
                 <Grid item>{featureDisabledInfo}</Grid>
+              </Grid>
+            </Grid>
+          )}
+          {config.AdvancedAccess && !elems.length && (
+            <Grid item xs={12}>
+              <Grid container justifyContent="center" spacing={2}>
+                <Grid item>
+                  <Typography variant="body1">
+                    {config.ViewOnly
+                      ? `🔕 Trading is disabled. Toggle off "View-only" in Settings to activate again.`
+                      : `⌚ Waiting for specific conditions to buy a candidate.`}
+                  </Typography>
+                </Grid>
               </Grid>
             </Grid>
           )}
@@ -129,7 +136,7 @@ const percentileToColorMap = {
   0.9: `#66ff00`,
 };
 
-function candidates(data: PriceChannelsDataResponse): JSX.Element {
+function candidatesList(data: PriceChannelsDataResponse): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
     data[a][Key.PERCENTILE] > data[b][Key.PERCENTILE] ? -1 : 1
   );
@@ -142,7 +149,11 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
         <Divider>
           <Chip
             onClick={() => setHide(!hide)}
-            label={`Candidates (${candidateCoins.length})`}
+            label={
+              <Typography variant={`h6`}>
+                {`⚖️ `}Candidates ({candidateCoins.length})
+              </Typography>
+            }
           />
         </Divider>
       </Grid>
@@ -199,7 +210,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }
-                          secondary={`Strength: ${f0(percentile * 100)}`}
+                          secondary={`💪 Strength: ${f0(percentile * 100)}`}
                         />
                       </ListItem>
                     );

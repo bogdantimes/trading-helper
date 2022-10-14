@@ -1,6 +1,9 @@
 import * as React from "react";
 import { useEffect } from "react";
 import Hotkeys from "react-hot-keys";
+import InfoIcon from "@mui/icons-material/Info";
+import HomeIcon from "@mui/icons-material/Home";
+import SettingsIcon from "@mui/icons-material/Settings";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
@@ -16,7 +19,7 @@ import {
 } from "@mui/material";
 import { Settings } from "./components/Settings";
 import { Info } from "./components/Info";
-import { Assets } from "./components/Assets";
+import { Home } from "./components/Home";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
 import { AppState } from "../lib";
@@ -73,7 +76,7 @@ export default function App(): JSX.Element {
   }
 
   function reFetchState(): void {
-    if (tab === TabId.SettingsTab) {
+    if (tab === TabId.Settings) {
       // do not re-fetch state when on Settings tab
       return;
     }
@@ -111,22 +114,18 @@ export default function App(): JSX.Element {
           <Box sx={{ width: `100%` }}>
             <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
               <Tabs value={tab} onChange={changeTab} centered>
-                <Tab label="Assets" {...a11yProps(TabId.AssetsTab)} />
-                <Tab
-                  sx={{ minWidth: `50px` }}
-                  label="Info"
-                  {...a11yProps(TabId.InfoTab)}
-                />
-                <Tab label="Settings" {...a11yProps(TabId.SettingsTab)} />
+                <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
+                <Tab icon={<InfoIcon />} {...a11yProps(TabId.Info)} />
+                <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
               </Tabs>
             </Box>
-            <TabPanel value={tab} index={TabId.AssetsTab}>
-              <Assets state={state} />
+            <TabPanel value={tab} index={TabId.Home}>
+              <Home state={state} />
             </TabPanel>
-            <TabPanel value={tab} index={TabId.InfoTab}>
+            <TabPanel value={tab} index={TabId.Info}>
               <Info stats={state.info} />
             </TabPanel>
-            <TabPanel value={tab} index={TabId.SettingsTab}>
+            <TabPanel value={tab} index={TabId.Settings}>
               <Settings
                 config={state.config}
                 setConfig={(config) => setState({ ...state, config })}
@@ -172,7 +171,7 @@ export default function App(): JSX.Element {
 }
 
 enum TabId {
-  AssetsTab,
-  InfoTab,
-  SettingsTab,
+  Home,
+  Info,
+  Settings,
 }

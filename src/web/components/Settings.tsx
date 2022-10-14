@@ -207,7 +207,7 @@ export function Settings(params: {
           </Box>
           <Alert severity="info">
             The tool internal update interval is 1 minute, so it may take up to
-            1 minute for some changes to take effect.
+            1 minute ⏳ for some changes to take effect.
           </Alert>
         </Stack>
         {error && <Alert severity="error">{error.toString()}</Alert>}
