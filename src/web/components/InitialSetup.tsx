@@ -19,16 +19,20 @@ enum Step {
 export function InitialSetup({
   config,
   onConnect,
+  firebaseURL,
 }: {
   config: Config;
   onConnect: () => void;
+  firebaseURL: string;
 }): JSX.Element {
-  const [step, setStep] = useState(Step.DbConnect);
+  const [step, setStep] = useState(
+    firebaseURL ? Step.BinanceConnect : Step.DbConnect
+  );
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(``);
 
   const [params, setParams] = useState<InitialSetupParams>({
-    dbURL: ``,
+    dbURL: firebaseURL,
     binanceAPIKey: config?.KEY,
     binanceSecretKey: config?.SECRET,
     viewOnly: false,

@@ -108,7 +108,11 @@ export default function App(): JSX.Element {
           </Alert>
         )}
         {!fetchingData && initialSetup && (
-          <InitialSetup config={state.config} onConnect={initialFetch} />
+          <InitialSetup
+            firebaseURL={state.firebaseURL}
+            config={state.config}
+            onConnect={initialFetch}
+          />
         )}
         {!fetchingData && !initialSetup && (
           <Box sx={{ width: `100%` }}>
