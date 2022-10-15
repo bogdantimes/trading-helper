@@ -76,7 +76,7 @@ function assetsCards(elems: TradeMemo[], config: Config): JSX.Element {
   return (
     <>
       <Grid item xs={12}>
-        <Divider>
+        <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
           <Chip
             onClick={() => setHide(!hide)}
             label={
@@ -147,7 +147,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
   return (
     <>
       <Grid item xs={12}>
-        <Divider>
+        <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
           <Chip
             onClick={() => setHide(!hide)}
             label={

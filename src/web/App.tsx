@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect } from "react";
-import Hotkeys from "react-hot-keys";
+import { useDoubleTap } from "use-double-tap";
 import InfoIcon from "@mui/icons-material/Info";
 import HomeIcon from "@mui/icons-material/Home";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -88,89 +88,95 @@ export default function App(): JSX.Element {
 
   const [terminalOpen, setTerminalOpen] = React.useState(false);
   const [terminalOutput, setTerminalOutput] = React.useState(``);
+  const openTerminal = useDoubleTap((event) => {
+    event.preventDefault();
+    setTerminalOpen(true);
+  });
 
   return (
-    <Hotkeys keyName="ctrl+alt+t" onKeyDown={() => setTerminalOpen(true)}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        {fetchingData && (
-          <Box sx={{ width: `100%` }}>
-            <LinearProgress />
-          </Box>
-        )}
-        {fetchDataError && (
-          <Alert severity="error">
-            <Typography variant="caption">{fetchDataError}</Typography>
-            <Typography variant="caption">
-              {` `}Please check your network connection and that Google Apps
-              Script application is deployed and try again.
-            </Typography>
-          </Alert>
-        )}
-        {!fetchingData && initialSetup && (
-          <InitialSetup
-            firebaseURL={state.firebaseURL}
-            config={state.config}
-            onConnect={initialFetch}
-          />
-        )}
-        {!fetchingData && !initialSetup && (
-          <Box sx={{ width: `100%` }}>
-            <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
-              <Tabs value={tab} onChange={changeTab} centered>
-                <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
-                <Tab icon={<InfoIcon />} {...a11yProps(TabId.Info)} />
-                <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
-              </Tabs>
-            </Box>
-            <TabPanel value={tab} index={TabId.Home}>
-              <Home state={state} />
-            </TabPanel>
-            <TabPanel value={tab} index={TabId.Info}>
-              <Info stats={state.info} />
-            </TabPanel>
-            <TabPanel value={tab} index={TabId.Settings}>
-              <Settings
-                config={state.config}
-                setConfig={(config) => handleState({ ...state, config })}
-                firebaseURL={state.firebaseURL}
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {fetchingData && (
+        <Box sx={{ width: `100%` }}>
+          <LinearProgress />
+        </Box>
+      )}
+      {fetchDataError && (
+        <Alert severity="error">
+          <Typography variant="caption">{fetchDataError}</Typography>
+          <Typography variant="caption">
+            {` `}Please check your network connection and that Google Apps
+            Script application is deployed and try again.
+          </Typography>
+        </Alert>
+      )}
+      {!fetchingData && initialSetup && (
+        <InitialSetup
+          firebaseURL={state.firebaseURL}
+          config={state.config}
+          onConnect={initialFetch}
+        />
+      )}
+      {!fetchingData && !initialSetup && (
+        <Box sx={{ width: `100%` }}>
+          <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
+            <Tabs value={tab} onChange={changeTab} centered>
+              <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
+              <Tab
+                icon={<InfoIcon />}
+                {...a11yProps(TabId.Info)}
+                {...openTerminal}
               />
-            </TabPanel>
+              <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
+            </Tabs>
           </Box>
-        )}
-        <Dialog open={terminalOpen} onClose={() => setTerminalOpen(false)}>
-          <Box
-            width={600}
-            height={400}
-            sx={{ [`.react-terminal`]: { height: `290px` } }}
+          <TabPanel value={tab} index={TabId.Home}>
+            <Home state={state} />
+          </TabPanel>
+          <TabPanel value={tab} index={TabId.Info}>
+            <Info stats={state.info} />
+          </TabPanel>
+          <TabPanel value={tab} index={TabId.Settings}>
+            <Settings
+              config={state.config}
+              setConfig={(config) => handleState({ ...state, config })}
+              firebaseURL={state.firebaseURL}
+            />
+          </TabPanel>
+        </Box>
+      )}
+      <Dialog open={terminalOpen} onClose={() => setTerminalOpen(false)}>
+        <Box
+          width={600}
+          height={400}
+          sx={{ [`.react-terminal`]: { height: `290px` } }}
+        >
+          <Terminal
+            name="API"
+            colorMode={
+              theme.palette.mode === `dark` ? ColorMode.Dark : ColorMode.Light
+            }
+            onInput={(terminalInput) => {
+              // parse terminal input: <cmd> <arg1> <arg2> ...
+              const [cmd, ...args] = terminalInput.split(` `);
+              // JSON parse the args
+              const parsedArgs = args.map((arg) => JSON.parse(arg));
+              // call the function
+              google.script.run
+                .withSuccessHandler((resp) => {
+                  setTerminalOutput(JSON.stringify(resp, null, 2));
+                })
+                .withFailureHandler((resp) => {
+                  setTerminalOutput(resp.message);
+                })
+                [cmd](...parsedArgs);
+            }}
           >
-            <Terminal
-              name="API"
-              colorMode={
-                theme.palette.mode === `dark` ? ColorMode.Dark : ColorMode.Light
-              }
-              onInput={(terminalInput) => {
-                // parse terminal input: <cmd> <arg1> <arg2> ...
-                const [cmd, ...args] = terminalInput.split(` `);
-                // JSON parse the args
-                const parsedArgs = args.map((arg) => JSON.parse(arg));
-                // call the function
-                google.script.run
-                  .withSuccessHandler((resp) => {
-                    setTerminalOutput(JSON.stringify(resp, null, 2));
-                  })
-                  .withFailureHandler((resp) => {
-                    setTerminalOutput(resp.message);
-                  })
-                  [cmd](...parsedArgs);
-              }}
-            >
-              {terminalOutput}
-            </Terminal>
-          </Box>
-        </Dialog>
-      </ThemeProvider>
-    </Hotkeys>
+            {terminalOutput}
+          </Terminal>
+        </Box>
+      </Dialog>
+    </ThemeProvider>
   );
 }
 
