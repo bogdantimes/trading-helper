@@ -128,7 +128,7 @@ export default function App(): JSX.Element {
             <TabPanel value={tab} index={TabId.Settings}>
               <Settings
                 config={state.config}
-                setConfig={(config) => setState({ ...state, config })}
+                setConfig={(config) => handleState({ ...state, config })}
                 firebaseURL={state.firebaseURL}
               />
             </TabPanel>

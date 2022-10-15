@@ -100,7 +100,7 @@ function assetsCards(elems: TradeMemo[], config: Config): JSX.Element {
                 <Grid item>
                   <Typography variant="body1">
                     {config.ViewOnly
-                      ? `🔕 Trading is disabled. Toggle off "View-only" in Settings to activate again.`
+                      ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
                       : `⌚ Waiting for specific conditions to buy a candidate.`}
                   </Typography>
                 </Grid>
@@ -211,7 +211,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }
-                          secondary={`💪 Strength: ${f0(percentile * 100)}`}
+                          secondary={`Strength: ${f0(percentile * 100)}`}
                         />
                       </ListItem>
                     );
