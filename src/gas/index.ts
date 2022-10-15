@@ -1,4 +1,4 @@
-import { DefaultStore, FirebaseStore } from "./Store";
+import { CachedStore, DefaultStore, FirebaseStore } from "./Store";
 import { TradeActions } from "./TradeActions";
 import { Statistics } from "./Statistics";
 import { Exchange } from "./Exchange";
@@ -103,7 +103,7 @@ function initialSetup(params: InitialSetupParams): string {
       const fbStore = new FirebaseStore();
       fbStore.connect(params.dbURL);
       Log.alert(`Connected to Firebase: ${params.dbURL}`);
-      store = fbStore;
+      store = new CachedStore(fbStore, CacheProxy);
     }
     const configDao = new ConfigDao(store);
     const config = configDao.get();

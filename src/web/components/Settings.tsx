@@ -5,21 +5,20 @@ import {
   Alert,
   Box,
   Button,
+  Divider,
   FormControl,
   FormControlLabel,
-  FormLabel,
+  FormHelperText,
   InputAdornment,
   InputLabel,
   MenuItem,
-  Radio,
-  RadioGroup,
   Select,
   Stack,
   Switch,
   TextField,
 } from "@mui/material";
 import { circularProgress } from "./Common";
-import { Config, f2, MarketTrend, StableUSDCoin } from "../../lib";
+import { Config, enumKeys, f2, MarketTrend, StableUSDCoin } from "../../lib";
 
 export function Settings(params: {
   config: Config;
@@ -29,7 +28,9 @@ export function Settings(params: {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [balance, setBalance] = useState(
-    f2(params.config.StableBalance).toString()
+    params.config.StableBalance === -1
+      ? ``
+      : f2(params.config.StableBalance).toString()
   );
   const [cfg, setCfg] = useState(params.config);
 
@@ -50,9 +51,9 @@ export function Settings(params: {
 
     if (isFinite(+balance) && (+balance === -1 || +balance >= 0)) {
       cfg.StableBalance = +balance;
-    } else {
+    } else if (balance !== ``) {
       setError(
-        `Balance must be a positive number or -1 to initialize with the current balance`
+        `Balance must be a positive number or empty to auto-detect it from Binance.`
       );
       return;
     }
@@ -74,30 +75,30 @@ export function Settings(params: {
   const trend = `Market Trend (${marketTrendLabel[cfg.AutoMarketTrend]})`;
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
-      <Stack spacing={2} sx={{ maxWidth: `400px` }}>
-        <FormControl>
-          <FormLabel>Stable Coin</FormLabel>
-          <RadioGroup
-            row
-            value={cfg.StableCoin}
-            onChange={(e, val) =>
-              setCfg({ ...cfg, StableCoin: val as StableUSDCoin })
-            }
-          >
-            {Object.values(StableUSDCoin).map((coin) => (
-              <FormControlLabel
-                key={coin}
-                value={coin}
-                control={<Radio />}
-                label={coin}
-              />
-            ))}
-          </RadioGroup>
-        </FormControl>
+      <Stack spacing={2} sx={{ maxWidth: `400px` }} divider={<Divider />}>
         <Stack direction={`row`} spacing={2}>
+          <FormControl fullWidth>
+            <InputLabel id={`stable-coin`}>Stable Coin</InputLabel>
+            <Select
+              labelId="stable-coin"
+              value={cfg.StableCoin}
+              label={`Stable Coin`}
+              defaultValue={StableUSDCoin.BUSD}
+              onChange={(e) =>
+                setCfg({ ...cfg, StableCoin: e.target.value as StableUSDCoin })
+              }
+            >
+              {enumKeys<StableUSDCoin>(StableUSDCoin).map((coin) => (
+                <MenuItem key={coin} value={coin}>
+                  {coin}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             fullWidth
             value={balance}
+            placeholder={`Auto-detect`}
             label={`Balance`}
             onChange={(e) => setBalance(e.target.value)}
             InputProps={{
@@ -106,29 +107,36 @@ export function Settings(params: {
               ),
             }}
           />
-          <FormControl fullWidth>
-            <InputLabel id={`trend`}>{trend}</InputLabel>
-            <Select
-              labelId="trend"
-              value={cfg.MarketTrend}
-              label={trend}
-              defaultValue={MarketTrend.SIDEWAYS}
-              onChange={(e) => setCfg({ ...cfg, MarketTrend: +e.target.value })}
-            >
-              <MenuItem value={-1}>Auto</MenuItem>
-              <MenuItem value={MarketTrend.SIDEWAYS}>
-                {marketTrendLabel[MarketTrend.SIDEWAYS]}
-              </MenuItem>
-              <MenuItem value={MarketTrend.UP}>
-                {marketTrendLabel[MarketTrend.UP]}
-              </MenuItem>
-              <MenuItem value={MarketTrend.DOWN}>
-                {marketTrendLabel[MarketTrend.DOWN]}
-              </MenuItem>
-            </Select>
-          </FormControl>
         </Stack>
-        <Stack direction={`row`} spacing={2}>
+        <FormControl fullWidth>
+          <InputLabel id={`trend`}>{trend}</InputLabel>
+          <Select
+            labelId="trend"
+            value={cfg.MarketTrend}
+            label={trend}
+            defaultValue={MarketTrend.SIDEWAYS}
+            onChange={(e) => setCfg({ ...cfg, MarketTrend: +e.target.value })}
+            aria-describedby={`trend-helper-text`}
+          >
+            <MenuItem value={-1}>Auto-detect</MenuItem>
+            <MenuItem value={MarketTrend.SIDEWAYS}>
+              {marketTrendLabel[MarketTrend.SIDEWAYS]}
+            </MenuItem>
+            <MenuItem value={MarketTrend.UP}>
+              {marketTrendLabel[MarketTrend.UP]}
+            </MenuItem>
+            <MenuItem value={MarketTrend.DOWN}>
+              {marketTrendLabel[MarketTrend.DOWN]}
+            </MenuItem>
+          </Select>
+          <FormHelperText id={`trend-helper-text`}>
+            Market trend defines some characteristics of the trading algorithm.
+            In general: quicker trades when the market is trending up.
+            Auto-detect is updated every 3 days and uses the BTC price move over
+            the last 3 weeks.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
           <FormControlLabel
             control={
               <Switch
@@ -138,8 +146,16 @@ export function Settings(params: {
                 }
               />
             }
-            label="Sell At Stop limit"
+            label="Active stop-limits"
+            aria-describedby={`stop-limit-helper-text`}
           />
+          <FormHelperText id={`stop-limit-helper-text`}>
+            Sell automatically when a stop-limit is <b>crossed down</b>.
+            Recommended to always keep enabled. Disable only if you need to hold
+            the assets.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
           <FormControlLabel
             control={
               <Switch
@@ -148,40 +164,52 @@ export function Settings(params: {
               />
             }
             label="View-only"
+            aria-describedby={`view-only-helper-text`}
+          />
+          <FormHelperText id={`view-only-helper-text`}>
+            Disables autonomous trading and makes Binance API keys optional.
+          </FormHelperText>
+        </FormControl>
+        <Stack spacing={2}>
+          <TextField
+            type={`password`}
+            value={cfg.KEY}
+            label={`Binance API Key`}
+            onChange={(e) => setCfg({ ...cfg, KEY: e.target.value })}
+            name="binanceAPIKey"
+          />
+          <TextField
+            type={`password`}
+            value={cfg.SECRET}
+            label={`Binance Secret Key`}
+            onChange={(e) => setCfg({ ...cfg, SECRET: e.target.value })}
+            name="binanceSecretKey"
           />
         </Stack>
-        <TextField
-          type={`password`}
-          value={cfg.KEY}
-          label={`Binance API Key`}
-          onChange={(e) => setCfg({ ...cfg, KEY: e.target.value })}
-          name="binanceAPIKey"
-        />
-        <TextField
-          type={`password`}
-          value={cfg.SECRET}
-          label={`Binance Secret Key`}
-          onChange={(e) => setCfg({ ...cfg, SECRET: e.target.value })}
-          name="binanceSecretKey"
-        />
         <TextField
           value={newFbURL}
           label={`Firebase URL`}
           onChange={(e) => setNewFbURL(e.target.value)}
-          helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. Your data won't be lost.`}
+          helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. External database is essential only when you switch to a newer version of the tool.`}
         />
-        <Box alignSelf={`center`} sx={{ position: `relative` }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SaveIcon />}
-            onClick={onSave}
-            disabled={isSaving}
-          >
-            Save
-          </Button>
-          {isSaving && circularProgress}
-        </Box>
+        <Stack spacing={2}>
+          <Box alignSelf={`center`} sx={{ position: `relative` }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SaveIcon />}
+              onClick={onSave}
+              disabled={isSaving}
+            >
+              Save
+            </Button>
+            {isSaving && circularProgress}
+          </Box>
+          <Alert severity="info">
+            The tool internal update interval is 1 minute, so it may take up to
+            1 minute ⏳ for some changes to take effect.
+          </Alert>
+        </Stack>
         {error && <Alert severity="error">{error.toString()}</Alert>}
       </Stack>
     </Box>

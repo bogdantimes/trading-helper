@@ -28,8 +28,8 @@ To support this project:
 
 ### Screeshots
 
-![assets-1.png](img/assets-1.png)
-![assets-2.png](img/assets-2.png)
+![home.png](img/home.png)
+![info.png](img/info.png)
 ![settings.png](img/settings.png)
 
 ## How to

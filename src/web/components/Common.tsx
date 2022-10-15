@@ -46,7 +46,7 @@ export const cardWidth = `332px`;
 export const featureDisabledInfo = (
   <Alert severity="info">
     <Typography variant="body1">
-      <div>Your application is working in candidates view-only mode.</div>
+      <div>Your installation is working in candidates view-only mode 👀.</div>
       <Link
         href="https://www.patreon.com/bePatron?u=52791105"
         target="_blank"
@@ -54,7 +54,7 @@ export const featureDisabledInfo = (
       >
         Become a Patron!
       </Link>
-      {` `}to unlock "buy" signals for fully-autonomous trading.
+      {` `}to unlock "buy" signals and activate the fully-autonomous trading.
     </Typography>
     <Typography variant="caption">
       <b>Important: use the same Google account in Patreon.</b>

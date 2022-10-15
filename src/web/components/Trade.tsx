@@ -49,31 +49,55 @@ export default function Trade(props: {
     handleScroll: false,
     handleScale: false,
     rightPriceScale: {
-      mode: PriceScaleMode.Logarithmic,
+      mode: PriceScaleMode.Normal,
     },
   };
 
+  const entryColor = `gold`;
+  const stopColor = `red`;
+  const exitColor = `cyan`;
   // In dark more 'lightblue' color price line looks better
-  const priceLineColor = theme.palette.mode === `light` ? `blue` : `lightblue`;
-  const profitLineColor =
-    theme.palette.mode === `light` ? `green` : `lightgreen`;
+  const priceColor = theme.palette.mode === `light` ? `blue` : `lightblue`;
+  const profitColor = theme.palette.mode === `light` ? `green` : `lightgreen`;
 
   useEffect(() => {
     if (!chart.current) {
       chart.current = createChart(chartContainerRef.current, chartOpts);
 
       setPriceLine(
-        chart.current.addLineSeries({ color: priceLineColor, lineWidth: 1 })
+        chart.current.addLineSeries({
+          title: `Price`,
+          color: priceColor,
+          lineWidth: 1,
+        })
       );
-      setStopLine(chart.current.addLineSeries({ color: `red`, lineWidth: 1 }));
+      setStopLine(
+        chart.current.addLineSeries({
+          title: `Stop-limit`,
+          color: stopColor,
+          lineWidth: 1,
+        })
+      );
       setProfitLine(
-        chart.current.addLineSeries({ color: profitLineColor, lineWidth: 1 })
+        chart.current.addLineSeries({
+          title: `Profit goal`,
+          color: profitColor,
+          lineWidth: 1,
+        })
       );
       setOrderLine(
-        chart.current.addLineSeries({ color: `gold`, lineWidth: 1 })
+        chart.current.addLineSeries({
+          title: `Entry price`,
+          color: entryColor,
+          lineWidth: 1,
+        })
       );
       setSoldPriceLine(
-        chart.current.addLineSeries({ color: `cyan`, lineWidth: 1 })
+        chart.current.addLineSeries({
+          title: `Exit price`,
+          color: exitColor,
+          lineWidth: 1,
+        })
       );
     }
 
@@ -103,7 +127,7 @@ export default function Trade(props: {
 
     if (priceLine) {
       priceLine.setData(map(tm.prices, (v) => v));
-      priceLine.applyOptions({ color: priceLineColor, priceFormat });
+      priceLine.applyOptions({ color: priceColor, priceFormat });
     }
 
     if (stopLine) {
@@ -126,7 +150,7 @@ export default function Trade(props: {
 
     if (profitLine) {
       profitLine.applyOptions({
-        color: profitLineColor,
+        color: profitColor,
         visible: !!tm.tradeResult.quantity,
         lineStyle: LineStyle.Dashed,
         priceFormat,
