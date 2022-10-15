@@ -35,7 +35,7 @@ export function InitialSetup({
     dbURL: firebaseURL,
     binanceAPIKey: config?.KEY,
     binanceSecretKey: config?.SECRET,
-    viewOnly: false,
+    viewOnly: config.ViewOnly,
   });
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>): void {
@@ -140,7 +140,11 @@ export function InitialSetup({
             <Button
               variant="contained"
               color="primary"
-              onClick={onClickConnect}
+              onClick={() => {
+                params.viewOnly = false;
+                setParams(params);
+                onClickConnect();
+              }}
               disabled={isConnecting}
             >
               Connect
