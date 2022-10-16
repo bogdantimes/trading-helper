@@ -4,11 +4,12 @@
 * The underlying algorithms were re-worked to focus on automated profit goal and stop-limit decisions making.
 * Automated market trend detection.
 * Buy signals algorithm re-worked.
-* UI simplified, added candidates section on Assets page.
+* UI simplified, added Candidates section on Home page.
 * Settings re-worked:
   * most settings removed;
   * added Balance input, to set initial and current amount of money for trading;
-  * added Market Trend selector.
+  * added Market Trend selector;
+  * added View-only mode which disables trading and allows to not have Binance keys.
 
 # v2.7.1
 

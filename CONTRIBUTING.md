@@ -18,12 +18,8 @@ npm run gopen
 
 If you see the "Welcome" page, the webapp is running.
 
-To pass the initial setup on the Welcome page:
-
-* [Optionally] Create the Firebase Realtime database and provide the URL, click "Connect".
-* Create Binance API key and secret and provide them, click "Connect".
-
-If you see the "Assets" page, the webapp is now fully configured and is ready to use.
+Pass the initial setup and once you see the Home page - the initial setup is done.
+Candidates will appear in 1 minute after the initial setup is done.
 
 See the YouTube playlist with tutorials [here](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox)
 

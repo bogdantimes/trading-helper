@@ -26,10 +26,9 @@ To support this project:
 * Fully-autonomous trading on Binance Spot without manual interventions whatsoever.
 * Info page with balance changes since Day 1.
 
-### Screeshots
+### Screenshots
 
 ![home.png](img/home.png)
-![info.png](img/info.png)
 ![settings.png](img/settings.png)
 
 ## How to
@@ -37,7 +36,8 @@ To support this project:
 ### You will need
 
 1. Google account.
-2. Binance account and Binance API token and key for spot trading.
+2. Optional: Binance API keys.
+   Binance keys are needed if you are going to use the autonomous trading functionality.
 
 ### Set up the latest build
 
