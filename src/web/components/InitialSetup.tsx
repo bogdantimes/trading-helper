@@ -35,7 +35,7 @@ export function InitialSetup({
     dbURL: firebaseURL,
     binanceAPIKey: config?.KEY,
     binanceSecretKey: config?.SECRET,
-    viewOnly: config.ViewOnly,
+    viewOnly: config?.ViewOnly,
   });
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>): void {
