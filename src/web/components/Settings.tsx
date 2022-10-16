@@ -1,6 +1,6 @@
-import * as React from "react"
-import { useEffect, useState } from "react"
-import SaveIcon from "@mui/icons-material/Save"
+import * as React from "react";
+import { useState } from "react";
+import SaveIcon from "@mui/icons-material/Save";
 import {
   Alert,
   Box,
@@ -8,288 +8,216 @@ import {
   Divider,
   FormControl,
   FormControlLabel,
-  FormLabel,
+  FormHelperText,
   InputAdornment,
+  InputLabel,
   MenuItem,
-  Radio,
-  RadioGroup,
   Select,
-  Slider,
   Stack,
   Switch,
   TextField,
-  Typography,
-} from "@mui/material"
-import { capitalizeWord, cardWidth, circularProgress, selectivityColorMap } from "./Common"
-import {
-  AutoTradeBestScores,
-  Config,
-  enumKeys,
-  f2,
-  ScoreSelectivityKeys,
-  StableUSDCoin,
-} from "trading-helper-lib"
-import { ScoreSelectivity } from "trading-helper-lib/dist/Types"
+} from "@mui/material";
+import { circularProgress } from "./Common";
+import { Config, enumKeys, f2, MarketTrend, StableUSDCoin } from "../../lib";
 
-export function Settings({
-  config,
-  setConfig,
-}: {
-  config: Config
-  setConfig: (config: Config) => void
-}) {
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState(null)
+export function Settings(params: {
+  config: Config;
+  setConfig: (config: Config) => void;
+  firebaseURL: string;
+}): JSX.Element {
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [balance, setBalance] = useState(
+    params.config.StableBalance === -1
+      ? ``
+      : f2(params.config.StableBalance).toString()
+  );
+  const [cfg, setCfg] = useState(params.config);
 
-  const [stopLimit, setLossLimit] = useState(f2(config.StopLimit * 100).toString())
-  const [profitLimit, setProfitLimit] = useState(f2(config.ProfitLimit * 100).toString())
-  const [buyQuantity, setBuyQuantity] = useState(config.BuyQuantity.toString())
+  const [initialFbURL, setInitialFbURL] = useState(params.firebaseURL);
+  const [newFbURL, setNewFbURL] = useState(params.firebaseURL);
 
-  const [initialFbURL, setInitialFbURL] = useState(``)
-  const [newFbURL, setNewFbURL] = useState(``)
-
-  useEffect(() => setNewFbURL(initialFbURL), [initialFbURL])
-  useEffect(() => {
-    google.script.run
-      .withSuccessHandler(setInitialFbURL)
-      .withFailureHandler(setError)
-      .getFirebaseURL()
-  }, [])
-
-  const onSave = () => {
+  const onSave = (): void => {
     if (initialFbURL !== newFbURL) {
       google.script.run
         .withSuccessHandler(() => {
-          setInitialFbURL(newFbURL)
+          setInitialFbURL(newFbURL);
         })
         .withFailureHandler(setError)
-        .setFirebaseURL(newFbURL)
+        .setFirebaseURL(newFbURL);
     }
 
-    if (!config.StableCoin) {
-      setError(`Stable Coin is required`)
-      return
-    }
-    setError(null)
+    setError(null);
 
-    isFinite(+stopLimit) && (config.StopLimit = +stopLimit / 100)
-    isFinite(+profitLimit) && (config.ProfitLimit = +profitLimit / 100)
-    isFinite(+buyQuantity) && (config.BuyQuantity = Math.floor(+buyQuantity))
-    setConfig(config)
-    setIsSaving(true)
+    if (isFinite(+balance) && (+balance === -1 || +balance >= 0)) {
+      cfg.StableBalance = +balance;
+    } else if (balance !== ``) {
+      setError(
+        `Balance must be a positive number or empty to auto-detect it from Binance.`
+      );
+      return;
+    }
+
+    setIsSaving(true);
     google.script.run
       .withFailureHandler((r) => {
-        setIsSaving(false)
-        setError(r)
+        setIsSaving(false);
+        setError(r);
       })
       .withSuccessHandler(() => {
-        setIsSaving(false)
-        setError(``)
+        setIsSaving(false);
+        setError(``);
+        params.setConfig(cfg);
       })
-      .setConfig(config as any)
-  }
+      .setConfig(cfg as any);
+  };
 
+  const trend = `Market Trend (${marketTrendLabel[cfg.AutoMarketTrend]})`;
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
-      <Stack spacing={2} divider={<Divider />}>
-        <FormControl>
-          <FormLabel>Stable Coin</FormLabel>
-          <RadioGroup
-            row
-            value={config.StableCoin}
-            onChange={(e, val) => setConfig({ ...config, StableCoin: val as StableUSDCoin })}
-          >
-            {Object.values(StableUSDCoin).map((coin) => (
-              <FormControlLabel key={coin} value={coin} control={<Radio />} label={coin} />
-            ))}
-          </RadioGroup>
-        </FormControl>
-        <TextField
-          value={buyQuantity}
-          label={`Buy Quantity`}
-          onChange={(e) => setBuyQuantity(e.target.value)}
-          InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
-        />
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              value={profitLimit}
-              label={`Profit Limit`}
-              onChange={(e) => setProfitLimit(e.target.value)}
-              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.SellAtProfitLimit}
-                  onChange={(e) => setConfig({ ...config, SellAtProfitLimit: e.target.checked })}
-                />
+      <Stack spacing={2} sx={{ maxWidth: `400px` }} divider={<Divider />}>
+        <Stack direction={`row`} spacing={2}>
+          <FormControl fullWidth>
+            <InputLabel id={`stable-coin`}>Stable Coin</InputLabel>
+            <Select
+              labelId="stable-coin"
+              value={cfg.StableCoin}
+              label={`Stable Coin`}
+              defaultValue={StableUSDCoin.BUSD}
+              onChange={(e) =>
+                setCfg({ ...cfg, StableCoin: e.target.value as StableUSDCoin })
               }
-              label="Auto-sell"
-            />
-          </Stack>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              disabled={config.ProfitBasedStopLimit}
-              value={stopLimit}
-              label={`Stop Limit`}
-              onChange={(e) => setLossLimit(e.target.value)}
-              InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={config.SellAtStopLimit}
-                  onChange={(e) => setConfig({ ...config, SellAtStopLimit: e.target.checked })}
-                />
-              }
-              label="Auto-sell"
-            />
-          </Stack>
-        </Stack>
-        <Stack spacing={1}>
+            >
+              {enumKeys<StableUSDCoin>(StableUSDCoin).map((coin) => (
+                <MenuItem key={coin} value={coin}>
+                  {coin}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
-            value={config.PriceAnomalyAlert}
-            label={`Price Anomaly Alert`}
-            onChange={(e) => setConfig({ ...config, PriceAnomalyAlert: +e.target.value })}
-            InputProps={{ startAdornment: <InputAdornment position="start">%</InputAdornment> }}
-          />
-          <Select
-            value={[!!config.BuyDumps, !!config.SellPumps].toString()}
-            onChange={(e) => {
-              const [buyDumps, sellPumps] = e.target.value.split(`,`)
-              setConfig({
-                ...config,
-                BuyDumps: buyDumps === `true`,
-                SellPumps: sellPumps === `true`,
-              })
+            fullWidth
+            value={balance}
+            placeholder={`Auto-detect`}
+            label={`Balance`}
+            onChange={(e) => setBalance(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">$</InputAdornment>
+              ),
             }}
-          >
-            <MenuItem value={[false, false].toString()}>No Action</MenuItem>
-            <MenuItem value={[true, false].toString()}>Buy Dumps</MenuItem>
-            <MenuItem value={[false, true].toString()}>Sell Pumps</MenuItem>
-            <MenuItem value={[true, true].toString()}>Buy Dumps & Sell Pumps</MenuItem>
-          </Select>
+          />
         </Stack>
-        {switchers(config, setConfig)}
-        {autonomousTrading(config, setConfig)}
-        {scoreThresholdSelector(config, setConfig)}
+        <FormControl fullWidth>
+          <InputLabel id={`trend`}>{trend}</InputLabel>
+          <Select
+            labelId="trend"
+            value={cfg.MarketTrend}
+            label={trend}
+            defaultValue={MarketTrend.SIDEWAYS}
+            onChange={(e) => setCfg({ ...cfg, MarketTrend: +e.target.value })}
+            aria-describedby={`trend-helper-text`}
+          >
+            <MenuItem value={-1}>Auto-detect</MenuItem>
+            <MenuItem value={MarketTrend.SIDEWAYS}>
+              {marketTrendLabel[MarketTrend.SIDEWAYS]}
+            </MenuItem>
+            <MenuItem value={MarketTrend.UP}>
+              {marketTrendLabel[MarketTrend.UP]}
+            </MenuItem>
+            <MenuItem value={MarketTrend.DOWN}>
+              {marketTrendLabel[MarketTrend.DOWN]}
+            </MenuItem>
+          </Select>
+          <FormHelperText id={`trend-helper-text`}>
+            Market trend defines some characteristics of the trading algorithm.
+            In general: quicker trades when the market is trending up.
+            Auto-detect is updated every 3 days and uses the BTC price move over
+            the last 3 weeks.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={cfg.SellAtStopLimit}
+                onChange={(e) =>
+                  setCfg({ ...cfg, SellAtStopLimit: e.target.checked })
+                }
+              />
+            }
+            label="Active stop-limits"
+            aria-describedby={`stop-limit-helper-text`}
+          />
+          <FormHelperText id={`stop-limit-helper-text`}>
+            Sell automatically when a stop-limit is <b>crossed down</b>.
+            Recommended to always keep enabled. Disable only if you need to hold
+            the assets.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={cfg.ViewOnly}
+                onChange={(e) => setCfg({ ...cfg, ViewOnly: e.target.checked })}
+              />
+            }
+            label="View-only"
+            aria-describedby={`view-only-helper-text`}
+          />
+          <FormHelperText id={`view-only-helper-text`}>
+            Disables autonomous trading and makes Binance API keys optional.
+          </FormHelperText>
+        </FormControl>
+        <Stack spacing={2}>
+          <TextField
+            type={`password`}
+            value={cfg.KEY}
+            label={`Binance API Key`}
+            onChange={(e) => setCfg({ ...cfg, KEY: e.target.value })}
+            name="binanceAPIKey"
+          />
+          <TextField
+            type={`password`}
+            value={cfg.SECRET}
+            label={`Binance Secret Key`}
+            onChange={(e) => setCfg({ ...cfg, SECRET: e.target.value })}
+            name="binanceSecretKey"
+          />
+        </Stack>
         <TextField
           value={newFbURL}
           label={`Firebase URL`}
           onChange={(e) => setNewFbURL(e.target.value)}
-          sx={{ maxWidth: `389px` }}
-          helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. Your data won't be lost.`}
+          helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. External database is essential only when you switch to a newer version of the tool.`}
         />
-        <Box alignSelf={`center`} sx={{ position: `relative` }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SaveIcon />}
-            onClick={onSave}
-            disabled={isSaving}
-          >
-            Save
-          </Button>
-          {isSaving && circularProgress}
-        </Box>
+        <Stack spacing={2}>
+          <Box alignSelf={`center`} sx={{ position: `relative` }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SaveIcon />}
+              onClick={onSave}
+              disabled={isSaving}
+            >
+              Save
+            </Button>
+            {isSaving && circularProgress}
+          </Box>
+          <Alert severity="info">
+            The tool internal update interval is 1 minute, so it may take up to
+            1 minute ⏳ for some changes to take effect.
+          </Alert>
+        </Stack>
         {error && <Alert severity="error">{error.toString()}</Alert>}
       </Stack>
     </Box>
-  )
+  );
 }
 
-function switchers(
-  config: Config,
-  setConfig: (value: ((prevState: Config) => Config) | Config) => void,
-) {
-  return (
-    <Stack>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={config.ProfitBasedStopLimit}
-            onChange={(e) => setConfig({ ...config, ProfitBasedStopLimit: e.target.checked })}
-          />
-        }
-        label="P/L based Stop Limit"
-      />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={config.SwingTradeEnabled}
-            onChange={(e) => setConfig({ ...config, SwingTradeEnabled: e.target.checked })}
-          />
-        }
-        label="Swing trading"
-      />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={config.AveragingDown}
-            onChange={(e) => setConfig({ ...config, AveragingDown: e.target.checked })}
-          />
-        }
-        label="Averaging down"
-      />
-    </Stack>
-  )
-}
-
-const scoreSelectorCaption: { [key in ScoreSelectivityKeys]: string } = {
-  EXTREME: `Best for manual trading. Reliable score starts at ~15 points.`,
-  HIGH: `Best for manual or supervised autonomous trading. Reliable score starts at ~30 points.`,
-  MODERATE: `Best for unsupervised fully-autonomous trading. Reliable score starts at ~90 points.`,
-  MINIMAL: `Best for manual or supervised autonomous trading. Reliable score starts at ~210 points.`,
-}
-
-function scoreThresholdSelector(config: Config, setConfig: (config: Config) => void) {
-  return (
-    <FormControl sx={{ maxWidth: cardWidth }}>
-      <FormLabel>Score Selectivity</FormLabel>
-      <RadioGroup
-        value={config.ScoreSelectivity}
-        onChange={(e) =>
-          setConfig({ ...config, ScoreSelectivity: e.target.value as ScoreSelectivityKeys })
-        }
-      >
-        {enumKeys<ScoreSelectivityKeys>(ScoreSelectivity).map((key) => (
-          <FormControlLabel
-            key={key}
-            labelPlacement="end"
-            value={key}
-            control={<Radio size={`small`} color={selectivityColorMap[key]} />}
-            label={
-              <Box sx={{ lineHeight: `1` }}>
-                <Typography marginBottom={`-4px`}>{capitalizeWord(key)}</Typography>
-                <Typography variant={`caption`}>{scoreSelectorCaption[key]}</Typography>
-              </Box>
-            }
-          />
-        ))}
-      </RadioGroup>
-    </FormControl>
-  )
-}
-
-function autonomousTrading(config: Config, setConfig: (config: Config) => void) {
-  return (
-    <FormControl sx={{ paddingRight: `28px` }}>
-      <FormLabel>Autonomous Trading</FormLabel>
-      <Slider
-        sx={{ marginLeft: `10px` }}
-        value={config.AutoTradeBestScores}
-        onChange={(e, value) =>
-          setConfig({ ...config, AutoTradeBestScores: value as AutoTradeBestScores })
-        }
-        step={null}
-        min={0}
-        max={10}
-        marks={enumKeys<string>(AutoTradeBestScores).map((key) => ({
-          value: AutoTradeBestScores[key],
-          label: capitalizeWord(key),
-        }))}
-      />
-    </FormControl>
-  )
-}
+const marketTrendLabel = {
+  [MarketTrend.UP]: `Up`,
+  [MarketTrend.DOWN]: `Down`,
+  [MarketTrend.SIDEWAYS]: `Sideways`,
+};

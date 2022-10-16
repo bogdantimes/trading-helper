@@ -1,3 +1,16 @@
+# v3.0.0
+
+* Project main idea shifted to make it a fully-autonomous trading tool, all cool manual trading features that are in v2 were removed.
+* The underlying algorithms were re-worked to focus on automated profit goal and stop-limit decisions making.
+* Automated market trend detection.
+* Buy signals algorithm re-worked.
+* UI simplified, added Candidates section on Home page.
+* Settings re-worked:
+  * most settings removed;
+  * added Balance input, to set initial and current amount of money for trading;
+  * added Market Trend selector;
+  * added View-only mode which disables trading and allows to not have Binance keys.
+
 # v2.7.1
 
 * Firebase Realtime Database is made optional and initial setup simplified.

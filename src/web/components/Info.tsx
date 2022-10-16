@@ -1,35 +1,35 @@
-import * as React from "react"
-import { useEffect } from "react"
-import { Alert, Box, ListItem, ListItemAvatar, ListItemText, Stack } from "@mui/material"
-import { FixedSizeList } from "react-window"
-import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material"
-import { Stats } from "trading-helper-lib"
-import { cardWidth } from "./Common"
+import * as React from "react";
+import {
+  Alert,
+  Box,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Stack,
+} from "@mui/material";
+import { FixedSizeList } from "react-window";
+import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
+import CurrencyFormat from "react-currency-format";
+import { Stats } from "../../lib";
+import { cardWidth } from "./Common";
 
-export function Info() {
-  const [stats, setStats] = React.useState<Stats>(null)
-
-  useEffect(() => {
-    google.script.run.withSuccessHandler(setStats).getStatistics()
-  }, [])
-
-  const rows = []
+export function Info({ stats }: { stats: Stats }): JSX.Element {
+  const rows = [];
 
   if (stats) {
-    rows.push({ id: 1, timeFrame: `Total`, profit: stats.TotalProfit })
+    rows.push({ id: 1, timeFrame: `Total`, profit: stats.TotalProfit });
     Object.keys(stats.DailyProfit)
       .sort((a, b) => (new Date(a) < new Date(b) ? 1 : -1))
       .forEach((d, i) => {
-        rows.push({ id: i + 2, timeFrame: d, profit: stats.DailyProfit[d] })
-      })
+        rows.push({ id: i + 2, timeFrame: d, profit: stats.DailyProfit[d] });
+      });
   }
 
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
         <Alert sx={{ width: cardWidth }} severity={`info`}>
-          The summary of realised profits and losses for each day and the total P/L since the
-          beginning.
+          Balance changes since Day 1 💸.
         </Alert>
         <FixedSizeList
           width={cardWidth}
@@ -39,17 +39,34 @@ export function Info() {
           overscanCount={5}
         >
           {({ index, style }) => {
-            const up = rows[index].profit >= 0
-            const icon = up ? <ArrowDropUp color={`success`} /> : <ArrowDropDown color={`error`} />
+            const profit = rows[index].profit;
+            const up = profit >= 0;
+            const icon = up ? (
+              <ArrowDropUp color={`success`} />
+            ) : (
+              <ArrowDropDown color={`error`} />
+            );
             return (
               <ListItem style={style} key={index} component="div">
                 <ListItemAvatar>{icon}</ListItemAvatar>
-                <ListItemText primary={rows[index].profit} secondary={rows[index].timeFrame} />
+                <ListItemText
+                  primary={
+                    <CurrencyFormat
+                      value={profit}
+                      displayType={`text`}
+                      thousandSeparator={true}
+                      decimalScale={2}
+                      fixedDecimalScale={true}
+                      prefix={profit >= 0 ? `+$` : `$`}
+                    />
+                  }
+                  secondary={rows[index].timeFrame}
+                />
               </ListItem>
-            )
+            );
           }}
         </FixedSizeList>
       </Stack>
     </Box>
-  )
+  );
 }

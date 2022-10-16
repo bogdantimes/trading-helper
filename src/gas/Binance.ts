@@ -1,97 +1,111 @@
-import { IExchange } from "./Exchange"
-import { CacheProxy } from "./CacheProxy"
-import { execute, Log } from "./Common"
-import { Config, ExchangeSymbol, PriceMap, TradeResult } from "trading-helper-lib"
-import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
+import { Log } from "./Common";
+import {
+  ExchangeSymbol,
+  execute,
+  floor,
+  getPrecision,
+  TradeResult,
+} from "../lib";
+import { IExchange } from "./Exchange";
+import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
+
+interface ExchangeInfo {
+  symbols: [
+    { symbol: string; filters: [{ filterType: `LOT_SIZE`; stepSize: string }] }
+  ];
+}
 
 export class Binance implements IExchange {
-  private readonly key: string
-  private readonly secret: string
-  private readonly attempts: number = 5
-  private readonly interval: number = 100
-  private readonly numberOfAPIServers = 5 // 5 distinct addresses were verified.
-  private readonly defaultReqOpts: URLFetchRequestOptions
-  private readonly tradeReqOpts: URLFetchRequestOptions
-  private readonly serverIds: number[]
+  private readonly key: string;
+  private readonly secret: string;
+  private readonly defaultReqOpts: URLFetchRequestOptions;
+  private readonly tradeReqOpts: URLFetchRequestOptions;
+  private readonly serverIds: number[];
+  readonly #balances: { [coinName: string]: number } = {};
 
-  constructor(config: Config) {
-    this.key = config.KEY
-    this.secret = config.SECRET
-    this.defaultReqOpts = { headers: { "X-MBX-APIKEY": this.key }, muteHttpExceptions: true }
-    this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts)
-    this.serverIds = this.shuffleServerIds()
+  #exchangeInfo: ExchangeInfo;
+  #curServerId: number;
+
+  constructor(key: string, secret: string) {
+    this.key = key ?? ``;
+    this.secret = secret ?? ``;
+    this.defaultReqOpts = {
+      headers: { "X-MBX-APIKEY": this.key },
+      muteHttpExceptions: true,
+    };
+    this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts);
+    this.serverIds = this.#shuffleServerIds();
+    this.#curServerId = this.serverIds[0];
   }
 
-  getPrices(): PriceMap {
-    Log.debug(`Fetching prices from Binance`)
+  getBalance(coinName: string): number {
+    if (this.#balances[coinName]) {
+      return this.#balances[coinName];
+    }
+    const resource = `account`;
+    const query = ``;
     try {
-      const prices: { symbol: string; price: string }[] = this.fetch(
-        () => `ticker/price`,
-        this.defaultReqOpts,
-      )
-      Log.debug(`Got ${prices.length} prices`)
-      return prices.reduce<PriceMap>((acc, p) => {
-        const spotPrice = !p.symbol.match(/^\w+(UP|DOWN|BEAR|BULL)\w+$/)
-        spotPrice && (acc[p.symbol] = +p.price)
-        return acc
-      }, {})
-    } catch (e) {
-      throw new Error(`Failed to get prices: ${e.message}`)
+      const accountData = this.fetch(
+        () => `${resource}?${this.addSignature(query)}`,
+        this.defaultReqOpts
+      );
+      accountData.balances.forEach((balance: any) => {
+        this.#balances[balance.asset] = +(balance.free || 0);
+      });
+    } catch (e: any) {
+      throw new Error(`Failed to get available ${coinName}: ${e.message}`);
     }
+    return +(this.#balances[coinName] || 0);
   }
 
-  getPrice(symbol: ExchangeSymbol): number {
-    const resource = `ticker/price`
-    const query = `symbol=${symbol}`
+  getLatestKlineOpenPrices(
+    symbol: ExchangeSymbol,
+    interval: string,
+    limit: number
+  ): number[] {
+    Log.debug(
+      `Fetching latest kline open prices for ${symbol}, interval: ${interval}, limit: ${limit}`
+    );
+    const resource = `klines`;
+    const query = `symbol=${symbol}&interval=${interval}&limit=${limit}`;
     try {
-      const ticker = this.fetch(() => `${resource}?${query}`, this.defaultReqOpts)
-      Log.debug(ticker)
-      return +ticker.price
-    } catch (e) {
-      throw new Error(`Failed to get price for ${symbol}: ${e.message}`)
+      return this.fetch(() => `${resource}?${query}`, this.defaultReqOpts).map(
+        (kline: any) => +kline[1]
+      );
+    } catch (e: any) {
+      throw new Error(
+        `Failed to get latest kline open prices for ${symbol}: ${e.message}`
+      );
     }
   }
 
-  getFreeAsset(assetName: string): number {
-    const accountDataJson = CacheProxy.get(`AccountData`)
-    let accountData = accountDataJson ? JSON.parse(accountDataJson) : null
-    if (!accountData) {
-      const resource = `account`
-      const query = ``
-      try {
-        accountData = this.fetch(
-          () => `${resource}?${this.addSignature(query)}`,
-          this.defaultReqOpts,
-        )
-        CacheProxy.put(`AccountData`, JSON.stringify(accountData), 30) // 30 seconds
-      } catch (e) {
-        throw new Error(`Failed to get available ${assetName}: ${e.message}`)
-      }
-    }
-    const assetVal = accountData.balances.find((balance) => balance.asset == assetName)
-    return assetVal ? +assetVal.free : 0
+  #updateBalance(coinName: string, amount: number): void {
+    const balance = this.#balances[coinName] || 0;
+    this.#balances[coinName] = balance + amount;
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
-    const moneyAvailable = this.getFreeAsset(symbol.priceAsset)
+    const moneyAvailable = this.getBalance(symbol.priceAsset);
     if (moneyAvailable < cost) {
       return new TradeResult(
         symbol,
-        `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`,
-      )
+        `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`
+      );
     }
-    Log.alert(`➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`)
-    const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`
+    Log.alert(
+      `➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`
+    );
+    const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     try {
-      const tradeResult = this.marketTrade(symbol, query)
-      tradeResult.paid = tradeResult.cost
-      Log.alert(tradeResult.toTradeString())
-      return tradeResult
-    } catch (e) {
+      const tradeResult = this.marketTrade(symbol, query);
+      tradeResult.paid = tradeResult.cost;
+      this.#updateBalance(symbol.priceAsset, -tradeResult.cost);
+      return tradeResult;
+    } catch (e: any) {
       if (e.message.includes(`Market is closed`)) {
-        return new TradeResult(symbol, `Market is closed for ${symbol}.`)
+        return new TradeResult(symbol, `Market is closed for ${symbol}.`);
       }
-      throw e
+      throw e;
     }
   }
 
@@ -101,91 +115,125 @@ export class Binance implements IExchange {
    * @param quantity
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
-    const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${quantity}`
-    Log.alert(`➖ Selling ${quantity} ${symbol.quantityAsset} for ${symbol.priceAsset}`)
+    const qty = this.#qtyForLotStepSize(symbol, quantity);
+    const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${qty}`;
+    Log.alert(
+      `➖ Selling ${qty} ${symbol.quantityAsset} for ${symbol.priceAsset}`
+    );
     try {
-      const tradeResult = this.marketTrade(symbol, query)
-      tradeResult.gained = tradeResult.cost
-      tradeResult.soldPrice = tradeResult.price
-      Log.alert(tradeResult.toTradeString())
-      return tradeResult
-    } catch (e) {
+      const tradeResult = this.marketTrade(symbol, query);
+      tradeResult.gained = tradeResult.cost;
+      tradeResult.soldPrice = tradeResult.price;
+      this.#updateBalance(symbol.priceAsset, tradeResult.cost);
+      return tradeResult;
+    } catch (e: any) {
       if (e.message.includes(`Account has insufficient balance`)) {
-        return new TradeResult(symbol, `Account has no ${quantity} of ${symbol.quantityAsset}`)
+        return new TradeResult(
+          symbol,
+          `Account has no ${qty} of ${symbol.quantityAsset}`
+        );
       }
       if (e.message.includes(`Market is closed`)) {
-        return new TradeResult(symbol, `Market is closed for ${symbol}.`)
+        return new TradeResult(symbol, `Market is closed for ${symbol}.`);
       }
       if (e.message.includes(`MIN_NOTIONAL`)) {
         return new TradeResult(
           symbol,
-          `The cost of ${symbol.quantityAsset} is less than minimal needed to sell it.`,
-        )
+          `The cost of ${symbol.quantityAsset} is less than minimal needed to sell it.`
+        );
       }
-      throw e
+      throw e;
     }
+  }
+
+  #qtyForLotStepSize(symbol: ExchangeSymbol, quantity: number): number {
+    if (!this.#exchangeInfo) {
+      this.#exchangeInfo = this.fetch(
+        () => `exchangeInfo`,
+        this.defaultReqOpts
+      );
+    }
+
+    const stepSize = this.#exchangeInfo.symbols
+      .find((s) => s.symbol === symbol.toString())
+      ?.filters.find((f) => f.filterType === `LOT_SIZE`)?.stepSize;
+    const precision = stepSize ? getPrecision(+stepSize) : 0;
+
+    return floor(quantity, precision);
   }
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
     try {
-      const order = this.fetch(() => `order?${this.addSignature(query)}`, this.tradeReqOpts)
-      Log.debug(order)
-      const tradeResult = new TradeResult(symbol)
-      const commission = this.getCommission(order.fills)
-      tradeResult.quantity = +order.origQty
-      tradeResult.cost = +order.cummulativeQuoteQty
-      tradeResult.fromExchange = true
-      tradeResult.commission = commission
-      return tradeResult
-    } catch (e) {
-      throw new Error(`Failed to trade ${symbol}: ${e.message}`)
+      const order = this.fetch(
+        () => `order?${this.addSignature(query)}`,
+        this.tradeReqOpts
+      );
+      Log.debug(order);
+      const tradeResult = new TradeResult(symbol);
+      const fees = this.#getFees(symbol, order.fills);
+      tradeResult.quantity = +order.origQty - fees.origQty;
+      tradeResult.cost = +order.cummulativeQuoteQty - fees.quoteQty;
+      tradeResult.commission = fees.BNB;
+      tradeResult.fromExchange = true;
+      return tradeResult;
+    } catch (e: any) {
+      throw new Error(`Failed to trade ${symbol}: ${e.message}`);
     }
   }
 
-  private getCommission(fills = []): number {
-    let commission = 0
+  #getFees(
+    symbol: ExchangeSymbol,
+    fills: any[] = []
+  ): { BNB: number; origQty: number; quoteQty: number } {
+    const fees = { BNB: 0, origQty: 0, quoteQty: 0 };
     fills.forEach((f) => {
-      if (f.commissionAsset != `BNB`) {
-        Log.alert(`ℹ️ Commission is ${f.commissionAsset} instead of BNB`)
-      } else {
-        commission += +f.commission
+      if (f.commissionAsset === `BNB`) {
+        fees.BNB += +f.commission;
+      } else if (f.commissionAsset === symbol.quantityAsset) {
+        fees.origQty += +f.commission;
+      } else if (f.commissionAsset === symbol.priceAsset) {
+        fees.quoteQty += +f.commission;
       }
-    })
-    return commission
+    });
+    return fees;
   }
 
-  private addSignature(data: string) {
-    const timestamp = Number(new Date().getTime()).toFixed(0)
-    const sigData = `${data}${data ? `&` : ``}timestamp=${timestamp}`
+  private addSignature(data: string): string {
+    const timestamp = Number(new Date().getTime()).toFixed(0);
+    const sigData = `${data}${data ? `&` : ``}timestamp=${timestamp}`;
     const sig = Utilities.computeHmacSha256Signature(sigData, this.secret)
       .map((e) => {
-        const v = (e < 0 ? e + 256 : e).toString(16)
-        return v.length == 1 ? `0` + v : v
+        const v = (e < 0 ? e + 256 : e).toString(16);
+        return v.length === 1 ? `0` + v : v;
       })
-      .join(``)
+      .join(``);
 
-    return `${sigData}&signature=${sig}`
+    return `${sigData}&signature=${sig}`;
   }
 
-  fetch(resource: () => string, options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions): any {
+  fetch(
+    resource: () => string,
+    options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
+  ): any {
     return execute({
-      interval: this.interval,
-      attempts: this.attempts,
+      interval: 200,
+      attempts: this.serverIds.length * 4,
       runnable: () => {
-        const index = this.getNextServerIndex()
-        const server = `https://api${index}.binance.com/api/v3`
-        const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options)
+        const server = `https://api${this.#curServerId}.binance.com/api/v3`;
+        const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options);
 
         if (resp.getResponseCode() === 200) {
           try {
-            return JSON.parse(resp.getContentText())
-          } catch (e) {
-            throw new Error(`Failed to parse response from Binance: ${resp.getContentText()}`)
+            return JSON.parse(resp.getContentText());
+          } catch (e: any) {
+            Log.debug(`Failed to parse response from Binance: ${e.message}`);
           }
         }
 
+        this.#rotateServer();
+
         if (resp.getResponseCode() === 418 || resp.getResponseCode() === 429) {
-          Log.debug(`Limit reached on server ` + server)
+          Log.debug(`Limit reached on server ` + server);
         }
 
         if (
@@ -193,24 +241,21 @@ export class Binance implements IExchange {
           resp.getContentText().includes(`Not all sent parameters were read`)
         ) {
           // Likely a request signature verification timeout
-          Log.debug(`Got 400 response code from ` + server)
+          Log.debug(`Got 400 response code from ` + server);
         }
 
-        throw new Error(`${resp.getResponseCode()} ${resp.getContentText()}`)
+        throw new Error(`${resp.getResponseCode()} ${resp.getContentText()}`);
       },
-    })
+    });
   }
 
-  private shuffleServerIds() {
-    return Array.from(Array(this.numberOfAPIServers).keys())
-      .map((i) => i + 1)
-      .sort(() => Math.random() - 0.5)
+  #shuffleServerIds(): number[] {
+    // 3 distinct addresses were verified.
+    return [1, 2, 3].sort(() => Math.random() - 0.5);
   }
 
-  private getNextServerIndex(): number {
-    // take first server from the list and move it to the end
-    const index = this.serverIds.shift()
-    this.serverIds.push(index)
-    return index
+  #rotateServer(): void {
+    this.#curServerId = this.serverIds.shift();
+    this.serverIds.push(this.#curServerId);
   }
 }

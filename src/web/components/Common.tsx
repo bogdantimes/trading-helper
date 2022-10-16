@@ -1,13 +1,12 @@
-import { CircularProgress } from "@mui/material"
-import * as React from "react"
-import { Config, PriceMove, ScoreSelectivityKeys } from "trading-helper-lib"
+import { Alert, CircularProgress, Link, Typography } from "@mui/material";
+import * as React from "react";
+import { PriceMove } from "../../lib";
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
   KeyboardDoubleArrowDown,
   KeyboardDoubleArrowUp,
-} from "@mui/icons-material"
-import { AlertColor } from "@mui/material/Alert/Alert"
+} from "@mui/icons-material";
 
 export const circularProgress = (
   <>
@@ -22,38 +21,43 @@ export const circularProgress = (
       }}
     />
   </>
-)
+);
 
-const map = new Map<PriceMove, JSX.Element>()
-map.set(PriceMove.STRONG_DOWN, <KeyboardDoubleArrowDown htmlColor={`red`} />)
-map.set(PriceMove.DOWN, <KeyboardArrowDown htmlColor={`red`} />)
+const map = new Map<PriceMove, JSX.Element>();
+map.set(PriceMove.STRONG_DOWN, <KeyboardDoubleArrowDown htmlColor={`red`} />);
+map.set(PriceMove.DOWN, <KeyboardArrowDown htmlColor={`red`} />);
 map.set(
   PriceMove.NEUTRAL,
-  <KeyboardArrowUp htmlColor={`lightblue`} sx={{ transform: `rotate(90deg)` }} />,
-)
-map.set(PriceMove.UP, <KeyboardArrowUp htmlColor={`green`} />)
-map.set(PriceMove.STRONG_UP, <KeyboardDoubleArrowUp htmlColor={`green`} />)
-export const growthIconMap = map
+  <KeyboardArrowUp
+    htmlColor={`lightblue`}
+    sx={{ transform: `rotate(90deg)` }}
+  />
+);
+map.set(PriceMove.UP, <KeyboardArrowUp htmlColor={`green`} />);
+map.set(PriceMove.STRONG_UP, <KeyboardDoubleArrowUp htmlColor={`green`} />);
 
-export const confirmBuy = (coinName: string, config: Config) =>
-  confirm(`Are you sure you want to buy ${coinName} for ${config.StableCoin}?`)
+export const growthIconMap = map;
 
-export const confirmSell = (coinName: string, config: Config) =>
-  confirm(
-    `Are you sure you want to sell ${coinName} and get ${config.StableCoin}? ${
-      config.AveragingDown
-        ? `Averaging down is enabled. All gained money will be re-invested into the most unprofitable coin.`
-        : ``
-    }`,
-  )
+export const capitalizeWord = (s: string): string =>
+  s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
-export const capitalizeWord = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+export const cardWidth = `332px`;
 
-export const cardWidth = `332px`
-
-export const selectivityColorMap: { [key in ScoreSelectivityKeys]: AlertColor } = {
-  EXTREME: `error`,
-  HIGH: `warning`,
-  MODERATE: `info`,
-  MINIMAL: `success`,
-}
+export const featureDisabledInfo = (
+  <Alert severity="info">
+    <Typography variant="body1">
+      <div>Your installation is working in candidates view-only mode 👀.</div>
+      <Link
+        href="https://www.patreon.com/bePatron?u=52791105"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Become a Patron!
+      </Link>
+      {` `}to unlock "buy" signals and activate the fully-autonomous trading.
+    </Typography>
+    <Typography variant="caption">
+      <b>Important: use the same Google account in Patreon.</b>
+    </Typography>
+  </Alert>
+);

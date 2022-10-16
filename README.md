@@ -7,52 +7,37 @@ The project to help you with crypto trading, written for Google Apps Script.
 The most secure trading tool, as you deploy your own WEB application, and create and connect to your own database.
 No one, except you, have access to the WEB-application and the data. If you trust Google, you can trust the project.
 
-### Toss a coin to your witcher
+### Donations
 
-Buy me a coffee, to support this project. It will not evolve without your support!
+To support this project:
 
 * [patreon.com/bogdantimes](patreon.com/bogdantimes)
 * USDT/USDC/BUSD/BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
 
 ## Features
 
-* Integration with Binance spot.
-* Settings for manual, semi-autonomous or fully-autonomous trading style.
-* Set up your profit and stop limits to automatically sell coins when the limits are crossed.
-* A moving stop-limit, which goes up together with the price, or fixed, based on a total profit of the tool.
-* Price anomalies detection (pump or dump) with an option to auto-buy when price drops.
-* Swing trading: automatically buy low and sell high during the rally.
-* Averaging down: automatically re-invest gains into most unprofitable coins to buy them at discount prices.
-* Your statistics: see how much you have made and how much you have lost on a daily basis.
+* Web UI.
+* Monitors the market 24/7 and shows great investment candidates.
+* Gmail notifications.
+* Optional external database (Firebase).
 
 ### Available for Patrons only
 
-* __Scores__: the recommendations engine which finds best/rare opportunities and enables a truly fully-autonomous
-  trading.
+* Fully-autonomous trading on Binance Spot without manual interventions whatsoever.
+* Info page with balance changes since Day 1.
 
-### Assets
+### Screenshots
 
-![assets.png](img/assets.png)
-
-### Scores
-
-![scores.png](img/scores.png)
-
-### Info
-
-![info.png](img/info.png)
-
-### Settings
-
-![settings1.png](img/settings1.png)
-![settings2.png](img/settings2.png)
+![home.png](img/home.png)
+![settings.png](img/settings.png)
 
 ## How to
 
 ### You will need
 
 1. Google account.
-2. Binance account and Binance API token and key for spot trading.
+2. Optional: Binance API keys.
+   Binance keys are needed if you are going to use the autonomous trading functionality.
 
 ### Set up the latest build
 

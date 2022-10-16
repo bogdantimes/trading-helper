@@ -1,9 +1,20 @@
 {
   "compilerOptions": {
+    // web
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "jsx": "react",
+    "esModuleInterop": true,
+    // gas
     "target": "ES2019",
     "module": "None",
     "moduleResolution": "node",
     "noImplicitUseStrict": true,
     "experimentalDecorators": true
-  }
+  },
+  "include": [
+    "src/**/*"
+  ],
 }
