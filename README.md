@@ -9,7 +9,8 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 ## Features
 
-* Web UI.
+* Free Cloud hosting on Google Apps Script.
+* Web UI (optimized for mobile).
 * Monitors the market 24/7 and shows great investment candidates.
 * Gmail notifications.
 * Optional external database (Firebase).
@@ -32,20 +33,14 @@ No one, except you, have access to the WEB-application and the data. If you trus
 2. Optional: Binance API keys.
    Binance keys are needed if you are going to use the autonomous trading functionality.
 
-### Set up the latest build
+### Set up
 
-There are ready to use builds published in the Google Apps Script and made available to everyone via a link.
-Links are attached to each release.
-See [latest release](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
-
-You will need to clone the Google Apps Script project to your account and set it up.
-See the [Tutorials playlist on YouTube](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox). The
-setup was simplified as much as possible for this kind of project.
+Links are in the [latest release](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
+Clone the latest public release of the Google Apps Script project to your Google account (you can follow the tutorial video).
 
 ### Set up from sources
 
-Setting up using the command line interface.
-See [CONTRIBUTING.md](./CONTRIBUTING.md) to set up the tool from sources.
+To set up from sources using the command line interface - see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## Support this project
 
