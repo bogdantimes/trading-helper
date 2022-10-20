@@ -7,13 +7,6 @@ The project to help you with crypto trading, written for Google Apps Script.
 The most secure trading tool, as you deploy your own WEB application, and create and connect to your own database.
 No one, except you, have access to the WEB-application and the data. If you trust Google, you can trust the project.
 
-### Donations
-
-To support this project:
-
-* [patreon.com/bogdantimes](patreon.com/bogdantimes)
-* USDT/USDC/BUSD/BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
-
 ## Features
 
 * Web UI.
@@ -53,3 +46,8 @@ setup was simplified as much as possible for this kind of project.
 
 Setting up using the command line interface.
 See [CONTRIBUTING.md](./CONTRIBUTING.md) to set up the tool from sources.
+
+## Support this project
+
+* [patreon.com/bogdantimes](patreon.com/bogdantimes)
+* USDT/USDC/BUSD/BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
