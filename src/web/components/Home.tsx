@@ -16,6 +16,7 @@ import Balance from "./Balance";
 import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   AppState,
+  ChannelState,
   Config,
   f0,
   Key,
@@ -184,6 +185,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                     const {
                       [Key.PERCENTILE]: percentile,
                       [Key.PRICE_MOVE]: priceMove,
+                      [Key.S0]: s0,
                     } = data[coin];
                     return (
                       <ListItem
@@ -207,7 +209,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                             <Typography
                               sx={{ display: `flex`, alignItems: `center` }}
                             >
-                              {coin}
+                              {s0 === ChannelState.TOP ? <b>coin</b> : coin}
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }
