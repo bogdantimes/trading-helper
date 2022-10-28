@@ -209,7 +209,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                             <Typography
                               sx={{ display: `flex`, alignItems: `center` }}
                             >
-                              {s0 === ChannelState.TOP ? <b>coin</b> : coin}
+                              {s0 === ChannelState.TOP ? <b>{coin}</b> : coin}
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }
