@@ -20,7 +20,15 @@ No one, except you, have access to the WEB-application and the data. If you trus
 * Fully-autonomous trading on Binance Spot without manual interventions whatsoever.
 * Info page with balance changes since Day 1.
 
-### Screenshots
+## Testing
+
+**Back-testing:** September 2019 -> June 2022
+
+**Result:** $1,000 -> $135,000 (135x profit)
+
+![top-result](https://user-images.githubusercontent.com/7527778/198873961-4c570842-276a-46b8-be32-f03db959742e.png)
+
+## Screenshots
 
 ![home.png](img/home.png)
 ![settings.png](img/settings.png)
