@@ -140,7 +140,7 @@ const percentileToColorMap = {
 
 function candidates(data: PriceChannelsDataResponse): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
-    data[a][Key.PERCENTILE] > data[b][Key.PERCENTILE] ? -1 : 1
+    data[a][Key.MIN_PERCENTILE] > data[b][Key.MIN_PERCENTILE] ? -1 : 1
   );
 
   const [hide, setHide] = useState(false);
