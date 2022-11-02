@@ -52,7 +52,7 @@ To set up from sources using the command line interface - see [CONTRIBUTING.md](
 
 ## Support this project
 
-* Become a Patron: [patreon.com/bogdantimes](patreon.com/bogdantimes)
+* Become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes)
 * Donate: USDT/USDC/BUSD/BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
 
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
