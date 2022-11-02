@@ -183,7 +183,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                 >
                   {candidateCoins.map((coin, i) => {
                     const {
-                      [Key.PERCENTILE]: percentile,
+                      [Key.MIN_PERCENTILE]: percentile,
                       [Key.PRICE_MOVE]: priceMove,
                       [Key.S0]: s0,
                     } = data[coin];

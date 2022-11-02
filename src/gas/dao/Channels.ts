@@ -18,7 +18,7 @@ export class ChannelsDao {
     const isReady = s0 === TOP && s1 === MIDDLE && s2 === s0;
     return (
       ch[Key.DURATION_MET] &&
-      ch[Key.PERCENTILE] >= percentile &&
+      ch[Key.MIN_PERCENTILE] >= percentile &&
       (isCandidate || isReady)
     );
   }
