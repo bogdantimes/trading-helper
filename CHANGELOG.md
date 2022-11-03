@@ -1,3 +1,9 @@
+# v3.0.1
+
+* Library updated to v6 with significant auto-trading reliability improvements.
+* Minor fixes to candidates display.
+* Minor fixes to profit goal estimates.
+
 # v3.0.0
 
 * Project main idea shifted to make it a fully-autonomous trading tool, all cool manual trading features that are in v2 were removed.

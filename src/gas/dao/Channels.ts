@@ -11,6 +11,18 @@ import { isNode } from "browser-or-node";
 const PriceChannelDataKey = `ChannelData`;
 
 export class ChannelsDao {
+  static isCandidate(ch: PriceChannelData, percentile: number): boolean {
+    const { TOP, MIDDLE } = ChannelState;
+    const { [Key.S0]: s0, [Key.S1]: s1, [Key.S2]: s2 } = ch;
+    const isCandidate = s0 === MIDDLE && s1 === TOP;
+    const isReady = s0 === TOP && s1 === MIDDLE && s2 === s0;
+    return (
+      ch[Key.DURATION_MET] &&
+      ch[Key.MIN_PERCENTILE] >= percentile &&
+      (isCandidate || isReady)
+    );
+  }
+
   private memCache: { [p: string]: PriceChannelData };
 
   constructor(private readonly store: IStore) {}
@@ -57,12 +69,7 @@ export class ChannelsDao {
     const candidates: { [p: string]: PriceChannelData } = {};
     Object.keys(all).forEach((key) => {
       const ch = all[key];
-      if (
-        ch[Key.DURATION_MET] &&
-        ch[Key.PERCENTILE] >= percentile &&
-        ch[Key.S0] === ChannelState.MIDDLE &&
-        ch[Key.S1] === ChannelState.TOP
-      ) {
+      if (ChannelsDao.isCandidate(ch, percentile)) {
         candidates[key] = ch;
       }
     });
