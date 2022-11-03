@@ -22,11 +22,17 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 ## Testing
 
+**Back-testing:** August 2021 -> August 2022
+
+**Result:** `$1,000 -> $7,195 (+619%, 6x profit)`
+
+![image](https://user-images.githubusercontent.com/7527778/199758549-45b21cc7-f8a7-4e49-b395-6b172ef8cc1e.png)
+
 **Back-testing:** September 2019 -> June 2022
 
-**Result:** $1,000 -> $135,000 (135x profit)
+**Result:** `$1,000 -> $127,886 (+12688%, 126x profit)`
 
-![top-result](https://user-images.githubusercontent.com/7527778/198873961-4c570842-276a-46b8-be32-f03db959742e.png)
+![image](https://user-images.githubusercontent.com/7527778/199759859-0baa70da-a1cb-4155-ad9a-d3fb208e027f.png)
 
 ## Screenshots
 
