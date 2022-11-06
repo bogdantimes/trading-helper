@@ -56,9 +56,14 @@ Clone the latest public release of the Google Apps Script project to your Google
 
 To set up from sources using the command line interface - see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-## Support this project
+## Contact
 
-* Become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes)
-* Donate: USDT/USDC/BUSD/BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
+Subscribe for updates:
+* [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
 
-[![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
+Be a friend:
+* [instagram.com/bogdantimes](https://instagram.com/bogdantimes)
+
+Support the project:
+* [patreon.com/bogdantimes](https://patreon.com/bogdantimes)
+* USDT/USDC/BUSD/BNB: `0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e` (BEP20)
