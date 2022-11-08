@@ -1,4 +1,4 @@
-import { f2, f8, sumWithMaxPrecision } from "./Functions";
+import { f8, sumWithMaxPrecision } from "./Functions";
 import { ExchangeSymbol } from "./Types";
 
 export class TradeResult {
@@ -8,10 +8,10 @@ export class TradeResult {
   cost = 0;
   paid = 0;
   gained = 0;
-  soldPrice: number;
+  soldPrice = 0;
   profit = 0;
   commission = 0;
-  msg: string;
+  msg = ``;
   fromExchange = false;
 
   constructor(symbol: ExchangeSymbol, msg = ``) {
@@ -25,30 +25,6 @@ export class TradeResult {
 
   toString(): string {
     return `${this.symbol} => Qty: ${this.quantity}, Av. price: ${this.price}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${this.gained}, Commission BNB: ${this.commission}, Profit: ${this.profit}, Msg: ${this.msg}`;
-  }
-
-  /**
-   * @example "
-   * Entry Date,Coin/Token,Invested,Quantity,Entry Price
-   * 10/13/2022,WOO,94.99776,674.0253,0.1409
-   * "
-   *
-   * @example "
-   * Exit Date,Exit Price,Gained,% Profit/Loss
-   * 10/13/2022,16.432,95.54,0.71
-   * "
-   */
-  toCVSString(): string {
-    const date = new Date().toLocaleDateString();
-    if (this.soldPrice) {
-      const profPercent = f2((this.profit / this.paid) * 100);
-      return `Exit Date,Exit Price,Gained,% Profit/Loss
-${date},$${this.soldPrice},$${f2(this.gained)},${profPercent}%`;
-    } else {
-      const coin = this.symbol.quantityAsset;
-      return `Entry Date,Coin/Token,Invested,Quantity,Entry Price
-${date},${coin},$${f2(this.paid)},${this.quantity},$${this.price}`;
-    }
   }
 
   join(next: TradeResult): TradeResult {

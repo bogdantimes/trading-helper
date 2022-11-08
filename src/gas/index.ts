@@ -190,7 +190,7 @@ function getState(): AppState {
       config,
       assets: new TradesDao(DefaultStore)
         .getList()
-        .filter((a) => a.tradeResult.quantity > 0),
+        .filter((a) => a.currentValue > 0 || a.tradeResult.soldPrice > 0),
       info: new Statistics(DefaultStore).getAll(),
       candidates: new ChannelsDao(DefaultStore).getCandidates(0),
       firebaseURL: FirebaseStore.url,
