@@ -16,6 +16,7 @@ import Balance from "./Balance";
 import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   AppState,
+  ChannelState,
   Config,
   f0,
   Key,
@@ -139,7 +140,7 @@ const percentileToColorMap = {
 
 function candidates(data: PriceChannelsDataResponse): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
-    data[a][Key.PERCENTILE] > data[b][Key.PERCENTILE] ? -1 : 1
+    data[a][Key.MIN_PERCENTILE] > data[b][Key.MIN_PERCENTILE] ? -1 : 1
   );
 
   const [hide, setHide] = useState(false);
@@ -182,8 +183,9 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                 >
                   {candidateCoins.map((coin, i) => {
                     const {
-                      [Key.PERCENTILE]: percentile,
+                      [Key.MIN_PERCENTILE]: percentile,
                       [Key.PRICE_MOVE]: priceMove,
+                      [Key.S0]: s0,
                     } = data[coin];
                     return (
                       <ListItem
@@ -207,7 +209,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                             <Typography
                               sx={{ display: `flex`, alignItems: `center` }}
                             >
-                              {coin}
+                              {s0 === ChannelState.TOP ? <b>{coin}</b> : coin}
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }

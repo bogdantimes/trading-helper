@@ -7,16 +7,10 @@ The project to help you with crypto trading, written for Google Apps Script.
 The most secure trading tool, as you deploy your own WEB application, and create and connect to your own database.
 No one, except you, have access to the WEB-application and the data. If you trust Google, you can trust the project.
 
-### Donations
-
-To support this project:
-
-* [patreon.com/bogdantimes](patreon.com/bogdantimes)
-* USDT/USDC/BUSD/BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
-
 ## Features
 
-* Web UI.
+* Free Cloud hosting on Google Apps Script.
+* Web UI (optimized for mobile).
 * Monitors the market 24/7 and shows great investment candidates.
 * Gmail notifications.
 * Optional external database (Firebase).
@@ -26,7 +20,21 @@ To support this project:
 * Fully-autonomous trading on Binance Spot without manual interventions whatsoever.
 * Info page with balance changes since Day 1.
 
-### Screenshots
+## Testing
+
+**Back-testing:** August 2021 -> August 2022
+
+**Result:** `$1,000 -> $7,195 (+619%, 6x profit)`
+
+![image](https://user-images.githubusercontent.com/7527778/199758549-45b21cc7-f8a7-4e49-b395-6b172ef8cc1e.png)
+
+**Back-testing:** September 2019 -> June 2022
+
+**Result:** `$1,000 -> $127,886 (+12688%, 126x profit)`
+
+![image](https://user-images.githubusercontent.com/7527778/199759859-0baa70da-a1cb-4155-ad9a-d3fb208e027f.png)
+
+## Screenshots
 
 ![home.png](img/home.png)
 ![settings.png](img/settings.png)
@@ -39,17 +47,24 @@ To support this project:
 2. Optional: Binance API keys.
    Binance keys are needed if you are going to use the autonomous trading functionality.
 
-### Set up the latest build
+### Set up
 
-There are ready to use builds published in the Google Apps Script and made available to everyone via a link.
-Links are attached to each release.
-See [latest release](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
-
-You will need to clone the Google Apps Script project to your account and set it up.
-See the [Tutorials playlist on YouTube](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox). The
-setup was simplified as much as possible for this kind of project.
+Links are in the [latest release](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
+Clone the latest public release of the Google Apps Script project to your Google account (you can follow the tutorial video).
 
 ### Set up from sources
 
-Setting up using the command line interface.
-See [CONTRIBUTING.md](./CONTRIBUTING.md) to set up the tool from sources.
+To set up from sources using the command line interface - see [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+## Contact
+
+Subscribe for updates:
+* [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
+* [t.me/tradinghelperblog](https://t.me/tradinghelperblog)
+
+Be a friend:
+* [instagram.com/bogdantimes](https://instagram.com/bogdantimes)
+
+Support the project:
+* [patreon.com/bogdantimes](https://patreon.com/bogdantimes)
+* USDT/USDC/BUSD/BNB: `0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e` (BEP20)

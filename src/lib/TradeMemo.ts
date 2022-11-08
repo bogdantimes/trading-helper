@@ -164,7 +164,7 @@ export class TradeMemo extends PricesHolder {
   }
 
   get profitGoal(): number {
-    return (this.duration / 2000) * this.range * 0.1;
+    return Math.min(15, Math.max(2, this.duration / 2000)) * this.range * 0.1;
   }
 
   get stopLimitBottomPrice(): number {
