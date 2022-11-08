@@ -60,6 +60,7 @@ To set up from sources using the command line interface - see [CONTRIBUTING.md](
 
 Subscribe for updates:
 * [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
+* [t.me/tradinghelperblog](https://t.me/tradinghelperblog)
 
 Be a friend:
 * [instagram.com/bogdantimes](https://instagram.com/bogdantimes)
