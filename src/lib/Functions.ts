@@ -22,8 +22,8 @@ export function floorLastDigit(value: number, precision: number): number {
 
 export function floorToOptimalGrid(value: number, precision: number): number {
   let r = value;
-  // require at least 0.1% step
-  for (; value / r < 1.0001; precision--) {
+  // step should exceed 0.075% step
+  for (; value / r < 1.000075; precision--) {
     r = floor(value, precision);
   }
   return r;
