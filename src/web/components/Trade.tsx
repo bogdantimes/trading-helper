@@ -12,11 +12,10 @@ import {
   ISeriesApi,
   LineData,
   LineStyle,
-  PriceScaleMode,
 } from "lightweight-charts";
 import { Box, Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
-import { Config, f2, getPrecision, TradeMemo, TradeState } from "../../lib";
+import { Config, f2, getPrecision, TradeMemo } from "../../lib";
 
 export default function Trade(props: {
   data: TradeMemo;
@@ -45,12 +44,9 @@ export default function Trade(props: {
   const chartOpts: DeepPartial<ChartOptions> = {
     width: 300,
     height: 200,
-    timeScale: { visible: false },
     handleScroll: false,
     handleScale: false,
-    rightPriceScale: {
-      mode: PriceScaleMode.Normal,
-    },
+    timeScale: { visible: false },
   };
 
   const entryColor = `gold`;
@@ -161,7 +157,7 @@ export default function Trade(props: {
 
     if (soldPriceLine) {
       soldPriceLine.applyOptions({
-        visible: tm.stateIs(TradeState.SOLD),
+        visible: !!tm.tradeResult.soldPrice,
         priceFormat,
       });
       soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice));
@@ -187,7 +183,7 @@ export default function Trade(props: {
     }
   }
 
-  const curVal = tm.tradeResult.quantity * tm.currentPrice;
+  const curVal = tm.currentValue;
   const profit = tm.profit();
   return (
     <>
@@ -195,7 +191,7 @@ export default function Trade(props: {
         <Card elevation={2}>
           <CardContent>
             <TradeTitle tradeMemo={tm} onDelete={onDelete} />
-            {tm.tradeResult.quantity && (
+            {
               <Typography
                 margin={`-2px 0 8px`}
                 variant="body2"
@@ -213,7 +209,7 @@ export default function Trade(props: {
                 />
                 <span>{` (${profit > 0 ? `+` : ``}${f2(profit)})`}</span>
               </Typography>
-            )}
+            }
             <Box
               sx={chartStyle(theme)}
               width={chartOpts.width}
