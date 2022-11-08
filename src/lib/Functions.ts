@@ -20,6 +20,15 @@ export function floorLastDigit(value: number, precision: number): number {
   return floor(value, precision - 1);
 }
 
+export function floorToOptimalGrid(value: number, precision: number): number {
+  let r = value;
+  // require at least 0.1% step
+  for (; value / r < 1.0001; precision--) {
+    r = floor(value, precision);
+  }
+  return r;
+}
+
 export function sumWithMaxPrecision(a: number, b: number): number {
   const aSplit = `${a}`.split(`.`);
   const bSplit = `${b}`.split(`.`);

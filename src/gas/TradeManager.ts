@@ -7,7 +7,7 @@ import {
   ExchangeSymbol,
   f2,
   floor,
-  floorLastDigit,
+  floorToOptimalGrid,
   Key,
   MarketTrend,
   PriceMove,
@@ -270,7 +270,7 @@ export class TradeManager {
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
-      tm.stopLimitPrice = floorLastDigit(ch[Key.MIN], tm.precision);
+      tm.stopLimitPrice = floorToOptimalGrid(ch[Key.MIN], tm.precision);
       return;
     }
 
@@ -297,7 +297,7 @@ export class TradeManager {
     newStopLimit = Math.min(newStopLimit, tm.currentPrice);
 
     // quantize stop limit to stick it to the grid
-    newStopLimit = floorLastDigit(newStopLimit, tm.precision);
+    newStopLimit = floorToOptimalGrid(newStopLimit, tm.precision);
     // update the stop limit price if it's higher than the current one
     tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
   }
