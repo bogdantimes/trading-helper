@@ -120,9 +120,11 @@ export class TradeMemo extends PricesHolder {
   setState(state: TradeState): void {
     if (state === TradeState.SOLD) {
       // Assign an empty trade result for SOLD state.
-      // Keep the last trade price and the current price only.
+      // Keep the last trade details only.
       const newState = TradeMemo.newManual(this.tradeResult.symbol);
       newState.tradeResult.soldPrice = this.tradeResult.soldPrice;
+      newState.tradeResult.paid = this.tradeResult.paid;
+      newState.tradeResult.gained = this.tradeResult.gained;
       newState.pushPrice(this.currentPrice);
       Object.assign(this, newState);
     }
@@ -146,9 +148,9 @@ export class TradeMemo extends PricesHolder {
   }
 
   profit(): number {
-    return (
-      this.currentPrice * this.tradeResult.quantity - this.tradeResult.paid
-    );
+    return this.tradeResult.soldPrice
+      ? this.tradeResult.gained - this.tradeResult.paid
+      : this.currentPrice * this.tradeResult.quantity - this.tradeResult.paid;
   }
 
   /**

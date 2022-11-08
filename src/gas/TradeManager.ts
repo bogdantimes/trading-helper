@@ -6,6 +6,7 @@ import {
   Config,
   ExchangeSymbol,
   f2,
+  floor,
   floorLastDigit,
   Key,
   MarketTrend,
@@ -212,7 +213,9 @@ export class TradeManager {
     this.pushNewPrice(tm);
 
     if (tm.tradeResult.quantity > 0) {
-      this.processBoughtState(tm);
+      this.#processBoughtState(tm);
+    } else if (tm.tradeResult.soldPrice) {
+      this.#processSoldState(tm);
     }
 
     const priceMove = tm.getPriceMove();
@@ -253,20 +256,13 @@ export class TradeManager {
     return result < MIN_BUY ? 0 : result;
   }
 
-  private processBoughtState(tm: TradeMemo): void {
-    if (isFinite(tm.ttl)) {
-      tm.ttl++;
-    } else {
-      tm.ttl = 0;
-    }
+  #processBoughtState(tm: TradeMemo): void {
+    tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
 
     this.updateStopLimit(tm);
 
-    if (tm.stopLimitCrossedDown()) {
-      Log.alert(
-        `ℹ️ ${tm.getCoinName()} stop limit crossed down at ${tm.currentPrice}`
-      );
-      this.#config.SellAtStopLimit && tm.setState(TradeState.SELL);
+    if (this.#config.SellAtStopLimit && tm.stopLimitCrossedDown()) {
+      tm.setState(TradeState.SELL);
     }
   }
 
@@ -357,7 +353,6 @@ export class TradeManager {
         Log.alert(
           `${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`
         );
-        Log.info(tradeResult.toCVSString());
         Log.debug(tm);
       } catch (e) {
         Log.error(e);
@@ -372,58 +367,69 @@ export class TradeManager {
   }
 
   #sell(memo: TradeMemo): void {
-    const symbol = new ExchangeSymbol(
-      memo.tradeResult.symbol.quantityAsset,
-      this.#config.StableCoin
-    );
-    const tradeResult = this.exchange.marketSell(
-      symbol,
-      memo.tradeResult.quantity
-    );
-    if (tradeResult.fromExchange) {
+    const entry = memo.tradeResult;
+    const coin = memo.getCoinName();
+    const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
+    const exit = this.exchange.marketSell(symbol, entry.quantity);
+    if (exit.fromExchange) {
       // any actions should not affect changing the state to SOLD in the end
       try {
         this.#canInvest = Math.min(
           this.#optimalInvestRatio,
           this.#canInvest + 1
         );
-        this.#balance += tradeResult.gained;
-        const fee = this.processSellFee(memo, tradeResult);
-        const profit = f2(tradeResult.gained - memo.tradeResult.paid - fee);
-        const profitPercentage = f2(100 * (profit / memo.tradeResult.paid));
+        this.#balance += exit.gained;
+        const fee = this.processSellFee(memo, exit);
+        const profit = f2(exit.gained - entry.paid - fee);
+        const profitPercentage = f2(100 * (profit / entry.paid));
+
+        exit.paid = entry.paid + fee;
 
         Log.alert(
-          `ℹ️ Gained: $${tradeResult.gained - fee} | ${
+          `ℹ️ Gained: $${exit.gained - fee} | ${
             profit >= 0 ? `Profit` : `Loss`
           }: $${profit} (${profitPercentage}%)`
         );
 
-        tradeResult.profit = profit;
-        tradeResult.paid = memo.tradeResult.paid;
-        Log.info(tradeResult.toCVSString());
+        // Alert the following CSV string:
+        // Entry Date,Coin/Token,Invested,Quantity,Entry Price,Exit Date,Exit Price,Gained,% Profit/Loss
+        const exitDate = new Date().toLocaleDateString();
+        // Derive entry date using ttl minutes
+        const entryDate = new Date(
+          new Date().getTime() - memo.ttl * 60 * 1000
+        ).toLocaleDateString();
+        const entryPrice = floor(entry.price, memo.precision);
+        const exitPrice = floor(exit.price, memo.precision);
+        Log.info(
+          `<table><tr><th>Entry Date</th><th>Coin/Token</th><th>Invested</th><th>Quantity</th><th>Entry Price</th><th>Exit Date</th><th>Exit Price</th><th>Gained</th><th>% Profit/Loss</th></tr><tr><td>${entryDate}</td><td>${coin}</td><td>$${f2(
+            entry.paid
+          )}</td><td>${
+            entry.quantity
+          }</td><td>$${entryPrice}</td><td>${exitDate}</td><td>$${exitPrice}</td><td>$${f2(
+            exit.gained
+          )}</td><td>${profitPercentage}%</td></tr></table>`
+        );
+
         this.updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit);
       } catch (e) {
         Log.error(e);
       } finally {
-        memo.tradeResult = tradeResult;
+        memo.tradeResult = exit;
         Log.debug(memo);
         memo.setState(TradeState.SOLD);
-        memo.ttl = 0;
       }
     } else {
       Log.debug(memo);
       memo.setState(TradeState.BOUGHT);
       Log.alert(`An issue happened while selling ${symbol}.`);
-      Log.alert(tradeResult.toString());
+      Log.alert(exit.toString());
     }
-
-    memo.deleted = memo.stateIs(TradeState.SOLD);
   }
 
   private updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
     if (StableUSDCoin[gainedCoin]) {
       this.stats.addProfit(profit);
-      Log.info(`P/L added to statistics: ${profit}`);
+      Log.info(`P/L added to statistics: $${f2(profit)}`);
     }
   }
 
@@ -462,5 +468,13 @@ export class TradeManager {
       return tm;
     });
     return updated;
+  }
+
+  #processSoldState(tm: TradeMemo): void {
+    // Delete the sold trade after a day
+    tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
+    if (tm.ttl >= 1440) {
+      tm.deleted = true;
+    }
   }
 }
