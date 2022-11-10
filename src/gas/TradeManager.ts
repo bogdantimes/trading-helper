@@ -429,7 +429,6 @@ export class TradeManager {
   private updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
     if (StableUSDCoin[gainedCoin]) {
       this.stats.addProfit(profit);
-      Log.info(`P/L added to statistics: $${f2(profit)}`);
     }
   }
 

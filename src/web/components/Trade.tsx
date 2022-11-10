@@ -20,9 +20,9 @@ import { Config, f2, getPrecision, TradeMemo } from "../../lib";
 export default function Trade(props: {
   data: TradeMemo;
   config: Config;
+  onDelete: (coinName: string) => void;
 }): JSX.Element {
-  const { data: tm, config: cfg } = props;
-  const coinName = tm.getCoinName();
+  const { data: tm, config: cfg, onDelete } = props;
 
   const chartContainerRef = useRef();
   const chart = useRef<IChartApi>(null);
@@ -172,22 +172,17 @@ export default function Trade(props: {
     orderLine,
   ]);
 
-  const [removed, setRemoved] = useState(false);
-
-  function onDelete(): void {
-    if (confirm(`Are you sure you want to remove ${coinName}?`)) {
-      google.script.run
-        .withSuccessHandler(() => setRemoved(true))
-        .withFailureHandler(alert)
-        .dropCoin(coinName);
+  useEffect(() => {
+    if (chart.current) {
+      chart.current.resize(300, tm.tradeResult.soldPrice ? 100 : 200);
     }
-  }
+  }, [chart.current, tm.tradeResult.soldPrice]);
 
   const curVal = tm.currentValue;
   const profit = tm.profit();
   return (
     <>
-      {!removed && (
+      {
         <Card elevation={2}>
           <CardContent>
             <TradeTitle tradeMemo={tm} onDelete={onDelete} />
@@ -219,7 +214,7 @@ export default function Trade(props: {
             />
           </CardContent>
         </Card>
-      )}
+      }
     </>
   );
 }

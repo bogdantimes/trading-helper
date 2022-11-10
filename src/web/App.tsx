@@ -131,7 +131,7 @@ export default function App(): JSX.Element {
             </Tabs>
           </Box>
           <TabPanel value={tab} index={TabId.Home}>
-            <Home state={state} />
+            <Home state={state} setState={setState} />
           </TabPanel>
           <TabPanel value={tab} index={TabId.Info}>
             <Info stats={state.info} />
