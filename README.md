@@ -22,11 +22,17 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 ## Testing
 
+**Back-testing:** August 2021 -> August 2022
+
+**Result:** `$1,000 -> $7,195 (+619%, 6x profit)`
+
+![image](https://user-images.githubusercontent.com/7527778/199758549-45b21cc7-f8a7-4e49-b395-6b172ef8cc1e.png)
+
 **Back-testing:** September 2019 -> June 2022
 
-**Result:** $1,000 -> $135,000 (135x profit)
+**Result:** `$1,000 -> $127,886 (+12688%, 126x profit)`
 
-![top-result](https://user-images.githubusercontent.com/7527778/198873961-4c570842-276a-46b8-be32-f03db959742e.png)
+![image](https://user-images.githubusercontent.com/7527778/199759859-0baa70da-a1cb-4155-ad9a-d3fb208e027f.png)
 
 ## Screenshots
 
@@ -50,9 +56,15 @@ Clone the latest public release of the Google Apps Script project to your Google
 
 To set up from sources using the command line interface - see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-## Support this project
+## Contact
 
-* Become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes)
-* Donate: USDT/USDC/BUSD/BNB: **0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e** (BEP20)
+Subscribe for updates:
+* [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
+* [t.me/tradinghelperblog](https://t.me/tradinghelperblog)
 
-[![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
+Be a friend:
+* [instagram.com/bogdantimes](https://instagram.com/bogdantimes)
+
+Support the project:
+* [patreon.com/bogdantimes](https://patreon.com/bogdantimes)
+* USDT/USDC/BUSD/BNB: `0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e` (BEP20)
