@@ -11,7 +11,7 @@ export function TradeTitle({
   onDelete,
 }: {
   tradeMemo: TradeMemo;
-  onDelete: () => void;
+  onDelete: (coinName: string) => void;
 }): JSX.Element {
   const theme = useTheme();
   const [deleteHover, setDeleteHover] = useState(false);
@@ -21,7 +21,7 @@ export function TradeTitle({
     : theme.palette.action.disabled;
   const deleteIcon = (
     <IconButton
-      onClick={onDelete}
+      onClick={() => onDelete(tm.getCoinName())}
       sx={{ color: deleteColor }}
       onMouseEnter={() => setDeleteHover(true)}
       onMouseLeave={() => setDeleteHover(false)}
