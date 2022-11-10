@@ -1,4 +1,4 @@
-# v3.0.1
+# v3.0.2
 
 * Improved stop-limit grid.
 * Improved email format.
