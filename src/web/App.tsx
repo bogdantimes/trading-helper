@@ -86,6 +86,20 @@ export default function App(): JSX.Element {
       .getState();
   }
 
+  function onAssetDelete(coinName: string): void {
+    if (confirm(`Are you sure you want to remove ${coinName}?`)) {
+      google.script.run
+        .withSuccessHandler(() => {
+          setState({
+            ...state,
+            assets: state.assets.filter((a) => a.getCoinName() !== coinName),
+          });
+        })
+        .withFailureHandler(alert)
+        .dropCoin(coinName);
+    }
+  }
+
   const [terminalOpen, setTerminalOpen] = React.useState(false);
   const [terminalOutput, setTerminalOutput] = React.useState(``);
   const openTerminal = useDoubleTap((event) => {
@@ -131,7 +145,7 @@ export default function App(): JSX.Element {
             </Tabs>
           </Box>
           <TabPanel value={tab} index={TabId.Home}>
-            <Home state={state} setState={setState} />
+            <Home state={state} onAssetDelete={onAssetDelete} />
           </TabPanel>
           <TabPanel value={tab} index={TabId.Info}>
             <Info stats={state.info} />

@@ -27,28 +27,14 @@ import {
 
 export function Home({
   state,
-  setState,
+  onAssetDelete,
 }: {
   state: AppState;
-  setState: (state: AppState) => void;
+  onAssetDelete: (coinName: string) => void;
 }): JSX.Element {
   const config = state.config;
   const assets = state.assets.map(TradeMemo.fromObject);
   const assetsValue = assets.reduce((sum, tm) => sum + tm.currentValue, 0);
-
-  function onAssetDelete(coinName: string): void {
-    if (confirm(`Are you sure you want to remove ${coinName}?`)) {
-      google.script.run
-        .withSuccessHandler(() => {
-          setState({
-            ...state,
-            assets: state.assets.filter((a) => a.getCoinName() !== coinName),
-          });
-        })
-        .withFailureHandler(alert)
-        .dropCoin(coinName);
-    }
-  }
 
   return (
     <>
