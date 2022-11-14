@@ -386,7 +386,7 @@ export class TradeManager {
         exit.paid = entry.paid + fee;
 
         Log.alert(
-          `ℹ️ Gained: $${exit.gained - fee} | ${
+          `ℹ️ Gained: $${f2(exit.gained)} | ${
             profit >= 0 ? `Profit` : `Loss`
           }: $${profit} (${profitPercentage}%)`
         );
