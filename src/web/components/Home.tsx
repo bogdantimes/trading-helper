@@ -84,6 +84,10 @@ function assetsCards(
   onAssetDelete: (coinName: string) => void
 ): JSX.Element {
   const [hide, setHide] = useState(false);
+
+  const sorted = elems.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1));
+  const current = sorted.filter((t) => t.currentValue);
+  const sold = sorted.filter((t) => !t.currentValue);
   return (
     <>
       <Grid item xs={12}>
@@ -92,7 +96,7 @@ function assetsCards(
             onClick={() => setHide(!hide)}
             label={
               <Typography variant={`h6`}>
-                🪙 Assets ({elems.filter((t) => t.currentValue).length})
+                🪙 Assets ({current.length})
               </Typography>
             }
           />
@@ -107,7 +111,7 @@ function assetsCards(
               </Grid>
             </Grid>
           )}
-          {config.AdvancedAccess && !elems.length && (
+          {config.AdvancedAccess && !sorted.length && (
             <Grid item xs={12}>
               <Grid container justifyContent="center" spacing={2}>
                 <Grid item>
@@ -120,17 +124,28 @@ function assetsCards(
               </Grid>
             </Grid>
           )}
-          <Grid item xs={12}>
-            <Grid container justifyContent="center" spacing={2}>
-              {elems
-                .sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
-                .map((t) => (
+          {!!current.length && (
+            <Grid item xs={12}>
+              <Grid container justifyContent="center" spacing={2}>
+                {current.map((t) => (
                   <Grid key={t.getCoinName()} item>
                     <Trade data={t} config={config} onDelete={onAssetDelete} />
                   </Grid>
                 ))}
+              </Grid>
             </Grid>
-          </Grid>
+          )}
+          {!!sold.length && (
+            <Grid item xs={12}>
+              <Grid container justifyContent="center" spacing={2}>
+                {sold.map((t) => (
+                  <Grid key={t.getCoinName()} item>
+                    <Trade data={t} config={config} onDelete={onAssetDelete} />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+          )}
         </>
       )}
     </>

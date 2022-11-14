@@ -43,7 +43,7 @@ export default function Trade(props: {
 
   const chartOpts: DeepPartial<ChartOptions> = {
     width: 300,
-    height: 200,
+    height: tm.tradeResult.soldPrice ? 100 : 200,
     handleScroll: false,
     handleScale: false,
     timeScale: { visible: false },
@@ -179,6 +179,7 @@ export default function Trade(props: {
   }, [chart.current, tm.tradeResult.soldPrice]);
 
   const curVal = tm.currentValue;
+  const gained = tm.tradeResult.gained;
   const profit = tm.profit();
   return (
     <>
@@ -193,9 +194,11 @@ export default function Trade(props: {
                 color="text.secondary"
                 gutterBottom
               >
-                <b>Current value: </b>
+                <b>
+                  {tm.tradeResult.soldPrice ? `Gained: ` : `Current value: `}
+                </b>
                 <CurrencyFormat
-                  value={curVal}
+                  value={tm.tradeResult.soldPrice ? gained : curVal}
                   displayType={`text`}
                   thousandSeparator={true}
                   decimalScale={2}
