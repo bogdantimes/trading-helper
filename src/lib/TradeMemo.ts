@@ -148,9 +148,11 @@ export class TradeMemo extends PricesHolder {
   }
 
   profit(): number {
+    const commission = 1.0002; // buy + sell commission percentage
     return this.tradeResult.soldPrice
       ? this.tradeResult.gained - this.tradeResult.paid
-      : this.currentPrice * this.tradeResult.quantity - this.tradeResult.paid;
+      : this.currentPrice * this.tradeResult.quantity -
+          this.tradeResult.paid * commission;
   }
 
   /**
