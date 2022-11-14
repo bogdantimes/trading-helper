@@ -1,3 +1,9 @@
+# v3.0.2
+
+* Improved stop-limit grid.
+* Improved email format.
+* Sold assets stay on the Home page for 1 day.
+
 # v3.0.1
 
 * Library updated to v6 with significant auto-trading reliability improvements.

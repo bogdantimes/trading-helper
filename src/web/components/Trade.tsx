@@ -12,18 +12,17 @@ import {
   ISeriesApi,
   LineData,
   LineStyle,
-  PriceScaleMode,
 } from "lightweight-charts";
 import { Box, Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
-import { Config, f2, getPrecision, TradeMemo, TradeState } from "../../lib";
+import { Config, f2, getPrecision, TradeMemo } from "../../lib";
 
 export default function Trade(props: {
   data: TradeMemo;
   config: Config;
+  onDelete: (coinName: string) => void;
 }): JSX.Element {
-  const { data: tm, config: cfg } = props;
-  const coinName = tm.getCoinName();
+  const { data: tm, config: cfg, onDelete } = props;
 
   const chartContainerRef = useRef();
   const chart = useRef<IChartApi>(null);
@@ -44,13 +43,10 @@ export default function Trade(props: {
 
   const chartOpts: DeepPartial<ChartOptions> = {
     width: 300,
-    height: 200,
-    timeScale: { visible: false },
+    height: tm.tradeResult.soldPrice ? 100 : 200,
     handleScroll: false,
     handleScale: false,
-    rightPriceScale: {
-      mode: PriceScaleMode.Normal,
-    },
+    timeScale: { visible: false },
   };
 
   const entryColor = `gold`;
@@ -161,7 +157,7 @@ export default function Trade(props: {
 
     if (soldPriceLine) {
       soldPriceLine.applyOptions({
-        visible: tm.stateIs(TradeState.SOLD),
+        visible: !!tm.tradeResult.soldPrice,
         priceFormat,
       });
       soldPriceLine.setData(map(tm.prices, () => tm.tradeResult.soldPrice));
@@ -176,35 +172,33 @@ export default function Trade(props: {
     orderLine,
   ]);
 
-  const [removed, setRemoved] = useState(false);
-
-  function onDelete(): void {
-    if (confirm(`Are you sure you want to remove ${coinName}?`)) {
-      google.script.run
-        .withSuccessHandler(() => setRemoved(true))
-        .withFailureHandler(alert)
-        .dropCoin(coinName);
+  useEffect(() => {
+    if (chart.current) {
+      chart.current.resize(300, tm.tradeResult.soldPrice ? 100 : 200);
     }
-  }
+  }, [chart.current, tm.tradeResult.soldPrice]);
 
-  const curVal = tm.tradeResult.quantity * tm.currentPrice;
+  const curVal = tm.currentValue;
+  const gained = tm.tradeResult.gained;
   const profit = tm.profit();
   return (
     <>
-      {!removed && (
+      {
         <Card elevation={2}>
           <CardContent>
             <TradeTitle tradeMemo={tm} onDelete={onDelete} />
-            {tm.tradeResult.quantity && (
+            {
               <Typography
                 margin={`-2px 0 8px`}
                 variant="body2"
                 color="text.secondary"
                 gutterBottom
               >
-                <b>Current value: </b>
+                <b>
+                  {tm.tradeResult.soldPrice ? `Gained: ` : `Current value: `}
+                </b>
                 <CurrencyFormat
-                  value={curVal}
+                  value={tm.tradeResult.soldPrice ? gained : curVal}
                   displayType={`text`}
                   thousandSeparator={true}
                   decimalScale={2}
@@ -213,7 +207,7 @@ export default function Trade(props: {
                 />
                 <span>{` (${profit > 0 ? `+` : ``}${f2(profit)})`}</span>
               </Typography>
-            )}
+            }
             <Box
               sx={chartStyle(theme)}
               width={chartOpts.width}
@@ -223,7 +217,7 @@ export default function Trade(props: {
             />
           </CardContent>
         </Card>
-      )}
+      }
     </>
   );
 }

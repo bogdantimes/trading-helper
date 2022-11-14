@@ -25,7 +25,13 @@ import {
   TradeMemo,
 } from "../../lib";
 
-export function Home({ state }: { state: AppState }): JSX.Element {
+export function Home({
+  state,
+  onAssetDelete,
+}: {
+  state: AppState;
+  onAssetDelete: (coinName: string) => void;
+}): JSX.Element {
   const config = state.config;
   const assets = state.assets.map(TradeMemo.fromObject);
   const assetsValue = assets.reduce((sum, tm) => sum + tm.currentValue, 0);
@@ -34,7 +40,7 @@ export function Home({ state }: { state: AppState }): JSX.Element {
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
         {balanceCard(config.StableCoin, config.StableBalance, assetsValue)}
-        {assetsCards(assets, config)}
+        {assetsCards(assets, config, onAssetDelete)}
         {candidates(state.candidates)}
       </Grid>
     </>
@@ -72,8 +78,16 @@ function balanceCard(
   );
 }
 
-function assetsCards(elems: TradeMemo[], config: Config): JSX.Element {
+function assetsCards(
+  elems: TradeMemo[],
+  config: Config,
+  onAssetDelete: (coinName: string) => void
+): JSX.Element {
   const [hide, setHide] = useState(false);
+
+  const sorted = elems.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1));
+  const current = sorted.filter((t) => t.currentValue);
+  const sold = sorted.filter((t) => !t.currentValue);
   return (
     <>
       <Grid item xs={12}>
@@ -81,7 +95,9 @@ function assetsCards(elems: TradeMemo[], config: Config): JSX.Element {
           <Chip
             onClick={() => setHide(!hide)}
             label={
-              <Typography variant={`h6`}>🪙 Assets ({elems.length})</Typography>
+              <Typography variant={`h6`}>
+                🪙 Assets ({current.length})
+              </Typography>
             }
           />
         </Divider>
@@ -95,7 +111,7 @@ function assetsCards(elems: TradeMemo[], config: Config): JSX.Element {
               </Grid>
             </Grid>
           )}
-          {config.AdvancedAccess && !elems.length && (
+          {config.AdvancedAccess && !sorted.length && (
             <Grid item xs={12}>
               <Grid container justifyContent="center" spacing={2}>
                 <Grid item>
@@ -108,17 +124,28 @@ function assetsCards(elems: TradeMemo[], config: Config): JSX.Element {
               </Grid>
             </Grid>
           )}
-          <Grid item xs={12}>
-            <Grid container justifyContent="center" spacing={2}>
-              {elems
-                .sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1))
-                .map((t) => (
+          {!!current.length && (
+            <Grid item xs={12}>
+              <Grid container justifyContent="center" spacing={2}>
+                {current.map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <Trade data={t} config={config} />
+                    <Trade data={t} config={config} onDelete={onAssetDelete} />
                   </Grid>
                 ))}
+              </Grid>
             </Grid>
-          </Grid>
+          )}
+          {!!sold.length && (
+            <Grid item xs={12}>
+              <Grid container justifyContent="center" spacing={2}>
+                {sold.map((t) => (
+                  <Grid key={t.getCoinName()} item>
+                    <Trade data={t} config={config} onDelete={onAssetDelete} />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+          )}
         </>
       )}
     </>
@@ -127,6 +154,7 @@ function assetsCards(elems: TradeMemo[], config: Config): JSX.Element {
 
 const percentileToColorMap = {
   // Gradient from red to green, with keys from 0.1 to 0.9 and step 0.1
+  0.0: `#ff0000`,
   0.1: `#ff0000`,
   0.2: `#ff3300`,
   0.3: `#ff6600`,
@@ -136,6 +164,8 @@ const percentileToColorMap = {
   0.7: `#ccff00`,
   0.8: `#99ff00`,
   0.9: `#66ff00`,
+  // Above 0.9 is worse, hence the color is more yellow.
+  1.0: `#ccff00`,
 };
 
 function candidates(data: PriceChannelsDataResponse): JSX.Element {

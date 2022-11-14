@@ -38,14 +38,20 @@ export class Log {
   }
 
   static print(): string {
-    return `${this.alerts.length > 0 ? `${this.alerts.join(`\n`)}\n` : ``}
+    return `${this.alerts.length > 0 ? `${this.alerts.join(`<br/>`)}<br/>` : ``}
 ${
   this.errLog.length > 0
-    ? `Errors:\n${this.errLog.map((e) => `Stack: ${e.stack}`).join(`\n`)}\n`
+    ? `Errors:<br/>${this.errLog
+        .map((e) => `Stack: ${e.stack}`)
+        .join(`<br/>`)}<br/>`
     : ``
 }
-${this.infoLog.length > 0 ? `Info:\n${this.infoLog.join(`\n`)}\n` : ``}
-${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
+${this.infoLog.length > 0 ? `Info:<br/>${this.infoLog.join(`<br/>`)}<br/>` : ``}
+${
+  this.debugLog.length > 0
+    ? `Debug:<br/>${this.debugLog.join(`<br/><br/>`)}`
+    : ``
+}
 `;
   }
 
@@ -56,10 +62,10 @@ ${this.debugLog.length > 0 ? `Debug:\n${this.debugLog.join(`\n\n`)}` : ``}
         this.errLog.length ? `Error` : `Alert`
       }`;
       try {
-        GmailApp.sendEmail(email, subject, this.print());
+        GmailApp.sendEmail(email, subject, ``, { htmlBody: this.print() });
       } catch (e) {
         Log.error(e);
-        GmailApp.createDraft(email, subject, this.print());
+        GmailApp.createDraft(email, subject, ``, { htmlBody: this.print() });
       }
     }
   }

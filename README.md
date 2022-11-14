@@ -22,17 +22,17 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 ## Testing
 
-**Back-testing:** August 2021 -> August 2022
+**Back-testing:** October 2021 -> October 2022 (downtrend market 📉)
 
-**Result:** `$1,000 -> $7,195 (+619%, 6x profit)`
+**Result:** `$1,000 -> $4,505 (+350%, 3.5x profit)`
 
-![image](https://user-images.githubusercontent.com/7527778/199758549-45b21cc7-f8a7-4e49-b395-6b172ef8cc1e.png)
+![r1.png](img/r1.png)
 
-**Back-testing:** September 2019 -> June 2022
+**Back-testing:** September 2019 -> June 2022 (uptrend market 📈)
 
-**Result:** `$1,000 -> $127,886 (+12688%, 126x profit)`
+**Result:** `$1,000 -> $115,611 (+11461%, 114x profit)`
 
-![image](https://user-images.githubusercontent.com/7527778/199759859-0baa70da-a1cb-4155-ad9a-d3fb208e027f.png)
+![r2.png](img/r2.png)
 
 ## Screenshots
 
