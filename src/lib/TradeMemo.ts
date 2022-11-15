@@ -148,11 +148,18 @@ export class TradeMemo extends PricesHolder {
   }
 
   profit(): number {
-    const commission = 1.0002; // buy + sell commission percentage
-    return this.tradeResult.soldPrice
-      ? this.tradeResult.gained - this.tradeResult.paid
-      : this.currentPrice * this.tradeResult.quantity -
-          this.tradeResult.paid * commission;
+    if (this.tradeResult.soldPrice) {
+      return this.tradeResult.gained - this.tradeResult.paid;
+    } else {
+      // using lot size quantity to calculate profit,
+      // because if quantity has a fraction that is less than lot size,
+      // that part will not be sold
+      // hence here we're counting only the part that will be sold
+      const qty = this.tradeResult.lotSizeQty || this.tradeResult.quantity;
+      // anticipated sell commission percentage
+      const commission = 1.0001;
+      return this.currentPrice * qty - this.tradeResult.paid * commission;
+    }
   }
 
   /**

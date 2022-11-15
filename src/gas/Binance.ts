@@ -115,7 +115,7 @@ export class Binance implements IExchange {
    * @param quantity
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
-    const qty = this.#qtyForLotStepSize(symbol, quantity);
+    const qty = this.quantityForLotStepSize(symbol, quantity);
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${qty}`;
     Log.alert(
       `➖ Selling ${qty} ${symbol.quantityAsset} for ${symbol.priceAsset}`
@@ -146,7 +146,7 @@ export class Binance implements IExchange {
     }
   }
 
-  #qtyForLotStepSize(symbol: ExchangeSymbol, quantity: number): number {
+  quantityForLotStepSize(symbol: ExchangeSymbol, quantity: number): number {
     if (!this.#exchangeInfo) {
       this.#exchangeInfo = this.fetch(
         () => `exchangeInfo`,

@@ -267,6 +267,13 @@ export class TradeManager {
   }
 
   private updateStopLimit(tm: TradeMemo): void {
+    if (!tm.tradeResult.lotSizeQty) {
+      tm.tradeResult.lotSizeQty = this.exchange.quantityForLotStepSize(
+        tm.tradeResult.symbol,
+        tm.tradeResult.quantity
+      );
+    }
+
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
