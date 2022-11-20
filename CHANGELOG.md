@@ -4,6 +4,7 @@
 * Improved candidate strength accuracy.
 * Fixed concurrent trades update issues.
 * Fixes UI state not being immediately updated after trade deletion.
+* Added Setting to Hide balances.
 
 # v3.0.2
 
