@@ -23,12 +23,16 @@ import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
   return catchError(() => {
-    return HtmlService.createTemplateFromFile(`index`)
-      .evaluate()
-      .addMetaTag(
-        `viewport`,
-        `width=device-width, initial-scale=1, maximum-scale=1`
-      );
+    return (
+      HtmlService.createTemplateFromFile(`index`)
+        .evaluate()
+        .addMetaTag(
+          `viewport`,
+          `width=device-width, initial-scale=1, maximum-scale=1`
+        )
+        // @ts-expect-error
+        .setTitle(`TradingHelper v${VERSION} #${ScriptApp.getScriptId()}`)
+    );
   });
 }
 
