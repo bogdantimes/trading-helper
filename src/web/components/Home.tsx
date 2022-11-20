@@ -21,6 +21,7 @@ import {
   f0,
   Key,
   PriceChannelsDataResponse,
+  PriceMove,
   StableUSDCoin,
   TradeMemo,
 } from "../../lib";
@@ -210,11 +211,10 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                   }}
                 >
                   {candidateCoins.map((coin, i) => {
-                    const {
-                      [Key.STRENGTH]: strength,
-                      [Key.PRICE_MOVE]: priceMove,
-                      [Key.S0]: s0,
-                    } = data[coin];
+                    const ch = data[coin];
+                    const strength = ch[Key.STRENGTH] ?? 0;
+                    const priceMove = ch[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
+                    const s0 = ch[Key.S0] ?? ChannelState.NONE;
                     return (
                       <ListItem
                         sx={{
