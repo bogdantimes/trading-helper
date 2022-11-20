@@ -164,8 +164,6 @@ const percentileToColorMap = {
   0.7: `#ccff00`,
   0.8: `#99ff00`,
   0.9: `#66ff00`,
-  // Above 0.9 is worse, hence the color is more yellow.
-  1.0: `#ccff00`,
 };
 
 function candidates(data: PriceChannelsDataResponse): JSX.Element {
@@ -213,10 +211,21 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                 >
                   {candidateCoins.map((coin, i) => {
                     const {
-                      [Key.MIN_PERCENTILE]: percentile,
+                      [Key.MIN_PERCENTILE]: min,
+                      [Key.MAX_PERCENTILE]: max,
+                      [Key.PERCENTILE]: percentile,
                       [Key.PRICE_MOVE]: priceMove,
                       [Key.S0]: s0,
                     } = data[coin];
+                    // displayed strength is equal to `min`,
+                    // minus how much `percentile` exceeds 0.91,
+                    // minus how much `max` exceeds 0.94:
+                    const strength = Math.max(
+                      0,
+                      min -
+                        Math.max(0, percentile - 0.91) -
+                        Math.max(0, max - 0.94)
+                    );
                     return (
                       <ListItem
                         sx={{
@@ -228,8 +237,8 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                         <ListItemAvatar>
                           <SemiCircleProgressBar
                             diameter={80}
-                            percentage={f0(percentile * 100)}
-                            stroke={percentileToColorMap[percentile.toFixed(1)]}
+                            percentage={f0(strength * 100)}
+                            stroke={percentileToColorMap[strength.toFixed(1)]}
                             strokeWidth={10}
                           />
                         </ListItemAvatar>
@@ -243,7 +252,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }
-                          secondary={`Strength: ${f0(percentile * 100)}`}
+                          secondary={`Strength: ${f0(strength * 100)}`}
                         />
                       </ListItem>
                     );
