@@ -33,6 +33,11 @@ export class TradesDao {
   ): void {
     coinName = coinName.toUpperCase();
     const trade = this.get()[coinName];
+    if (trade) {
+      if (trade.locked) return; // return if locked
+      trade.lock();
+      this.#set(trade);
+    }
     // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
     // otherwise changedTrade is null.
     const changedTrade = trade
@@ -42,6 +47,7 @@ export class TradesDao {
       : null;
 
     if (changedTrade) {
+      changedTrade.unlock();
       changedTrade.deleted
         ? this.#delete(changedTrade)
         : this.#set(changedTrade);
@@ -87,26 +93,13 @@ export class TradesDao {
 
   #set(tm: TradeMemo): void {
     const trades = this.get();
-    this.#assertNoConflict(trades, tm);
-    tm.bumpGeneration();
     trades[tm.getCoinName()] = tm;
     this.store.set(`Trades`, trades);
   }
 
   #delete(tm: TradeMemo): void {
     const trades = this.get();
-    this.#assertNoConflict(trades, tm);
     delete trades[tm.getCoinName()];
     this.store.set(`Trades`, trades);
-  }
-
-  #assertNoConflict(ts: { [p: string]: TradeMemo }, t: TradeMemo): void {
-    const cur = ts[t.getCoinName()];
-    // if trade exists - generations should be the same
-    if (cur && cur.generation !== t.generation) {
-      throw new Error(
-        `Could not update trade ${t.getCoinName()} because generations do not match.`
-      );
-    }
   }
 }
