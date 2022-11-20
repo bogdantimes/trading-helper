@@ -45,15 +45,15 @@ function tick(): void {
   });
 }
 
-function start(): void {
-  catchError(createTriggers);
+function start(): string {
+  return catchError(createTriggers);
 }
 
-function stop(): void {
-  catchError(deleteTriggers);
+function stop(): string {
+  return catchError(deleteTriggers);
 }
 
-function createTriggers(): void {
+function createTriggers(): string {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger(Process.tick.name)
     .timeBased()
@@ -70,15 +70,17 @@ function createTriggers(): void {
     DefaultStore.set(`Trades`, ts);
     Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
   }
+  return `OK`;
 }
 
-function deleteTriggers(): void {
+function deleteTriggers(): string {
   let deleted = false;
   ScriptApp.getProjectTriggers().forEach((t) => {
     ScriptApp.deleteTrigger(t);
     deleted = true;
   });
   deleted && Log.alert(`⛔ Background processes stopped.`);
+  return `OK`;
 }
 
 function catchError<T>(fn: () => T): T {
