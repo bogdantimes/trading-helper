@@ -34,23 +34,34 @@ export class TradesDao {
     coinName = coinName.toUpperCase();
     const trade = this.get()[coinName];
     if (trade) {
-      if (trade.locked) return; // return if locked
+      // Google Apps runs every 1 minute
+      // if for any reason the process that started 1 minute ago is still running
+      // aka the trade memo is locked, we just return
+      if (trade.locked) return;
+      // lock the trade memo
       trade.lock();
       this.#set(trade);
     }
     // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
     // otherwise changedTrade is null.
-    const changedTrade = trade
-      ? mutateFn(trade)
-      : notFoundFn
-      ? notFoundFn()
-      : null;
-
-    if (changedTrade) {
-      changedTrade.unlock();
-      changedTrade.deleted
-        ? this.#delete(changedTrade)
-        : this.#set(changedTrade);
+    try {
+      const changedTrade = trade
+        ? mutateFn(trade)
+        : notFoundFn
+        ? notFoundFn()
+        : null;
+      if (changedTrade) {
+        changedTrade.unlock();
+        changedTrade.deleted
+          ? this.#delete(changedTrade)
+          : this.#set(changedTrade);
+      }
+    } catch (e) {
+      if (trade) {
+        trade.unlock();
+        this.#set(trade);
+      }
+      throw e;
     }
   }
 
