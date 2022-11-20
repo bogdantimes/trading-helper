@@ -19,6 +19,7 @@ import {
   ChannelState,
   Config,
   f0,
+  f2,
   Key,
   PriceChannelsDataResponse,
   PriceMove,
@@ -89,6 +90,11 @@ function assetsCards(
   const sorted = elems.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1));
   const current = sorted.filter((t) => t.currentValue);
   const sold = sorted.filter((t) => !t.currentValue);
+
+  const value = elems.reduce((sum, tm) => sum + tm.currentValue, 0);
+  const profit = elems.reduce((sum, tm) => sum + tm.profit(), 0);
+  const profitPercent = f2((profit / value) * 100);
+  const ppMsg = profitPercent > 0 ? `+${profitPercent}%` : `${profitPercent}%`;
   return (
     <>
       <Grid item xs={12}>
@@ -97,7 +103,7 @@ function assetsCards(
             onClick={() => setHide(!hide)}
             label={
               <Typography variant={`h6`}>
-                🪙 Assets ({current.length})
+                🪙 Assets {ppMsg} ({current.length})
               </Typography>
             }
           />
