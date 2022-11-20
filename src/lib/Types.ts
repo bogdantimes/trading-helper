@@ -136,6 +136,7 @@ export enum Key {
   MAX_PERCENTILE,
   PRICE_MOVE,
   MIN_PERCENTILE,
+  STRENGTH,
 }
 
 export enum Bit {
@@ -163,7 +164,5 @@ export interface PriceChannelData {
   [Key.MAX_PERCENTILE]: number;
   [Key.MIN_PERCENTILE]: number;
   [Key.PRICE_MOVE]: PriceMove;
+  [Key.STRENGTH]: number;
 }
-
-export const PercentageBorder = 0.91;
-export const MaxPercentageBorder = 0.94;

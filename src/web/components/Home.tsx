@@ -20,8 +20,6 @@ import {
   Config,
   f0,
   Key,
-  MaxPercentageBorder,
-  PercentageBorder,
   PriceChannelsDataResponse,
   StableUSDCoin,
   TradeMemo,
@@ -170,7 +168,7 @@ const percentileToColorMap = {
 
 function candidates(data: PriceChannelsDataResponse): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
-    data[a][Key.MIN_PERCENTILE] > data[b][Key.MIN_PERCENTILE] ? -1 : 1
+    data[a][Key.STRENGTH] > data[b][Key.STRENGTH] ? -1 : 1
   );
 
   const [hide, setHide] = useState(false);
@@ -213,21 +211,10 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                 >
                   {candidateCoins.map((coin, i) => {
                     const {
-                      [Key.MIN_PERCENTILE]: min,
-                      [Key.MAX_PERCENTILE]: max,
-                      [Key.PERCENTILE]: percentile,
+                      [Key.STRENGTH]: strength,
                       [Key.PRICE_MOVE]: priceMove,
                       [Key.S0]: s0,
                     } = data[coin];
-                    // displayed strength is equal to `min`,
-                    // minus how much `percentile` exceeds `PercentageBorder`,
-                    // minus how much `max` exceeds `MaxPercentageBorder`:
-                    const strength = Math.max(
-                      0,
-                      min -
-                        Math.max(0, percentile - PercentageBorder) -
-                        Math.max(0, max - MaxPercentageBorder)
-                    );
                     return (
                       <ListItem
                         sx={{
