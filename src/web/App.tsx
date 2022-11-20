@@ -90,10 +90,12 @@ export default function App(): JSX.Element {
     if (confirm(`Are you sure you want to remove ${coinName}?`)) {
       google.script.run
         .withSuccessHandler(() => {
-          state.assets = state.assets.filter(
-            (a) => a.getCoinName() !== coinName
-          );
-          setState(state);
+          setState({
+            ...state,
+            assets: state.assets.filter(
+              (a) => a.tradeResult.symbol.quantityAsset !== coinName
+            ),
+          });
         })
         .withFailureHandler(alert)
         .dropCoin(coinName);
