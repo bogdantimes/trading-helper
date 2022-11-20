@@ -85,15 +85,28 @@ export class TradesDao {
     return state ? values.filter((trade) => trade.stateIs(state)) : values;
   }
 
-  #set(tradeMemo: TradeMemo): void {
+  #set(tm: TradeMemo): void {
     const trades = this.get();
-    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo;
+    this.#assertNoConflict(trades, tm);
+    tm.bumpGeneration();
+    trades[tm.getCoinName()] = tm;
     this.store.set(`Trades`, trades);
   }
 
-  #delete(tradeMemo: TradeMemo): void {
+  #delete(tm: TradeMemo): void {
     const trades = this.get();
-    delete trades[tradeMemo.tradeResult.symbol.quantityAsset];
+    this.#assertNoConflict(trades, tm);
+    delete trades[tm.getCoinName()];
     this.store.set(`Trades`, trades);
+  }
+
+  #assertNoConflict(ts: { [p: string]: TradeMemo }, t: TradeMemo): void {
+    const cur = ts[t.getCoinName()];
+    // if trade exists - generations should be the same
+    if (cur && cur.generation !== t.generation) {
+      throw new Error(
+        `Could not update trade ${t.getCoinName()} because generations do not match.`
+      );
+    }
   }
 }

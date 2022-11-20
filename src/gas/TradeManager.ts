@@ -164,6 +164,7 @@ export class TradeManager {
     this.#balance = this.#config.StableBalance;
     if (this.#balance === -1 && this.#config.KEY && this.#config.SECRET) {
       this.#balance = this.exchange.getBalance(this.#config.StableCoin);
+      this.#config.StableBalance = 0; // set to remaining balance in #finalize()
     }
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
     const cs = this.channelsDao.getCandidates(percentile);
@@ -177,6 +178,7 @@ export class TradeManager {
       this.#config.StableBalance += diff;
       this.#balance = this.#config.StableBalance;
       this.configDao.set(this.#config);
+      Log.info(`Balance: ${this.#balance}`);
     }
   }
 

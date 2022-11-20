@@ -35,6 +35,8 @@ export class TradeMemo extends PricesHolder {
    */
   private y: number;
 
+  private gen: number = 0;
+
   constructor(tradeResult: TradeResult) {
     super();
     this.tradeResult = tradeResult;
@@ -71,6 +73,17 @@ export class TradeMemo extends PricesHolder {
     );
     tradeMemo.prices = tradeMemo.prices || [];
     return tradeMemo;
+  }
+
+  /**
+   * generation is used to determine if the memo has been updated since the last time it was used.
+   */
+  get generation(): number {
+    return this.gen;
+  }
+
+  bumpGeneration(): void {
+    this.gen++;
   }
 
   get currentValue(): number {
