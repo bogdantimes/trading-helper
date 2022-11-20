@@ -164,3 +164,6 @@ export interface PriceChannelData {
   [Key.MIN_PERCENTILE]: number;
   [Key.PRICE_MOVE]: PriceMove;
 }
+
+export const PercentageBorder = 0.91;
+export const MaxPercentageBorder = 0.94;

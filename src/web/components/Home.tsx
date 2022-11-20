@@ -20,6 +20,8 @@ import {
   Config,
   f0,
   Key,
+  MaxPercentageBorder,
+  PercentageBorder,
   PriceChannelsDataResponse,
   StableUSDCoin,
   TradeMemo,
@@ -218,13 +220,13 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                       [Key.S0]: s0,
                     } = data[coin];
                     // displayed strength is equal to `min`,
-                    // minus how much `percentile` exceeds 0.91,
-                    // minus how much `max` exceeds 0.94:
+                    // minus how much `percentile` exceeds `PercentageBorder`,
+                    // minus how much `max` exceeds `MaxPercentageBorder`:
                     const strength = Math.max(
                       0,
                       min -
-                        Math.max(0, percentile - 0.91) -
-                        Math.max(0, max - 0.94)
+                        Math.max(0, percentile - PercentageBorder) -
+                        Math.max(0, max - MaxPercentageBorder)
                     );
                     return (
                       <ListItem
