@@ -62,6 +62,14 @@ function createTriggers(): void {
   Log.alert(
     `ℹ️ Background process started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
   );
+  // Low level unlock of all trades (in case of any issues with them).
+  const ts = new TradesDao(DefaultStore).get();
+  const locked = Object.keys(ts).filter((coinName) => ts[coinName].locked);
+  if (locked.length) {
+    locked.forEach((coinName) => ts[coinName].unlock());
+    DefaultStore.set(`Trades`, ts);
+    Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
+  }
 }
 
 function deleteTriggers(): void {
