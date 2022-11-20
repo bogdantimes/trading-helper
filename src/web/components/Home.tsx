@@ -91,10 +91,10 @@ function assetsCards(
   const current = sorted.filter((t) => t.currentValue);
   const sold = sorted.filter((t) => !t.currentValue);
 
-  const value = elems.reduce((sum, tm) => sum + tm.currentValue, 0);
-  const profit = elems.reduce((sum, tm) => sum + tm.profit(), 0);
-  const profitPercent = f2((profit / value) * 100);
-  const ppMsg = profitPercent > 0 ? `+${profitPercent}%` : `${profitPercent}%`;
+  const currentPaid = current.reduce((sum, tm) => sum + tm.tradeResult.paid, 0);
+  const currentProfit = current.reduce((sum, tm) => sum + tm.profit(), 0);
+  const currentPP = f2((currentProfit / currentPaid) * 100);
+  const ppMsg = currentPP > 0 ? `+${currentPP}%` : `${currentPP}%`;
   return (
     <>
       <Grid item xs={12}>
