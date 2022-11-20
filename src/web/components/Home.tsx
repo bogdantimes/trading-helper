@@ -22,7 +22,6 @@ import {
   Key,
   PriceChannelsDataResponse,
   PriceMove,
-  StableUSDCoin,
   TradeMemo,
 } from "../../lib";
 
@@ -40,7 +39,7 @@ export function Home({
   return (
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
-        {balanceCard(config.StableCoin, config.StableBalance, assetsValue)}
+        {balanceCard(config, assetsValue)}
         {assetsCards(assets, config, onAssetDelete)}
         {candidates(state.candidates)}
       </Grid>
@@ -48,11 +47,7 @@ export function Home({
   );
 }
 
-function balanceCard(
-  name: StableUSDCoin,
-  balance: number,
-  assetsValue: number
-): JSX.Element {
+function balanceCard(config: Config, assetsValue: number): JSX.Element {
   const [hide, setHide] = useState(false);
 
   return (
@@ -70,7 +65,12 @@ function balanceCard(
         <Grid item xs={12}>
           <Grid container justifyContent="center" spacing={2}>
             <Grid item>
-              <Balance {...{ name, balance, assetsValue }} />
+              <Balance
+                name={config.StableCoin}
+                balance={config.StableBalance}
+                assetsValue={assetsValue}
+                hide={config.HideBalances}
+              />
             </Grid>
           </Grid>
         </Grid>

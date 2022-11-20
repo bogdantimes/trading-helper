@@ -170,6 +170,23 @@ export function Settings(params: {
             Disables autonomous trading and makes Binance API keys optional.
           </FormHelperText>
         </FormControl>
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={cfg.HideBalances}
+                onChange={(e) =>
+                  setCfg({ ...cfg, HideBalances: e.target.checked })
+                }
+              />
+            }
+            label="Hide balances"
+            aria-describedby={`hide-balances-helper-text`}
+          />
+          <FormHelperText id={`hide-balances-helper-text`}>
+            Hides balances on the Home tab.
+          </FormHelperText>
+        </FormControl>
         <Stack spacing={2}>
           <TextField
             type={`password`}

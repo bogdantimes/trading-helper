@@ -31,8 +31,10 @@ export interface Config {
    */
   AdvancedAccess: boolean;
   ViewOnly: boolean;
+  HideBalances: boolean;
 }
 
 export const DefaultRange = 0.14;
 export const DefaultDuration = 4000;
 export const MASK = `********`;
+export const SHORT_MASK = `👻`;

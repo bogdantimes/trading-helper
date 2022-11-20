@@ -15,7 +15,7 @@ import {
 } from "lightweight-charts";
 import { Box, Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
-import { Config, f2, getPrecision, TradeMemo } from "../../lib";
+import { Config, f2, getPrecision, SHORT_MASK, TradeMemo } from "../../lib";
 
 export default function Trade(props: {
   data: TradeMemo;
@@ -197,15 +197,21 @@ export default function Trade(props: {
                 <b>
                   {tm.tradeResult.soldPrice ? `Gained: ` : `Current value: `}
                 </b>
-                <CurrencyFormat
-                  value={tm.tradeResult.soldPrice ? gained : curVal}
-                  displayType={`text`}
-                  thousandSeparator={true}
-                  decimalScale={2}
-                  fixedDecimalScale={true}
-                  prefix={`$`}
-                />
-                <span>{` (${profit > 0 ? `+` : ``}${f2(profit)})`}</span>
+                {cfg.HideBalances ? (
+                  <span>${SHORT_MASK}</span>
+                ) : (
+                  <>
+                    <CurrencyFormat
+                      value={tm.tradeResult.soldPrice ? gained : curVal}
+                      displayType={`text`}
+                      thousandSeparator={true}
+                      decimalScale={2}
+                      fixedDecimalScale={true}
+                      prefix={`$`}
+                    />
+                    <span>{` (${profit > 0 ? `+` : ``}${f2(profit)})`}</span>
+                  </>
+                )}
               </Typography>
             }
             <Box
