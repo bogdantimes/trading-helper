@@ -4,6 +4,11 @@ import { ExchangeSymbol } from "./Types";
 export class TradeResult {
   symbol: ExchangeSymbol;
   quantity = 0;
+  /**
+   * lotSizeQty is the quantity that can actually be sold on Binance,
+   * without getting LOT_SIZE error
+   */
+  lotSizeQty = 0;
   // todo: get rid of either paid or cost field
   cost = 0;
   paid = 0;

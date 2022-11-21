@@ -13,6 +13,8 @@ export interface IExchange {
     interval: string,
     limit: number
   ) => number[];
+
+  quantityForLotStepSize: (symbol: ExchangeSymbol, quantity: number) => number;
 }
 
 export class Exchange implements IExchange {
@@ -20,6 +22,10 @@ export class Exchange implements IExchange {
 
   constructor(key: string, secret: string) {
     this.exchange = new Binance(key, secret);
+  }
+
+  quantityForLotStepSize(symbol: ExchangeSymbol, quantity: number): number {
+    return this.exchange.quantityForLotStepSize(symbol, quantity);
   }
 
   getBalance(assetName: string): number {

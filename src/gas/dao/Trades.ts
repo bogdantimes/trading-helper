@@ -31,20 +31,27 @@ export class TradesDao {
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
     notFoundFn?: () => TradeMemo | undefined
   ): void {
-    coinName = coinName.toUpperCase();
-    const trade = this.get()[coinName];
-    // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
-    // otherwise changedTrade is null.
-    const changedTrade = trade
-      ? mutateFn(trade)
-      : notFoundFn
-      ? notFoundFn()
-      : null;
+    try {
+      coinName = coinName.toUpperCase();
 
-    if (changedTrade) {
-      changedTrade.deleted
-        ? this.#delete(changedTrade)
-        : this.#set(changedTrade);
+      if (!this.#lockTrade(coinName)) return;
+
+      const trade = this.get()[coinName];
+      // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
+      // otherwise changedTrade is null.
+      const changedTrade = trade
+        ? mutateFn(trade)
+        : notFoundFn
+        ? notFoundFn()
+        : null;
+
+      if (changedTrade) {
+        changedTrade.deleted
+          ? this.#delete(changedTrade)
+          : this.#set(changedTrade);
+      }
+    } finally {
+      this.#unlockTrade(coinName);
     }
   }
 
@@ -85,15 +92,39 @@ export class TradesDao {
     return state ? values.filter((trade) => trade.stateIs(state)) : values;
   }
 
-  #set(tradeMemo: TradeMemo): void {
+  #set(tm: TradeMemo): void {
     const trades = this.get();
-    trades[tradeMemo.tradeResult.symbol.quantityAsset] = tradeMemo;
+    trades[tm.getCoinName()] = tm;
     this.store.set(`Trades`, trades);
   }
 
-  #delete(tradeMemo: TradeMemo): void {
+  #delete(tm: TradeMemo): void {
     const trades = this.get();
-    delete trades[tradeMemo.tradeResult.symbol.quantityAsset];
+    delete trades[tm.getCoinName()];
+    this.store.set(`Trades`, trades);
+  }
+
+  /**
+   * #lockTrade and #unlockTrade are used to prevent multiple processes from updating the same trade memo object.
+   * This is needed because Google Apps Script runs every 1 minute and if the process takes longer than 1 minute
+   * to complete, it will be started again.
+   * @param coinName
+   * @private
+   * @returns {boolean} true if the trade memo was locked, false if it was already locked
+   */
+  #lockTrade(coinName: string): boolean {
+    const trades = this.get();
+    if (trades[coinName]?.locked) {
+      return false;
+    }
+    trades[coinName]?.lock();
+    this.store.set(`Trades`, trades);
+    return true;
+  }
+
+  #unlockTrade(coinName: string): void {
+    const trades = this.get();
+    trades[coinName]?.unlock();
     this.store.set(`Trades`, trades);
   }
 }

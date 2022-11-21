@@ -23,12 +23,16 @@ import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
   return catchError(() => {
-    return HtmlService.createTemplateFromFile(`index`)
-      .evaluate()
-      .addMetaTag(
-        `viewport`,
-        `width=device-width, initial-scale=1, maximum-scale=1`
-      );
+    return (
+      HtmlService.createTemplateFromFile(`index`)
+        .evaluate()
+        .addMetaTag(
+          `viewport`,
+          `width=device-width, initial-scale=1, maximum-scale=1`
+        )
+        // @ts-expect-error
+        .setTitle(`TradingHelper v${VERSION} id:${ScriptApp.getScriptId()}`)
+    );
   });
 }
 
@@ -45,15 +49,15 @@ function tick(): void {
   });
 }
 
-function start(): void {
-  catchError(createTriggers);
+function start(): string {
+  return catchError(createTriggers);
 }
 
-function stop(): void {
-  catchError(deleteTriggers);
+function stop(): string {
+  return catchError(deleteTriggers);
 }
 
-function createTriggers(): void {
+function createTriggers(): string {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger(Process.tick.name)
     .timeBased()
@@ -62,15 +66,25 @@ function createTriggers(): void {
   Log.alert(
     `ℹ️ Background process started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
   );
+  // Low level unlock of all trades (in case of any issues with them).
+  const ts = new TradesDao(DefaultStore).get();
+  const locked = Object.keys(ts).filter((coinName) => ts[coinName].locked);
+  if (locked.length) {
+    locked.forEach((coinName) => ts[coinName].unlock());
+    DefaultStore.set(`Trades`, ts);
+    Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
+  }
+  return `OK`;
 }
 
-function deleteTriggers(): void {
+function deleteTriggers(): string {
   let deleted = false;
   ScriptApp.getProjectTriggers().forEach((t) => {
     ScriptApp.deleteTrigger(t);
     deleted = true;
   });
   deleted && Log.alert(`⛔ Background processes stopped.`);
+  return `OK`;
 }
 
 function catchError<T>(fn: () => T): T {

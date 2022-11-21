@@ -164,6 +164,7 @@ export class TradeManager {
     this.#balance = this.#config.StableBalance;
     if (this.#balance === -1 && this.#config.KEY && this.#config.SECRET) {
       this.#balance = this.exchange.getBalance(this.#config.StableCoin);
+      this.#config.StableBalance = 0; // set to remaining balance in #finalize()
     }
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
     const cs = this.channelsDao.getCandidates(percentile);
@@ -177,6 +178,7 @@ export class TradeManager {
       this.#config.StableBalance += diff;
       this.#balance = this.#config.StableBalance;
       this.configDao.set(this.#config);
+      Log.info(`Free balance: ${this.#balance}`);
     }
   }
 
@@ -267,6 +269,13 @@ export class TradeManager {
   }
 
   private updateStopLimit(tm: TradeMemo): void {
+    if (!tm.tradeResult.lotSizeQty) {
+      tm.tradeResult.lotSizeQty = this.exchange.quantityForLotStepSize(
+        tm.tradeResult.symbol,
+        tm.tradeResult.quantity
+      );
+    }
+
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price

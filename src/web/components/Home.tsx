@@ -21,7 +21,7 @@ import {
   f0,
   Key,
   PriceChannelsDataResponse,
-  StableUSDCoin,
+  PriceMove,
   TradeMemo,
 } from "../../lib";
 
@@ -30,7 +30,7 @@ export function Home({
   onAssetDelete,
 }: {
   state: AppState;
-  onAssetDelete: (coinName: string) => void;
+  onAssetDelete?: (coinName: string, noConfirm?: boolean) => void;
 }): JSX.Element {
   const config = state.config;
   const assets = state.assets.map(TradeMemo.fromObject);
@@ -39,7 +39,7 @@ export function Home({
   return (
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
-        {balanceCard(config.StableCoin, config.StableBalance, assetsValue)}
+        {balanceCard(config, assetsValue)}
         {assetsCards(assets, config, onAssetDelete)}
         {candidates(state.candidates)}
       </Grid>
@@ -47,11 +47,7 @@ export function Home({
   );
 }
 
-function balanceCard(
-  name: StableUSDCoin,
-  balance: number,
-  assetsValue: number
-): JSX.Element {
+function balanceCard(config: Config, assetsValue: number): JSX.Element {
   const [hide, setHide] = useState(false);
 
   return (
@@ -69,7 +65,12 @@ function balanceCard(
         <Grid item xs={12}>
           <Grid container justifyContent="center" spacing={2}>
             <Grid item>
-              <Balance {...{ name, balance, assetsValue }} />
+              <Balance
+                name={config.StableCoin}
+                balance={config.StableBalance}
+                assetsValue={assetsValue}
+                hide={config.HideBalances}
+              />
             </Grid>
           </Grid>
         </Grid>
@@ -81,13 +82,14 @@ function balanceCard(
 function assetsCards(
   elems: TradeMemo[],
   config: Config,
-  onAssetDelete: (coinName: string) => void
+  onAssetDelete?: (coinName: string, noConfirm?: boolean) => void
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
   const sorted = elems.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1));
   const current = sorted.filter((t) => t.currentValue);
   const sold = sorted.filter((t) => !t.currentValue);
+
   return (
     <>
       <Grid item xs={12}>
@@ -164,13 +166,11 @@ const percentileToColorMap = {
   0.7: `#ccff00`,
   0.8: `#99ff00`,
   0.9: `#66ff00`,
-  // Above 0.9 is worse, hence the color is more yellow.
-  1.0: `#ccff00`,
 };
 
 function candidates(data: PriceChannelsDataResponse): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
-    data[a][Key.MIN_PERCENTILE] > data[b][Key.MIN_PERCENTILE] ? -1 : 1
+    data[a][Key.STRENGTH] > data[b][Key.STRENGTH] ? -1 : 1
   );
 
   const [hide, setHide] = useState(false);
@@ -212,11 +212,10 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                   }}
                 >
                   {candidateCoins.map((coin, i) => {
-                    const {
-                      [Key.MIN_PERCENTILE]: percentile,
-                      [Key.PRICE_MOVE]: priceMove,
-                      [Key.S0]: s0,
-                    } = data[coin];
+                    const ch = data[coin];
+                    const strength = ch[Key.STRENGTH] ?? 0;
+                    const priceMove = ch[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
+                    const s0 = ch[Key.S0] ?? ChannelState.NONE;
                     return (
                       <ListItem
                         sx={{
@@ -228,8 +227,8 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                         <ListItemAvatar>
                           <SemiCircleProgressBar
                             diameter={80}
-                            percentage={f0(percentile * 100)}
-                            stroke={percentileToColorMap[percentile.toFixed(1)]}
+                            percentage={f0(strength * 100)}
+                            stroke={percentileToColorMap[strength.toFixed(1)]}
                             strokeWidth={10}
                           />
                         </ListItemAvatar>
@@ -243,7 +242,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }
-                          secondary={`Strength: ${f0(percentile * 100)}`}
+                          secondary={`Strength: ${f0(strength * 100)}`}
                         />
                       </ListItem>
                     );

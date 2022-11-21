@@ -8,6 +8,7 @@ export const DefaultConfig: () => Config = () => ({
   AutoMarketTrend: MarketTrend.SIDEWAYS,
   AdvancedAccess: false,
   ViewOnly: false,
+  HideBalances: false,
 });
 
 export class ConfigDao {
