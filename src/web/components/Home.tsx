@@ -19,7 +19,6 @@ import {
   ChannelState,
   Config,
   f0,
-  f2,
   Key,
   PriceChannelsDataResponse,
   PriceMove,
@@ -91,10 +90,6 @@ function assetsCards(
   const current = sorted.filter((t) => t.currentValue);
   const sold = sorted.filter((t) => !t.currentValue);
 
-  const currentPaid = current.reduce((sum, tm) => sum + tm.tradeResult.paid, 0);
-  const currentProfit = current.reduce((sum, tm) => sum + tm.profit(), 0);
-  const currentPP = f2((currentProfit / currentPaid) * 100);
-  const ppMsg = currentPP > 0 ? `+${currentPP}%` : `${currentPP}%`;
   return (
     <>
       <Grid item xs={12}>
@@ -103,7 +98,7 @@ function assetsCards(
             onClick={() => setHide(!hide)}
             label={
               <Typography variant={`h6`}>
-                🪙 Assets {ppMsg} ({current.length})
+                🪙 Assets ({current.length})
               </Typography>
             }
           />

@@ -40,7 +40,7 @@ export default function Balance({
             )}
           </div>
           <div>
-            <b>Assets value:</b>
+            <b>Assets:</b>
             {hide && <span style={{ float: `right` }}>${SHORT_MASK}</span>}
             {!hide && (
               <CurrencyFormat

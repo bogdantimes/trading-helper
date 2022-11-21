@@ -178,7 +178,7 @@ export class TradeManager {
       this.#config.StableBalance += diff;
       this.#balance = this.#config.StableBalance;
       this.configDao.set(this.#config);
-      Log.info(`Balance: ${this.#balance}`);
+      Log.info(`Free balance: ${this.#balance}`);
     }
   }
 
