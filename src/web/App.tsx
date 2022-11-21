@@ -46,6 +46,7 @@ export default function App(): JSX.Element {
   const [initialSetup, setInitialSetup] = React.useState(true);
   const [fetchingData, setFetchingData] = React.useState(true);
   const [fetchDataError, setFetchDataError] = React.useState(null);
+  const [deletingAsset, setDeletingAsset] = React.useState(false);
 
   useEffect(initialFetch, []);
   useEffect(() => {
@@ -86,8 +87,9 @@ export default function App(): JSX.Element {
       .getState();
   }
 
-  function onAssetDelete(coinName: string): void {
-    if (confirm(`Are you sure you want to remove ${coinName}?`)) {
+  function onAssetDelete(coinName: string, noConfirm = false): void {
+    if (noConfirm || confirm(`Are you sure you want to remove ${coinName}?`)) {
+      setDeletingAsset(true);
       google.script.run
         .withSuccessHandler(() => {
           setState({
@@ -96,8 +98,12 @@ export default function App(): JSX.Element {
               (a) => a.tradeResult.symbol.quantityAsset !== coinName
             ),
           });
+          setDeletingAsset(false);
         })
-        .withFailureHandler(alert)
+        .withFailureHandler((err) => {
+          setDeletingAsset(false);
+          alert(err);
+        })
         .dropCoin(coinName);
     }
   }
@@ -147,7 +153,10 @@ export default function App(): JSX.Element {
             </Tabs>
           </Box>
           <TabPanel value={tab} index={TabId.Home}>
-            <Home state={state} onAssetDelete={onAssetDelete} />
+            <Home
+              state={state}
+              onAssetDelete={deletingAsset ? null : onAssetDelete}
+            />
           </TabPanel>
           <TabPanel value={tab} index={TabId.Info}>
             <Info stats={state.info} />

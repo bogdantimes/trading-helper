@@ -20,7 +20,7 @@ import { Config, f2, getPrecision, SHORT_MASK, TradeMemo } from "../../lib";
 export default function Trade(props: {
   data: TradeMemo;
   config: Config;
-  onDelete: (coinName: string) => void;
+  onDelete?: (coinName: string, noConfirm?: boolean) => void;
 }): JSX.Element {
   const { data: tm, config: cfg, onDelete } = props;
 

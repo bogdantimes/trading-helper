@@ -30,7 +30,7 @@ export function Home({
   onAssetDelete,
 }: {
   state: AppState;
-  onAssetDelete: (coinName: string) => void;
+  onAssetDelete?: (coinName: string, noConfirm?: boolean) => void;
 }): JSX.Element {
   const config = state.config;
   const assets = state.assets.map(TradeMemo.fromObject);
@@ -82,7 +82,7 @@ function balanceCard(config: Config, assetsValue: number): JSX.Element {
 function assetsCards(
   elems: TradeMemo[],
   config: Config,
-  onAssetDelete: (coinName: string) => void
+  onAssetDelete?: (coinName: string, noConfirm?: boolean) => void
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 

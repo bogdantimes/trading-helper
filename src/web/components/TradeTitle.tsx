@@ -11,7 +11,7 @@ export function TradeTitle({
   onDelete,
 }: {
   tradeMemo: TradeMemo;
-  onDelete: (coinName: string) => void;
+  onDelete?: (coinName: string, noConfirm?: boolean) => void;
 }): JSX.Element {
   const theme = useTheme();
   const [deleteHover, setDeleteHover] = useState(false);
@@ -21,7 +21,7 @@ export function TradeTitle({
     : theme.palette.action.disabled;
   const deleteIcon = (
     <IconButton
-      onClick={() => onDelete(tm.getCoinName())}
+      onClick={() => onDelete(tm.getCoinName(), !tm.currentValue)}
       sx={{ color: deleteColor }}
       onMouseEnter={() => setDeleteHover(true)}
       onMouseLeave={() => setDeleteHover(false)}
@@ -40,7 +40,8 @@ export function TradeTitle({
       {tm.getCoinName()}
       {growthIconMap.get(tm.getPriceMove())}
       {profit > 0 ? `+` : ``}
-      {f2(profit)}%<span style={{ marginLeft: `auto` }}>{deleteIcon}</span>
+      {f2(profit)}%
+      {onDelete && <span style={{ marginLeft: `auto` }}>{deleteIcon}</span>}
     </Typography>
   );
 }
