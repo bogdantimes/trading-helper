@@ -21,6 +21,7 @@ export function TradeTitle({
     : theme.palette.action.disabled;
   const deleteIcon = (
     <IconButton
+      disabled={!onDelete}
       onClick={() => onDelete(tm.getCoinName(), !tm.currentValue)}
       sx={{ color: deleteColor }}
       onMouseEnter={() => setDeleteHover(true)}
@@ -40,8 +41,7 @@ export function TradeTitle({
       {tm.getCoinName()}
       {growthIconMap.get(tm.getPriceMove())}
       {profit > 0 ? `+` : ``}
-      {f2(profit)}%
-      {onDelete && <span style={{ marginLeft: `auto` }}>{deleteIcon}</span>}
+      {f2(profit)}%<span style={{ marginLeft: `auto` }}>{deleteIcon}</span>
     </Typography>
   );
 }
