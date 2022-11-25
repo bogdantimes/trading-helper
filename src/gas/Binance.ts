@@ -175,6 +175,14 @@ export class Binance implements IExchange {
       tradeResult.cost = +order.cummulativeQuoteQty - fees.quoteQty;
       tradeResult.commission = fees.BNB;
       tradeResult.fromExchange = true;
+
+      try {
+        const bidAskScore = this.#getBidAskScore(symbol);
+        Log.info(`Bid/ask score: ${bidAskScore}`);
+      } catch (e) {
+        Log.error(`Failed to fetch bid_ask_imbalance: ${e.message}`);
+      }
+
       return tradeResult;
     } catch (e: any) {
       throw new Error(`Failed to trade ${symbol}: ${e.message}`);
@@ -257,5 +265,22 @@ export class Binance implements IExchange {
   #rotateServer(): void {
     this.#curServerId = this.serverIds.shift();
     this.serverIds.push(this.#curServerId);
+  }
+
+  /**
+   * "title": "Bid-Ask Volume Imbalance",
+   * "type": "percentage",
+   * "info": "Volume at the bid price - Volume at the ask price",
+   * "category": "exchange",
+   * "value": 0.019458971208629272,
+   * "score": 0.912158093405244,
+   * @param symbol
+   * @private
+   */
+  #getBidAskScore(symbol: ExchangeSymbol): number {
+    const url = `https://services.intotheblock.com/api/${symbol.quantityAsset}/signals`;
+    const resp = UrlFetchApp.fetch(url);
+    const data = JSON.parse(resp.getContentText());
+    return data.signals.find((s) => s.name === `bid_ask_imbalance`)?.score;
   }
 }
