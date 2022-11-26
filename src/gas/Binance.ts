@@ -179,7 +179,8 @@ export class Binance implements IExchange {
       tradeResult.fromExchange = true;
 
       try {
-        const optimalLimit = floorToOptimalGrid(order.price).precisionDiff * 10;
+        const precisionDiff = floorToOptimalGrid(order.price).precisionDiff;
+        const optimalLimit = Math.pow(10, precisionDiff);
         const imbalance = this.#getImbalance(symbol, optimalLimit);
         Log.info(`Imbalance: ${f2(imbalance)} (limit: ${optimalLimit})`);
       } catch (e) {
