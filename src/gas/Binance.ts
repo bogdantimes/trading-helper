@@ -180,7 +180,7 @@ export class Binance implements IExchange {
         const bidAskScore = this.#getBidAskScore(symbol);
         Log.info(`Bid/ask score: ${bidAskScore}`);
       } catch (e) {
-        Log.error(`Failed to fetch bid_ask_imbalance: ${e.message}`);
+        Log.info(`Failed to fetch bid_ask_imbalance: ${e.message}`);
       }
 
       return tradeResult;

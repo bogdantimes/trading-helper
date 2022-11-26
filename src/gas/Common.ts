@@ -32,7 +32,7 @@ export class Log {
     this.level >= LogLevel.DEBUG && this.debugLog.push(JSON.stringify(arg));
   }
 
-  static error(err: Error | any): void {
+  static error(err: Error): void {
     this.level >= LogLevel.ERROR &&
       this.errLog.push(new Error(`${err?.stack?.slice(0, 1000)}`));
   }
