@@ -279,7 +279,7 @@ export class TradeManager {
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
-      tm.stopLimitPrice = floorToOptimalGrid(ch[Key.MIN], tm.precision);
+      tm.stopLimitPrice = floorToOptimalGrid(ch[Key.MIN], tm.precision).result;
       return;
     }
 
@@ -306,7 +306,7 @@ export class TradeManager {
     newStopLimit = Math.min(newStopLimit, tm.currentPrice);
 
     // quantize stop limit to stick it to the grid
-    newStopLimit = floorToOptimalGrid(newStopLimit, tm.precision);
+    newStopLimit = floorToOptimalGrid(newStopLimit, tm.precision).result;
     // update the stop limit price if it's higher than the current one
     tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
   }

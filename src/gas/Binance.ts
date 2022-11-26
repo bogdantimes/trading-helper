@@ -4,6 +4,7 @@ import {
   execute,
   f2,
   floor,
+  floorToOptimalGrid,
   getPrecision,
   TradeResult,
 } from "../lib";
@@ -178,8 +179,9 @@ export class Binance implements IExchange {
       tradeResult.fromExchange = true;
 
       try {
-        const imbalance = this.#getImbalance(symbol);
-        Log.info(`Imbalance: ${f2(imbalance)}`);
+        const optimalLimit = floorToOptimalGrid(order.price).precisionDiff * 10;
+        const imbalance = this.#getImbalance(symbol, optimalLimit);
+        Log.info(`Imbalance: ${f2(imbalance)} (limit: ${optimalLimit})`);
       } catch (e) {
         Log.info(`Failed to fetch order book depth: ${e.message}`);
       }
@@ -268,12 +270,8 @@ export class Binance implements IExchange {
     this.serverIds.push(this.#curServerId);
   }
 
-  /**
-   * @param symbol
-   * @private
-   */
-  #getImbalance(symbol: ExchangeSymbol): number {
-    const url = `https://api.binance.com/api/v3/depth?symbol=${symbol.quantityAsset}&limit=10`;
+  #getImbalance(symbol: ExchangeSymbol, limit: number): number {
+    const url = `https://api.binance.com/api/v3/depth?symbol=${symbol.quantityAsset}&limit=${limit}`;
     const resp = UrlFetchApp.fetch(url);
     const data = JSON.parse(resp.getContentText());
     const bidsVol: number = data.bids.reduce((s: number, b) => s + +b[1], 0);
