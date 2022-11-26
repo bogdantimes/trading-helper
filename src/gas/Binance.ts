@@ -2,6 +2,7 @@ import { Log } from "./Common";
 import {
   ExchangeSymbol,
   execute,
+  f2,
   floor,
   getPrecision,
   TradeResult,
@@ -177,10 +178,10 @@ export class Binance implements IExchange {
       tradeResult.fromExchange = true;
 
       try {
-        const bidAskScore = this.#getBidAskScore(symbol);
-        Log.info(`Bid/ask score: ${bidAskScore}`);
+        const imbalance = this.#getImbalance(symbol);
+        Log.info(`Imbalance: ${f2(imbalance)}`);
       } catch (e) {
-        Log.info(`Failed to fetch bid_ask_imbalance: ${e.message}`);
+        Log.info(`Failed to fetch order book depth: ${e.message}`);
       }
 
       return tradeResult;
@@ -268,19 +269,15 @@ export class Binance implements IExchange {
   }
 
   /**
-   * "title": "Bid-Ask Volume Imbalance",
-   * "type": "percentage",
-   * "info": "Volume at the bid price - Volume at the ask price",
-   * "category": "exchange",
-   * "value": 0.019458971208629272,
-   * "score": 0.912158093405244,
    * @param symbol
    * @private
    */
-  #getBidAskScore(symbol: ExchangeSymbol): number {
-    const url = `https://services.intotheblock.com/api/${symbol.quantityAsset}/signals`;
+  #getImbalance(symbol: ExchangeSymbol): number {
+    const url = `https://api.binance.com/api/v3/depth?symbol=${symbol.quantityAsset}&limit=10`;
     const resp = UrlFetchApp.fetch(url);
     const data = JSON.parse(resp.getContentText());
-    return data.signals.find((s) => s.name === `bid_ask_imbalance`)?.score;
+    const bidsVol: number = data.bids.reduce((s: number, b) => s + +b[1], 0);
+    const asksVol: number = data.asks.reduce((s: number, a) => s + +a[1], 0);
+    return (bidsVol - asksVol) / (bidsVol + asksVol);
   }
 }
