@@ -334,9 +334,8 @@ export class TradeManager {
         // if the stop limit is crossed down and the imbalance is bullish,
         // we move the stop limit down to the current price
         if (imbalance > 0.3) {
-          tm.stopLimitPrice = tm.currentPrice;
           Log.alert(
-            `⚠️ Not selling ${tm.getCoinName()} yet! Stop limit crossed down, but the order book imbalance is bullish`
+            `⚠️ Stop limit crossed down, but the order book imbalance is bullish`
           );
         }
       } catch (e) {
