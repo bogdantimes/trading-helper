@@ -27,10 +27,10 @@ interface FloorResult {
 }
 
 export function floorToOptimalGrid(v: number, precision?: number): FloorResult {
+  let result = v;
   let p = precision ?? getPrecision(v);
   const originalPrecision = p;
   // step should exceed 0.075% step
-  let result = v;
   for (; v / result < 1.000075; p--) {
     result = floor(v, p);
   }

@@ -149,6 +149,11 @@ export class Binance implements IExchange {
   }
 
   quantityForLotStepSize(symbol: ExchangeSymbol, quantity: number): number {
+    const precision = this.getLotSizePrecision(symbol);
+    return floor(quantity, precision);
+  }
+
+  getLotSizePrecision(symbol: ExchangeSymbol): number {
     if (!this.#exchangeInfo) {
       this.#exchangeInfo = this.fetch(
         () => `exchangeInfo`,
@@ -159,9 +164,7 @@ export class Binance implements IExchange {
     const stepSize = this.#exchangeInfo.symbols
       .find((s) => s.symbol === symbol.toString())
       ?.filters.find((f) => f.filterType === `LOT_SIZE`)?.stepSize;
-    const precision = stepSize ? getPrecision(+stepSize) : 0;
-
-    return floor(quantity, precision);
+    return stepSize ? getPrecision(+stepSize) : 0;
   }
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
@@ -179,12 +182,17 @@ export class Binance implements IExchange {
       tradeResult.fromExchange = true;
 
       try {
-        const precisionDiff = floorToOptimalGrid(order.price).precisionDiff;
+        const precision = this.getLotSizePrecision(symbol);
+        const { precisionDiff } = floorToOptimalGrid(+order.price, precision);
         const optimalLimit = Math.pow(10, precisionDiff);
         const imbalance = this.#getImbalance(symbol, optimalLimit);
-        Log.info(`Imbalance: ${f2(imbalance)} (limit: ${optimalLimit})`);
+        Log.info(
+          `Imbalance: ${f2(
+            imbalance
+          )} (origPrecision: ${precision}), optimalLimit: ${optimalLimit}`
+        );
       } catch (e) {
-        Log.info(`Failed to fetch order book depth: ${e.message}`);
+        Log.info(`Failed to calculate imbalance: ${e.message}`);
       }
 
       return tradeResult;
