@@ -15,6 +15,8 @@ export interface IExchange {
   ) => number[];
 
   quantityForLotStepSize: (symbol: ExchangeSymbol, quantity: number) => number;
+
+  getImbalance: (symbol: ExchangeSymbol, limit: number) => number;
 }
 
 export class Exchange implements IExchange {
@@ -46,5 +48,9 @@ export class Exchange implements IExchange {
     limit: number
   ): number[] {
     return this.exchange.getLatestKlineOpenPrices(symbol, interval, limit);
+  }
+
+  getImbalance(symbol: ExchangeSymbol, limit: number): number {
+    return this.exchange.getImbalance(symbol, limit);
   }
 }

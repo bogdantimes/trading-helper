@@ -185,7 +185,7 @@ export class Binance implements IExchange {
         const precision = this.getLotSizePrecision(symbol);
         const { precisionDiff } = floorToOptimalGrid(+order.price, precision);
         const optimalLimit = Math.pow(10, precisionDiff);
-        const imbalance = this.#getImbalance(symbol, optimalLimit);
+        const imbalance = this.getImbalance(symbol, optimalLimit);
         Log.info(
           `Imbalance: ${f2(
             imbalance
@@ -279,7 +279,7 @@ export class Binance implements IExchange {
     this.serverIds.push(this.#curServerId);
   }
 
-  #getImbalance(symbol: ExchangeSymbol, limit: number): number {
+  getImbalance(symbol: ExchangeSymbol, limit: number): number {
     const url = `https://api.binance.com/api/v3/depth?symbol=${symbol.quantityAsset}&limit=${limit}`;
     const resp = UrlFetchApp.fetch(url);
     const data = JSON.parse(resp.getContentText());
