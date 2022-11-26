@@ -137,6 +137,8 @@ export enum Key {
   PRICE_MOVE,
   MIN_PERCENTILE,
   STRENGTH,
+  ATH,
+  ATHTime,
 }
 
 export enum Bit {
@@ -165,4 +167,6 @@ export interface PriceChannelData {
   [Key.MIN_PERCENTILE]: number;
   [Key.PRICE_MOVE]: PriceMove;
   [Key.STRENGTH]: number;
+  [Key.ATH]: number;
+  [Key.ATHTime]: number;
 }
