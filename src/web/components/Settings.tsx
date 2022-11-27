@@ -150,7 +150,7 @@ export function Settings(params: {
             aria-describedby={`stop-limit-helper-text`}
           />
           <FormHelperText id={`stop-limit-helper-text`}>
-            Sell automatically when a stop-limit is <b>crossed down</b>.
+            Sell automatically when stop-limit is <b>crossed down</b>.
             Recommended to always keep enabled. Disable only if you need to hold
             the assets.
           </FormHelperText>
@@ -171,7 +171,7 @@ export function Settings(params: {
           />
           <FormHelperText id={`imbalance-helper-text`}>
             Do not sell immediately when stop-limit is crossed down, but the
-            order book imbalance is bullish (more buyers then sellers), to avoid
+            order book imbalance is bullish (more buyers than sellers), to avoid
             selling at turnarounds.
           </FormHelperText>
         </FormControl>
