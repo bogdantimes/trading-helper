@@ -159,6 +159,25 @@ export function Settings(params: {
           <FormControlLabel
             control={
               <Switch
+                checked={cfg.ImbalanceCheck}
+                onChange={(e) =>
+                  setCfg({ ...cfg, ImbalanceCheck: e.target.checked })
+                }
+              />
+            }
+            label="Imbalance check"
+            aria-describedby={`imbalance-helper-text`}
+          />
+          <FormHelperText id={`imbalance-helper-text`}>
+            Do not sell when stop-limit is crossed down, but the order book
+            imbalance is bullish (more buyers then sellers), to avoid selling at
+            turnarounds.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
                 checked={cfg.ViewOnly}
                 onChange={(e) => setCfg({ ...cfg, ViewOnly: e.target.checked })}
               />
