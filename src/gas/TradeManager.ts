@@ -178,7 +178,7 @@ export class TradeManager {
       this.#config.StableBalance += diff;
       this.#balance = this.#config.StableBalance;
       this.configDao.set(this.#config);
-      Log.info(`Free balance: ${this.#balance}`);
+      Log.info(`Free balance: $${f2(this.#balance)}`);
     }
   }
 
@@ -323,7 +323,7 @@ export class TradeManager {
               `🐂 ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
             );
         } else {
-          Log.info(`Order book is not bullish for ${tm.getCoinName()}`);
+          Log.info(`Order book was not bullish for ${tm.getCoinName()}`);
         }
       } catch (e) {
         this.#config.SellAtStopLimit &&

@@ -13,7 +13,7 @@
     "gbuild": "node gas-build.js",
     "start": "parcel src/web/index.html --dist-dir ./apps-script",
     "report": "parcel build src/web/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
-    "build": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script",
+    "build": "cross-env LOG=DEBUG npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script",
     "prod": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
     "lint": "eslint --fix --ext .ts,.tsx ./src",
     "prepare": "husky install"
@@ -24,6 +24,7 @@
     "@types/google-apps-script": "1.0.56",
     "@types/google.script.client-side": "0.1.1",
     "@typescript-eslint/eslint-plugin": "5.44.0",
+    "cross-env": "7.0.3",
     "esbuild": "0.15.16",
     "esbuild-gas-plugin": "0.5.0",
     "eslint": "8.28.0",

@@ -11,6 +11,7 @@ esbuild
     // resolve `VERSION` variable with the value from package.json
     define: {
       VERSION: JSON.stringify(require("./package.json").version),
+      LOG_LEVEL: JSON.stringify(process.env.LOG || "INFO"),
     },
   })
   .then(() => {
