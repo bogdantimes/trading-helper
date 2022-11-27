@@ -1,3 +1,8 @@
+# v3.1.0
+
+* Library updated to v6 with significant algorithm improvements (+30-40% better profits / year).
+* Experimental "Imbalance Check" feature included in hidden-disabled mode (in testing yet).
+
 # v3.0.3
 
 * Improved current profit percentage accuracy.
