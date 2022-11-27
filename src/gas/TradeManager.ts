@@ -269,17 +269,21 @@ export class TradeManager {
   }
 
   private updateStopLimit(tm: TradeMemo): void {
+    const symbol = tm.tradeResult.symbol;
+
     if (!tm.tradeResult.lotSizeQty) {
       tm.tradeResult.lotSizeQty = this.exchange.quantityForLotStepSize(
-        tm.tradeResult.symbol,
+        symbol,
         tm.tradeResult.quantity
       );
     }
 
+    const precision = tm.precision;
+
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
-      tm.stopLimitPrice = floorToOptimalGrid(ch[Key.MIN], tm.precision);
+      tm.stopLimitPrice = floorToOptimalGrid(ch[Key.MIN], precision).result;
       return;
     }
 
@@ -306,9 +310,36 @@ export class TradeManager {
     newStopLimit = Math.min(newStopLimit, tm.currentPrice);
 
     // quantize stop limit to stick it to the grid
-    newStopLimit = floorToOptimalGrid(newStopLimit, tm.precision);
+    newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
     // update the stop limit price if it's higher than the current one
     tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+
+    if (this.#config.ImbalanceCheck && tm.stopLimitCrossedDown()) {
+      try {
+        if (this.#isOrderBookBullish(symbol, tm.tradeResult.price)) {
+          tm.stopLimitPrice = newStopLimit;
+          this.#config.SellAtStopLimit &&
+            Log.alert(
+              `🐂 ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
+            );
+        } else {
+          Log.info(`Order book is not bullish for ${tm.getCoinName()}`);
+        }
+      } catch (e) {
+        this.#config.SellAtStopLimit &&
+          Log.info(
+            `ℹ️ Couldn't check order book imbalance for ${tm.getCoinName()}`
+          );
+      }
+    }
+  }
+
+  #isOrderBookBullish(symbol: ExchangeSymbol, refPrice: number): boolean {
+    const precision = this.exchange.getPricePrecision(symbol);
+    const { precisionDiff } = floorToOptimalGrid(refPrice, precision);
+    const optimalLimit = Math.pow(10, precisionDiff) * 2;
+    const imbalance = this.exchange.getImbalance(symbol, optimalLimit);
+    return imbalance > 0.3;
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {

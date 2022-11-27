@@ -216,6 +216,8 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                     const strength = ch[Key.STRENGTH] ?? 0;
                     const priceMove = ch[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
                     const s0 = ch[Key.S0] ?? ChannelState.NONE;
+                    const ath = ch[Key.ATH] ?? 0;
+                    const bold = s0 === ChannelState.TOP && ath < ch[Key.MAX];
                     return (
                       <ListItem
                         sx={{
@@ -238,7 +240,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                             <Typography
                               sx={{ display: `flex`, alignItems: `center` }}
                             >
-                              {s0 === ChannelState.TOP ? <b>{coin}</b> : coin}
+                              {bold ? <b>{coin}</b> : coin}
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }

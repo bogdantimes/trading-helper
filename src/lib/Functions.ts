@@ -20,13 +20,21 @@ export function floorLastDigit(value: number, precision: number): number {
   return floor(value, precision - 1);
 }
 
-export function floorToOptimalGrid(value: number, precision: number): number {
-  let r = value;
+interface FloorResult {
+  result: number;
+  precision: number;
+  precisionDiff: number;
+}
+
+export function floorToOptimalGrid(v: number, precision?: number): FloorResult {
+  let result = v;
+  let p = precision ?? getPrecision(v);
+  const originalPrecision = p;
   // step should exceed 0.075% step
-  for (; value / r < 1.000075; precision--) {
-    r = floor(value, precision);
+  for (; v / result < 1.000075; p--) {
+    result = floor(v, p);
   }
-  return r;
+  return { result, precision: p, precisionDiff: originalPrecision - p };
 }
 
 export function sumWithMaxPrecision(a: number, b: number): number {
