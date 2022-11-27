@@ -316,12 +316,14 @@ export class TradeManager {
 
     if (this.#config.ImbalanceCheck && tm.stopLimitCrossedDown()) {
       try {
-        if (this.#isOrderBookBullish(symbol, tm.currentPrice)) {
+        if (this.#isOrderBookBullish(symbol, tm.tradeResult.price)) {
           tm.stopLimitPrice = newStopLimit;
           this.#config.SellAtStopLimit &&
             Log.alert(
               `🐂 ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
             );
+        } else {
+          Log.info(`Order book is not bullish for ${tm.getCoinName()}`);
         }
       } catch (e) {
         this.#config.SellAtStopLimit &&
@@ -337,7 +339,7 @@ export class TradeManager {
     const { precisionDiff } = floorToOptimalGrid(refPrice, precision);
     const optimalLimit = Math.pow(10, precisionDiff);
     const imbalance = this.exchange.getImbalance(symbol, optimalLimit);
-    return imbalance > 0.5;
+    return imbalance > 0.3;
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {
