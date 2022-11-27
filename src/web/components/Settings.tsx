@@ -159,20 +159,17 @@ export function Settings(params: {
           <FormControlLabel
             control={
               <Switch
-                disabled={!cfg.SellAtStopLimit}
-                checked={cfg.ImbalanceCheck}
+                checked={cfg.HideBalances}
                 onChange={(e) =>
-                  setCfg({ ...cfg, ImbalanceCheck: e.target.checked })
+                  setCfg({ ...cfg, HideBalances: e.target.checked })
                 }
               />
             }
-            label="Imbalance check"
-            aria-describedby={`imbalance-helper-text`}
+            label="Hide balances"
+            aria-describedby={`hide-balances-helper-text`}
           />
-          <FormHelperText id={`imbalance-helper-text`}>
-            Do not sell immediately when stop-limit is crossed down, but the
-            order book imbalance is bullish (more buyers than sellers), to avoid
-            selling at turnarounds.
+          <FormHelperText id={`hide-balances-helper-text`}>
+            Hides balances on the Home tab.
           </FormHelperText>
         </FormControl>
         <FormControl>
@@ -188,23 +185,6 @@ export function Settings(params: {
           />
           <FormHelperText id={`view-only-helper-text`}>
             Disables autonomous trading and makes Binance API keys optional.
-          </FormHelperText>
-        </FormControl>
-        <FormControl>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={cfg.HideBalances}
-                onChange={(e) =>
-                  setCfg({ ...cfg, HideBalances: e.target.checked })
-                }
-              />
-            }
-            label="Hide balances"
-            aria-describedby={`hide-balances-helper-text`}
-          />
-          <FormHelperText id={`hide-balances-helper-text`}>
-            Hides balances on the Home tab.
           </FormHelperText>
         </FormControl>
         <Stack spacing={2}>
