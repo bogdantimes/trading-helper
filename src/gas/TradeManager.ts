@@ -317,7 +317,7 @@ export class TradeManager {
     if (this.#config.ImbalanceCheck && tm.stopLimitCrossedDown()) {
       try {
         if (this.#isOrderBookBullish(symbol, tm.currentPrice)) {
-          tm.stopLimitPrice = tm.currentPrice;
+          tm.stopLimitPrice = newStopLimit;
           this.#config.SellAtStopLimit &&
             Log.alert(
               `🐂 ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
