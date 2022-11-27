@@ -308,40 +308,9 @@ export class TradeManager {
     newStopLimit = Math.min(newStopLimit, tm.currentPrice);
 
     // quantize stop limit to stick it to the grid
-    const { result, precisionDiff } = floorToOptimalGrid(
-      newStopLimit,
-      precision
-    );
+    newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
     // update the stop limit price if it's higher than the current one
-    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, result);
-
-    this.#handleImbalance(tm, precisionDiff, precision);
-  }
-
-  #handleImbalance(tm: TradeMemo, precision: number, diff: number): void {
-    if (tm.stopLimitCrossedDown()) {
-      try {
-        const optimalLimit = Math.pow(10, diff);
-        const imbalance = this.exchange.getImbalance(
-          tm.tradeResult.symbol,
-          optimalLimit
-        );
-        Log.info(
-          `Imbalance: ${f2(
-            imbalance
-          )} (origPrecision: ${precision}), optimalLimit: ${optimalLimit}`
-        );
-        // if the stop limit is crossed down and the imbalance is bullish,
-        // we move the stop limit down to the current price
-        if (imbalance > 0.3) {
-          Log.alert(
-            `⚠️ Stop limit crossed down, but the order book imbalance is bullish`
-          );
-        }
-      } catch (e) {
-        Log.info(`Failed to calculate imbalance: ${e.message}`);
-      }
-    }
+    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {
