@@ -18,7 +18,8 @@ export class Log {
   private static readonly errLog: Error[] = [];
   private static readonly alerts: string[] = [];
 
-  static level: LogLevel = LogLevel.INFO;
+  // @ts-expect-error
+  static level: LogLevel = LogLevel[LOG_LEVEL];
 
   static alert(msg: string): void {
     this.level >= LogLevel.ALERT && this.alerts.push(msg);
@@ -32,21 +33,27 @@ export class Log {
     this.level >= LogLevel.DEBUG && this.debugLog.push(JSON.stringify(arg));
   }
 
-  static error(err: Error | any): void {
+  static error(err: Error): void {
     this.level >= LogLevel.ERROR &&
       this.errLog.push(new Error(`${err?.stack?.slice(0, 1000)}`));
   }
 
   static print(): string {
-    return `${this.alerts.length > 0 ? `${this.alerts.join(`<br/>`)}<br/>` : ``}
+    return `${
+      this.alerts.length > 0 ? `${this.alerts.join(`<br/>`)}<br/><br/>` : ``
+    }
 ${
   this.errLog.length > 0
     ? `Errors:<br/>${this.errLog
         .map((e) => `Stack: ${e.stack}`)
-        .join(`<br/>`)}<br/>`
+        .join(`<br/>`)}<br/><br/>`
     : ``
 }
-${this.infoLog.length > 0 ? `Info:<br/>${this.infoLog.join(`<br/>`)}<br/>` : ``}
+${
+  this.infoLog.length > 0
+    ? `Info:<br/>${this.infoLog.join(`<br/>`)}<br/><br/>`
+    : ``
+}
 ${
   this.debugLog.length > 0
     ? `Debug:<br/>${this.debugLog.join(`<br/><br/>`)}`

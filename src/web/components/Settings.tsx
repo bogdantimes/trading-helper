@@ -150,24 +150,9 @@ export function Settings(params: {
             aria-describedby={`stop-limit-helper-text`}
           />
           <FormHelperText id={`stop-limit-helper-text`}>
-            Sell automatically when a stop-limit is <b>crossed down</b>.
+            Sell automatically when stop-limit is <b>crossed down</b>.
             Recommended to always keep enabled. Disable only if you need to hold
             the assets.
-          </FormHelperText>
-        </FormControl>
-        <FormControl>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={cfg.ViewOnly}
-                onChange={(e) => setCfg({ ...cfg, ViewOnly: e.target.checked })}
-              />
-            }
-            label="View-only"
-            aria-describedby={`view-only-helper-text`}
-          />
-          <FormHelperText id={`view-only-helper-text`}>
-            Disables autonomous trading and makes Binance API keys optional.
           </FormHelperText>
         </FormControl>
         <FormControl>
@@ -185,6 +170,21 @@ export function Settings(params: {
           />
           <FormHelperText id={`hide-balances-helper-text`}>
             Hides balances on the Home tab.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={cfg.ViewOnly}
+                onChange={(e) => setCfg({ ...cfg, ViewOnly: e.target.checked })}
+              />
+            }
+            label="View-only"
+            aria-describedby={`view-only-helper-text`}
+          />
+          <FormHelperText id={`view-only-helper-text`}>
+            Disables autonomous trading and makes Binance API keys optional.
           </FormHelperText>
         </FormControl>
         <Stack spacing={2}>

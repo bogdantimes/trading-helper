@@ -2,16 +2,27 @@ import { Log } from "./Common";
 import {
   ExchangeSymbol,
   execute,
+  f2,
   floor,
+  floorToOptimalGrid,
   getPrecision,
   TradeResult,
 } from "../lib";
 import { IExchange } from "./Exchange";
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
+interface Filter {
+  filterType: `LOT_SIZE` | `PRICE_FILTER`;
+  stepSize?: string;
+  tickSize?: string;
+}
+
 interface ExchangeInfo {
   symbols: [
-    { symbol: string; filters: [{ filterType: `LOT_SIZE`; stepSize: string }] }
+    {
+      symbol: string;
+      filters: Filter[];
+    }
   ];
 }
 
@@ -147,6 +158,11 @@ export class Binance implements IExchange {
   }
 
   quantityForLotStepSize(symbol: ExchangeSymbol, quantity: number): number {
+    const precision = this.getLotSizePrecision(symbol);
+    return floor(quantity, precision);
+  }
+
+  getLotSizePrecision(symbol: ExchangeSymbol): number {
     if (!this.#exchangeInfo) {
       this.#exchangeInfo = this.fetch(
         () => `exchangeInfo`,
@@ -154,12 +170,30 @@ export class Binance implements IExchange {
       );
     }
 
-    const stepSize = this.#exchangeInfo.symbols
+    const lotSize = this.#exchangeInfo.symbols
       .find((s) => s.symbol === symbol.toString())
-      ?.filters.find((f) => f.filterType === `LOT_SIZE`)?.stepSize;
-    const precision = stepSize ? getPrecision(+stepSize) : 0;
+      ?.filters.find((f) => f.filterType === `LOT_SIZE`);
+    if (!lotSize) {
+      throw new Error(`Failed to get LOT_SIZE for ${symbol}`);
+    }
+    return getPrecision(+lotSize.stepSize);
+  }
 
-    return floor(quantity, precision);
+  getPricePrecision(symbol: ExchangeSymbol): number {
+    if (!this.#exchangeInfo) {
+      this.#exchangeInfo = this.fetch(
+        () => `exchangeInfo`,
+        this.defaultReqOpts
+      );
+    }
+
+    const priceFilter = this.#exchangeInfo.symbols
+      .find((s) => s.symbol === symbol.toString())
+      ?.filters.find((f) => f.filterType === `PRICE_FILTER`);
+    if (!priceFilter) {
+      throw new Error(`Failed to get PRICE_FILTER for ${symbol}`);
+    }
+    return getPrecision(+priceFilter.tickSize);
   }
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
@@ -175,6 +209,21 @@ export class Binance implements IExchange {
       tradeResult.cost = +order.cummulativeQuoteQty - fees.quoteQty;
       tradeResult.commission = fees.BNB;
       tradeResult.fromExchange = true;
+
+      try {
+        const precision = this.getPricePrecision(symbol);
+        const { precisionDiff } = floorToOptimalGrid(+order.price, precision);
+        const optimalLimit = Math.pow(10, precisionDiff) * 2;
+        const imbalance = this.getImbalance(symbol, optimalLimit);
+        Log.debug(
+          `Imbalance: ${f2(
+            imbalance
+          )} (precision: ${precision}), gridDiff: ${precisionDiff}, optimalLimit: ${optimalLimit}`
+        );
+      } catch (e) {
+        Log.debug(`Failed to calculate imbalance: ${e.message}`);
+      }
+
       return tradeResult;
     } catch (e: any) {
       throw new Error(`Failed to trade ${symbol}: ${e.message}`);
@@ -257,5 +306,14 @@ export class Binance implements IExchange {
   #rotateServer(): void {
     this.#curServerId = this.serverIds.shift();
     this.serverIds.push(this.#curServerId);
+  }
+
+  getImbalance(symbol: ExchangeSymbol, limit: number): number {
+    const url = `https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=${limit}`;
+    const resp = UrlFetchApp.fetch(url);
+    const data = JSON.parse(resp.getContentText());
+    const bidsVol: number = data.bids.reduce((s: number, b) => s + +b[1], 0);
+    const asksVol: number = data.asks.reduce((s: number, a) => s + +a[1], 0);
+    return (bidsVol - asksVol) / (bidsVol + asksVol);
   }
 }
