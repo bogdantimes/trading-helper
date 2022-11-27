@@ -159,6 +159,7 @@ export function Settings(params: {
           <FormControlLabel
             control={
               <Switch
+                disabled={!cfg.SellAtStopLimit}
                 checked={cfg.ImbalanceCheck}
                 onChange={(e) =>
                   setCfg({ ...cfg, ImbalanceCheck: e.target.checked })
@@ -169,9 +170,9 @@ export function Settings(params: {
             aria-describedby={`imbalance-helper-text`}
           />
           <FormHelperText id={`imbalance-helper-text`}>
-            Do not sell when stop-limit is crossed down, but the order book
-            imbalance is bullish (more buyers then sellers), to avoid selling at
-            turnarounds.
+            Do not sell immediately when stop-limit is crossed down, but the
+            order book imbalance is bullish (more buyers then sellers), to avoid
+            selling at turnarounds.
           </FormHelperText>
         </FormControl>
         <FormControl>
