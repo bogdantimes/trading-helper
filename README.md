@@ -22,15 +22,15 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 ## Testing
 
-**Back-testing:** October 2021 -> October 2022 (downtrend market 📉)
+**Back-testing:** November 2021 -> November 2022 (downtrend/sideways market 📉)
 
-**Result:** `$1,000 -> $4,505 (+350%, 3.5x profit)`
+**Result:** `$1,000 -> $5,340 (+434%, 4.3x profit)`
 
 ![r1.png](img/r1.png)
 
 **Back-testing:** September 2019 -> June 2022 (uptrend market 📈)
 
-**Result:** `$1,000 -> $115,611 (+11461%, 114x profit)`
+**Result:** `$1,000 -> $160,000 (+15900%, 159x profit)`
 
 ![r2.png](img/r2.png)
 
@@ -49,7 +49,7 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 ### Set up
 
-Links are in the [latest release](https://github.com/bogdan-kovalev/trading-helper/releases/latest).
+Links are in the [latest release](https://github.com/bogdantimes/trading-helper/releases/latest).
 Clone the latest public release of the Google Apps Script project to your Google account (you can follow the tutorial video).
 
 ### Set up from sources

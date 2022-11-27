@@ -31,7 +31,7 @@ function doGet(): HtmlOutput {
           `width=device-width, initial-scale=1, maximum-scale=1`
         )
         // @ts-expect-error
-        .setTitle(`TradingHelper v${VERSION} id:${ScriptApp.getScriptId()}`)
+        .setTitle(`TradingHelper v${VERSION}`)
     );
   });
 }
