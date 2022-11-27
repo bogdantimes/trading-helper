@@ -337,7 +337,7 @@ export class TradeManager {
   #isOrderBookBullish(symbol: ExchangeSymbol, refPrice: number): boolean {
     const precision = this.exchange.getPricePrecision(symbol);
     const { precisionDiff } = floorToOptimalGrid(refPrice, precision);
-    const optimalLimit = Math.pow(10, precisionDiff);
+    const optimalLimit = Math.pow(10, precisionDiff) * 2;
     const imbalance = this.exchange.getImbalance(symbol, optimalLimit);
     return imbalance > 0.3;
   }
