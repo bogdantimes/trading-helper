@@ -11,9 +11,18 @@ import {
 import { IExchange } from "./Exchange";
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
+interface Filter {
+  filterType: `LOT_SIZE` | `PRICE_FILTER`;
+  stepSize?: string;
+  tickSize?: string;
+}
+
 interface ExchangeInfo {
   symbols: [
-    { symbol: string; filters: [{ filterType: `LOT_SIZE`; stepSize: string }] }
+    {
+      symbol: string;
+      filters: Filter[];
+    }
   ];
 }
 
@@ -161,10 +170,30 @@ export class Binance implements IExchange {
       );
     }
 
-    const stepSize = this.#exchangeInfo.symbols
+    const lotSize = this.#exchangeInfo.symbols
       .find((s) => s.symbol === symbol.toString())
-      ?.filters.find((f) => f.filterType === `LOT_SIZE`)?.stepSize;
-    return stepSize ? getPrecision(+stepSize) : 0;
+      ?.filters.find((f) => f.filterType === `LOT_SIZE`);
+    if (!lotSize) {
+      throw new Error(`Failed to get LOT_SIZE for ${symbol}`);
+    }
+    return getPrecision(+lotSize.stepSize);
+  }
+
+  getPricePrecision(symbol: ExchangeSymbol): number {
+    if (!this.#exchangeInfo) {
+      this.#exchangeInfo = this.fetch(
+        () => `exchangeInfo`,
+        this.defaultReqOpts
+      );
+    }
+
+    const priceFilter = this.#exchangeInfo.symbols
+      .find((s) => s.symbol === symbol.toString())
+      ?.filters.find((f) => f.filterType === `PRICE_FILTER`);
+    if (!priceFilter) {
+      throw new Error(`Failed to get PRICE_FILTER for ${symbol}`);
+    }
+    return getPrecision(+priceFilter.tickSize);
   }
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
@@ -182,14 +211,14 @@ export class Binance implements IExchange {
       tradeResult.fromExchange = true;
 
       try {
-        const precision = this.getLotSizePrecision(symbol);
+        const precision = this.getPricePrecision(symbol);
         const { precisionDiff } = floorToOptimalGrid(+order.price, precision);
         const optimalLimit = Math.pow(10, precisionDiff);
         const imbalance = this.getImbalance(symbol, optimalLimit);
         Log.info(
           `Imbalance: ${f2(
             imbalance
-          )} (origPrecision: ${precision}), optimalLimit: ${optimalLimit}`
+          )} (precision: ${precision}), gridDiff: ${precisionDiff}, optimalLimit: ${optimalLimit}`
         );
       } catch (e) {
         Log.info(`Failed to calculate imbalance: ${e.message}`);
