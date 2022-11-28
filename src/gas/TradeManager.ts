@@ -320,7 +320,7 @@ export class TradeManager {
           tm.stopLimitPrice = newStopLimit;
           this.#config.SellAtStopLimit &&
             Log.alert(
-              `🐂 ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
+              `⚠ ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
             );
         } else {
           Log.info(`Order book was not bullish for ${tm.getCoinName()}`);
@@ -328,7 +328,7 @@ export class TradeManager {
       } catch (e) {
         this.#config.SellAtStopLimit &&
           Log.info(
-            `ℹ️ Couldn't check order book imbalance for ${tm.getCoinName()}`
+            `ℹ Couldn't check order book imbalance for ${tm.getCoinName()}`
           );
       }
     }
