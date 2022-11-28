@@ -339,7 +339,12 @@ export class TradeManager {
     const { precisionDiff } = floorToOptimalGrid(refPrice, precision);
     const optimalLimit = Math.pow(10, precisionDiff) * 2;
     const imbalance = this.exchange.getImbalance(symbol, optimalLimit);
-    return imbalance > 0.3;
+    Log.debug(
+      `Imbalance: ${f2(
+        imbalance
+      )} (precision: ${precision}), gridDiff: ${precisionDiff}, optimalLimit: ${optimalLimit}`
+    );
+    return imbalance > 0.15;
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {

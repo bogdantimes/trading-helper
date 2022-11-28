@@ -226,11 +226,13 @@ function sell(coin: CoinName): string {
   });
 }
 
-function toggleImbalanceCheck(): string {
+function imbalanceCheck(on: boolean | 1 | 0): string {
   return catchError(() => {
     const cfg = new ConfigDao(DefaultStore).get();
-    cfg.ImbalanceCheck = !cfg.ImbalanceCheck;
-    new ConfigDao(DefaultStore).set(cfg);
+    if (cfg.ImbalanceCheck !== !!on) {
+      cfg.ImbalanceCheck = !!on;
+      new ConfigDao(DefaultStore).set(cfg);
+    }
     return `[${
       cfg.ImbalanceCheck ? `ENABLED` : `DISABLED`
     }] Do not sell immediately when stop-limit is crossed down, but the order book imbalance is bullish (more buyers than sellers), to avoid selling at turnarounds.`;
@@ -251,4 +253,4 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.toggleImbalanceCheck = toggleImbalanceCheck;
+global.toggleImbalanceCheck = imbalanceCheck;
