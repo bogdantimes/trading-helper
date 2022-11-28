@@ -253,4 +253,4 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.toggleImbalanceCheck = imbalanceCheck;
+global.imbalanceCheck = imbalanceCheck;
