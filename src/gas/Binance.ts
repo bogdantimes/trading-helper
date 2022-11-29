@@ -309,8 +309,10 @@ export class Binance implements IExchange {
   }
 
   getImbalance(symbol: ExchangeSymbol, limit: number): number {
-    const url = `https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=${limit}`;
-    const resp = UrlFetchApp.fetch(url);
+    const resp = this.fetch(
+      () => `depth?symbol=${symbol}&limit=${limit}`,
+      this.defaultReqOpts
+    );
     const data = JSON.parse(resp.getContentText());
     const bidsVol: number = data.bids.reduce((s: number, b) => s + +b[1], 0);
     const asksVol: number = data.asks.reduce((s: number, a) => s + +a[1], 0);

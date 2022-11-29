@@ -1,4 +1,5 @@
 import { CoinName, enumKeys, StableUSDCoin } from "../lib";
+import { isNode } from "browser-or-node";
 
 export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60;
@@ -19,7 +20,7 @@ export class Log {
   private static readonly alerts: string[] = [];
 
   // @ts-expect-error
-  static level: LogLevel = LogLevel[LOG_LEVEL];
+  static level: LogLevel = isNode ? LogLevel.NONE : LogLevel[LOG_LEVEL];
 
   static alert(msg: string): void {
     this.level >= LogLevel.ALERT && this.alerts.push(msg);
