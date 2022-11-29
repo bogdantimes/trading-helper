@@ -28,11 +28,11 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 ![r1.png](img/r1.png)
 
-**Back-testing:** September 2019 -> June 2022 (uptrend market 📈)
+**Back-testing:** November 2020 -> November 2022 (uptrend/downtrend/sideways market 📈)
 
-**Result:** `$1,000 -> $160,000 (+15900%, 159x profit)`
+**Result:** `$1,000 -> $59,409 (+5690%, 56x profit)`
 
-![r2.png](img/r2.png)
+![image](https://user-images.githubusercontent.com/7527778/204544799-37395bc8-462a-4eb7-86fc-f6f6e3d1c006.png)
 
 ## Screenshots
 
