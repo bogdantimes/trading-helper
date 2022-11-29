@@ -24,9 +24,9 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 **Back-testing:** November 2021 -> November 2022 (downtrend/sideways market 📉)
 
-**Result:** `$1,000 -> $5,340 (+434%, 4.3x profit)`
+**Result:** `$1,000 -> $5,102 (+407%, 4x profit)`
 
-![r1.png](img/r1.png)
+![image](https://user-images.githubusercontent.com/7527778/204552357-0cff0f4a-9c3d-4873-88d5-f3f12d2ccd22.png)
 
 **Back-testing:** November 2020 -> November 2022 (uptrend/downtrend/sideways market 📈)
 
