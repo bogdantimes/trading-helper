@@ -38,11 +38,11 @@
     "eslint-plugin-promise": "6.1.1",
     "eslint-plugin-react": "7.31.11",
     "eslint-plugin-react-hooks": "4.6.0",
+    "firebase-tools": "^11.16.1",
     "husky": "8.0.2",
     "parcel": "2.8.0",
     "prettier": "2.8.0",
-    "typescript": "4.9.3",
-    "firebase-tools": "11.16.1"
+    "typescript": "4.9.3"
   },
   "author": "Bohdan Kovalov",
   "license": "MIT",
@@ -64,12 +64,12 @@
   },
   "overrides": {
     "react-currency-format": {
-        "react": "$react",
-        "react-dom": "$react-dom"
+      "react": "$react",
+      "react-dom": "$react-dom"
     },
     "react-progressbar-semicircle": {
-        "react": "$react",
-        "react-dom": "$react-dom"
+      "react": "$react",
+      "react-dom": "$react-dom"
     }
   }
 }
