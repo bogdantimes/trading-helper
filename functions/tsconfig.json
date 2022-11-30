@@ -8,6 +8,9 @@
     "strict": true,
     "target": "es2017"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "compileOnSave": true,
   "include": [
     "src"
