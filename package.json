@@ -41,7 +41,8 @@
     "husky": "8.0.2",
     "parcel": "2.8.0",
     "prettier": "2.8.0",
-    "typescript": "4.9.3"
+    "typescript": "4.9.3",
+    "firebase-tools": "11.16.1"
   },
   "author": "Bohdan Kovalov",
   "license": "MIT",
@@ -53,12 +54,22 @@
     "browser-or-node": "2.0.0",
     "lightweight-charts": "3.8.0",
     "react": "18.2.0",
-    "react-currency-format": "1.1.0",
+    "react-currency-format": "^1.1.0",
     "react-dom": "18.2.0",
     "react-error-boundary": "3.1.4",
     "react-progressbar-semicircle": "1.2.1",
     "react-terminal-ui": "1.0.0",
     "react-window": "1.8.8",
     "use-double-tap": "1.3.4"
+  },
+  "overrides": {
+    "react-currency-format": {
+        "react": "$react",
+        "react-dom": "$react-dom"
+    },
+    "react-progressbar-semicircle": {
+        "react": "$react",
+        "react-dom": "$react-dom"
+    }
   }
 }
