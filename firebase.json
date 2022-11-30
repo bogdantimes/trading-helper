@@ -6,8 +6,7 @@
       "ignore": [
         "node_modules",
         ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log"
+        "*.log"
       ],
       "predeploy": "npm --prefix functions run build",
       "runtime": "nodejs18"

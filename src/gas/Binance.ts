@@ -33,10 +33,10 @@ export class Binance implements IExchange {
   private readonly tradeReqOpts: URLFetchRequestOptions;
   private readonly serverIds: number[];
   readonly #balances: { [coinName: string]: number } = {};
+  readonly #cloudURL: string;
 
   #exchangeInfo: ExchangeInfo;
   #curServerId: number;
-  #baseURL: string;
 
   constructor(key: string, secret: string) {
     this.key = key ?? ``;
@@ -48,7 +48,7 @@ export class Binance implements IExchange {
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts);
     this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
-    this.#baseURL = global.TradingHelperLibrary.getBinanceURL();
+    this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
   }
 
   getBalance(coinName: string): number {
@@ -266,12 +266,15 @@ export class Binance implements IExchange {
     resource: () => string,
     options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
   ): any {
-    const baseURL = this.#baseURL;
+    const cloudURL = this.#cloudURL;
     return execute({
-      attempts: 2,
+      interval: 200,
+      attempts: cloudURL ? 2 : this.serverIds.length * 4,
       runnable: () => {
+        const server =
+          cloudURL || `https://api${this.#curServerId}.binance.com/api/v3/`;
         const resp = UrlFetchApp.fetch(
-          `${baseURL}${encodeURI(resource())}`,
+          `${server}${encodeURI(resource())}`,
           options
         );
 
