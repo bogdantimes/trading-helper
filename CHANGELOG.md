@@ -1,3 +1,11 @@
+# v3.1.1
+
+News of the week was Binance restricting REST API access from any US-based cloud providers (like Google).
+
+* Added ability to use EU-based cloud proxy for Binance REST API requests.
+* Only Patrons that unlocked autonomous trading get the access to EU service.
+* Other fixes: improved experimental "Imbalance Check" feature (it still stays in hidden-disabled mode).
+
 # v3.1.0
 
 * Library updated to v6 with significant algorithm improvements (+30-40% better profits / year).

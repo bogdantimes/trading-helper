@@ -6,6 +6,7 @@ import {
   floor,
   floorToOptimalGrid,
   getPrecision,
+  INTERRUPT,
   TradeResult,
 } from "../lib";
 import { IExchange } from "./Exchange";
@@ -33,6 +34,7 @@ export class Binance implements IExchange {
   private readonly tradeReqOpts: URLFetchRequestOptions;
   private readonly serverIds: number[];
   readonly #balances: { [coinName: string]: number } = {};
+  readonly #cloudURL: string;
 
   #exchangeInfo: ExchangeInfo;
   #curServerId: number;
@@ -47,6 +49,7 @@ export class Binance implements IExchange {
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts);
     this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
+    this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
   }
 
   getBalance(coinName: string): number {
@@ -264,12 +267,17 @@ export class Binance implements IExchange {
     resource: () => string,
     options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
   ): any {
+    const cloudURL = this.#cloudURL;
     return execute({
       interval: 200,
-      attempts: this.serverIds.length * 4,
+      attempts: cloudURL ? 2 : this.serverIds.length * 4,
       runnable: () => {
-        const server = `https://api${this.#curServerId}.binance.com/api/v3`;
-        const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options);
+        const server =
+          cloudURL || `https://api${this.#curServerId}.binance.com/api/v3/`;
+        const resp = UrlFetchApp.fetch(
+          `${server}${encodeURI(resource())}`,
+          options
+        );
 
         if (resp.getResponseCode() === 200) {
           try {
@@ -282,7 +290,17 @@ export class Binance implements IExchange {
         this.#rotateServer();
 
         if (resp.getResponseCode() === 418 || resp.getResponseCode() === 429) {
-          Log.debug(`Limit reached on server ` + server);
+          Log.debug(`Limit reached on Binance`);
+        }
+
+        if (resp.getResponseCode() === 451) {
+          Log.alert(
+            `⛔ Binance blocked the request because it originates from a restricted location (most likely US-based Google Apps Script server). TradingHelper has EU-based service which is automatically enabled for Patrons that unlocked the autonomous trading.`
+          );
+          Log.error(
+            new Error(`${resp.getResponseCode()} ${resp.getContentText()}`)
+          );
+          throw new Error(INTERRUPT);
         }
 
         if (
@@ -290,7 +308,7 @@ export class Binance implements IExchange {
           resp.getContentText().includes(`Not all sent parameters were read`)
         ) {
           // Likely a request signature verification timeout
-          Log.debug(`Got 400 response code from ` + server);
+          Log.debug(`Got 400 response code from Binance`);
         }
 
         throw new Error(`${resp.getResponseCode()} ${resp.getContentText()}`);
@@ -309,9 +327,10 @@ export class Binance implements IExchange {
   }
 
   getImbalance(symbol: ExchangeSymbol, limit: number): number {
-    const url = `https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=${limit}`;
-    const resp = UrlFetchApp.fetch(url);
-    const data = JSON.parse(resp.getContentText());
+    const data = this.fetch(
+      () => `depth?symbol=${symbol}&limit=${limit}`,
+      this.defaultReqOpts
+    );
     const bidsVol: number = data.bids.reduce((s: number, b) => s + +b[1], 0);
     const asksVol: number = data.asks.reduce((s: number, a) => s + +a[1], 0);
     return (bidsVol - asksVol) / (bidsVol + asksVol);
