@@ -6,6 +6,7 @@ import {
   floor,
   floorToOptimalGrid,
   getPrecision,
+  INTERRUPT,
   TradeResult,
 } from "../lib";
 import { IExchange } from "./Exchange";
@@ -290,6 +291,16 @@ export class Binance implements IExchange {
 
         if (resp.getResponseCode() === 418 || resp.getResponseCode() === 429) {
           Log.debug(`Limit reached on Binance`);
+        }
+
+        if (resp.getResponseCode() === 451) {
+          Log.alert(
+            `⛔ Binance blocked the request because it originates from a restricted location (most likely US-based Google Apps Script server). TradingHelper has EU-based service which is automatically enabled for Patrons that unlocked the autonomous trading.`
+          );
+          Log.error(
+            new Error(`${resp.getResponseCode()} ${resp.getContentText()}`)
+          );
+          throw new Error(INTERRUPT);
         }
 
         if (
