@@ -33,6 +33,7 @@ export class Binance implements IExchange {
   private readonly tradeReqOpts: URLFetchRequestOptions;
   private readonly serverIds: number[];
   readonly #balances: { [coinName: string]: number } = {};
+  readonly #cloudURL: string;
 
   #exchangeInfo: ExchangeInfo;
   #curServerId: number;
@@ -47,6 +48,7 @@ export class Binance implements IExchange {
     this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts);
     this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
+    this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
   }
 
   getBalance(coinName: string): number {
@@ -264,12 +266,17 @@ export class Binance implements IExchange {
     resource: () => string,
     options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
   ): any {
+    const cloudURL = this.#cloudURL;
     return execute({
       interval: 200,
-      attempts: this.serverIds.length * 4,
+      attempts: cloudURL ? 2 : this.serverIds.length * 4,
       runnable: () => {
-        const server = `https://api${this.#curServerId}.binance.com/api/v3`;
-        const resp = UrlFetchApp.fetch(`${server}/${resource()}`, options);
+        const server =
+          cloudURL || `https://api${this.#curServerId}.binance.com/api/v3/`;
+        const resp = UrlFetchApp.fetch(
+          `${server}${encodeURI(resource())}`,
+          options
+        );
 
         if (resp.getResponseCode() === 200) {
           try {
@@ -282,7 +289,7 @@ export class Binance implements IExchange {
         this.#rotateServer();
 
         if (resp.getResponseCode() === 418 || resp.getResponseCode() === 429) {
-          Log.debug(`Limit reached on server ` + server);
+          Log.debug(`Limit reached on Binance`);
         }
 
         if (
@@ -290,7 +297,7 @@ export class Binance implements IExchange {
           resp.getContentText().includes(`Not all sent parameters were read`)
         ) {
           // Likely a request signature verification timeout
-          Log.debug(`Got 400 response code from ` + server);
+          Log.debug(`Got 400 response code from Binance`);
         }
 
         throw new Error(`${resp.getResponseCode()} ${resp.getContentText()}`);
