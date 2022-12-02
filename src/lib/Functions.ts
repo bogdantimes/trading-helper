@@ -113,7 +113,7 @@ export interface ExecParams {
   attempts?: number;
 }
 
-export const INTERRUPT = `INTERRUPT`;
+export const INTERRUPT = `⛔`;
 export const SERVICE_LIMIT = `Service invoked too many times`;
 
 export function execute({

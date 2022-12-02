@@ -297,10 +297,9 @@ export class Binance implements IExchange {
           Log.alert(
             `⛔ Binance blocked the request because it originates from a restricted location (most likely US-based Google Apps Script server). TradingHelper has EU-based service which is automatically enabled for Patrons that unlocked the autonomous trading.`
           );
-          Log.error(
-            new Error(`${resp.getResponseCode()} ${resp.getContentText()}`)
+          throw new Error(
+            `${INTERRUPT} ${resp.getResponseCode()} ${resp.getContentText()}`
           );
-          throw new Error(INTERRUPT);
         }
 
         if (
