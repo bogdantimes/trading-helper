@@ -49,8 +49,9 @@ export function Settings(params: {
 
     setError(null);
 
-    if (isFinite(+balance) && (+balance === -1 || +balance >= 0)) {
-      cfg.StableBalance = +balance;
+    const autoDetect = -1;
+    if (isFinite(+balance) && (+balance === autoDetect || +balance >= 0)) {
+      cfg.StableBalance = balance === `` ? autoDetect : +balance;
     } else if (balance !== ``) {
       setError(
         `Balance must be a positive number or empty to auto-detect it from Binance.`
