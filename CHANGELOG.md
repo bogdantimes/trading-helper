@@ -1,3 +1,7 @@
+# v3.1.2
+
+* Minor fixes to initial setup for new users.
+
 # v3.1.1
 
 News of the week was Binance restricting REST API access from any US-based cloud providers (like Google).
