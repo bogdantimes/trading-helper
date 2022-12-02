@@ -159,16 +159,33 @@ export class TradeManager {
   }
 
   #prepare(): void {
-    this.#config = this.configDao.get();
+    this.#initBalance();
     this.#mktTrend = this.trendProvider.get();
-    this.#balance = this.#config.StableBalance;
-    if (this.#balance === -1 && this.#config.KEY && this.#config.SECRET) {
-      this.#balance = this.exchange.getBalance(this.#config.StableCoin);
-      this.#config.StableBalance = 0; // set to remaining balance in #finalize()
-    }
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
     const cs = this.channelsDao.getCandidates(percentile);
     this.#optimalInvestRatio = Math.max(1, Math.min(3, Object.keys(cs).length));
+  }
+
+  #initBalance(): void {
+    this.#config = this.configDao.get();
+    this.#balance = this.#config.StableBalance;
+    if (this.#balance === -1 && this.#config.KEY && this.#config.SECRET) {
+      try {
+        this.#balance = this.exchange.getBalance(this.#config.StableCoin);
+        // if balance > 0 it will be saved in #finalize()
+        // otherwise the tool will try to get it again next time
+        this.#config.StableBalance = 0;
+      } catch (e) {
+        Log.alert(
+          `Couldn't read the initial ${
+            this.#config.StableCoin
+          } balance. It was set to $0, you can change in the Settings.`
+        );
+        // It should stop trying to get the balance if it failed. Setting it to 0 will do that.
+        this.#config.StableBalance = 0;
+        this.configDao.set(this.#config);
+      }
+    }
   }
 
   #finalize(): void {
