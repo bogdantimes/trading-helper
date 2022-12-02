@@ -10,6 +10,7 @@ import { IExchange } from "./Exchange";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
 import { MAX_EXPIRATION } from "./CacheProxy";
+import { Log } from "./Common";
 
 const cacheKey = `TrendProvider.get`;
 
@@ -57,6 +58,9 @@ export class TrendProvider {
       this.cache.put(cacheKey, trend.toString(), exp);
       return trend;
     } catch (e) {
+      Log.alert(
+        `⚠️ Couldn't get latest BTC prices for trend calculation. Falling back to sideways market trend.`
+      );
       this.cache.put(cacheKey, MarketTrend.SIDEWAYS.toString(), MAX_EXPIRATION);
       throw e;
     }

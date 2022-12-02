@@ -177,11 +177,12 @@ export class TradeManager {
         this.#config.StableBalance = 0;
       } catch (e) {
         Log.alert(
-          `Couldn't read the initial ${
+          `⚠️ Couldn't read the initial ${
             this.#config.StableCoin
           } balance. It was set to $0, you can change in the Settings.`
         );
         // It should stop trying to get the balance if it failed. Setting it to 0 will do that.
+        this.#balance = 0;
         this.#config.StableBalance = 0;
         this.configDao.set(this.#config);
       }
