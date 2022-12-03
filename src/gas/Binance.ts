@@ -137,7 +137,7 @@ export class Binance implements IExchange {
     try {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost;
-      tradeResult.soldPrice = tradeResult.price;
+      tradeResult.soldPrice = tradeResult.avgPrice;
       this.#updateBalance(symbol.priceAsset, tradeResult.cost);
       return tradeResult;
     } catch (e: any) {
