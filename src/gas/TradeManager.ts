@@ -316,14 +316,14 @@ export class TradeManager {
     let c2 = curTTL / maxTTL;
 
     // if the stop limit is above the entry price, we don't want to apply TTL stop limit
-    if (tm.stopLimitPrice >= tm.tradeResult.price) {
+    if (tm.stopLimitPrice >= tm.tradeResult.entryPrice) {
       c2 = 0;
     }
 
     // apply max of c1 and c2 to the stop limit price
     const c = Math.max(c1, c2);
     const bottomPrice = tm.stopLimitBottomPrice;
-    let newStopLimit = bottomPrice + (tm.profitGoalPrice() - bottomPrice) * c;
+    let newStopLimit = bottomPrice + (tm.profitGoalPrice - bottomPrice) * c;
     // keep the stop limit lower than the current price
     newStopLimit = Math.min(newStopLimit, tm.currentPrice);
 
@@ -334,7 +334,7 @@ export class TradeManager {
 
     if (this.#config.ImbalanceCheck && tm.stopLimitCrossedDown()) {
       try {
-        if (this.#isOrderBookBullish(symbol, tm.tradeResult.price)) {
+        if (this.#isOrderBookBullish(symbol, tm.tradeResult.entryPrice)) {
           tm.stopLimitPrice = newStopLimit;
           this.#config.SellAtStopLimit &&
             Log.alert(
@@ -414,7 +414,7 @@ export class TradeManager {
         this.forceUpdateStopLimit(tm);
         this.processBuyFee(tradeResult);
         Log.alert(
-          `${tm.getCoinName()} asset average price: ${tm.tradeResult.price}`
+          `${tm.getCoinName()} asset average price: ${tm.tradeResult.avgPrice}`
         );
         Log.debug(tm);
       } catch (e) {
@@ -461,8 +461,8 @@ export class TradeManager {
         const entryDate = new Date(
           new Date().getTime() - memo.ttl * 60 * 1000
         ).toLocaleDateString();
-        const entryPrice = floor(entry.price, memo.precision);
-        const exitPrice = floor(exit.price, memo.precision);
+        const entryPrice = floor(entry.avgPrice, memo.precision);
+        const exitPrice = floor(exit.avgPrice, memo.precision);
         Log.info(
           `<table><tr><th>Entry Date</th><th>Coin/Token</th><th>Invested</th><th>Quantity</th><th>Entry Price</th><th>Exit Date</th><th>Exit Price</th><th>Gained</th><th>% Profit/Loss</th></tr><tr><td>${entryDate}</td><td>${coin}</td><td>$${f2(
             entry.paid

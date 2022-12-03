@@ -29,9 +29,9 @@ export default function Trade(props: {
   const theme = useTheme();
 
   const [priceLine, setPriceLine] = useState<ISeriesApi<`Line`>>(null);
-  const [profitLine, setProfitLine] = useState<ISeriesApi<`Line`>>(null);
+  const [targetLine, setTargetLine] = useState<ISeriesApi<`Line`>>(null);
   const [stopLine, setStopLine] = useState<ISeriesApi<`Line`>>(null);
-  const [orderLine, setOrderLine] = useState<ISeriesApi<`Line`>>(null);
+  const [entryLine, setEntryLine] = useState<ISeriesApi<`Line`>>(null);
   const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<`Line`>>(null);
 
   const map = (prices: number[], mapFn: (v: number) => number): LineData[] => {
@@ -74,14 +74,14 @@ export default function Trade(props: {
           lineWidth: 1,
         })
       );
-      setProfitLine(
+      setTargetLine(
         chart.current.addLineSeries({
           title: `Profit goal`,
           color: profitColor,
           lineWidth: 1,
         })
       );
-      setOrderLine(
+      setEntryLine(
         chart.current.addLineSeries({
           title: `Entry price`,
           color: entryColor,
@@ -136,23 +136,23 @@ export default function Trade(props: {
       stopLine.setData(map(tm.prices, () => tm.stopLimitPrice));
     }
 
-    if (orderLine) {
-      orderLine.applyOptions({
-        visible: !!tm.tradeResult.quantity,
+    if (entryLine) {
+      entryLine.applyOptions({
+        visible: !!tm.tradeResult.entryPrice,
         priceFormat,
       });
-      orderLine.setData(map(tm.prices, () => tm.tradeResult.price));
+      entryLine.setData(map(tm.prices, () => tm.tradeResult.entryPrice));
     }
 
-    if (profitLine) {
-      profitLine.applyOptions({
+    if (targetLine) {
+      targetLine.applyOptions({
         color: profitColor,
         visible: !!tm.tradeResult.quantity,
         lineStyle: LineStyle.Dashed,
         priceFormat,
       });
-      const profitPrice = tm.profitGoalPrice();
-      profitLine.setData(map(tm.prices, () => profitPrice));
+      const profitGoalPrice = tm.profitGoalPrice;
+      targetLine.setData(map(tm.prices, () => profitGoalPrice));
     }
 
     if (soldPriceLine) {
@@ -167,9 +167,9 @@ export default function Trade(props: {
     tm,
     cfg.AutoMarketTrend,
     priceLine,
-    profitLine,
+    targetLine,
     stopLine,
-    orderLine,
+    entryLine,
   ]);
 
   useEffect(() => {
