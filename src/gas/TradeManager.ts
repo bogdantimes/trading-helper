@@ -6,6 +6,7 @@ import {
   Config,
   ExchangeSymbol,
   f2,
+  f8,
   floor,
   floorToOptimalGrid,
   Key,
@@ -297,6 +298,7 @@ export class TradeManager {
     }
 
     const precision = tm.precision;
+    const slCrossedDown = tm.stopLimitCrossedDown();
 
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
@@ -334,11 +336,12 @@ export class TradeManager {
 
     if (
       this.#config.ImbalanceCheck &&
-      tm.stopLimitCrossedDown() &&
-      curTTL < maxTTL
+      curTTL > maxTTL &&
+      slCrossedDown &&
+      tm.currentPrice > bottomPrice
     ) {
       try {
-        if (this.#isOrderBookBullish(symbol, tm.tradeResult.entryPrice)) {
+        if (this.#isOrderBookBullish(tm)) {
           tm.stopLimitPrice = newStopLimit;
           this.#config.SellAtStopLimit &&
             Log.alert(
@@ -356,15 +359,19 @@ export class TradeManager {
     }
   }
 
-  #isOrderBookBullish(symbol: ExchangeSymbol, refPrice: number): boolean {
+  #isOrderBookBullish(tm: TradeMemo): boolean {
+    const symbol = tm.tradeResult.symbol;
     const precision = this.exchange.getPricePrecision(symbol);
-    const { precisionDiff } = floorToOptimalGrid(refPrice, precision);
-    const optimalLimit = Math.pow(10, precisionDiff) * 2;
-    const imbalance = this.exchange.getImbalance(symbol, optimalLimit);
+    const floor = floorToOptimalGrid(tm.currentPrice, precision);
+    const optimalLimit = Math.pow(10, floor.precisionDiff) * 2;
+    const bidCutOffPrice = floor.result;
+    const imbalance = this.exchange.getImbalance(
+      symbol,
+      optimalLimit,
+      bidCutOffPrice
+    );
     Log.debug(
-      `Imbalance: ${f2(
-        imbalance
-      )} (precision: ${precision}), gridDiff: ${precisionDiff}, optimalLimit: ${optimalLimit}`
+      `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
     );
     return imbalance > 0.15;
   }
