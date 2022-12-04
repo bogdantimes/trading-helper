@@ -332,7 +332,11 @@ export class TradeManager {
     // update the stop limit price if it's higher than the current one
     tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
-    if (this.#config.ImbalanceCheck && tm.stopLimitCrossedDown()) {
+    if (
+      this.#config.ImbalanceCheck &&
+      tm.stopLimitCrossedDown() &&
+      curTTL < maxTTL
+    ) {
       try {
         if (this.#isOrderBookBullish(symbol, tm.tradeResult.entryPrice)) {
           tm.stopLimitPrice = newStopLimit;
