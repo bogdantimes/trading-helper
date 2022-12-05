@@ -331,35 +331,44 @@ export class TradeManager {
 
     // quantize stop limit to stick it to the grid
     newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
-    // update the stop limit price if it's higher than the current one
-    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
     if (
-      this.#config.ImbalanceCheck &&
-      curTTL > maxTTL &&
       slCrossedDown &&
-      tm.currentPrice > bottomPrice
+      curTTL < maxTTL &&
+      tm.currentPrice > bottomPrice &&
+      this.#isOrderBookBullish(tm)
     ) {
-      try {
-        if (this.#isOrderBookBullish(tm)) {
-          tm.stopLimitPrice = newStopLimit;
-          this.#config.SellAtStopLimit &&
-            Log.alert(
-              `⚠ ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
-            );
-        } else {
-          Log.info(`Order book was not bullish for ${tm.getCoinName()}`);
-        }
-      } catch (e) {
-        this.#config.SellAtStopLimit &&
-          Log.info(
-            `ℹ Couldn't check order book imbalance for ${tm.getCoinName()}`
-          );
-      }
+      // Allow stop-limit be lowered when it is crossed down,
+      // but the order book imbalance is bullish (more buyers than sellers),
+      // to avoid selling at turnarounds.
+      tm.stopLimitPrice = newStopLimit;
+    } else {
+      // Apply new stop limit if it is higher.
+      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
     }
   }
 
   #isOrderBookBullish(tm: TradeMemo): boolean {
+    try {
+      if (this.#checkImbalance(tm)) {
+        this.#config.SellAtStopLimit &&
+          Log.alert(
+            `⚠ ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
+          );
+        return true;
+      } else {
+        Log.info(`Order book was not bullish for ${tm.getCoinName()}`);
+      }
+    } catch (e) {
+      this.#config.SellAtStopLimit &&
+        Log.info(
+          `ℹ Couldn't check order book imbalance for ${tm.getCoinName()}`
+        );
+    }
+    return false;
+  }
+
+  #checkImbalance(tm: TradeMemo): boolean {
     const symbol = tm.tradeResult.symbol;
     const precision = this.exchange.getPricePrecision(symbol);
     const floor = floorToOptimalGrid(tm.currentPrice, precision);

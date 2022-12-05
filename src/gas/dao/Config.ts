@@ -9,7 +9,6 @@ export const DefaultConfig: () => Config = () => ({
   AdvancedAccess: false,
   ViewOnly: false,
   HideBalances: false,
-  ImbalanceCheck: false,
 });
 
 export class ConfigDao {
