@@ -4,6 +4,10 @@
 * Active stop-limit renamed to **Smart exit**: sell automatically when smart exit is **crossed down** and there
   are **no** buyers to support the price.
 * Updated [back-testing/results.md](back-testing/results.md) with the results of the full test-set.
+* Added support of automatic OTA (Over The Air) upgrades to next versions:
+  * Upgrade functionality requires the additional permissions:
+    `https://www.googleapis.com/auth/drive`
+    `https://www.googleapis.com/auth/drive.scripts`
 
 # v3.1.2
 
