@@ -19,6 +19,7 @@ import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
+import { Updater } from "./Updater";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -62,6 +63,10 @@ function createTriggers(): string {
   ScriptApp.newTrigger(Process.tick.name)
     .timeBased()
     .everyMinutes(TICK_INTERVAL_MIN)
+    .create();
+  ScriptApp.newTrigger(Updater.OTAUpdate.name)
+    .timeBased()
+    .everyHours(6)
     .create();
   Log.alert(
     `ℹ️ Background process started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
@@ -226,19 +231,6 @@ function sell(coin: CoinName): string {
   });
 }
 
-function imbalanceCheck(on: boolean | 1 | 0): string {
-  return catchError(() => {
-    const cfg = new ConfigDao(DefaultStore).get();
-    if (cfg.ImbalanceCheck !== !!on) {
-      cfg.ImbalanceCheck = !!on;
-      new ConfigDao(DefaultStore).set(cfg);
-    }
-    return `[${
-      cfg.ImbalanceCheck ? `ENABLED` : `DISABLED`
-    }] Do not sell immediately when stop-limit is crossed down, but the order book imbalance is bullish (more buyers than sellers), to avoid selling at turnarounds.`;
-  });
-}
-
 global.doGet = doGet;
 global.doPost = doPost;
 global.tick = tick;
@@ -253,4 +245,4 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.imbalanceCheck = imbalanceCheck;
+global.upgrade = () => catchError(Updater.OTAUpdate);

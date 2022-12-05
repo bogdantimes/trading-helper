@@ -21,8 +21,6 @@ If you see the "Welcome" page, the webapp is running.
 Pass the initial setup and once you see the Home page - the initial setup is done.
 Candidates will appear in 1 minute after the initial setup is done.
 
-See the YouTube playlist with tutorials [here](https://www.youtube.com/playlist?list=PLAiqSgC5hs1fcFglYk81W7hpNRJbqu0Ox)
-
 ## To push your changes
 
 ```bash

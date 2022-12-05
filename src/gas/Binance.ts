@@ -2,9 +2,7 @@ import { Log } from "./Common";
 import {
   ExchangeSymbol,
   execute,
-  f2,
   floor,
-  floorToOptimalGrid,
   getPrecision,
   INTERRUPT,
   TradeResult,
@@ -137,7 +135,7 @@ export class Binance implements IExchange {
     try {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.gained = tradeResult.cost;
-      tradeResult.soldPrice = tradeResult.price;
+      tradeResult.soldPrice = tradeResult.avgPrice;
       this.#updateBalance(symbol.priceAsset, tradeResult.cost);
       return tradeResult;
     } catch (e: any) {
@@ -212,21 +210,6 @@ export class Binance implements IExchange {
       tradeResult.cost = +order.cummulativeQuoteQty - fees.quoteQty;
       tradeResult.commission = fees.BNB;
       tradeResult.fromExchange = true;
-
-      try {
-        const precision = this.getPricePrecision(symbol);
-        const { precisionDiff } = floorToOptimalGrid(+order.price, precision);
-        const optimalLimit = Math.pow(10, precisionDiff) * 2;
-        const imbalance = this.getImbalance(symbol, optimalLimit);
-        Log.debug(
-          `Imbalance: ${f2(
-            imbalance
-          )} (precision: ${precision}), gridDiff: ${precisionDiff}, optimalLimit: ${optimalLimit}`
-        );
-      } catch (e) {
-        Log.debug(`Failed to calculate imbalance: ${e.message}`);
-      }
-
       return tradeResult;
     } catch (e: any) {
       throw new Error(`Failed to trade ${symbol}: ${e.message}`);
@@ -325,13 +308,32 @@ export class Binance implements IExchange {
     this.serverIds.push(this.#curServerId);
   }
 
-  getImbalance(symbol: ExchangeSymbol, limit: number): number {
+  getImbalance(
+    symbol: ExchangeSymbol,
+    limit: number,
+    bidCutOffPrice: number
+  ): number {
     const data = this.fetch(
       () => `depth?symbol=${symbol}&limit=${limit}`,
       this.defaultReqOpts
     );
-    const bidsVol: number = data.bids.reduce((s: number, b) => s + +b[1], 0);
-    const asksVol: number = data.asks.reduce((s: number, a) => s + +a[1], 0);
+
+    // Sum volume of bids above bidCutOffPrice
+    const bidsVol: number = data.bids.reduce((s: number, b) => {
+      return +b[0] > bidCutOffPrice ? s + +b[1] : s;
+    }, 0);
+
+    const topBid = data.bids[0]?.[0] ?? 0;
+    const topAsk = data.asks[0]?.[0] ?? 0;
+    const midPrice = (+topBid + +topAsk) / 2;
+    // askCutOffPrice is the price on the same distance from midPrice as
+    // bidCutOffPrice is from topBid, aka cut-off prices form a range around midPrice
+    const askCutOffPrice = midPrice * (midPrice / bidCutOffPrice);
+
+    // Sum volume of asks below askCutOffPrice
+    const asksVol: number = data.asks.reduce((s: number, a) => {
+      return +a[0] < askCutOffPrice ? s + +a[1] : s;
+    }, 0);
     return (bidsVol - asksVol) / (bidsVol + asksVol);
   }
 }

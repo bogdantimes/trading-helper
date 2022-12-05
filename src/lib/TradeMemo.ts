@@ -162,9 +162,7 @@ export class TradeMemo extends PricesHolder {
   }
 
   profit(): number {
-    if (this.tradeResult.soldPrice) {
-      return this.tradeResult.gained - this.tradeResult.paid;
-    } else {
+    const unrealizedProfit = (): number => {
       // using lot size quantity to calculate profit,
       // because if quantity has a fraction that is less than lot size,
       // that part will not be sold
@@ -173,7 +171,8 @@ export class TradeMemo extends PricesHolder {
       // anticipated sell commission percentage
       const commission = 1.0001;
       return this.currentPrice * qty - this.tradeResult.paid * commission;
-    }
+    };
+    return this.tradeResult.realisedProfit || unrealizedProfit();
   }
 
   /**
@@ -184,8 +183,8 @@ export class TradeMemo extends PricesHolder {
    * (4000 / 2000) * 0.14 * 0.1 = 0.028 (2.8%)
    * If price is 10, the profit goal price is 10 * (1 + 0.028) = 10.28
    */
-  profitGoalPrice(): number {
-    return this.tradeResult.price * (1 + this.profitGoal);
+  get profitGoalPrice(): number {
+    return this.tradeResult.entryPrice * (1 + this.profitGoal);
   }
 
   get profitGoal(): number {
@@ -193,44 +192,17 @@ export class TradeMemo extends PricesHolder {
   }
 
   get stopLimitBottomPrice(): number {
-    return this.tradeResult.price * (1 - this.range);
+    return this.tradeResult.entryPrice * (1 - this.range);
   }
 
   profitPercent(): number {
     return (this.profit() / this.tradeResult.paid) * 100;
   }
 
-  stopLimitLoss(): number {
-    return (
-      this.tradeResult.paid * (this.stopLimitPrice / this.tradeResult.price - 1)
-    );
-  }
-
-  stopLimitLossPercent(): number {
-    return (this.stopLimitLoss() / this.tradeResult.paid) * 100;
-  }
-
-  soldPriceChangePercent(): number {
-    return (
-      ((this.currentPrice - this.tradeResult.soldPrice) /
-        this.tradeResult.soldPrice) *
-      100
-    );
-  }
-
   stopLimitCrossedDown(): boolean {
     return (
       this.currentPrice < this.stopLimitPrice &&
       this.prices[this.prices.length - 2] >= this.stopLimitPrice
-    );
-  }
-
-  entryPriceCrossedUp(): boolean {
-    // all prices except the last one are lower the price at which the trade was bought
-    const entryPrice = this.tradeResult.price;
-    return (
-      this.currentPrice > entryPrice &&
-      this.prices.slice(0, -1).every((p) => p <= entryPrice)
     );
   }
 }
