@@ -170,3 +170,9 @@ export interface PriceChannelData {
   [Key.ATH]: number;
   [Key.ATHTime]: number;
 }
+
+export interface UpgradeInfo {
+  newVersion: string;
+  URL?: string;
+  files?: Array<{ id?: string; name: string; type: string; source: string }>;
+}

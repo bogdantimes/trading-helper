@@ -73,7 +73,7 @@ ${
         GmailApp.sendEmail(email, subject, ``, { htmlBody: this.print() });
       } catch (e) {
         Log.error(e);
-        GmailApp.createDraft(email, subject, ``, { htmlBody: this.print() });
+        // TODO: communicate to user over the app UI
       }
     }
   }

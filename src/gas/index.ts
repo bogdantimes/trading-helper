@@ -20,6 +20,7 @@ import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+import { upgrade } from "./Upgrade";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -240,3 +241,4 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
+global.upgrade = () => catchError(upgrade);
