@@ -1,3 +1,10 @@
+# v3.2.0
+
+* "Imbalance Check" function is integrated into active stop-limit with stunning **x2** profits/year improvement.
+* Active stop-limit renamed to **Smart exit**: sell automatically when smart exit is **crossed down** and there
+  are **no** buyers to support the price.
+* Updated [back-testing/results.md](back-testing/results.md) with the results of the full test-set.
+
 # v3.1.2
 
 * Minor fixes to initial setup for new users.

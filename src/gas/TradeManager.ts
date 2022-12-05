@@ -280,14 +280,14 @@ export class TradeManager {
   #processBoughtState(tm: TradeMemo): void {
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
 
-    this.updateStopLimit(tm);
+    this.#updateStopLimit(tm);
 
     if (this.#config.SellAtStopLimit && tm.stopLimitCrossedDown()) {
       tm.setState(TradeState.SELL);
     }
   }
 
-  private updateStopLimit(tm: TradeMemo): void {
+  #updateStopLimit(tm: TradeMemo): void {
     const symbol = tm.tradeResult.symbol;
 
     if (!tm.tradeResult.lotSizeQty) {
@@ -353,17 +353,17 @@ export class TradeManager {
       if (this.#checkImbalance(tm)) {
         this.#config.SellAtStopLimit &&
           Log.alert(
-            `⚠ ${tm.getCoinName()} stop limit crossed down, but the order book is bullish. Not selling yet.`
+            `⚠ ${tm.getCoinName()} smart exit was crossed down, but there are buyers to support the price. Not selling yet.`
           );
         return true;
       } else {
-        Log.info(`Order book was not bullish for ${tm.getCoinName()}`);
+        Log.info(
+          `${tm.getCoinName()} buyers are not enough to support the price.`
+        );
       }
     } catch (e) {
       this.#config.SellAtStopLimit &&
-        Log.info(
-          `ℹ Couldn't check order book imbalance for ${tm.getCoinName()}`
-        );
+        Log.info(`ℹ Couldn't check the buyers support for ${tm.getCoinName()}`);
     }
     return false;
   }
@@ -388,7 +388,7 @@ export class TradeManager {
   private forceUpdateStopLimit(tm: TradeMemo): void {
     tm.ttl = 0;
     tm.stopLimitPrice = 0;
-    this.updateStopLimit(tm);
+    this.#updateStopLimit(tm);
   }
 
   private pushNewPrice(tm: TradeMemo): void {

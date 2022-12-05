@@ -147,13 +147,13 @@ export function Settings(params: {
                 }
               />
             }
-            label="Active stop-limits"
-            aria-describedby={`stop-limit-helper-text`}
+            label="Smart exit"
+            aria-describedby={`smart-exit-helper-text`}
           />
-          <FormHelperText id={`stop-limit-helper-text`}>
-            Sell automatically when stop-limit is <b>crossed down</b>.
-            Recommended to always keep enabled. Disable only if you need to hold
-            the assets.
+          <FormHelperText id={`smart-exit-helper-text`}>
+            Sell automatically when smart exit is <b>crossed down</b> and there
+            are <b>no</b> buyers to support the price. Recommended to always
+            keep enabled. Disable only if you need to hold the assets.
           </FormHelperText>
         </FormControl>
         <FormControl>

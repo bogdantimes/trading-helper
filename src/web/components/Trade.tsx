@@ -69,7 +69,7 @@ export default function Trade(props: {
       );
       setStopLine(
         chart.current.addLineSeries({
-          title: `Stop-limit`,
+          title: `Smart exit`,
           color: stopColor,
           lineWidth: 1,
         })

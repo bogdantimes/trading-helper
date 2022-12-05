@@ -20,19 +20,23 @@ No one, except you, have access to the WEB-application and the data. If you trus
 * Fully-autonomous trading on Binance Spot without manual interventions whatsoever.
 * Info page with balance changes since Day 1.
 
-## Testing
+## Back-testing
 
-**Back-testing:** November 2021 -> November 2022 (downtrend/sideways market 📉)
+Running on a historical data like if it was trading in the past.
 
-**Result:** `$1,000 -> $5,102 (+407%, 4x profit)`
+**Dates:** November 2021 -> November 2022 (downtrend/sideways market 📉)
 
-![image](https://user-images.githubusercontent.com/7527778/204552357-0cff0f4a-9c3d-4873-88d5-f3f12d2ccd22.png)
+**Best Result:** `$1,000 -> $9,360 (+836%, 8.3x profit)`
+**Worst Result:** `$1,000 -> $5,734 (+473%, 4.7x profit)`
 
-**Back-testing:** November 2020 -> November 2022 (uptrend/downtrend/sideways market 📈)
+![r1-best.png](img/r1-best.png)
 
-**Result:** `$1,000 -> $59,409 (+5690%, 56x profit)`
+**Dates:** November 2020 -> November 2022 (uptrend/downtrend/sideways market 📈)
 
-![image](https://user-images.githubusercontent.com/7527778/204544799-37395bc8-462a-4eb7-86fc-f6f6e3d1c006.png)
+**Best Result:** `$1,000 -> $12,6537 (+12553%, 125x profit)`
+**Worst Result:** `$1,000 -> $6,091 (+6091%, 60x profit)`
+
+![r1-best.png](img/r2-best.png)
 
 ## Screenshots
 
