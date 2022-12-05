@@ -8,8 +8,8 @@
 import { Log } from "./Common";
 import { UpgradeInfo } from "../lib/index";
 
-export class Upgrader {
-  static OTAUpgrade(): string {
+export class Updater {
+  static OTAUpdate(): string {
     // @ts-expect-error
     const curVer = VERSION;
     const { files, newVersion, URL }: UpgradeInfo =

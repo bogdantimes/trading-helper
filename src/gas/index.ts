@@ -19,7 +19,7 @@ import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
-import { Upgrader } from "./Upgrader";
+import { Updater } from "./Updater";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -64,7 +64,7 @@ function createTriggers(): string {
     .timeBased()
     .everyMinutes(TICK_INTERVAL_MIN)
     .create();
-  ScriptApp.newTrigger(Upgrader.OTAUpgrade.name)
+  ScriptApp.newTrigger(Updater.OTAUpdate.name)
     .timeBased()
     .everyHours(6)
     .create();
@@ -245,4 +245,4 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.upgrade = () => catchError(Upgrader.OTAUpgrade);
+global.upgrade = () => catchError(Updater.OTAUpdate);
