@@ -41,6 +41,7 @@ Running on a historical data like if it was trading in the past.
 ## Screenshots
 
 ![home.png](img/home.png)
+![info.png](img/info.png)
 ![settings.png](img/settings.png)
 
 ## How to
