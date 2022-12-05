@@ -8,9 +8,14 @@
         "version": "30"
       },
       {
+        "userSymbol": "GASProjectApp",
+        "libraryId": "1to51j1yqDvtTrJIoHzgOffCnZOK9MTCcSkky6niwRJlTLTNpxIfj3bI-",
+        "version": "1"
+      },
+      {
         "userSymbol": "TradingHelperLibrary",
         "libraryId": "1HVyGwXDWhXhrJ53E_hc-uzV001f96XfA6dDuLXExYjEkg5r-NqZVtwo9",
-        "version": "12",
+        "version": "13",
         "developmentMode": false
       }
     ]
@@ -25,8 +30,9 @@
     "https://www.googleapis.com/auth/script.external_request",
     "https://www.googleapis.com/auth/script.scriptapp",
     "https://www.googleapis.com/auth/gmail.send",
-    "https://www.googleapis.com/auth/gmail.compose",
     "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/firebase.database"
+    "https://www.googleapis.com/auth/firebase.database",
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/drive.scripts"
   ]
 }
