@@ -19,8 +19,8 @@ import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
+import { Upgrader } from "./Upgrader";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
-import { upgrade } from "./Upgrade";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -63,6 +63,10 @@ function createTriggers(): string {
   ScriptApp.newTrigger(Process.tick.name)
     .timeBased()
     .everyMinutes(TICK_INTERVAL_MIN)
+    .create();
+  ScriptApp.newTrigger(Upgrader.OTAUpgrade.name)
+    .timeBased()
+    .everyHours(6)
     .create();
   Log.alert(
     `ℹ️ Background process started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
@@ -241,4 +245,4 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.upgrade = () => catchError(upgrade);
+global.upgrade = () => catchError(Upgrader.OTAUpgrade);
