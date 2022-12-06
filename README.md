@@ -33,7 +33,7 @@ Running on a historical data like if it was trading in the past.
 
 **Dates:** November 2020 -> November 2022 (uptrend/downtrend/sideways market 📈)
 
-**Best Result:** `$1,000 -> $12,6537 (+12553%, 125x profit)`
+**Best Result:** `$1,000 -> $126,537 (+12553%, 125x profit)`
 **Worst Result:** `$1,000 -> $6,091 (+6091%, 60x profit)`
 
 ![r1-best.png](img/r2-best.png)
