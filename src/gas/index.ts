@@ -242,4 +242,4 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.upgrade = () => catchError(Updater.upgrade);
+global[Updater.upgrade.name] = () => catchError(Updater.upgrade);
