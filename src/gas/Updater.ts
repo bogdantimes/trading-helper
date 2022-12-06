@@ -9,7 +9,7 @@ import { Log } from "./Common";
 import { UpgradeInfo } from "../lib/index";
 
 export class Updater {
-  static OTAUpdate(): string {
+  static upgrade(): string {
     // @ts-expect-error
     const curVer = `v${VERSION}`;
     const { files, newVersion, URL }: UpgradeInfo =
@@ -26,7 +26,7 @@ export class Updater {
     const response = global.GASProjectApp.getProject(scriptId).getContentText();
     const projectFiles = JSON.parse(response).files;
 
-    const nextAttemptMsg = `Next attempt in 6 hours. You can remove "OTAUpdate" trigger in Google Apps Script project to disable it.`;
+    const nextAttemptMsg = `Next attempt in 6 hours. You can remove "upgrade" trigger in Google Apps Script project to disable it.`;
     if (!projectFiles) {
       const errMsg = `❌ Upgrade failed: couldn't get project files from the Drive. ${nextAttemptMsg}`;
       Log.alert(errMsg);
