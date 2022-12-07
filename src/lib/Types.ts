@@ -139,6 +139,7 @@ export enum Key {
   STRENGTH,
   ATH,
   ATHTime,
+  IMBALANCE,
 }
 
 export enum Bit {
@@ -169,6 +170,7 @@ export interface PriceChannelData {
   [Key.STRENGTH]: number;
   [Key.ATH]: number;
   [Key.ATHTime]: number;
+  [Key.IMBALANCE]: number;
 }
 
 export interface UpgradeInfo {

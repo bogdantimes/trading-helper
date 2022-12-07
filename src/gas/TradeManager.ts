@@ -79,7 +79,8 @@ export class TradeManager {
     const { advancedAccess, requests } = this.plugin.trade({
       marketTrend: this.#mktTrend,
       channelsDao: this.channelsDao,
-      prices: this.priceProvider.get(StableUSDCoin.BUSD),
+      prices: this.priceProvider.get(this.#config.StableCoin),
+      stableCoin: this.#config.StableCoin,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
