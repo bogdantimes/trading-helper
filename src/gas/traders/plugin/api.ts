@@ -3,6 +3,7 @@ import {
   MarketTrend,
   PriceHoldersMap,
   PriceMap,
+  StableUSDCoin,
 } from "../../../lib/index";
 import { ChannelsDao } from "../../dao/Channels";
 
@@ -26,6 +27,7 @@ export interface PluginContext {
   marketTrend: MarketTrend;
   prices: PriceHoldersMap;
   channelsDao: ChannelsDao;
+  stableCoin: StableUSDCoin;
 }
 
 export interface TradeRequest {
