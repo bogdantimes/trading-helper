@@ -16,7 +16,6 @@ import Balance from "./Balance";
 import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   AppState,
-  BNB,
   ChannelState,
   Config,
   f0,
@@ -70,7 +69,7 @@ function balanceCard(config: Config, assetsValue: number): JSX.Element {
                 name={config.StableCoin}
                 balances={{
                   [config.StableCoin]: config.StableBalance,
-                  [BNB]: config.BNBStableBalance,
+                  feesBudget: config.FeesBudget,
                 }}
                 assetsValue={assetsValue}
                 hide={config.HideBalances}

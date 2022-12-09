@@ -17,9 +17,9 @@ export interface Config {
    */
   StableBalance: number | AutoDetect;
   /**
-   * BNBStableBalance is total value of account's BNB in the StableCoin value.
+   * FeesBudget is total value of account's BNB in the StableCoin value.
    */
-  BNBStableBalance: number;
+  FeesBudget: number;
   /**
    * MarketTrend affects the profit goal and the stop limit aggressiveness.
    * For mark-up trend, it makes the profit goal lower and the stop limit more aggressive.

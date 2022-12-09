@@ -4,7 +4,6 @@ import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import CurrencyFormat from "react-currency-format";
 import {
-  BNB,
   BNBFee,
   SHORT_MASK,
   StableCoinKeys,
@@ -12,7 +11,7 @@ import {
 } from "../../lib/index";
 import Tooltip from "@mui/material/Tooltip/Tooltip";
 
-type Balances = { [key in StableCoinKeys | typeof BNB]?: number };
+type Balances = { [key in StableCoinKeys | `feesBudget`]?: number };
 
 interface BalanceProps {
   name: StableUSDCoin;
@@ -28,11 +27,11 @@ export default function Balance({
   hide,
 }: BalanceProps): JSX.Element {
   const stableBalance = balances[name] >= 0 ? balances[name] : 0;
-  const bnbStableBalance = balances.BNB >= 0 ? balances.BNB : 0;
+  const feesBudget = balances.feesBudget >= 0 ? balances.feesBudget : 0;
   const total = stableBalance + assetsValue;
-  const approxTradesCoveredByBNB = Math.max(
+  const approxTrades = Math.max(
     0,
-    Math.floor(bnbStableBalance / (total * BNBFee * 2))
+    Math.floor(feesBudget / (total * BNBFee * 2))
   );
   return (
     <Card sx={{ width: `240px` }}>
@@ -88,7 +87,7 @@ export default function Balance({
           </div>
           <div>
             <Tooltip
-              title="Approximate number of trades with commissions covered by BNB available in the account (updated every trade). Recommended to keep some BNB on Binance to pay less fees and not accumulate small non-sold balances that are not tracked by the bot."
+              title="Approximate number of trades w/ fees covered by BNB available in the account. Recommended to keep some BNB on Binance to pay less fees and not accumulate small non-sold balances that are not tracked by Trading Helper."
               arrow
             >
               <b
@@ -97,11 +96,11 @@ export default function Balance({
                   textDecorationStyle: `dashed`,
                 }}
               >
-                BNB cover:
+                Fees budget:
               </b>
             </Tooltip>
             <span style={{ float: `right` }}>
-              ~ {hide ? SHORT_MASK : approxTradesCoveredByBNB} trade(s)
+              ~ {hide ? SHORT_MASK : approxTrades} trade(s)
             </span>
           </div>
         </Typography>

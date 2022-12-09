@@ -192,17 +192,17 @@ export class TradeManager {
     }
   }
 
-  #updateBNBStableBalance(): void {
+  #updateFeesBudget(): void {
     if (this.#config.KEY && this.#config.SECRET) {
       try {
         const base = this.#config.StableCoin;
         const price = this.priceProvider.get(base)[BNB]?.currentPrice;
-        this.#config.BNBStableBalance = this.exchange.getBalance(BNB) * price;
+        this.#config.FeesBudget = this.exchange.getBalance(BNB) * price;
       } catch (e) {
         Log.alert(
-          `⚠️ Couldn't update "BNB cover". It was reset to 0. Next check after next trade or during Balance auto-detect.`
+          `⚠️ Couldn't update fees budget. It was reset to 0. Next attempt is after next trade or during balance auto-detect.`
         );
-        this.#config.BNBStableBalance = 0;
+        this.#config.FeesBudget = 0;
       }
     }
   }
@@ -211,18 +211,16 @@ export class TradeManager {
     // Update balances only if the balance changed
     // Or if BNBStableBalance is not set
     const diff = this.#balance - this.#config.StableBalance;
-    if (diff !== 0 || this.#config.BNBStableBalance === -1) {
+    if (diff !== 0 || this.#config.FeesBudget === -1) {
       this.#config = this.configDao.get();
       this.#config.StableBalance += diff;
       this.#balance = this.#config.StableBalance;
-      this.#updateBNBStableBalance();
+      this.#updateFeesBudget();
       this.configDao.set(this.#config);
       Log.info(
         `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
       );
-      Log.info(
-        `Free ${BNB} balance (in USD): ~$${f2(this.#config.BNBStableBalance)}`
-      );
+      Log.info(`Fees budget: ~$${f2(this.#config.FeesBudget)}`);
     }
   }
 

@@ -3,7 +3,7 @@ import { Config, IStore, MarketTrend, MASK, StableUSDCoin } from "../../lib";
 export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: -1, // -1 Auto detect
-  BNBStableBalance: -1, // -1 Auto detect
+  FeesBudget: -1, // -1 Auto detect
   SellAtStopLimit: true,
   MarketTrend: -1, // -1 Auto detect
   AutoMarketTrend: MarketTrend.SIDEWAYS,
