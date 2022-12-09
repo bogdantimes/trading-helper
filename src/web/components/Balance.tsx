@@ -30,7 +30,10 @@ export default function Balance({
   const stableBalance = balances[name] >= 0 ? balances[name] : 0;
   const bnbStableBalance = balances.BNB >= 0 ? balances.BNB : 0;
   const total = stableBalance + assetsValue;
-  const approxTradesCoveredByBNB = bnbStableBalance / (total * BNBFee * 2);
+  const approxTradesCoveredByBNB = Math.max(
+    0,
+    Math.floor(bnbStableBalance / (total * BNBFee * 2))
+  );
   return (
     <Card sx={{ width: `240px` }}>
       <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
