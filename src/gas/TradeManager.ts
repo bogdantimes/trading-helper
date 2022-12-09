@@ -199,13 +199,17 @@ export class TradeManager {
         const price = this.priceProvider.get(base)[BNB]?.currentPrice;
         this.#config.BNBStableBalance = this.exchange.getBalance(BNB) * price;
       } catch (e) {
-        Log.info(`⚠️ Couldn't read the BNB balance. `);
+        Log.alert(
+          `⚠️ Couldn't update "BNB cover". It was reset to 0. Next check after next trade or during Balance auto-detect.`
+        );
         this.#config.BNBStableBalance = 0;
       }
     }
   }
 
   #finalize(): void {
+    // Update balances only if the balance changed
+    // Or if BNBStableBalance is not set
     const diff = this.#balance - this.#config.StableBalance;
     if (diff !== 0 || this.#config.BNBStableBalance === -1) {
       this.#config = this.configDao.get();
@@ -216,7 +220,9 @@ export class TradeManager {
       Log.info(
         `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
       );
-      Log.info(`Free ${BNB} value: ~$${f2(this.#config.BNBStableBalance)}`);
+      Log.info(
+        `Free ${BNB} balance (in USD): ~$${f2(this.#config.BNBStableBalance)}`
+      );
     }
   }
 

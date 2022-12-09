@@ -88,7 +88,7 @@ export default function Balance({
           </div>
           <div>
             <Tooltip
-              title="Approximate number of trades with commissions covered by BNB available in the account. Recommended to keep some BNB on Binance to pay less fees and not accumulate small non-sold balances that are not tracked by the bot."
+              title="Approximate number of trades with commissions covered by BNB available in the account (updated every trade). Recommended to keep some BNB on Binance to pay less fees and not accumulate small non-sold balances that are not tracked by the bot."
               arrow
             >
               <b
