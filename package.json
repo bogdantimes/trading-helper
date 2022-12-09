@@ -51,6 +51,7 @@
     "@mui/icons-material": "5.10.15",
     "@mui/material": "5.10.15",
     "browser-or-node": "2.0.0",
+    "compare-versions": "5.0.1",
     "lightweight-charts": "3.8.0",
     "react": "18.2.0",
     "react-currency-format": "^1.1.0",

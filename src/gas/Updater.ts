@@ -7,6 +7,7 @@
 
 import { Log } from "./Common";
 import { UpgradeInfo } from "../lib/index";
+import { compare } from "compare-versions";
 
 export class Updater {
   static upgrade(): string {
@@ -15,7 +16,7 @@ export class Updater {
     const { files, newVersion, URL }: UpgradeInfo =
       global.TradingHelperLibrary.getUpgrades(curVer);
 
-    if (newVersion === curVer || !files?.length) {
+    if (compare(curVer, newVersion, `>=`) || !files?.length) {
       Log.info(`ℹ️ Trading Helper is up to date.`);
       return `ℹ️ Trading Helper is up to date.`;
     }
