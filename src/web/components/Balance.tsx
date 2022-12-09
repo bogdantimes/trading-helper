@@ -97,7 +97,7 @@ export default function Balance({
                   textDecorationStyle: `dashed`,
                 }}
               >
-                BNB covers:
+                BNB cover:
               </b>
             </Tooltip>
             <span style={{ float: `right` }}>
