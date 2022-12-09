@@ -178,3 +178,5 @@ export interface UpgradeInfo {
   URL?: string;
   files?: Array<{ id?: string; name: string; type: string; source: string }>;
 }
+
+export type StableCoinKeys = keyof typeof StableUSDCoin;

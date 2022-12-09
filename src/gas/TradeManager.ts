@@ -2,6 +2,7 @@ import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
 import { Log } from "./Common";
 import {
+  BNB,
   CoinName,
   Config,
   ExchangeSymbol,
@@ -161,14 +162,14 @@ export class TradeManager {
   }
 
   #prepare(): void {
-    this.#initBalance();
+    this.#initStableBalance();
     this.#mktTrend = this.trendProvider.get();
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
     const cs = this.channelsDao.getCandidates(percentile);
     this.#optimalInvestRatio = Math.max(1, Math.min(3, Object.keys(cs).length));
   }
 
-  #initBalance(): void {
+  #initStableBalance(): void {
     this.#config = this.configDao.get();
     this.#balance = this.#config.StableBalance;
     if (this.#balance === -1 && this.#config.KEY && this.#config.SECRET) {
@@ -191,14 +192,31 @@ export class TradeManager {
     }
   }
 
+  #updateBNBStableBalance(): void {
+    if (this.#config.KEY && this.#config.SECRET) {
+      try {
+        const base = this.#config.StableCoin;
+        const price = this.priceProvider.get(base)[BNB]?.currentPrice;
+        this.#config.BNBStableBalance = this.exchange.getBalance(BNB) * price;
+      } catch (e) {
+        Log.info(`⚠️ Couldn't read the BNB balance. `);
+        this.#config.BNBStableBalance = 0;
+      }
+    }
+  }
+
   #finalize(): void {
     const diff = this.#balance - this.#config.StableBalance;
-    if (diff !== 0) {
+    if (diff !== 0 || this.#config.BNBStableBalance === -1) {
       this.#config = this.configDao.get();
       this.#config.StableBalance += diff;
       this.#balance = this.#config.StableBalance;
+      this.#updateBNBStableBalance();
       this.configDao.set(this.#config);
-      Log.info(`Free balance: $${f2(this.#balance)}`);
+      Log.info(
+        `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
+      );
+      Log.info(`Free ${BNB} value: ~$${f2(this.#config.BNBStableBalance)}`);
     }
   }
 
