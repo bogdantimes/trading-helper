@@ -3,21 +3,34 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import CurrencyFormat from "react-currency-format";
-import { SHORT_MASK } from "../../lib/index";
+import {
+  BNB,
+  BNBFee,
+  SHORT_MASK,
+  StableCoinKeys,
+  StableUSDCoin,
+} from "../../lib/index";
+import Tooltip from "@mui/material/Tooltip/Tooltip";
+
+type Balances = { [key in StableCoinKeys | typeof BNB]?: number };
 
 interface BalanceProps {
-  name: string;
-  balance: number;
+  name: StableUSDCoin;
+  balances: Balances;
   assetsValue: number;
   hide: boolean;
 }
 
 export default function Balance({
   name,
-  balance,
+  balances,
   assetsValue,
   hide,
 }: BalanceProps): JSX.Element {
+  const stableBalance = balances[name] >= 0 ? balances[name] : 0;
+  const bnbStableBalance = balances.BNB >= 0 ? balances.BNB : 0;
+  const total = stableBalance + assetsValue;
+  const approxTradesCoveredByBNB = bnbStableBalance / (total * BNBFee * 2);
   return (
     <Card sx={{ width: `240px` }}>
       <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
@@ -25,12 +38,12 @@ export default function Balance({
         <Typography variant="body2" color="text.secondary">
           <div>
             <b>Free:</b>
-            {balance === -1 && <span> Wait...</span>}
+            {stableBalance === -1 && <span> Wait...</span>}
             {hide && <span style={{ float: `right` }}>${SHORT_MASK}</span>}
-            {!hide && balance !== -1 && (
+            {!hide && stableBalance !== -1 && (
               <CurrencyFormat
                 style={{ float: `right` }}
-                value={balance}
+                value={stableBalance}
                 displayType={`text`}
                 thousandSeparator={true}
                 decimalScale={2}
@@ -61,7 +74,7 @@ export default function Balance({
             ) : (
               <CurrencyFormat
                 style={{ float: `right` }}
-                value={balance >= 0 ? balance + assetsValue : assetsValue}
+                value={total}
                 displayType={`text`}
                 thousandSeparator={true}
                 decimalScale={2}
@@ -69,6 +82,24 @@ export default function Balance({
                 prefix={`$`}
               />
             )}
+          </div>
+          <div>
+            <Tooltip
+              title="Approximate number of trades with commissions covered by BNB available in the account. Recommended to keep some BNB on Binance to pay less fees and not accumulate small non-sold balances that are not tracked by the bot."
+              arrow
+            >
+              <b
+                style={{
+                  textDecoration: `underline`,
+                  textDecorationStyle: `dashed`,
+                }}
+              >
+                BNB covers:
+              </b>
+            </Tooltip>
+            <span style={{ float: `right` }}>
+              ~ {hide ? SHORT_MASK : approxTradesCoveredByBNB} trades
+            </span>
           </div>
         </Typography>
       </CardContent>

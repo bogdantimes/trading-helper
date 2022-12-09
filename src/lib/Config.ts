@@ -15,7 +15,11 @@ export interface Config {
    * Balance of free money. If set to -1, means it should be initialized by reading from the account.
    * Otherwise, if it is >= 0, it tells the program how much money it has and can use.
    */
-  StableBalance: number;
+  StableBalance: number | AutoDetect;
+  /**
+   * BNBStableBalance is total value of account's BNB in the StableCoin value.
+   */
+  BNBStableBalance: number;
   /**
    * MarketTrend affects the profit goal and the stop limit aggressiveness.
    * For mark-up trend, it makes the profit goal lower and the stop limit more aggressive.
@@ -38,3 +42,5 @@ export const DefaultRange = 0.14;
 export const DefaultDuration = 4000;
 export const MASK = `********`;
 export const SHORT_MASK = `👻`;
+export const BNB = `BNB`;
+export const BNBFee = 0.00075;

@@ -29,7 +29,7 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
         <Alert sx={{ width: cardWidth }} severity={`info`}>
-          Balance changes since Day 1 💸.
+          Balance changes since Day 1 including BNB spending on fees 💸.
         </Alert>
         <FixedSizeList
           width={cardWidth}
