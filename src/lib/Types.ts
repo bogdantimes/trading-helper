@@ -139,6 +139,7 @@ export enum Key {
   STRENGTH,
   ATH,
   ATHTime,
+  IMBALANCE,
 }
 
 export enum Bit {
@@ -169,6 +170,7 @@ export interface PriceChannelData {
   [Key.STRENGTH]: number;
   [Key.ATH]: number;
   [Key.ATHTime]: number;
+  [Key.IMBALANCE]: number;
 }
 
 export interface UpgradeInfo {
@@ -176,3 +178,5 @@ export interface UpgradeInfo {
   URL?: string;
   files?: Array<{ id?: string; name: string; type: string; source: string }>;
 }
+
+export type StableCoinKeys = keyof typeof StableUSDCoin;

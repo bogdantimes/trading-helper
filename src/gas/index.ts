@@ -64,10 +64,7 @@ function createTriggers(): string {
     .timeBased()
     .everyMinutes(TICK_INTERVAL_MIN)
     .create();
-  ScriptApp.newTrigger(Updater.OTAUpdate.name)
-    .timeBased()
-    .everyHours(6)
-    .create();
+  ScriptApp.newTrigger(Updater.upgrade.name).timeBased().everyHours(6).create();
   Log.alert(
     `ℹ️ Background process started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
   );
@@ -245,4 +242,4 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.upgrade = () => catchError(Updater.OTAUpdate);
+global.upgrade = () => catchError(Updater.upgrade);
