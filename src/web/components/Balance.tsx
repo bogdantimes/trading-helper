@@ -101,7 +101,7 @@ export default function Balance({
               </b>
             </Tooltip>
             <span style={{ float: `right` }}>
-              ~ {hide ? SHORT_MASK : approxTradesCoveredByBNB} trades
+              ~ {hide ? SHORT_MASK : approxTradesCoveredByBNB} trade(s)
             </span>
           </div>
         </Typography>
