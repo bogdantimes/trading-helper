@@ -1,3 +1,8 @@
+# v3.2.1
+
+* Trading Library updated to v14 with better "Strength" accuracy and improved "buy" signals with "Imbalance Check".
+* Added tracking of ~ # of trades covered by available BNB (displayed on Home page).
+
 # v3.2.0
 
 * "Imbalance Check" function is integrated into active stop-limit with stunning **x2** profits/year improvement.
