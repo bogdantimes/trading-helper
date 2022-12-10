@@ -121,6 +121,8 @@ export interface IStore {
   isConnected: () => boolean;
 
   connect: (dbURL: string) => void;
+
+  keepCacheAlive: () => void;
 }
 
 export enum Key {

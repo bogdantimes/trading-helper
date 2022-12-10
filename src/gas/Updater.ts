@@ -9,6 +9,8 @@ import { Log } from "./Common";
 import { UpgradeInfo } from "../lib/index";
 import { compare } from "compare-versions";
 
+export const UpgradeDone = `Upgrade done`;
+
 export class Updater {
   static upgrade(): string {
     // @ts-expect-error
@@ -59,7 +61,7 @@ export class Updater {
       return errMsg;
     }
 
-    const msg = `✅ Upgrade done. New version: ${newVersion}. Release notes: ${URL}.`;
+    const msg = `✅ ${UpgradeDone}. New version: ${newVersion}. Release notes: ${URL}.`;
     Log.alert(msg);
     return msg + ` Please reload the webpage.`;
   }

@@ -35,6 +35,8 @@ export class ScriptStore implements IStore {
     );
     return value;
   }
+
+  keepCacheAlive(): void {}
 }
 
 export class FirebaseStore implements IStore {
@@ -122,6 +124,8 @@ export class FirebaseStore implements IStore {
     this.source.setData(key, value);
     return value;
   }
+
+  keepCacheAlive(): void {}
 }
 
 export class CachedStore implements IStore {
@@ -132,7 +136,6 @@ export class CachedStore implements IStore {
   constructor(store: IStore, cache: DefaultCacheProxy) {
     this.#store = store;
     this.#cache = cache;
-    this.#syncCache();
   }
 
   connect(dbURL: string): void {
@@ -176,11 +179,14 @@ export class CachedStore implements IStore {
     return value;
   }
 
-  #syncCache(): void {
+  keepCacheAlive(): void {
+    // Iterate all Store paths and get/put values to reset expiration
     const cachedStoreValues = this.#cache.getAll(this.#store.getKeys());
-    Object.keys(cachedStoreValues).forEach((key) =>
-      this.set(key, JSON.parse(cachedStoreValues[key]))
-    );
+    Object.keys(cachedStoreValues).forEach((key) => {
+      if (cachedStoreValues[key]) {
+        this.set(key, JSON.parse(cachedStoreValues[key]));
+      }
+    });
   }
 }
 

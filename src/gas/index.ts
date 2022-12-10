@@ -19,7 +19,7 @@ import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
-import { Updater } from "./Updater";
+import { Updater, UpgradeDone } from "./Updater";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -51,22 +51,26 @@ function tick(): void {
 }
 
 function start(): string {
-  return catchError(createTriggers);
+  return catchError(startAllProcesses);
 }
 
 function stop(): string {
-  return catchError(deleteTriggers);
+  return catchError(stopTradingProcess);
 }
 
-function createTriggers(): string {
+function startAllProcesses(): string {
   ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger(Process.tick.name)
     .timeBased()
     .everyMinutes(TICK_INTERVAL_MIN)
     .create();
   ScriptApp.newTrigger(Updater.upgrade.name).timeBased().everyHours(6).create();
+  ScriptApp.newTrigger(DefaultStore.keepCacheAlive.name)
+    .timeBased()
+    .everyHours(3)
+    .create();
   Log.alert(
-    `ℹ️ Background process started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
+    `ℹ️ Background processes started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
   );
   // Low level unlock of all trades (in case of any issues with them).
   const ts = new TradesDao(DefaultStore).get();
@@ -79,13 +83,15 @@ function createTriggers(): string {
   return `OK`;
 }
 
-function deleteTriggers(): string {
+function stopTradingProcess(): string {
   let deleted = false;
   ScriptApp.getProjectTriggers().forEach((t) => {
-    ScriptApp.deleteTrigger(t);
-    deleted = true;
+    if (t.getHandlerFunction() === Process.tick.name) {
+      ScriptApp.deleteTrigger(t);
+      deleted = true;
+    }
   });
-  deleted && Log.alert(`⛔ Background processes stopped.`);
+  deleted && Log.alert(`⛔ Trading process stopped.`);
   return `OK`;
 }
 
@@ -127,7 +133,7 @@ function initialSetup(params: InitialSetupParams): string {
     config.SECRET = params.binanceSecretKey || config.SECRET;
     config.ViewOnly = params.viewOnly;
     if (config.ViewOnly || (config.KEY && config.SECRET)) {
-      createTriggers();
+      startAllProcesses();
     }
     configDao.set(config);
     Log.alert(`✨ Initial setup done.`);
@@ -242,4 +248,11 @@ global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.upgrade = () => catchError(Updater.upgrade);
+global.keepCacheAlive = () => catchError(() => DefaultStore.keepCacheAlive());
+global.upgrade = () => {
+  return catchError(() => {
+    const result = Updater.upgrade();
+    result.includes(UpgradeDone) && start();
+    return result;
+  });
+};
