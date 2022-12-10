@@ -1,4 +1,4 @@
-import { CacheProxy, DefaultCacheProxy } from "./CacheProxy";
+import { CacheProxy, DefaultCacheProxy, ExpirationEntries } from "./CacheProxy";
 import { isNode } from "browser-or-node";
 import { IStore } from "../lib/index";
 
@@ -33,6 +33,8 @@ export class ScriptStore implements IStore {
   }
 
   keepCacheAlive(): void {}
+
+  clearCache(): void {}
 }
 
 export class FirebaseStore implements IStore {
@@ -118,6 +120,8 @@ export class FirebaseStore implements IStore {
   }
 
   keepCacheAlive(): void {}
+
+  clearCache(): void {}
 }
 
 export class CachedStore implements IStore {
@@ -178,12 +182,16 @@ export class CachedStore implements IStore {
 
   keepCacheAlive(): void {
     // Iterate all Store paths and get/put values to reset expiration
-    const cachedStoreValues = this.#cache.getAll(this.#store.getKeys());
-    Object.keys(cachedStoreValues).forEach((key) => {
-      if (cachedStoreValues[key]) {
-        this.set(key, JSON.parse(cachedStoreValues[key]));
-      }
+    const cachedValues = this.#cache.getAll(this.#store.getKeys());
+    const putBackValues: ExpirationEntries = {};
+    Object.keys(cachedValues).forEach((key) => {
+      putBackValues[key] = { value: cachedValues[key] };
     });
+    this.#cache.putAll(putBackValues);
+  }
+
+  clearCache(): void {
+    this.#cache.removeAll(this.#store.getKeys());
   }
 }
 
