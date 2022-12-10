@@ -114,8 +114,6 @@ export interface IStore {
 
   set: (key: string, value: any) => any;
 
-  getOrSet: (key: string, value: any) => any;
-
   delete: (key: string) => void;
 
   isConnected: () => boolean;

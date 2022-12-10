@@ -32,7 +32,7 @@ export class ChannelsDao {
       // performance optimization for back-testing
       return this.memCache;
     }
-    const data = this.store.getOrSet(PriceChannelDataKey, {});
+    const data = this.store.get(PriceChannelDataKey) || {};
     this.memCache = data;
     return data;
   }

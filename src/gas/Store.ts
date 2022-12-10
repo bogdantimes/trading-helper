@@ -16,10 +16,6 @@ export class ScriptStore implements IStore {
     return PropertiesService.getScriptProperties().getKeys();
   }
 
-  getOrSet(key: string, value: any): any {
-    return this.get(key) || this.set(key, value);
-  }
-
   isConnected(): boolean {
     return true;
   }
@@ -112,10 +108,6 @@ export class FirebaseStore implements IStore {
     return data && typeof data === `object` ? Object.keys(data) : [];
   }
 
-  getOrSet(key: string, value: any): any {
-    return this.get(key) || this.set(key, value);
-  }
-
   set(key: string, value: any): any {
     if (!this.isConnected()) {
       throw new Error(`Firebase is not connected.`);
@@ -161,15 +153,20 @@ export class CachedStore implements IStore {
     return this.#store.getKeys();
   }
 
-  getOrSet(key: string, value: any): any {
-    return this.get(key) || this.set(key, value);
-  }
-
   isConnected(): boolean {
     return this.#store.isConnected();
   }
 
   set(key: string, value: any): any {
+    if (
+      !value ||
+      (Array.isArray(value) && value.length === 0) ||
+      (typeof value === `object` && Object.keys(value).length === 0)
+    ) {
+      this.#cache.remove(key);
+      return value;
+    }
+
     this.#cache.put(key, JSON.stringify(value));
     const synced = this.#cache.get(`${key}_synced`);
     if (!synced) {

@@ -73,7 +73,7 @@ export class TradesDao {
       return this.memCache;
     }
 
-    const trades = this.store.getOrSet(`Trades`, {});
+    const trades = this.store.get(`Trades`) || {};
     // Convert raw trades to TradeMemo objects
     const tradeMemos = Object.keys(trades).reduce<{ [p: string]: TradeMemo }>(
       (acc, key) => {

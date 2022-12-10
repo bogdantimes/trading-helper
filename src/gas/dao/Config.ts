@@ -25,7 +25,7 @@ export class ConfigDao {
 
   get(): Config {
     const defaultConfig = DefaultConfig();
-    let config: Config = this.store.getOrSet(`Config`, defaultConfig);
+    let config: Config = this.store.get(`Config`) || defaultConfig;
     // apply existing config on top of default one
     config = Object.assign(defaultConfig, config);
     return config;
