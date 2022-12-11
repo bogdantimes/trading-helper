@@ -1,5 +1,6 @@
 import { Log } from "./Common";
 import {
+  ExchangeInfo,
   ExchangeSymbol,
   execute,
   floor,
@@ -10,21 +11,6 @@ import {
 import { IExchange } from "./Exchange";
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
-interface Filter {
-  filterType: `LOT_SIZE` | `PRICE_FILTER`;
-  stepSize?: string;
-  tickSize?: string;
-}
-
-interface ExchangeInfo {
-  symbols: [
-    {
-      symbol: string;
-      filters: Filter[];
-    }
-  ];
-}
-
 export class Binance implements IExchange {
   private readonly key: string;
   private readonly secret: string;
@@ -33,8 +19,8 @@ export class Binance implements IExchange {
   private readonly serverIds: number[];
   readonly #balances: { [coinName: string]: number } = {};
   readonly #cloudURL: string;
+  readonly #exchangeInfo: ExchangeInfo;
 
-  #exchangeInfo: ExchangeInfo;
   #curServerId: number;
 
   constructor(key: string, secret: string) {
@@ -48,6 +34,7 @@ export class Binance implements IExchange {
     this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
     this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
+    this.#exchangeInfo = global.TradingHelperLibrary.getBinanceExchangeInfo();
   }
 
   getBalance(coinName: string): number {
@@ -164,13 +151,6 @@ export class Binance implements IExchange {
   }
 
   getLotSizePrecision(symbol: ExchangeSymbol): number {
-    if (!this.#exchangeInfo) {
-      this.#exchangeInfo = this.fetch(
-        () => `exchangeInfo`,
-        this.defaultReqOpts
-      );
-    }
-
     const lotSize = this.#exchangeInfo.symbols
       .find((s) => s.symbol === symbol.toString())
       ?.filters.find((f) => f.filterType === `LOT_SIZE`);
@@ -181,13 +161,6 @@ export class Binance implements IExchange {
   }
 
   getPricePrecision(symbol: ExchangeSymbol): number {
-    if (!this.#exchangeInfo) {
-      this.#exchangeInfo = this.fetch(
-        () => `exchangeInfo`,
-        this.defaultReqOpts
-      );
-    }
-
     const priceFilter = this.#exchangeInfo.symbols
       .find((s) => s.symbol === symbol.toString())
       ?.filters.find((f) => f.filterType === `PRICE_FILTER`);

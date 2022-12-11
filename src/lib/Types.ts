@@ -182,3 +182,16 @@ export interface UpgradeInfo {
 }
 
 export type StableCoinKeys = keyof typeof StableUSDCoin;
+
+export interface Filter {
+  filterType: `LOT_SIZE` | `PRICE_FILTER`;
+  stepSize?: string;
+  tickSize?: string;
+}
+
+export interface ExchangeInfo {
+  symbols: Array<{
+    symbol: string;
+    filters: Filter[];
+  }>;
+}

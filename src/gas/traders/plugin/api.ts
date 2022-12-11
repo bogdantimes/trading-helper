@@ -1,5 +1,6 @@
 import {
   CoinName,
+  ExchangeInfo,
   MarketTrend,
   PriceChannelData,
   PriceHoldersMap,
@@ -15,6 +16,7 @@ export interface TraderPlugin {
     channelsDao: ChannelsDao,
     percentile?: number
   ) => { [p: string]: PriceChannelData };
+  getBinanceExchangeInfo: () => ExchangeInfo;
 }
 
 export interface PluginResult {
