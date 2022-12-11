@@ -355,43 +355,37 @@ export class TradeManager {
     // quantize stop limit to stick it to the grid
     newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
 
-    if (
-      slCrossedDown &&
-      curTTL < maxTTL &&
-      tm.currentPrice > bottomPrice &&
-      this.#isOrderBookBullish(tm)
-    ) {
-      // Allow stop-limit be lowered when it is crossed down,
-      // but the order book imbalance is bullish (more buyers than sellers),
-      // to avoid selling at turnarounds.
-      tm.stopLimitPrice = newStopLimit;
+    if (slCrossedDown && curTTL < maxTTL && tm.currentPrice > bottomPrice) {
+      this.#handleEarlyExit(tm);
     } else {
       // Apply new stop limit if it is higher.
       tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
     }
   }
 
-  #isOrderBookBullish(tm: TradeMemo): boolean {
+  #handleEarlyExit(tm: TradeMemo): void {
+    const msg = `${tm.getCoinName()} smart exit was crossed down at ${f8(
+      tm.stopLimitPrice
+    )}`;
     try {
-      if (this.#checkImbalance(tm)) {
+      // Allow stop-limit be lowered when it is crossed down,
+      // but the order book imbalance is bullish (more buyers than sellers),
+      // to avoid selling at turnarounds.
+      if (this.#tryLowerStopLimit(tm)) {
         this.#config.SellAtStopLimit &&
           Log.alert(
-            `⚠ ${tm.getCoinName()} smart exit was crossed down, but there are buyers to support the price. Not selling yet.`
+            `⚠ ${msg}, but there are buyers to support the price. Not selling yet.`
           );
-        return true;
       } else {
-        Log.info(
-          `${tm.getCoinName()} buyers are not enough to support the price.`
-        );
+        Log.info(`${msg} and there are no enough buyers to support the price.`);
       }
     } catch (e) {
       this.#config.SellAtStopLimit &&
-        Log.info(`ℹ Couldn't check the buyers support for ${tm.getCoinName()}`);
+        Log.info(`${msg}. Couldn't check the buyers support for the price.`);
     }
-    return false;
   }
 
-  #checkImbalance(tm: TradeMemo): boolean {
+  #tryLowerStopLimit(tm: TradeMemo): boolean {
     const symbol = tm.tradeResult.symbol;
     const precision = this.exchange.getPricePrecision(symbol);
     const floor = floorToOptimalGrid(tm.currentPrice, precision);
@@ -405,7 +399,11 @@ export class TradeManager {
     Log.debug(
       `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
     );
-    return imbalance > 0.15;
+    const bullishBalance = imbalance > 0.15;
+    if (bullishBalance) {
+      tm.stopLimitPrice = bidCutOffPrice;
+    }
+    return bullishBalance;
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {
