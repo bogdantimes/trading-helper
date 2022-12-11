@@ -189,9 +189,11 @@ export interface Filter {
   tickSize?: string;
 }
 
+export interface SymbolInfo {
+  symbol: string;
+  filters: Filter[];
+}
+
 export interface ExchangeInfo {
-  symbols: Array<{
-    symbol: string;
-    filters: Filter[];
-  }>;
+  symbols: SymbolInfo[];
 }

@@ -1,11 +1,11 @@
 import { Log } from "./Common";
 import {
-  ExchangeInfo,
   ExchangeSymbol,
   execute,
   floor,
   getPrecision,
   INTERRUPT,
+  SymbolInfo,
   TradeResult,
 } from "../lib";
 import { IExchange } from "./Exchange";
@@ -19,7 +19,6 @@ export class Binance implements IExchange {
   private readonly serverIds: number[];
   readonly #balances: { [coinName: string]: number } = {};
   readonly #cloudURL: string;
-  readonly #exchangeInfo: ExchangeInfo;
 
   #curServerId: number;
 
@@ -34,7 +33,10 @@ export class Binance implements IExchange {
     this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
     this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
-    this.#exchangeInfo = global.TradingHelperLibrary.getBinanceExchangeInfo();
+  }
+
+  #getSymbolInfo(symbol: ExchangeSymbol): SymbolInfo {
+    return global.TradingHelperLibrary.getBinanceSymbolInfo(symbol);
   }
 
   getBalance(coinName: string): number {
@@ -151,9 +153,9 @@ export class Binance implements IExchange {
   }
 
   getLotSizePrecision(symbol: ExchangeSymbol): number {
-    const lotSize = this.#exchangeInfo.symbols
-      .find((s) => s.symbol === symbol.toString())
-      ?.filters.find((f) => f.filterType === `LOT_SIZE`);
+    const lotSize = this.#getSymbolInfo(symbol)?.filters.find(
+      (f) => f.filterType === `LOT_SIZE`
+    );
     if (!lotSize) {
       throw new Error(`Failed to get LOT_SIZE for ${symbol}`);
     }
@@ -161,9 +163,9 @@ export class Binance implements IExchange {
   }
 
   getPricePrecision(symbol: ExchangeSymbol): number {
-    const priceFilter = this.#exchangeInfo.symbols
-      .find((s) => s.symbol === symbol.toString())
-      ?.filters.find((f) => f.filterType === `PRICE_FILTER`);
+    const priceFilter = this.#getSymbolInfo(symbol)?.filters.find(
+      (f) => f.filterType === `PRICE_FILTER`
+    );
     if (!priceFilter) {
       throw new Error(`Failed to get PRICE_FILTER for ${symbol}`);
     }

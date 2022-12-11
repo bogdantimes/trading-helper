@@ -1,11 +1,12 @@
 import {
   CoinName,
-  ExchangeInfo,
+  ExchangeSymbol,
   MarketTrend,
   PriceChannelData,
   PriceHoldersMap,
   PriceMap,
   StableUSDCoin,
+  SymbolInfo,
 } from "../../../lib/index";
 import { ChannelsDao } from "../../dao/Channels";
 
@@ -16,7 +17,7 @@ export interface TraderPlugin {
     channelsDao: ChannelsDao,
     percentile?: number
   ) => { [p: string]: PriceChannelData };
-  getBinanceExchangeInfo: () => ExchangeInfo;
+  getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo;
 }
 
 export interface PluginResult {
