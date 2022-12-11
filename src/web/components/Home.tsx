@@ -16,7 +16,6 @@ import Balance from "./Balance";
 import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   AppState,
-  ChannelState,
   Config,
   f0,
   Key,
@@ -218,9 +217,7 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
                     const ch = data[coin];
                     const strength = ch[Key.STRENGTH] ?? 0;
                     const priceMove = ch[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
-                    const s0 = ch[Key.S0] ?? ChannelState.NONE;
-                    const ath = ch[Key.ATH] ?? 0;
-                    const bold = s0 === ChannelState.TOP && ath < ch[Key.MAX];
+                    const bold = ch[Key.IS_READY];
                     return (
                       <ListItem
                         sx={{

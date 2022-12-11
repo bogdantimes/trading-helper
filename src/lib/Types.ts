@@ -142,6 +142,7 @@ export enum Key {
   ATH,
   ATHTime,
   IMBALANCE,
+  IS_READY,
 }
 
 export enum Bit {
@@ -173,6 +174,7 @@ export interface PriceChannelData {
   [Key.ATH]: number;
   [Key.ATHTime]: number;
   [Key.IMBALANCE]: number;
+  [Key.IS_READY]: Bit;
 }
 
 export interface UpgradeInfo {
