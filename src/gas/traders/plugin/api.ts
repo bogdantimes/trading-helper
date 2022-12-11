@@ -1,6 +1,7 @@
 import {
   CoinName,
   MarketTrend,
+  PriceChannelData,
   PriceHoldersMap,
   PriceMap,
   StableUSDCoin,
@@ -10,6 +11,10 @@ import { ChannelsDao } from "../../dao/Channels";
 export interface TraderPlugin {
   trade: (context: PluginContext) => PluginResult;
   getPrices: () => PriceMap;
+  getCandidates: (
+    channelsDao: ChannelsDao,
+    percentile?: number
+  ) => { [p: string]: PriceChannelData };
 }
 
 export interface PluginResult {

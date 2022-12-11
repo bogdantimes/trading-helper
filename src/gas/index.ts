@@ -21,6 +21,7 @@ import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+import { TraderPlugin } from "./traders/plugin/api";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -208,14 +209,15 @@ function getConfig(): Config {
 function getState(): AppState {
   return catchError<AppState>(() => {
     const config = getConfig();
+    const plugin: TraderPlugin = global.TradingHelperLibrary;
     return {
       config,
+      firebaseURL: FirebaseStore.url,
+      info: new Statistics(DefaultStore).getAll(),
+      candidates: plugin.getCandidates(new ChannelsDao(DefaultStore)),
       assets: new TradesDao(DefaultStore)
         .getList()
         .filter((a) => a.currentValue > 0 || a.tradeResult.soldPrice > 0),
-      info: new Statistics(DefaultStore).getAll(),
-      candidates: new ChannelsDao(DefaultStore).getCandidates(0),
-      firebaseURL: FirebaseStore.url,
     };
   });
 }

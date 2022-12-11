@@ -165,7 +165,7 @@ export class TradeManager {
     this.#initStableBalance();
     this.#mktTrend = this.trendProvider.get();
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
-    const cs = this.channelsDao.getCandidates(percentile);
+    const cs = this.plugin.getCandidates(this.channelsDao, percentile);
     this.#optimalInvestRatio = Math.max(1, Math.min(3, Object.keys(cs).length));
   }
 
