@@ -309,6 +309,9 @@ export class Binance implements IExchange {
     const asksVol: number = data.asks.reduce((s: number, a) => {
       return +a[0] < askCutOffPrice ? s + +a[1] : s;
     }, 0);
-    return (bidsVol - asksVol) / (bidsVol + asksVol);
+    const imb = (bidsVol - asksVol) / (bidsVol + asksVol);
+    // if NaN, return 0
+    // NaN can happen if there are no bids or asks for this bidCutOffPrice
+    return imb || 0;
   }
 }
