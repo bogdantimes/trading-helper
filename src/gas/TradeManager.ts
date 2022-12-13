@@ -146,14 +146,16 @@ export class TradeManager {
     this.#setSellState({ action: TradeAction.Sell, coin, x: 0, y: 0 });
   }
 
-  sellAll(sellNow = false): void {
+  sellAll(): void {
     this.#prepare();
 
     this.tradesDao.iterate((tm) => {
+      // Reset potential BUY state to avoid buying for the time being
       tm.resetState();
       if (tm.tradeResult.quantity > 0) {
-        tm.setState(TradeState.SELL);
-        sellNow && this.#sell(tm);
+        this.#sell(tm);
+      } else {
+        Log.alert(`⚠️ Can't sell ${tm.getCoinName()}. Current value is 0`);
       }
       return tm;
     });
