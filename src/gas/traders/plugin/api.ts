@@ -11,24 +11,13 @@ import {
 import { ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
-  trade: (context: PluginTradingContext) => PluginResult;
+  trade: (context: PluginContext) => PluginResult;
   getPrices: () => PriceMap;
   getCandidates: (
     channelsDao: ChannelsDao,
     percentile?: number
   ) => { [p: string]: PriceChannelData };
   getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo;
-}
-
-export interface PluginTradingContext {
-  stableCoin: StableUSDCoin;
-  marketTrend: MarketTrend;
-  channelsDao: ChannelsDao;
-  prices: PriceHoldersMap;
-  /**
-   * provideCandidatesToBuy - whether the plugin caller is interested in buy candidates.
-   */
-  provideCandidatesToBuy: boolean;
 }
 
 export interface PluginResult {
@@ -47,6 +36,10 @@ export interface PluginContext {
   prices: PriceHoldersMap;
   channelsDao: ChannelsDao;
   stableCoin: StableUSDCoin;
+  /**
+   * provideCandidatesToBuy - whether the plugin caller is interested in buy candidates.
+   */
+  provideCandidatesToBuy: boolean;
 }
 
 export interface TradeRequest {
