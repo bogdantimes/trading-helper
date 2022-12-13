@@ -12,6 +12,7 @@ import {
   floorToOptimalGrid,
   Key,
   MarketTrend,
+  MIN_BUY,
   PriceMove,
   PricesHolder,
   StableUSDCoin,
@@ -28,8 +29,6 @@ import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
 import { TrendProvider } from "./TrendProvider";
-
-const MIN_BUY = 15;
 
 export class TradeManager {
   #config: Config;
@@ -77,11 +76,22 @@ export class TradeManager {
   trade(): void {
     this.#prepare();
 
+    const trades = this.tradesDao.getList();
+    const invested = trades.filter((t) => t.currentValue).length;
+    this.#canInvest = Math.max(0, this.#optimalInvestRatio - invested);
+
+    // First process !BUY state assets (some might get sold and free up $)
+    trades
+      .filter((tm) => !tm.stateIs(TradeState.BUY))
+      .forEach((tm) => this.#tryCheckTrade(tm));
+
+    // Run plugin to update candidates and also get buy candidates if we can invest
     const { advancedAccess, requests } = this.plugin.trade({
       marketTrend: this.#mktTrend,
       channelsDao: this.channelsDao,
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
+      provideCandidatesToBuy: this.#canInvest > 0,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
@@ -90,41 +100,22 @@ export class TradeManager {
     }
 
     if (!this.#config.ViewOnly) {
-      requests.forEach((r) => {
-        if (r.action === TradeAction.Buy) {
-          this.#setBuyState(r);
-        } else if (r.action === TradeAction.Sell) {
-          this.#setSellState(r);
-        }
-      });
+      requests
+        .filter((r) => r.action === TradeAction.Buy)
+        .forEach((r) => this.#setBuyState(r));
     }
 
-    const trades = this.tradesDao.getList();
-    const inv = trades.filter((t) => t.tradeResult.quantity > 0);
-    this.#canInvest = Math.max(0, this.#optimalInvestRatio - inv.length);
-
-    trades.sort(
-      isNode
-        ? // For back-testing, sorting to ensure tests consistency
-          (a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1)
-        : // For production, randomizing the order to avoid biases
-          () => Math.random() - 0.5
-    );
-
-    const trs = [
-      // First process existing trades (some might get sold and free up space to buy new ones)
-      ...trades.filter((tm) => !tm.stateIs(TradeState.BUY)),
-      // Now process those which were requested to buy
-      ...trades.filter((tm) => tm.stateIs(TradeState.BUY)),
-    ];
-    trs.forEach((tm) => {
-      try {
-        this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
-      } catch (e) {
-        Log.alert(`Failed to trade ${tm.getCoinName()}: ${e.message}`);
-        Log.error(e);
-      }
-    });
+    // Now process trades which are yet to be bought
+    // For back-testing, sort by name to ensure tests consistency
+    // For production, randomizing the order to avoid biases
+    this.tradesDao
+      .getList(TradeState.BUY)
+      .sort(
+        isNode
+          ? (a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1)
+          : () => Math.random() - 0.5
+      )
+      .forEach((tm) => this.#tryCheckTrade(tm));
 
     this.#finalize();
   }
@@ -143,7 +134,7 @@ export class TradeManager {
 
   sell(coin: CoinName): void {
     this.#prepare();
-    this.#setSellState({ action: TradeAction.Sell, coin, x: 0, y: 0 });
+    this.#setSellState(coin);
   }
 
   sellAll(): void {
@@ -246,13 +237,22 @@ export class TradeManager {
     );
   }
 
-  #setSellState(r: TradeRequest): void {
-    this.tradesDao.update(r.coin, (tm) => {
+  #setSellState(coin: CoinName): void {
+    this.tradesDao.update(coin, (tm) => {
       if (tm.tradeResult.quantity > 0) {
         tm.setState(TradeState.SELL);
       }
       return tm;
     });
+  }
+
+  #tryCheckTrade(tm: TradeMemo): void {
+    try {
+      this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
+    } catch (e) {
+      Log.alert(`Failed to process ${tm.getCoinName()}: ${e.message}`);
+      Log.error(e);
+    }
   }
 
   #checkTrade(tm: TradeMemo): TradeMemo {

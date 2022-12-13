@@ -44,3 +44,4 @@ export const MASK = `********`;
 export const SHORT_MASK = `👻`;
 export const BNB = `BNB`;
 export const BNBFee = 0.00075;
+export const MIN_BUY = 15;
