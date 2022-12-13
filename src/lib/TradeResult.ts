@@ -14,7 +14,6 @@ export class TradeResult {
   paid = 0;
   gained = 0;
   soldPrice = 0;
-  profit = 0;
   commission = 0;
   msg = ``;
   fromExchange = false;
@@ -25,7 +24,7 @@ export class TradeResult {
   }
 
   get avgPrice(): number {
-    return f8(this.cost / this.quantity);
+    return f8(this.cost / this.quantity) || 0;
   }
 
   get entryPrice(): number {
@@ -35,7 +34,7 @@ export class TradeResult {
     // for sold assets
     // calculate approximate entry price from soldPrice and realisedProfit
     const profitPercent = this.realisedProfit / this.paid;
-    return this.soldPrice / (1 + profitPercent);
+    return this.soldPrice / (1 + profitPercent) || 0;
   }
 
   get realisedProfit(): number {
@@ -43,13 +42,13 @@ export class TradeResult {
   }
 
   toString(): string {
-    return `${this.symbol} => Qty: ${this.quantity}, Entry Price: ${this.entryPrice}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${this.gained}, Commission BNB: ${this.commission}, Profit: ${this.profit}, Msg: ${this.msg}`;
+    return `${this.symbol} => Qty: ${this.quantity}, Entry Price: ${this.entryPrice}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${this.gained}, Commission BNB: ${this.commission}, Profit: ${this.realisedProfit}, Msg: ${this.msg}`;
   }
 
   join(next: TradeResult): TradeResult {
     if (this.fromExchange !== next.fromExchange) {
       throw Error(
-        `Cannot join trades where 'fromExchange' is not equal: ${next.toString()}`
+        `Cannot join trades where 'fromExchange' is not equal: ${next}`
       );
     }
     if (this.symbol.quantityAsset !== next.symbol.quantityAsset) {

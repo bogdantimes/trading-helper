@@ -449,15 +449,15 @@ export class TradeManager {
       try {
         this.#canInvest = Math.max(0, this.#canInvest - 1);
         this.#balance -= tradeResult.paid;
-        // flatten out prices to make them not cross any limits right after the trade
-        tm.prices = [tm.currentPrice];
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
         // set the stop limit according to the current settings
         this.forceUpdateStopLimit(tm);
         this.processBuyFee(tradeResult);
-        Log.alert(
-          `${tm.getCoinName()} asset average price: ${tm.tradeResult.avgPrice}`
+        Log.info(
+          `${tm.getCoinName()} asset avg. price: $${f8(
+            tm.tradeResult.avgPrice
+          )}`
         );
         Log.debug(tm);
       } catch (e) {
@@ -527,8 +527,7 @@ export class TradeManager {
     } else {
       Log.debug(memo);
       memo.setState(TradeState.BOUGHT);
-      Log.alert(`An issue happened while selling ${symbol}.`);
-      Log.alert(exit.toString());
+      Log.alert(`An issue happened while selling ${symbol}: ${exit}`);
     }
   }
 
