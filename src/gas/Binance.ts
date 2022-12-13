@@ -288,18 +288,17 @@ export class Binance implements IExchange {
     limit: number,
     bidCutOffPrice: number
   ): number {
-    const data = this.fetch(
+    const data: { bids: any[]; asks: any[] } = this.fetch(
       () => `depth?symbol=${symbol}&limit=${limit}`,
       this.defaultReqOpts
     );
 
     // Sum volume of bids above bidCutOffPrice or use best bid size
-    let bidsVol = 0;
-    for (const [price, size] of data.bids) {
+    let bidsVol = +data.bids[0]?.[1] || 0;
+    for (const [price, size] of data.bids.slice(1)) {
       if (+price < bidCutOffPrice) break;
       bidsVol += +size;
     }
-    bidsVol = bidsVol || data.bids[0]?.[1] || 0;
 
     const bestBidPrice = data.bids[0]?.[0] || 0;
     const bestAskPrice = data.asks[0]?.[0] || 0;
@@ -309,12 +308,11 @@ export class Binance implements IExchange {
     const askCutOffPrice = midPrice * (midPrice / bidCutOffPrice);
 
     // Sum volume of asks below askCutOffPrice  or use best ask size
-    let asksVol = 0;
-    for (const [price, size] of data.asks) {
+    let asksVol = +data.asks[0]?.[1] || 0;
+    for (const [price, size] of data.asks.slice(1)) {
       if (+price > askCutOffPrice) break;
       asksVol += +size;
     }
-    asksVol = asksVol || data.asks[0]?.[1] || 0;
 
     const imb = (bidsVol - asksVol) / (bidsVol + asksVol);
     // if NaN, return 0
