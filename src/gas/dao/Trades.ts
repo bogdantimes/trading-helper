@@ -1,5 +1,6 @@
 import { IStore, TradeMemo, TradeState } from "../../lib";
 import { isNode } from "browser-or-node";
+import { Log } from "../Common";
 
 export class TradesDao {
   private memCache: { [p: string]: TradeMemo };
@@ -34,7 +35,10 @@ export class TradesDao {
     try {
       coinName = coinName.toUpperCase();
 
-      if (!this.#lockTrade(coinName)) return;
+      if (!this.#lockTrade(coinName)) {
+        Log.info(this.#lockSkipMsg(coinName));
+        return;
+      }
 
       const trade = this.get()[coinName];
       // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
@@ -56,13 +60,21 @@ export class TradesDao {
   }
 
   iterate(mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
-    const trades = this.get();
-    Object.values(trades).forEach((tm) => {
-      const changedTrade = mutateFn(tm);
-      if (changedTrade) {
-        changedTrade.deleted
-          ? this.#delete(changedTrade)
-          : this.#set(changedTrade);
+    this.getList().forEach((tm) => {
+      const coinName = tm.getCoinName();
+      try {
+        if (!this.#lockTrade(coinName)) {
+          Log.info(this.#lockSkipMsg(coinName));
+          return;
+        }
+        const changedTrade = mutateFn(tm);
+        if (changedTrade) {
+          changedTrade.deleted
+            ? this.#delete(changedTrade)
+            : this.#set(changedTrade);
+        }
+      } finally {
+        this.#unlockTrade(coinName);
       }
     });
   }
@@ -96,6 +108,10 @@ export class TradesDao {
     const trades = this.get();
     trades[tm.getCoinName()] = tm;
     this.store.set(`Trades`, trades);
+  }
+
+  #lockSkipMsg(coinName: string): string {
+    return `${coinName} was skipped as it is already being processed by another process right now. Try again.`;
   }
 
   #delete(tm: TradeMemo): void {
