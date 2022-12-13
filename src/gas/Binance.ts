@@ -293,25 +293,32 @@ export class Binance implements IExchange {
       this.defaultReqOpts
     );
 
-    // Sum volume of bids above bidCutOffPrice
-    const bidsVol: number = data.bids.reduce((s: number, b) => {
-      return +b[0] > bidCutOffPrice ? s + +b[1] : s;
-    }, 0);
+    // Sum volume of bids above bidCutOffPrice or use best bid size
+    let bidsVol = 0;
+    for (const [price, size] of data.bids) {
+      if (+price < bidCutOffPrice) break;
+      bidsVol += +size;
+    }
+    bidsVol = bidsVol || data.bids[0]?.[1] || 0;
 
-    const topBid = data.bids[0]?.[0] ?? 0;
-    const topAsk = data.asks[0]?.[0] ?? 0;
-    const midPrice = (+topBid + +topAsk) / 2;
-    // askCutOffPrice is the price on the same distance from midPrice as
-    // bidCutOffPrice is from topBid, aka cut-off prices form a range around midPrice
+    const bestBidPrice = data.bids[0]?.[0] || 0;
+    const bestAskPrice = data.asks[0]?.[0] || 0;
+    const midPrice = (+bestBidPrice + +bestAskPrice) / 2;
+    // askCutOffPrice  is the price on the same distance from midPrice as
+    // bidCutOffPrice is from bestBidPrice, aka cut-off prices form a range around midPrice
     const askCutOffPrice = midPrice * (midPrice / bidCutOffPrice);
 
-    // Sum volume of asks below askCutOffPrice
-    const asksVol: number = data.asks.reduce((s: number, a) => {
-      return +a[0] < askCutOffPrice ? s + +a[1] : s;
-    }, 0);
+    // Sum volume of asks below askCutOffPrice  or use best ask size
+    let asksVol = 0;
+    for (const [price, size] of data.asks) {
+      if (+price > askCutOffPrice) break;
+      asksVol += +size;
+    }
+    asksVol = asksVol || data.asks[0]?.[1] || 0;
+
     const imb = (bidsVol - asksVol) / (bidsVol + asksVol);
     // if NaN, return 0
-    // NaN can happen if there are no bids or asks for this bidCutOffPrice
+    // NaN can happen if there are no bids and asks
     return imb || 0;
   }
 }
