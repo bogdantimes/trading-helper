@@ -98,3 +98,7 @@ export class StableCoinMatcher {
     return this.match ? (this.match[2] as StableUSDCoin) : null;
   }
 }
+
+export const backTestSorter = isNode
+  ? (a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1)
+  : () => Math.random() - 0.5;

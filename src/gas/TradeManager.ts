@@ -1,6 +1,6 @@
 import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
-import { Log } from "./Common";
+import { backTestSorter, Log } from "./Common";
 import {
   BNB,
   CoinName,
@@ -110,11 +110,7 @@ export class TradeManager {
     // For production, randomizing the order to avoid biases
     this.tradesDao
       .getList(TradeState.BUY)
-      .sort(
-        isNode
-          ? (a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1)
-          : () => Math.random() - 0.5
-      )
+      .sort(backTestSorter)
       .forEach((tm) => this.#tryCheckTrade(tm));
 
     this.#finalize();
