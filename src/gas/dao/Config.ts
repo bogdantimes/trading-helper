@@ -9,6 +9,11 @@ export const DefaultConfig: () => Config = () => ({
   AdvancedAccess: false,
   ViewOnly: false,
   HideBalances: false,
+  /**
+   * ExitImbalanceCheck - check imbalance when smart-exit is crossed down.
+   * Disabled by default in v3.2.1, because it needs more back-testing.
+   */
+  ExitImbalanceCheck: false,
 });
 
 export class ConfigDao {
