@@ -333,6 +333,7 @@ export class TradeManager {
     newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
 
     if (
+      this.#config.ExitImbalanceCheck &&
       slCrossedDown &&
       curTTL < maxTTL &&
       tm.currentPrice > bottomPrice &&

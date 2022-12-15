@@ -1,3 +1,7 @@
+# v3.2.1
+
+* Disabled "Imbalance Check" on Smart Exit (that was introduced in v3.2.0) as it needs further fine-tuning and back-testing.
+
 # v3.2.0
 
 * "Imbalance Check" function is integrated into active stop-limit with stunning **x2** profits/year improvement.
