@@ -1,6 +1,7 @@
 import { StableUSDCoin } from "./Types";
 
 export type AutoDetect = -1;
+
 export enum MarketTrend {
   DOWN = 1,
   SIDEWAYS = 2,

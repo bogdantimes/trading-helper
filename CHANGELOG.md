@@ -1,7 +1,11 @@
-# v3.2.1
+# v3.2.2
 
 * Trading Library updated to v14 with better "Strength" accuracy and improved "buy" signals with "Imbalance Check".
 * Added tracking of ~ # of trades covered by available BNB (displayed on Home page).
+
+# v3.2.1
+
+* Disabled "Imbalance Check" on Smart Exit (that was introduced in v3.2.0) as it needs further fine-tuning and back-testing.
 
 # v3.2.0
 
