@@ -481,16 +481,16 @@ export class TradeManager {
           this.#canInvest + 1
         );
         this.#balance += exit.gained;
-        const fee = this.processSellFee(memo, exit);
-        const profit = f2(exit.gained - entry.paid - fee);
-        const profitPercentage = f2(100 * (profit / entry.paid));
+        const fee = this.processSellFee(entry, exit);
+        const profit = exit.gained - entry.paid - fee;
+        const profitPercentage = 100 * (profit / entry.paid);
 
         exit.paid = entry.paid + fee;
 
         Log.alert(
           `ℹ️ Gained: $${f2(exit.gained)} | ${
             profit >= 0 ? `Profit` : `Loss`
-          }: $${profit} (${profitPercentage}%)`
+          }: $${f2(profit)} (${f2(profitPercentage)}%)`
         );
 
         // Alert the following CSV string:
@@ -540,17 +540,18 @@ export class TradeManager {
     }
   }
 
-  private processSellFee(tm: TradeMemo, sellResult: TradeResult): number {
-    if (this.updateBNBBalance(-sellResult.commission)) {
+  private processSellFee(entry: TradeResult, exit: TradeResult): number {
+    if (this.updateBNBBalance(-exit.commission)) {
       // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
-      sellResult.commission = 0;
+      exit.commission = 0;
     }
-    const buyFee = this.getBNBCommissionCost(tm.tradeResult.commission);
-    const sellFee = this.getBNBCommissionCost(sellResult.commission);
+    const buyFee = this.getBNBCommissionCost(entry.commission);
+    const sellFee = this.getBNBCommissionCost(exit.commission);
     return buyFee + sellFee;
   }
 
   private getBNBCommissionCost(commission: number): number {
+    if (!commission) return 0;
     const bnbPriceHolder = this.#getPrices(
       new ExchangeSymbol(`BNB`, this.#config.StableCoin)
     );
@@ -558,6 +559,7 @@ export class TradeManager {
   }
 
   private updateBNBBalance(quantity: number): boolean {
+    if (!quantity) return false;
     let updated = false;
     this.tradesDao.update(`BNB`, (tm) => {
       // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.

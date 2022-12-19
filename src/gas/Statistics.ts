@@ -1,4 +1,4 @@
-import { f2, Stats, IStore } from "../lib";
+import { Stats, IStore } from "../lib";
 
 export class Statistics {
   private readonly store: IStore;
@@ -11,8 +11,8 @@ export class Statistics {
     const stats = this.getAll();
     const date = new Date().toDateString();
     const dailyProfit = (stats.DailyProfit[date] || 0) + profit;
-    stats.DailyProfit[date] = f2(dailyProfit);
-    stats.TotalProfit = f2(stats.TotalProfit + profit);
+    stats.DailyProfit[date] = dailyProfit;
+    stats.TotalProfit = stats.TotalProfit + profit;
 
     this.store.set(`Statistics`, stats);
     return stats.TotalProfit;

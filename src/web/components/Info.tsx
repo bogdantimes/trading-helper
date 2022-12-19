@@ -10,18 +10,22 @@ import {
 import { FixedSizeList } from "react-window";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 import CurrencyFormat from "react-currency-format";
-import { Stats } from "../../lib";
+import { f2, Stats } from "../../lib";
 import { cardWidth } from "./Common";
 
 export function Info({ stats }: { stats: Stats }): JSX.Element {
   const rows = [];
 
   if (stats) {
-    rows.push({ id: 1, timeFrame: `Total`, profit: stats.TotalProfit });
+    rows.push({ id: 1, timeFrame: `Total`, profit: f2(stats.TotalProfit) });
     Object.keys(stats.DailyProfit)
       .sort((a, b) => (new Date(a) < new Date(b) ? 1 : -1))
       .forEach((d, i) => {
-        rows.push({ id: i + 2, timeFrame: d, profit: stats.DailyProfit[d] });
+        rows.push({
+          id: i + 2,
+          timeFrame: d,
+          profit: f2(stats.DailyProfit[d]),
+        });
       });
   }
 
