@@ -26,17 +26,15 @@ Running on a historical data like if it was trading in the past.
 
 **Dates:** November 2021 -> November 2022 (downtrend/sideways market 📉)
 
-**Best Result:** `$1,000 -> $9,360 (+836%, 8.3x profit)`
-**Worst Result:** `$1,000 -> $5,734 (+473%, 4.7x profit)`
+**Best Result:** `$1,000 -> $5,102 (+407%, 4x profit)`
 
-![r1-best.png](img/r1-best.png)
+![image](https://user-images.githubusercontent.com/7527778/204552357-0cff0f4a-9c3d-4873-88d5-f3f12d2ccd22.png)
 
 **Dates:** November 2020 -> November 2022 (uptrend/downtrend/sideways market 📈)
 
-**Best Result:** `$1,000 -> $126,537 (+12553%, 125x profit)`
-**Worst Result:** `$1,000 -> $60,918 (+6091%, 60x profit)`
+**Best Result:** `$1,000 -> $59,409 (+5690%, 56x profit)`
 
-![r1-best.png](img/r2-best.png)
+![image](https://user-images.githubusercontent.com/7527778/204544799-37395bc8-462a-4eb7-86fc-f6f6e3d1c006.png)
 
 ## Screenshots
 
