@@ -138,14 +138,18 @@ export class TradesDao {
       if (i === maxAttempts - 1) return false;
       Utilities.sleep(1000);
     }
-    trades[coinName]?.lock();
-    this.store.set(`Trades`, trades);
+    if (trades[coinName]) {
+      trades[coinName].lock();
+      this.store.set(`Trades`, trades);
+    }
     return true;
   }
 
   #unlockTrade(coinName: string): void {
     const trades = this.get();
-    trades[coinName]?.unlock();
-    this.store.set(`Trades`, trades);
+    if (trades[coinName]) {
+      trades[coinName].unlock();
+      this.store.set(`Trades`, trades);
+    }
   }
 }
