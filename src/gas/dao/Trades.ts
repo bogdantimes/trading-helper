@@ -116,8 +116,10 @@ export class TradesDao {
 
   #delete(tm: TradeMemo): void {
     const trades = this.get();
-    delete trades[tm.getCoinName()];
-    this.store.set(`Trades`, trades);
+    if (trades[tm.getCoinName()]) {
+      delete trades[tm.getCoinName()];
+      this.store.set(`Trades`, trades);
+    }
   }
 
   /**
