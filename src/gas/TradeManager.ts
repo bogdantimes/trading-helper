@@ -319,7 +319,7 @@ export class TradeManager {
     }
 
     const precision = tm.precision;
-    // const slCrossedDown = tm.stopLimitCrossedDown();
+    const slCrossedDown = tm.stopLimitCrossedDown();
 
     if (tm.stopLimitPrice === 0) {
       const ch = this.channelsDao.get(tm.getCoinName());
@@ -353,12 +353,12 @@ export class TradeManager {
     // quantize stop limit to stick it to the grid
     newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
 
-    // if (slCrossedDown && curTTL < maxTTL && tm.currentPrice > bottomPrice) {
-    //   this.#handleEarlyExit(tm);
-    // } else {
-    // Apply new stop limit if it is higher.
-    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
-    // }
+    if (slCrossedDown && curTTL < maxTTL && tm.currentPrice > bottomPrice) {
+      this.#handleEarlyExit(tm);
+    } else {
+      // Apply new stop limit if it is higher.
+      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+    }
   }
 
   #handleEarlyExit(tm: TradeMemo): void {
@@ -397,7 +397,7 @@ export class TradeManager {
     Log.debug(
       `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
     );
-    const bullishBalance = imbalance > 0.15;
+    const bullishBalance = imbalance > 0.7;
     if (bullishBalance) {
       tm.stopLimitPrice = bidCutOffPrice;
     }
