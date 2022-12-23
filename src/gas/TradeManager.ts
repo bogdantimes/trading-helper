@@ -369,7 +369,7 @@ export class TradeManager {
       // Allow stop-limit be lowered when it is crossed down,
       // but the order book imbalance is bullish (more buyers than sellers),
       // to avoid selling at turnarounds.
-      if (this.#tryLowerStopLimit(tm)) {
+      if (this.#lowerStopLimitIfSupportIsPresent(tm)) {
         this.#config.SellAtStopLimit &&
           Log.alert(
             `⚠ ${msg}, but there are buyers to support the price. Not selling yet.`
@@ -383,12 +383,13 @@ export class TradeManager {
     }
   }
 
-  #tryLowerStopLimit(tm: TradeMemo): boolean {
+  #lowerStopLimitIfSupportIsPresent(tm: TradeMemo): boolean {
     const symbol = tm.tradeResult.symbol;
     const precision = this.exchange.getPricePrecision(symbol);
-    const floor = floorToOptimalGrid(tm.currentPrice, precision);
-    const optimalLimit = Math.pow(10, floor.precisionDiff) * 2;
-    const bidCutOffPrice = floor.result;
+    const bidCutOffPrice = tm.stopLimitBottomPrice;
+    const diff = tm.currentPrice - bidCutOffPrice;
+    const step = 1 / Math.pow(10, precision);
+    const optimalLimit = 2 * Math.floor(diff / step);
     const imbalance = this.exchange.getImbalance(
       symbol,
       optimalLimit,
@@ -397,11 +398,12 @@ export class TradeManager {
     Log.debug(
       `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
     );
-    const bullishBalance = imbalance > 0.7;
-    if (bullishBalance) {
-      tm.stopLimitPrice = bidCutOffPrice;
+    const supportIsPresent = imbalance > 0;
+    if (supportIsPresent) {
+      const floor = floorToOptimalGrid(tm.currentPrice, precision);
+      tm.stopLimitPrice = floor.result;
     }
-    return bullishBalance;
+    return supportIsPresent;
   }
 
   private forceUpdateStopLimit(tm: TradeMemo): void {
