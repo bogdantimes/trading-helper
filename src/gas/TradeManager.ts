@@ -252,7 +252,7 @@ export class TradeManager {
   }
 
   #checkTrade(tm: TradeMemo): TradeMemo {
-    this.pushNewPrice(tm);
+    this.#pushNewPrice(tm);
 
     if (tm.tradeResult.quantity > 0) {
       this.#processBoughtState(tm);
@@ -406,13 +406,13 @@ export class TradeManager {
     return supportIsPresent;
   }
 
-  private forceUpdateStopLimit(tm: TradeMemo): void {
+  #forceUpdateStopLimit(tm: TradeMemo): void {
     tm.ttl = 0;
     tm.stopLimitPrice = 0;
     this.#updateStopLimit(tm);
   }
 
-  private pushNewPrice(tm: TradeMemo): void {
+  #pushNewPrice(tm: TradeMemo): void {
     const priceHolder = this.#getPrices(tm.tradeResult.symbol);
     const symbol = `${tm.getCoinName()}${this.#config.StableCoin}`;
     if (priceHolder) {
@@ -450,8 +450,8 @@ export class TradeManager {
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
         // set the stop limit according to the current settings
-        this.forceUpdateStopLimit(tm);
-        this.processBuyFee(tradeResult);
+        this.#forceUpdateStopLimit(tm);
+        this.#processBuyFee(tradeResult);
         Log.info(
           `${tm.getCoinName()} asset avg. price: $${f8(
             tm.tradeResult.avgPrice
@@ -483,7 +483,7 @@ export class TradeManager {
           this.#canInvest + 1
         );
         this.#balance += exit.gained;
-        const fee = this.processSellFee(entry, exit);
+        const fee = this.#processSellFee(entry, exit);
         const profit = exit.gained - entry.paid - fee;
         const profitPercentage = 100 * (profit / entry.paid);
 
@@ -514,7 +514,7 @@ export class TradeManager {
           )}</td><td>${profitPercentage}%</td></tr></table>`
         );
 
-        this.updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit);
+        this.#updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit);
       } catch (e) {
         Log.error(e);
       } finally {
@@ -529,48 +529,80 @@ export class TradeManager {
     }
   }
 
-  private updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
+  #updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
     if (StableUSDCoin[gainedCoin]) {
       this.stats.addProfit(profit);
     }
   }
 
-  private processBuyFee(buyResult: TradeResult): void {
-    if (this.updateBNBBalance(-buyResult.commission)) {
+  #processBuyFee(entry: TradeResult): void {
+    if (
+      // If non BNB asset was bought, try to reduce existing BNB assets qty if it exists
+      entry.symbol.quantityAsset !== BNB &&
+      this.#reduceBNBBalance(entry.commission)
+    ) {
       // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
-      buyResult.commission = 0;
+      entry.commission = 0;
     }
   }
 
-  private processSellFee(entry: TradeResult, exit: TradeResult): number {
-    if (this.updateBNBBalance(-exit.commission)) {
+  #processSellFee(entry: TradeResult, exit: TradeResult): number {
+    if (
+      // If non BNB asset was sold, try to reduce existing BNB assets qty if it exists
+      entry.symbol.quantityAsset !== BNB &&
+      this.#reduceBNBBalance(exit.commission)
+    ) {
       // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
       exit.commission = 0;
     }
-    const buyFee = this.getBNBCommissionCost(entry.commission);
-    const sellFee = this.getBNBCommissionCost(exit.commission);
+    // Calculate the final summary fee (buy + sell)
+    const buyFee = this.#getBNBCommissionCost(entry.commission);
+    const sellFee = this.#getBNBCommissionCost(exit.commission);
     return buyFee + sellFee;
   }
 
-  private getBNBCommissionCost(commission: number): number {
+  #getBNBCommissionCost(commission: number): number {
     if (!commission) return 0;
     const bnbPriceHolder = this.#getPrices(
-      new ExchangeSymbol(`BNB`, this.#config.StableCoin)
+      new ExchangeSymbol(BNB, this.#config.StableCoin)
     );
     return bnbPriceHolder ? commission * bnbPriceHolder.currentPrice : 0;
   }
 
-  private updateBNBBalance(quantity: number): boolean {
-    if (!quantity) return false;
+  #reduceBNBBalance(reduceQty: number): boolean {
+    if (reduceQty <= 0) return false;
+
     let updated = false;
-    this.tradesDao.update(`BNB`, (tm) => {
-      // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
-      // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
-      tm.tradeResult.addQuantity(quantity, 0);
-      Log.alert(`BNB balance updated by ${quantity}`);
+    this.tradesDao.update(BNB, (tm) => {
+      // Do nothing if the BNB asset is not owned
+      if (tm.tradeResult.quantity <= 0) return;
+
+      const curBNB = this.exchange.getBalance(BNB);
+      const remainingQty = Math.max(0, curBNB - reduceQty);
+
+      if (remainingQty >= tm.tradeResult.quantity) {
+        // Do nothing if the BNB asset qty is not affected
+        return;
+      }
+
+      if (remainingQty <= 0) {
+        Log.alert(
+          `After paying fees, there is no more ${BNB} asset remaining and it is being removed from the portfolio.`
+        );
+        tm.deleted = true;
+        return tm;
+      }
+
+      // Set remaining BNB asset qty.
+      // The asset BNB profit/loss correctly reflects "losses" due to paid fees.
+      tm.tradeResult.setQuantity(remainingQty);
+      Log.alert(
+        `Remaining ${BNB} asset quantity was reduced after paying the trade fees.`
+      );
       updated = true;
       return tm;
     });
+
     return updated;
   }
 

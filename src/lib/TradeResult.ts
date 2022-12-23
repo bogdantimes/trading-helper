@@ -69,5 +69,13 @@ export class TradeResult {
     this.quantity = sumWithMaxPrecision(this.quantity, quantity);
     this.cost += cost;
     this.paid += cost;
+    // Reset lotSizeQty to 0, so that it will be recalculated
+    this.lotSizeQty = 0;
+  }
+
+  setQuantity(quantity: number): void {
+    this.quantity = quantity;
+    // Reset lotSizeQty to 0, so that it will be recalculated
+    this.lotSizeQty = 0;
   }
 }
