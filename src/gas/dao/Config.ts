@@ -19,10 +19,6 @@ export class ConfigDao {
     this.store = store;
   }
 
-  isInitialized(): boolean {
-    return !!this.store.get(`Config`);
-  }
-
   get(): Config {
     const defaultConfig = DefaultConfig();
     let config: Config = this.store.get(`Config`) || defaultConfig;

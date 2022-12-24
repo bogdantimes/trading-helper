@@ -15,7 +15,7 @@ import {
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
 import { TradesDao } from "./dao/Trades";
-import { ConfigDao } from "./dao/Config";
+import { ConfigDao, DefaultConfig } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
@@ -186,20 +186,16 @@ function setPriceChannelsData(data: PriceChannelsDataResponse): string {
 
 function getConfig(): Config {
   const configDao = new ConfigDao(DefaultStore);
-  if (configDao.isInitialized()) {
-    const config = configDao.get();
-    const trendProvider = new TrendProvider(
-      configDao,
-      new Exchange(config.KEY, config.SECRET),
-      CacheProxy
-    );
-    config.AutoMarketTrend = trendProvider.get();
-    config.KEY = config.KEY ? MASK : ``;
-    config.SECRET = config.SECRET ? MASK : ``;
-    return config;
-  } else {
-    return null;
-  }
+  const config = configDao.get();
+  const trendProvider = new TrendProvider(
+    configDao,
+    new Exchange(config.KEY, config.SECRET),
+    CacheProxy
+  );
+  config.AutoMarketTrend = trendProvider.get();
+  config.KEY = config.KEY ? MASK : ``;
+  config.SECRET = config.SECRET ? MASK : ``;
+  return config;
 }
 
 /**
@@ -208,10 +204,9 @@ function getConfig(): Config {
  */
 function getState(): AppState {
   return catchError<AppState>(() => {
-    const config = getConfig();
     const plugin: TraderPlugin = global.TradingHelperLibrary;
     return {
-      config,
+      config: getConfig(),
       firebaseURL: FirebaseStore.url,
       info: new Statistics(DefaultStore).getAll(),
       candidates: plugin.getCandidates(new ChannelsDao(DefaultStore)),

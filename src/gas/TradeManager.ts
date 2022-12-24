@@ -119,12 +119,11 @@ export class TradeManager {
   buy(coin: CoinName): void {
     this.#prepare();
     const ch = this.channelsDao.get(coin);
-    const rangePercent = 1 - ch[Key.MIN] / ch[Key.MAX];
     this.#setBuyState({
       action: TradeAction.Buy,
       coin,
-      x: ch[Key.DURATION],
-      y: rangePercent,
+      duration: ch?.[Key.DURATION],
+      rangeSize: ch?.[Key.SIZE],
     });
   }
 
@@ -225,7 +224,7 @@ export class TradeManager {
       },
       () => {
         const tm = new TradeMemo(new TradeResult(symbol));
-        tm.setRequestParams({ x: r.x, y: r.y });
+        tm.setRequestMetadata(r);
         tm.prices = this.priceProvider.get(stableCoin)[r.coin]?.prices;
         tm.setState(TradeState.BUY);
         return tm;
@@ -387,9 +386,12 @@ export class TradeManager {
     const symbol = tm.tradeResult.symbol;
     const precision = this.exchange.getPricePrecision(symbol);
     const bidCutOffPrice = tm.stopLimitBottomPrice;
-    const diff = tm.currentPrice - bidCutOffPrice;
+
+    // calculate how many records for imbalance we need for this cut off price
     const step = 1 / Math.pow(10, precision);
+    const diff = tm.currentPrice - bidCutOffPrice;
     const optimalLimit = 2 * Math.floor(diff / step);
+
     const imbalance = this.exchange.getImbalance(
       symbol,
       optimalLimit,

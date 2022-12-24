@@ -89,8 +89,8 @@ export interface MarketMove {
 
 export interface InitialSetupParams {
   dbURL: string;
-  binanceAPIKey: string;
-  binanceSecretKey: string;
+  binanceAPIKey?: string;
+  binanceSecretKey?: string;
   viewOnly: boolean;
 }
 

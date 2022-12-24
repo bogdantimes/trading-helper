@@ -2,6 +2,7 @@ import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, TradeState } from "./Types";
 import { PricesHolder } from "./IPriceProvider";
 import { DefaultDuration, DefaultRange } from "./Config";
+import { TradeRequest } from "../gas/traders/plugin/api";
 
 export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult;
@@ -76,7 +77,7 @@ export class TradeMemo extends PricesHolder {
   }
 
   get locked(): boolean {
-    return !!this._lock;
+    return this._lock;
   }
 
   lock(): void {
@@ -99,9 +100,9 @@ export class TradeMemo extends PricesHolder {
     this.stopLimit = Math.max(0, price);
   }
 
-  setRequestParams({ x, y }: { x: number; y: number }): void {
-    this.x = x;
-    this.y = y;
+  setRequestMetadata(r: TradeRequest): void {
+    this.x = r.duration;
+    this.y = r.rangeSize;
   }
 
   get duration(): number {

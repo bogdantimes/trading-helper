@@ -35,7 +35,7 @@ export class Binance implements IExchange {
     this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
   }
 
-  #getSymbolInfo(symbol: ExchangeSymbol): SymbolInfo {
+  #getSymbolInfo(symbol: ExchangeSymbol): SymbolInfo | undefined {
     return global.TradingHelperLibrary.getBinanceSymbolInfo(symbol);
   }
 

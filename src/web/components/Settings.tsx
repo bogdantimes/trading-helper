@@ -26,7 +26,7 @@ export function Settings(params: {
   firebaseURL: string;
 }): JSX.Element {
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(``);
   const [balance, setBalance] = useState(
     params.config.StableBalance === -1
       ? ``
@@ -43,11 +43,11 @@ export function Settings(params: {
         .withSuccessHandler(() => {
           setInitialFbURL(newFbURL);
         })
-        .withFailureHandler(setError)
+        .withFailureHandler((e) => setError(e.message))
         .setFirebaseURL(newFbURL);
     }
 
-    setError(null);
+    setError(``);
 
     const autoDetect = -1;
     if (isFinite(+balance) && (+balance === autoDetect || +balance >= 0)) {
@@ -63,7 +63,7 @@ export function Settings(params: {
     google.script.run
       .withFailureHandler((r) => {
         setIsSaving(false);
-        setError(r);
+        setError(r.message);
       })
       .withSuccessHandler(() => {
         setIsSaving(false);

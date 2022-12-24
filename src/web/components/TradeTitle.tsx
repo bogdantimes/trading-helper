@@ -22,7 +22,7 @@ export function TradeTitle({
   const deleteIcon = (
     <IconButton
       disabled={!onDelete}
-      onClick={() => onDelete(tm.getCoinName(), !tm.currentValue)}
+      onClick={() => onDelete?.(tm.getCoinName(), !tm.currentValue)}
       sx={{ color: deleteColor }}
       onMouseEnter={() => setDeleteHover(true)}
       onMouseLeave={() => setDeleteHover(false)}

@@ -40,8 +40,8 @@ export class ScriptStore implements IStore {
 export class FirebaseStore implements IStore {
   #source: object | null = null;
 
-  static get url(): string | null {
-    return PropertiesService.getScriptProperties().getProperty(`dbURL`);
+  static get url(): string {
+    return PropertiesService.getScriptProperties().getProperty(`dbURL`) ?? ``;
   }
 
   static set url(url: string | null) {
@@ -202,4 +202,5 @@ function getStore(): IStore {
   return new CachedStore(defaultStore, CacheProxy);
 }
 
+// @ts-expect-error
 export const DefaultStore: IStore = isNode ? null : getStore();

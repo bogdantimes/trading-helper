@@ -25,14 +25,14 @@ export default function Trade(props: {
   const { data: tm, config: cfg, onDelete } = props;
 
   const chartContainerRef = useRef();
-  const chart = useRef<IChartApi>(null);
+  const chart = useRef<IChartApi>();
   const theme = useTheme();
 
-  const [priceLine, setPriceLine] = useState<ISeriesApi<`Line`>>(null);
-  const [targetLine, setTargetLine] = useState<ISeriesApi<`Line`>>(null);
-  const [stopLine, setStopLine] = useState<ISeriesApi<`Line`>>(null);
-  const [entryLine, setEntryLine] = useState<ISeriesApi<`Line`>>(null);
-  const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<`Line`>>(null);
+  const [priceLine, setPriceLine] = useState<ISeriesApi<`Line`>>();
+  const [targetLine, setTargetLine] = useState<ISeriesApi<`Line`>>();
+  const [stopLine, setStopLine] = useState<ISeriesApi<`Line`>>();
+  const [entryLine, setEntryLine] = useState<ISeriesApi<`Line`>>();
+  const [soldPriceLine, setSoldPriceLine] = useState<ISeriesApi<`Line`>>();
 
   const map = (prices: number[], mapFn: (v: number) => number): LineData[] => {
     return prices.map((v, i) => ({
@@ -58,7 +58,7 @@ export default function Trade(props: {
 
   useEffect(() => {
     if (!chart.current) {
-      chart.current = createChart(chartContainerRef.current, chartOpts);
+      chart.current = createChart(chartContainerRef.current ?? ``, chartOpts);
 
       setPriceLine(
         chart.current.addLineSeries({
@@ -98,8 +98,8 @@ export default function Trade(props: {
     }
 
     return () => {
-      chart.current.remove();
-      chart.current = null;
+      chart.current?.remove();
+      chart.current = undefined;
     };
   }, []);
 
@@ -114,7 +114,9 @@ export default function Trade(props: {
   // refresh chart
   useEffect(() => {
     // change chart theme according to the current theme
-    changeChartTheme(chart.current, theme);
+    if (chart.current) {
+      changeChartTheme(chart.current, theme);
+    }
 
     // Setting price series min move to number of digits after decimal point
     const precision = getPrecision(tm.currentPrice);

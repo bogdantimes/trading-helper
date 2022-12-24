@@ -17,7 +17,7 @@ export interface TraderPlugin {
     channelsDao: ChannelsDao,
     percentile?: number
   ) => Record<string, PriceChannelData>;
-  getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo;
+  getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo | undefined;
 }
 
 export interface PluginResult {
@@ -45,8 +45,8 @@ export interface PluginContext {
 export interface TradeRequest {
   coin: CoinName;
   action: TradeAction;
-  x: number;
-  y: number;
+  duration: number;
+  rangeSize: number;
 }
 
 export enum TradeAction {
