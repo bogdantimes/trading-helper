@@ -399,7 +399,7 @@ export class TradeManager {
     Log.debug(
       `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
     );
-    const supportIsPresent = imbalance > 0;
+    const supportIsPresent = imbalance > 0.15;
     if (supportIsPresent) {
       const floor = floorToOptimalGrid(tm.currentPrice, precision);
       tm.stopLimitPrice = floor.result;
