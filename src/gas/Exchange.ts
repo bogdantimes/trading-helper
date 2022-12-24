@@ -28,7 +28,7 @@ export interface IExchange {
 export class Exchange implements IExchange {
   private readonly exchange: Binance;
 
-  constructor(key: string, secret: string) {
+  constructor(key?: string, secret?: string) {
     this.exchange = new Binance(key, secret);
   }
 

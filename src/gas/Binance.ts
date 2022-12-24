@@ -22,7 +22,7 @@ export class Binance implements IExchange {
 
   #curServerId: number;
 
-  constructor(key: string, secret: string) {
+  constructor(key?: string, secret?: string) {
     this.key = key ?? ``;
     this.secret = secret ?? ``;
     this.defaultReqOpts = {
@@ -156,7 +156,7 @@ export class Binance implements IExchange {
     const lotSize = this.#getSymbolInfo(symbol)?.filters.find(
       (f) => f.filterType === `LOT_SIZE`
     );
-    if (!lotSize) {
+    if (!lotSize?.stepSize) {
       throw new Error(`Failed to get LOT_SIZE for ${symbol}`);
     }
     return getPrecision(+lotSize.stepSize);
@@ -166,7 +166,7 @@ export class Binance implements IExchange {
     const priceFilter = this.#getSymbolInfo(symbol)?.filters.find(
       (f) => f.filterType === `PRICE_FILTER`
     );
-    if (!priceFilter) {
+    if (!priceFilter?.tickSize) {
       throw new Error(`Failed to get PRICE_FILTER for ${symbol}`);
     }
     return getPrecision(+priceFilter.tickSize);
@@ -279,7 +279,7 @@ export class Binance implements IExchange {
   }
 
   #rotateServer(): void {
-    this.#curServerId = this.serverIds.shift();
+    this.#curServerId = this.serverIds.shift() ?? this.#curServerId;
     this.serverIds.push(this.#curServerId);
   }
 
