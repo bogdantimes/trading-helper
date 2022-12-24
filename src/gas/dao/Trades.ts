@@ -3,7 +3,7 @@ import { isNode } from "browser-or-node";
 import { Log } from "../Common";
 
 export class TradesDao {
-  private memCache: { [p: string]: TradeMemo };
+  private memCache: Record<string, TradeMemo>;
 
   constructor(private readonly store: IStore) {}
 
@@ -79,7 +79,7 @@ export class TradesDao {
     });
   }
 
-  get(): { [p: string]: TradeMemo } {
+  get(): Record<string, TradeMemo> {
     if (isNode && this.memCache) {
       // performance optimization for back-testing
       return this.memCache;
@@ -87,7 +87,7 @@ export class TradesDao {
 
     const trades = this.store.get(`Trades`) || {};
     // Convert raw trades to TradeMemo objects
-    const tradeMemos = Object.keys(trades).reduce<{ [p: string]: TradeMemo }>(
+    const tradeMemos = Object.keys(trades).reduce<Record<string, TradeMemo>>(
       (acc, key) => {
         acc[key] = TradeMemo.fromObject(trades[key]);
         return acc;

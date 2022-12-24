@@ -37,7 +37,7 @@ export class PriceProvider implements IPriceProvider {
   }
 
   get(stableCoin: StableUSDCoin): PriceHoldersMap {
-    return this.#priceMaps[stableCoin] || {};
+    return this.#priceMaps[stableCoin] ?? {};
   }
 
   update(): boolean {

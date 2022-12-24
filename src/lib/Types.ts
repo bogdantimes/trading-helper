@@ -14,9 +14,7 @@ export enum OtherStableCoins {
   USDC = `USDC`,
 }
 
-export interface PriceMap {
-  [key: string]: number;
-}
+export type PriceMap = Record<string, number>;
 
 export interface Stats {
   TotalProfit: number;

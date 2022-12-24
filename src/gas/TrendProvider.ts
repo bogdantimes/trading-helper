@@ -38,7 +38,7 @@ export class TrendProvider {
   }
 
   #update(): MarketTrend {
-    const priceMoveToMarketTrend: { [p: number]: MarketTrend } = {
+    const priceMoveToMarketTrend: Record<number, MarketTrend> = {
       [PriceMove.STRONG_DOWN]: MarketTrend.DOWN,
       [PriceMove.DOWN]: MarketTrend.DOWN,
       [PriceMove.NEUTRAL]: MarketTrend.SIDEWAYS,

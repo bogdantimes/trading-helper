@@ -4,11 +4,11 @@ import { isNode } from "browser-or-node";
 const PriceChannelDataKey = `ChannelData`;
 
 export class ChannelsDao {
-  private memCache: { [p: string]: PriceChannelData };
+  private memCache: Record<string, PriceChannelData>;
 
   constructor(private readonly store: IStore) {}
 
-  getAll(): { [p: string]: PriceChannelData } {
+  getAll(): Record<string, PriceChannelData> {
     if (isNode && this.memCache) {
       // performance optimization for back-testing
       return this.memCache;
@@ -28,7 +28,7 @@ export class ChannelsDao {
     this.store.set(PriceChannelDataKey, all);
   }
 
-  setAll(data: { [p: string]: PriceChannelData }): void {
+  setAll(data: Record<string, PriceChannelData>): void {
     this.memCache = data;
     this.store.set(PriceChannelDataKey, data);
   }

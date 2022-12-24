@@ -17,7 +17,7 @@ export class Binance implements IExchange {
   private readonly defaultReqOpts: URLFetchRequestOptions;
   private readonly tradeReqOpts: URLFetchRequestOptions;
   private readonly serverIds: number[];
-  readonly #balances: { [coinName: string]: number } = {};
+  readonly #balances: Record<string, number> = {};
   readonly #cloudURL: string;
 
   #curServerId: number;

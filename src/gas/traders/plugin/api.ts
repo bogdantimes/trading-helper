@@ -16,7 +16,7 @@ export interface TraderPlugin {
   getCandidates: (
     channelsDao: ChannelsDao,
     percentile?: number
-  ) => { [p: string]: PriceChannelData };
+  ) => Record<string, PriceChannelData>;
   getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo;
 }
 

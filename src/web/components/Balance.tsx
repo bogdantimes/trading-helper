@@ -26,8 +26,8 @@ export default function Balance({
   assetsValue,
   hide,
 }: BalanceProps): JSX.Element {
-  const stableBalance = balances[name] >= 0 ? balances[name] : 0;
-  const feesBudget = balances.feesBudget >= 0 ? balances.feesBudget : 0;
+  const stableBalance = balances[name] ?? 0;
+  const feesBudget = balances.feesBudget ?? 0;
   const total = stableBalance + assetsValue;
   const approxTrades = Math.max(
     0,
