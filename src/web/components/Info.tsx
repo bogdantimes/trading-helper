@@ -14,11 +14,11 @@ import { f2, Stats } from "../../lib";
 import { cardWidth } from "./Common";
 
 export function Info({ stats }: { stats: Stats }): JSX.Element {
-  const rows: {
+  const rows: Array<{
     id: number;
     timeFrame: string;
     profit: number;
-  }[] = [];
+  }> = [];
 
   if (stats) {
     rows.push({ id: 1, timeFrame: `Total`, profit: f2(stats.TotalProfit) });

@@ -15,13 +15,13 @@ import {
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
 import { TradesDao } from "./dao/Trades";
-import { ConfigDao, DefaultConfig } from "./dao/Config";
+import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
-import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 import { TraderPlugin } from "./traders/plugin/api";
+import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -130,8 +130,8 @@ function initialSetup(params: InitialSetupParams): string {
     }
     const configDao = new ConfigDao(store);
     const config = configDao.get();
-    config.KEY = params.binanceAPIKey || config.KEY;
-    config.SECRET = params.binanceSecretKey || config.SECRET;
+    config.KEY = params.binanceAPIKey ?? config.KEY;
+    config.SECRET = params.binanceSecretKey ?? config.SECRET;
     config.ViewOnly = params.viewOnly;
     if (config.ViewOnly || (config.KEY && config.SECRET)) {
       startAllProcesses();
