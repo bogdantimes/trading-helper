@@ -351,12 +351,11 @@ export class TradeManager {
 
     // quantize stop limit to stick it to the grid
     newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
+    // Apply new stop limit if it is higher.
+    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
     if (slCrossedDown && tm.profit() <= 0 && tm.currentPrice > bottomPrice) {
       this.#handleEarlyExit(tm);
-    } else {
-      // Apply new stop limit if it is higher.
-      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
     }
   }
 

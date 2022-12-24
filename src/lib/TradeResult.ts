@@ -24,12 +24,12 @@ export class TradeResult {
   }
 
   get avgPrice(): number {
-    return f8(this.cost / this.quantity) || 0;
+    return this.cost / this.quantity || 0;
   }
 
   get entryPrice(): number {
     if (this.quantity > 0) {
-      return f8(this.cost / this.quantity);
+      return this.cost / this.quantity;
     }
     // for sold assets
     // calculate approximate entry price from soldPrice and realisedProfit
@@ -42,7 +42,13 @@ export class TradeResult {
   }
 
   toString(): string {
-    return `${this.symbol} => Qty: ${this.quantity}, Entry Price: ${this.entryPrice}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${this.gained}, Commission BNB: ${this.commission}, Profit: ${this.realisedProfit}, Msg: ${this.msg}`;
+    return `${this.symbol} => Qty: ${this.quantity}, Entry Price: ${f8(
+      this.entryPrice
+    )}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${
+      this.gained
+    }, Commission BNB: ${this.commission}, Profit: ${
+      this.realisedProfit
+    }, Msg: ${this.msg}`;
   }
 
   join(next: TradeResult): TradeResult {
