@@ -91,7 +91,7 @@ export class TradeManager {
       channelsDao: this.channelsDao,
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
-      provideCandidatesToBuy: this.#canInvest > 0,
+      provideCandidatesToBuy: this.#getMoneyToInvest() > 0,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
@@ -270,27 +270,31 @@ export class TradeManager {
       // or the price does not go up anymore
       // this allows to wait if price continues to go up
       this.#sell(tm);
-    } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
-      // buy only if price stopped going down
-      // this allows to wait if price continues to fall
-      const toInvest = this.#getMoneyToInvest(tm);
-      if (toInvest > 0) {
-        this.#buy(tm, toInvest);
+    }
+
+    // buy only if price stopped going down
+    // this allows to wait if price continues to fall
+    // do not invest into the same coin
+    if (
+      tm.stateIs(TradeState.BUY) &&
+      priceMove > PriceMove.DOWN &&
+      tm.tradeResult.quantity <= 0
+    ) {
+      const money = this.#getMoneyToInvest();
+      if (money > 0) {
+        this.#buy(tm, money);
       } else {
         Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - not enough balance`);
-        tm.resetState();
       }
     }
+
+    tm.resetState(); // Leaves only BOUGHT and SOLD assets
     return tm;
   }
 
-  #getMoneyToInvest(tm: TradeMemo): number {
-    if (
-      this.#balance === -1 ||
-      this.#canInvest <= 0 ||
-      tm.tradeResult.quantity > 0
-    ) {
-      // Return 0 if we can't invest or if we already have some coins
+  #getMoneyToInvest(): number {
+    if (this.#balance === -1 || this.#canInvest <= 0) {
+      // Return 0 if we can not invest
       return 0;
     }
     const result = Math.floor(this.#balance / this.#canInvest);
