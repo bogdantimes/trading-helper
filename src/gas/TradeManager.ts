@@ -77,7 +77,7 @@ export class TradeManager {
     this.#prepare();
 
     const trades = this.tradesDao.getList();
-    const invested = trades.filter((t) => t.currentValue).length;
+    const invested = trades.filter((t) => t.tradeResult.quantity).length;
     this.#canInvest = Math.max(0, this.#optimalInvestRatio - invested);
 
     // First process !BUY state assets (some might get sold and free up $)
@@ -274,21 +274,17 @@ export class TradeManager {
 
     // buy only if price stopped going down
     // this allows to wait if price continues to fall
-    // do not invest into the same coin
-    if (
-      tm.stateIs(TradeState.BUY) &&
-      priceMove > PriceMove.DOWN &&
-      tm.tradeResult.quantity <= 0
-    ) {
+    if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
       const money = this.#getMoneyToInvest();
-      if (money > 0) {
+      // do not invest into the same coin
+      if (tm.tradeResult.quantity <= 0 && money > 0) {
         this.#buy(tm, money);
       } else {
         Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - not enough balance`);
+        tm.resetState(); // Cancel BUY state
       }
     }
 
-    tm.resetState(); // Leaves only BOUGHT and SOLD assets
     return tm;
   }
 
