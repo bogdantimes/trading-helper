@@ -24,7 +24,7 @@ import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
-import { TradeAction, TradeRequest, TraderPlugin } from "./traders/plugin/api";
+import { SignalType, Signal, TraderPlugin } from "./traders/plugin/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
@@ -86,12 +86,12 @@ export class TradeManager {
       .forEach((tm) => this.#tryCheckTrade(tm));
 
     // Run plugin to update candidates and also get buy candidates if we can invest
-    const { advancedAccess, requests } = this.plugin.trade({
+    const { advancedAccess, signals } = this.plugin.trade({
       marketTrend: this.#mktTrend,
       channelsDao: this.channelsDao,
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
-      provideCandidatesToBuy: this.#getMoneyToInvest() > 0,
+      provideSignals: this.#getMoneyToInvest() > 0,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
@@ -100,8 +100,8 @@ export class TradeManager {
     }
 
     if (!this.#config.ViewOnly) {
-      requests
-        .filter((r) => r.action === TradeAction.Buy)
+      signals
+        .filter((r) => r.type === SignalType.Buy)
         .forEach((r) => this.#setBuyState(r));
     }
 
@@ -120,7 +120,7 @@ export class TradeManager {
     this.#prepare();
     const ch = this.channelsDao.get(coin);
     this.#setBuyState({
-      action: TradeAction.Buy,
+      type: SignalType.Buy,
       coin,
       duration: ch?.[Key.DURATION],
       rangeSize: ch?.[Key.SIZE],
@@ -212,7 +212,7 @@ export class TradeManager {
     }
   }
 
-  #setBuyState(r: TradeRequest): void {
+  #setBuyState(r: Signal): void {
     const stableCoin = this.#config.StableCoin;
     const symbol = new ExchangeSymbol(r.coin, stableCoin);
     this.tradesDao.update(

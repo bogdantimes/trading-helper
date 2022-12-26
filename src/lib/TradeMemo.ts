@@ -2,7 +2,7 @@ import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, TradeState } from "./Types";
 import { PricesHolder } from "./IPriceProvider";
 import { DefaultDuration, DefaultRange } from "./Config";
-import { TradeRequest } from "../gas/traders/plugin/api";
+import { Signal } from "../gas/traders/plugin/api";
 
 export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult;
@@ -100,7 +100,7 @@ export class TradeMemo extends PricesHolder {
     this.stopLimit = Math.max(0, price);
   }
 
-  setRequestMetadata(r: TradeRequest): void {
+  setRequestMetadata(r: Signal): void {
     this.x = r.duration;
     this.y = r.rangeSize;
   }

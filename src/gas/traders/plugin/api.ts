@@ -26,9 +26,9 @@ export interface PluginResult {
    */
   advancedAccess: boolean;
   /**
-   * Requests to trade.
+   * Signals to trade.
    */
-  requests: TradeRequest[];
+  signals: Signal[];
 }
 
 export interface PluginContext {
@@ -37,18 +37,18 @@ export interface PluginContext {
   channelsDao: ChannelsDao;
   stableCoin: StableUSDCoin;
   /**
-   * provideCandidatesToBuy - whether the plugin caller is interested in buy candidates.
+   * provideSignals - whether the plugin caller is interested in signals.
    */
-  provideCandidatesToBuy: boolean;
+  provideSignals: boolean;
 }
 
-export interface TradeRequest {
+export interface Signal {
   coin: CoinName;
-  action: TradeAction;
+  type: SignalType;
   duration: number;
   rangeSize: number;
 }
 
-export enum TradeAction {
+export enum SignalType {
   Buy,
 }
