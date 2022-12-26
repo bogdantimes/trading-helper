@@ -415,17 +415,22 @@ export class TradeManager {
 
   #pushNewPrice(tm: TradeMemo): void {
     const priceHolder = this.#getPrices(tm.tradeResult.symbol);
+
+    if (isNode && !priceHolder?.currentPrice) {
+      // Only for back-testing, force selling this asset
+      // The back-testing exchange mock will use the previous price
+      this.#sell(tm);
+      return;
+    }
+
     const symbol = `${tm.getCoinName()}${this.#config.StableCoin}`;
-    if (priceHolder) {
+    if (priceHolder?.currentPrice) {
       tm.pushPrice(priceHolder.currentPrice);
     } else if (tm.tradeResult.quantity) {
       // no price available, but we have quantity, which means we bought something earlier
-      Log.alert(`Exchange does not have price for ${symbol}.`);
-      if (isNode) {
-        // Only for back-testing, force selling this asset
-        // The back-testing exchange mock will use the previous price
-        this.#sell(tm);
-      }
+      Log.alert(
+        `Exchange does not have price for ${symbol}. Try another Stable Coin in Settings.`
+      );
     } else {
       // no price available, and no quantity, which means we haven't bought anything yet
       // could be a non-existing symbol, or not yet published in the exchange
