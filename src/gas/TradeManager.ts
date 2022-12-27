@@ -320,7 +320,7 @@ export class TradeManager {
     const precision = tm.precision;
     const slCrossedDown = tm.stopLimitCrossedDown();
 
-    if (tm.stopLimitPrice === 0) {
+    if (!tm.stopLimitPrice) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
       tm.stopLimitPrice = floorToOptimalGrid(ch[Key.MIN], precision).result;
