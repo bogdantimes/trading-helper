@@ -403,6 +403,7 @@ export class TradeManager {
     if (supportIsPresent) {
       const floor = floorToOptimalGrid(tm.currentPrice, precision);
       tm.stopLimitPrice = floor.result;
+      tm.ttl -= 240; // Cool down
     }
     return supportIsPresent;
   }
