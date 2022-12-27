@@ -106,11 +106,11 @@ export class TradeMemo extends PricesHolder {
   }
 
   get duration(): number {
-    return this.x ?? DefaultDuration;
+    return this.x || DefaultDuration;
   }
 
   get range(): number {
-    return this.y ?? DefaultRange;
+    return this.y || DefaultRange;
   }
 
   getCoinName(): string {
