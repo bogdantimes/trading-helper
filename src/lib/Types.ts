@@ -176,7 +176,7 @@ export interface PriceChannelData {
 }
 
 export interface UpgradeInfo {
-  newVersion: string;
+  newVersion?: string;
   URL?: string;
   files?: Array<{ id?: string; name: string; type: string; source: string }>;
 }

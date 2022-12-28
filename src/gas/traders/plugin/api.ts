@@ -47,6 +47,7 @@ export interface Signal {
   type: SignalType;
   duration: number;
   rangeSize: number;
+  imbalance: number;
 }
 
 export enum SignalType {

@@ -35,6 +35,11 @@ export class TradeMemo extends PricesHolder {
    * Some default value is required for trades that existed before the introduction of this feature.
    */
   private y: number;
+  /**
+   * Holds the latest imbalance (buyers vs sellers volume) value for this trade.
+   * @private
+   */
+  private i: number;
 
   private _lock: boolean;
 
@@ -100,9 +105,10 @@ export class TradeMemo extends PricesHolder {
     this.stopLimit = Math.max(0, price);
   }
 
-  setRequestMetadata(r: Signal): void {
+  setSignalMetadata(r: Signal): void {
     this.x = r.duration;
     this.y = r.rangeSize;
+    this.i = r.imbalance;
   }
 
   get duration(): number {
@@ -111,6 +117,10 @@ export class TradeMemo extends PricesHolder {
 
   get range(): number {
     return this.y || DefaultRange;
+  }
+
+  get imbalance(): number {
+    return this.i || 0;
   }
 
   getCoinName(): string {

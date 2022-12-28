@@ -124,6 +124,7 @@ export class TradeManager {
       coin,
       duration: ch?.[Key.DURATION],
       rangeSize: ch?.[Key.SIZE],
+      imbalance: ch?.[Key.IMBALANCE],
     });
   }
 
@@ -224,7 +225,7 @@ export class TradeManager {
       },
       () => {
         const tm = new TradeMemo(new TradeResult(symbol));
-        tm.setRequestMetadata(r);
+        tm.setSignalMetadata(r);
         tm.prices = this.priceProvider.get(stableCoin)[r.coin]?.prices;
         tm.setState(TradeState.BUY);
         return tm;

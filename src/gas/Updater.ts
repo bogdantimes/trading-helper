@@ -18,7 +18,7 @@ export class Updater {
     const { files, newVersion, URL }: UpgradeInfo =
       global.TradingHelperLibrary.getUpgrades(curVer);
 
-    if (compare(curVer, newVersion, `>=`) || !files?.length) {
+    if (!newVersion || compare(curVer, newVersion, `>=`) || !files?.length) {
       Log.info(`ℹ️ Trading Helper is up to date.`);
       return `ℹ️ Trading Helper is up to date.`;
     }
