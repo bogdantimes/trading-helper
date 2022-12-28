@@ -92,6 +92,7 @@ export class TradeManager {
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
       provideSignals: this.#getMoneyToInvest() > 0,
+      checkImbalance: this.#config.EntryImbalanceCheck,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
@@ -355,7 +356,12 @@ export class TradeManager {
     // Apply new stop limit if it is higher.
     tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
-    if (slCrossedDown && tm.profit() <= 0 && tm.currentPrice > bottomPrice) {
+    if (
+      this.#config.ExitImbalanceCheck &&
+      slCrossedDown &&
+      tm.profit() <= 0 &&
+      tm.currentPrice > bottomPrice
+    ) {
       this.#handleEarlyExit(tm);
     }
   }

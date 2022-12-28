@@ -10,6 +10,8 @@ export const DefaultConfig: () => Config = () => ({
   AdvancedAccess: false,
   ViewOnly: false,
   HideBalances: false,
+  EntryImbalanceCheck: true,
+  ExitImbalanceCheck: true,
 });
 
 export class ConfigDao {

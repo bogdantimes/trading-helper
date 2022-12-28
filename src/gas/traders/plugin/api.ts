@@ -40,6 +40,7 @@ export interface PluginContext {
    * provideSignals - whether the plugin caller is interested in signals.
    */
   provideSignals: boolean;
+  checkImbalance: boolean;
 }
 
 export interface Signal {
