@@ -35,6 +35,7 @@ export class Log {
   }
 
   static error(err: Error): void {
+    console.error(err);
     this.level >= LogLevel.ERROR &&
       this.errLog.push(new Error(`${err?.stack?.slice(0, 1000)}`));
   }

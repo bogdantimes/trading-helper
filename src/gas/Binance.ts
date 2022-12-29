@@ -315,8 +315,8 @@ export class Binance implements IExchange {
     }
 
     const imb = (bidsVol - asksVol) / (bidsVol + asksVol);
-    // if NaN, return 0
+    // if NaN, return -1
     // NaN can happen if there are no bids and asks
-    return imb || 0;
+    return imb || -1;
   }
 }

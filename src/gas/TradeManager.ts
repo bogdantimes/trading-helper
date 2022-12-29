@@ -539,7 +539,7 @@ export class TradeManager {
         memo.setState(TradeState.SOLD);
       }
     } else {
-      Log.debug(exit)
+      Log.debug(exit);
       Log.debug(memo);
       memo.setState(TradeState.BOUGHT);
       Log.alert(`An issue happened while selling ${symbol}: ${exit}`);

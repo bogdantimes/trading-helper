@@ -54,6 +54,9 @@ export class TradesDao {
           ? this.#delete(changedTrade)
           : this.#set(changedTrade);
       }
+    } catch (e) {
+      console.error(e);
+      Log.debug(e);
     } finally {
       this.#unlockTrade(coinName);
     }

@@ -213,7 +213,7 @@ export class TradeMemo extends PricesHolder {
   stopLimitCrossedDown(): boolean {
     return (
       this.currentPrice < this.stopLimitPrice &&
-      this.prices[this.prices.length - 2] >= this.stopLimitPrice
+      this.previousPrice >= this.stopLimitPrice
     );
   }
 }
