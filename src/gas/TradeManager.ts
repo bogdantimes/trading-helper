@@ -221,6 +221,7 @@ export class TradeManager {
       r.coin,
       (tm) => {
         tm.setState(TradeState.BUY);
+        tm.setSignalMetadata(r);
         tm.tradeResult.symbol = symbol;
         return tm;
       },
@@ -479,6 +480,7 @@ export class TradeManager {
       }
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`);
+      Log.debug(tradeResult);
       Log.debug(tm);
       tm.resetState();
     }
@@ -537,6 +539,7 @@ export class TradeManager {
         memo.setState(TradeState.SOLD);
       }
     } else {
+      Log.debug(exit)
       Log.debug(memo);
       memo.setState(TradeState.BOUGHT);
       Log.alert(`An issue happened while selling ${symbol}: ${exit}`);
