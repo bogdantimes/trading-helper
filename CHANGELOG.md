@@ -1,4 +1,4 @@
-# v3.2.2
+# v3.3.0
 
 * "Imbalance Check" is improved and re-enabled on "Smart exit".
 * Trading Library updated to v19: improved "buy" signals that work better on the past 6 months period.
