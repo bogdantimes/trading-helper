@@ -3,6 +3,7 @@
 * "Imbalance Check" is improved and re-enabled on "Smart exit".
 * Trading Library updated to v19: improved "buy" signals that work better on the past 6 months period.
 * Added tracking of approximate number of trades left, that covered by available BNB (displayed on Home page).
+* Fixed Firebase database import when connecting to a new project installation.
 
 # v3.2.1
 
