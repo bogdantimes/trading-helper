@@ -5,25 +5,11 @@ import {
   floor,
   getPrecision,
   INTERRUPT,
+  SymbolInfo,
   TradeResult,
 } from "../lib";
 import { IExchange } from "./Exchange";
 import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
-
-interface Filter {
-  filterType: `LOT_SIZE` | `PRICE_FILTER`;
-  stepSize?: string;
-  tickSize?: string;
-}
-
-interface ExchangeInfo {
-  symbols: [
-    {
-      symbol: string;
-      filters: Filter[];
-    }
-  ];
-}
 
 export class Binance implements IExchange {
   private readonly key: string;
@@ -31,13 +17,12 @@ export class Binance implements IExchange {
   private readonly defaultReqOpts: URLFetchRequestOptions;
   private readonly tradeReqOpts: URLFetchRequestOptions;
   private readonly serverIds: number[];
-  readonly #balances: { [coinName: string]: number } = {};
+  readonly #balances: Record<string, number> = {};
   readonly #cloudURL: string;
 
-  #exchangeInfo: ExchangeInfo;
   #curServerId: number;
 
-  constructor(key: string, secret: string) {
+  constructor(key?: string, secret?: string) {
     this.key = key ?? ``;
     this.secret = secret ?? ``;
     this.defaultReqOpts = {
@@ -48,6 +33,10 @@ export class Binance implements IExchange {
     this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
     this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
+  }
+
+  #getSymbolInfo(symbol: ExchangeSymbol): SymbolInfo | undefined {
+    return global.TradingHelperLibrary.getBinanceSymbolInfo(symbol);
   }
 
   getBalance(coinName: string): number {
@@ -164,34 +153,20 @@ export class Binance implements IExchange {
   }
 
   getLotSizePrecision(symbol: ExchangeSymbol): number {
-    if (!this.#exchangeInfo) {
-      this.#exchangeInfo = this.fetch(
-        () => `exchangeInfo`,
-        this.defaultReqOpts
-      );
-    }
-
-    const lotSize = this.#exchangeInfo.symbols
-      .find((s) => s.symbol === symbol.toString())
-      ?.filters.find((f) => f.filterType === `LOT_SIZE`);
-    if (!lotSize) {
+    const lotSize = this.#getSymbolInfo(symbol)?.filters.find(
+      (f) => f.filterType === `LOT_SIZE`
+    );
+    if (!lotSize?.stepSize) {
       throw new Error(`Failed to get LOT_SIZE for ${symbol}`);
     }
     return getPrecision(+lotSize.stepSize);
   }
 
   getPricePrecision(symbol: ExchangeSymbol): number {
-    if (!this.#exchangeInfo) {
-      this.#exchangeInfo = this.fetch(
-        () => `exchangeInfo`,
-        this.defaultReqOpts
-      );
-    }
-
-    const priceFilter = this.#exchangeInfo.symbols
-      .find((s) => s.symbol === symbol.toString())
-      ?.filters.find((f) => f.filterType === `PRICE_FILTER`);
-    if (!priceFilter) {
+    const priceFilter = this.#getSymbolInfo(symbol)?.filters.find(
+      (f) => f.filterType === `PRICE_FILTER`
+    );
+    if (!priceFilter?.tickSize) {
       throw new Error(`Failed to get PRICE_FILTER for ${symbol}`);
     }
     return getPrecision(+priceFilter.tickSize);
@@ -304,7 +279,7 @@ export class Binance implements IExchange {
   }
 
   #rotateServer(): void {
-    this.#curServerId = this.serverIds.shift();
+    this.#curServerId = this.serverIds.shift() ?? this.#curServerId;
     this.serverIds.push(this.#curServerId);
   }
 
@@ -313,27 +288,35 @@ export class Binance implements IExchange {
     limit: number,
     bidCutOffPrice: number
   ): number {
-    const data = this.fetch(
+    const data: { bids: any[]; asks: any[] } = this.fetch(
       () => `depth?symbol=${symbol}&limit=${limit}`,
       this.defaultReqOpts
     );
 
-    // Sum volume of bids above bidCutOffPrice
-    const bidsVol: number = data.bids.reduce((s: number, b) => {
-      return +b[0] > bidCutOffPrice ? s + +b[1] : s;
-    }, 0);
+    // Sum volume of bids above bidCutOffPrice or use best bid size
+    let bidsVol = +data.bids[0]?.[1] || 0;
+    for (const [price, size] of data.bids.slice(1)) {
+      if (+price < bidCutOffPrice) break;
+      bidsVol += +size;
+    }
 
-    const topBid = data.bids[0]?.[0] ?? 0;
-    const topAsk = data.asks[0]?.[0] ?? 0;
-    const midPrice = (+topBid + +topAsk) / 2;
-    // askCutOffPrice is the price on the same distance from midPrice as
-    // bidCutOffPrice is from topBid, aka cut-off prices form a range around midPrice
+    const bestBidPrice = data.bids[0]?.[0] || 0;
+    const bestAskPrice = data.asks[0]?.[0] || 0;
+    const midPrice = (+bestBidPrice + +bestAskPrice) / 2;
+    // askCutOffPrice  is the price on the same distance from midPrice as
+    // bidCutOffPrice is from bestBidPrice, aka cut-off prices form a range around midPrice
     const askCutOffPrice = midPrice * (midPrice / bidCutOffPrice);
 
-    // Sum volume of asks below askCutOffPrice
-    const asksVol: number = data.asks.reduce((s: number, a) => {
-      return +a[0] < askCutOffPrice ? s + +a[1] : s;
-    }, 0);
-    return (bidsVol - asksVol) / (bidsVol + asksVol);
+    // Sum volume of asks below askCutOffPrice  or use best ask size
+    let asksVol = +data.asks[0]?.[1] || 0;
+    for (const [price, size] of data.asks.slice(1)) {
+      if (+price > askCutOffPrice) break;
+      asksVol += +size;
+    }
+
+    const imb = (bidsVol - asksVol) / (bidsVol + asksVol);
+    // if NaN, return -1
+    // NaN can happen if there are no bids and asks
+    return imb || -1;
   }
 }

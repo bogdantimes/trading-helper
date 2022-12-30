@@ -14,7 +14,6 @@ export class TradeResult {
   paid = 0;
   gained = 0;
   soldPrice = 0;
-  profit = 0;
   commission = 0;
   msg = ``;
   fromExchange = false;
@@ -25,17 +24,17 @@ export class TradeResult {
   }
 
   get avgPrice(): number {
-    return f8(this.cost / this.quantity);
+    return this.cost / this.quantity || 0;
   }
 
   get entryPrice(): number {
     if (this.quantity > 0) {
-      return f8(this.cost / this.quantity);
+      return this.cost / this.quantity;
     }
     // for sold assets
     // calculate approximate entry price from soldPrice and realisedProfit
     const profitPercent = this.realisedProfit / this.paid;
-    return this.soldPrice / (1 + profitPercent);
+    return this.soldPrice / (1 + profitPercent) || 0;
   }
 
   get realisedProfit(): number {
@@ -43,13 +42,19 @@ export class TradeResult {
   }
 
   toString(): string {
-    return `${this.symbol} => Qty: ${this.quantity}, Entry Price: ${this.entryPrice}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${this.gained}, Commission BNB: ${this.commission}, Profit: ${this.profit}, Msg: ${this.msg}`;
+    return `${this.symbol} => Qty: ${this.quantity}, Entry Price: ${f8(
+      this.entryPrice
+    )}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${
+      this.gained
+    }, Commission BNB: ${this.commission}, Profit: ${
+      this.realisedProfit
+    }, Msg: ${this.msg}`;
   }
 
   join(next: TradeResult): TradeResult {
     if (this.fromExchange !== next.fromExchange) {
       throw Error(
-        `Cannot join trades where 'fromExchange' is not equal: ${next.toString()}`
+        `Cannot join trades where 'fromExchange' is not equal: ${next}`
       );
     }
     if (this.symbol.quantityAsset !== next.symbol.quantityAsset) {
@@ -70,5 +75,13 @@ export class TradeResult {
     this.quantity = sumWithMaxPrecision(this.quantity, quantity);
     this.cost += cost;
     this.paid += cost;
+    // Reset lotSizeQty to 0, so that it will be recalculated
+    this.lotSizeQty = 0;
+  }
+
+  setQuantity(quantity: number): void {
+    this.quantity = quantity;
+    // Reset lotSizeQty to 0, so that it will be recalculated
+    this.lotSizeQty = 0;
   }
 }

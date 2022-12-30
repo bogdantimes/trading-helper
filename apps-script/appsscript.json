@@ -15,8 +15,15 @@
       {
         "userSymbol": "TradingHelperLibrary",
         "libraryId": "1HVyGwXDWhXhrJ53E_hc-uzV001f96XfA6dDuLXExYjEkg5r-NqZVtwo9",
-        "version": "13",
+        "version": "19",
         "developmentMode": false
+      }
+    ],
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "Drive",
+        "version": "v2",
+        "serviceId": "drive"
       }
     ]
   },

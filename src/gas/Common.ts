@@ -35,6 +35,7 @@ export class Log {
   }
 
   static error(err: Error): void {
+    console.error(err);
     this.level >= LogLevel.ERROR &&
       this.errLog.push(new Error(`${err?.stack?.slice(0, 1000)}`));
   }
@@ -98,3 +99,7 @@ export class StableCoinMatcher {
     return this.match ? (this.match[2] as StableUSDCoin) : null;
   }
 }
+
+export const backTestSorter = isNode
+  ? (a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1)
+  : () => Math.random() - 0.5;

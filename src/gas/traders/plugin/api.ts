@@ -1,14 +1,23 @@
 import {
   CoinName,
+  ExchangeSymbol,
   MarketTrend,
+  PriceChannelData,
   PriceHoldersMap,
   PriceMap,
+  StableUSDCoin,
+  SymbolInfo,
 } from "../../../lib/index";
 import { ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
   trade: (context: PluginContext) => PluginResult;
   getPrices: () => PriceMap;
+  getCandidates: (
+    channelsDao: ChannelsDao,
+    percentile?: number
+  ) => Record<string, PriceChannelData>;
+  getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo | undefined;
 }
 
 export interface PluginResult {
@@ -17,25 +26,31 @@ export interface PluginResult {
    */
   advancedAccess: boolean;
   /**
-   * Requests to trade.
+   * Signals to trade.
    */
-  requests: TradeRequest[];
+  signals: Signal[];
 }
 
 export interface PluginContext {
   marketTrend: MarketTrend;
   prices: PriceHoldersMap;
   channelsDao: ChannelsDao;
+  stableCoin: StableUSDCoin;
+  /**
+   * provideSignals - whether the plugin caller is interested in signals.
+   */
+  provideSignals: boolean;
+  checkImbalance: boolean;
 }
 
-export interface TradeRequest {
+export interface Signal {
   coin: CoinName;
-  action: TradeAction;
-  x: number;
-  y: number;
+  type: SignalType;
+  duration: number;
+  rangeSize: number;
+  imbalance: number;
 }
 
-export enum TradeAction {
+export enum SignalType {
   Buy,
-  Sell,
 }

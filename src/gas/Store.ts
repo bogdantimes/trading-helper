@@ -1,4 +1,4 @@
-import { CacheProxy, DefaultCacheProxy } from "./CacheProxy";
+import { CacheProxy, DefaultCacheProxy, ExpirationEntries } from "./CacheProxy";
 import { isNode } from "browser-or-node";
 import { IStore } from "../lib/index";
 
@@ -16,10 +16,6 @@ export class ScriptStore implements IStore {
     return PropertiesService.getScriptProperties().getKeys();
   }
 
-  getOrSet(key: string, value: any): any {
-    return this.get(key) || this.set(key, value);
-  }
-
   isConnected(): boolean {
     return true;
   }
@@ -35,13 +31,17 @@ export class ScriptStore implements IStore {
     );
     return value;
   }
+
+  keepCacheAlive(): void {}
+
+  clearCache(): void {}
 }
 
 export class FirebaseStore implements IStore {
   #source: object | null = null;
 
-  static get url(): string | null {
-    return PropertiesService.getScriptProperties().getProperty(`dbURL`);
+  static get url(): string {
+    return PropertiesService.getScriptProperties().getProperty(`dbURL`) ?? ``;
   }
 
   static set url(url: string | null) {
@@ -110,10 +110,6 @@ export class FirebaseStore implements IStore {
     return data && typeof data === `object` ? Object.keys(data) : [];
   }
 
-  getOrSet(key: string, value: any): any {
-    return this.get(key) || this.set(key, value);
-  }
-
   set(key: string, value: any): any {
     if (!this.isConnected()) {
       throw new Error(`Firebase is not connected.`);
@@ -122,6 +118,10 @@ export class FirebaseStore implements IStore {
     this.source.setData(key, value);
     return value;
   }
+
+  keepCacheAlive(): void {}
+
+  clearCache(): void {}
 }
 
 export class CachedStore implements IStore {
@@ -132,7 +132,6 @@ export class CachedStore implements IStore {
   constructor(store: IStore, cache: DefaultCacheProxy) {
     this.#store = store;
     this.#cache = cache;
-    this.#syncCache();
   }
 
   connect(dbURL: string): void {
@@ -158,15 +157,20 @@ export class CachedStore implements IStore {
     return this.#store.getKeys();
   }
 
-  getOrSet(key: string, value: any): any {
-    return this.get(key) || this.set(key, value);
-  }
-
   isConnected(): boolean {
     return this.#store.isConnected();
   }
 
   set(key: string, value: any): any {
+    if (
+      !value ||
+      (Array.isArray(value) && value.length === 0) ||
+      (typeof value === `object` && Object.keys(value).length === 0)
+    ) {
+      this.#cache.remove(key);
+      return value;
+    }
+
     this.#cache.put(key, JSON.stringify(value));
     const synced = this.#cache.get(`${key}_synced`);
     if (!synced) {
@@ -176,11 +180,18 @@ export class CachedStore implements IStore {
     return value;
   }
 
-  #syncCache(): void {
-    const cachedStoreValues = this.#cache.getAll(this.#store.getKeys());
-    Object.keys(cachedStoreValues).forEach((key) =>
-      this.set(key, JSON.parse(cachedStoreValues[key]))
-    );
+  keepCacheAlive(): void {
+    // Iterate all Store paths and get/put values to reset expiration
+    const cachedValues = this.#cache.getAll(this.#store.getKeys());
+    const putBackValues: ExpirationEntries = {};
+    Object.keys(cachedValues).forEach((key) => {
+      putBackValues[key] = { value: cachedValues[key] };
+    });
+    this.#cache.putAll(putBackValues);
+  }
+
+  clearCache(): void {
+    this.#cache.removeAll(this.#store.getKeys());
   }
 }
 
@@ -191,4 +202,5 @@ function getStore(): IStore {
   return new CachedStore(defaultStore, CacheProxy);
 }
 
+// @ts-expect-error
 export const DefaultStore: IStore = isNode ? null : getStore();

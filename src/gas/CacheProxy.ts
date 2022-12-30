@@ -10,12 +10,14 @@ function byteCount(s: string): number {
 
 export const MAX_EXPIRATION = SECONDS_IN_HOUR * 6;
 
-export interface Entries {
-  [key: string]: any;
-}
-export interface ExpirationEntries {
-  [key: string]: { value: string; expiration?: Integer };
-}
+export type Entries = Record<string, any>;
+export type ExpirationEntries = Record<
+  string,
+  {
+    value: string;
+    expiration?: Integer;
+  }
+>;
 
 export class DefaultCacheProxy implements ICacheProxy {
   get(key: string): string | null {
@@ -28,7 +30,7 @@ export class DefaultCacheProxy implements ICacheProxy {
 
   putAll(values: ExpirationEntries): void {
     // group values into maps by expiration
-    const map: { [key: Integer]: { [key: string]: any } } = {};
+    const map: Record<Integer, Record<string, any>> = {};
     Object.keys(values).forEach((key) => {
       const { value, expiration = MAX_EXPIRATION } = values[key];
       map[expiration] = map[expiration] || {};

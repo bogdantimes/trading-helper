@@ -24,6 +24,7 @@ import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
 import { AppState } from "../lib";
 import Terminal, { ColorMode } from "react-terminal-ui";
+import { DefaultConfig } from "../gas/dao/Config";
 
 function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
   return {
@@ -33,19 +34,22 @@ function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
 }
 
 export default function App(): JSX.Element {
-  const [tab, setTab] = React.useState(0);
-  const changeTab = (e: React.SyntheticEvent, v: number): void => setTab(v);
-
   const mode = useMediaQuery(`(prefers-color-scheme: dark)`);
   const theme = React.useMemo(
     () => createTheme({ palette: { mode: mode ? `dark` : `light` } }),
     [mode]
   );
 
-  const [state, setState] = React.useState<AppState>(null);
+  const [state, setState] = React.useState<AppState>({
+    assets: [],
+    candidates: {},
+    config: DefaultConfig(),
+    firebaseURL: ``,
+    info: { TotalProfit: 0, DailyProfit: {} },
+  });
   const [initialSetup, setInitialSetup] = React.useState(true);
   const [fetchingData, setFetchingData] = React.useState(true);
-  const [fetchDataError, setFetchDataError] = React.useState(null);
+  const [fetchDataError, setFetchDataError] = React.useState(``);
   const [deletingAsset, setDeletingAsset] = React.useState(false);
 
   useEffect(initialFetch, []);
@@ -69,9 +73,9 @@ export default function App(): JSX.Element {
   }
 
   function handleState(state: AppState): void {
-    const { ViewOnly, KEY, SECRET } = state.config || {};
+    const { ViewOnly, KEY, SECRET } = state.config;
     setFetchingData(false);
-    setFetchDataError(null);
+    setFetchDataError(``);
     setInitialSetup(!ViewOnly && !(KEY && SECRET));
     setState(state);
   }
@@ -115,6 +119,17 @@ export default function App(): JSX.Element {
     setTerminalOpen(true);
   });
 
+  const [tab, setTab] = React.useState(0);
+  const changeTab = (e: React.SyntheticEvent, v: number): void => {
+    setTab((prevState) => {
+      if (prevState !== TabId.Settings && v === TabId.Settings) {
+        // Reload state when opening Settings
+        reFetchState();
+      }
+      return v;
+    });
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -155,7 +170,7 @@ export default function App(): JSX.Element {
           <TabPanel value={tab} index={TabId.Home}>
             <Home
               state={state}
-              onAssetDelete={deletingAsset ? null : onAssetDelete}
+              onAssetDelete={deletingAsset ? undefined : onAssetDelete}
             />
           </TabPanel>
           <TabPanel value={tab} index={TabId.Info}>

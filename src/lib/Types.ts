@@ -14,9 +14,7 @@ export enum OtherStableCoins {
   USDC = `USDC`,
 }
 
-export interface PriceMap {
-  [key: string]: number;
-}
+export type PriceMap = Record<string, number>;
 
 export interface Stats {
   TotalProfit: number;
@@ -91,8 +89,8 @@ export interface MarketMove {
 
 export interface InitialSetupParams {
   dbURL: string;
-  binanceAPIKey: string;
-  binanceSecretKey: string;
+  binanceAPIKey?: string;
+  binanceSecretKey?: string;
   viewOnly: boolean;
 }
 
@@ -114,13 +112,15 @@ export interface IStore {
 
   set: (key: string, value: any) => any;
 
-  getOrSet: (key: string, value: any) => any;
-
   delete: (key: string) => void;
 
   isConnected: () => boolean;
 
   connect: (dbURL: string) => void;
+
+  keepCacheAlive: () => void;
+
+  clearCache: () => void;
 }
 
 export enum Key {
@@ -139,6 +139,8 @@ export enum Key {
   STRENGTH,
   ATH,
   ATHTime,
+  IMBALANCE,
+  IS_READY,
 }
 
 export enum Bit {
@@ -169,10 +171,29 @@ export interface PriceChannelData {
   [Key.STRENGTH]: number;
   [Key.ATH]: number;
   [Key.ATHTime]: number;
+  [Key.IMBALANCE]: number;
+  [Key.IS_READY]: Bit;
 }
 
 export interface UpgradeInfo {
-  newVersion: string;
+  newVersion?: string;
   URL?: string;
   files?: Array<{ id?: string; name: string; type: string; source: string }>;
+}
+
+export type StableCoinKeys = keyof typeof StableUSDCoin;
+
+export interface Filter {
+  filterType: `LOT_SIZE` | `PRICE_FILTER`;
+  stepSize?: string;
+  tickSize?: string;
+}
+
+export interface SymbolInfo {
+  symbol: string;
+  filters: Filter[];
+}
+
+export interface ExchangeInfo {
+  symbols: SymbolInfo[];
 }

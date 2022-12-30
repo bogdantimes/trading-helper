@@ -2,6 +2,7 @@ import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, TradeState } from "./Types";
 import { PricesHolder } from "./IPriceProvider";
 import { DefaultDuration, DefaultRange } from "./Config";
+import { Signal } from "../gas/traders/plugin/api";
 
 export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult;
@@ -34,6 +35,11 @@ export class TradeMemo extends PricesHolder {
    * Some default value is required for trades that existed before the introduction of this feature.
    */
   private y: number;
+  /**
+   * Holds the latest imbalance (buyers vs sellers volume) value for this trade.
+   * @private
+   */
+  private i: number;
 
   private _lock: boolean;
 
@@ -76,7 +82,7 @@ export class TradeMemo extends PricesHolder {
   }
 
   get locked(): boolean {
-    return !!this._lock;
+    return this._lock;
   }
 
   lock(): void {
@@ -99,17 +105,22 @@ export class TradeMemo extends PricesHolder {
     this.stopLimit = Math.max(0, price);
   }
 
-  setRequestParams({ x, y }: { x: number; y: number }): void {
-    this.x = x;
-    this.y = y;
+  setSignalMetadata(r: Signal): void {
+    this.x = r.duration;
+    this.y = r.rangeSize;
+    this.i = r.imbalance;
   }
 
   get duration(): number {
-    return this.x ?? DefaultDuration;
+    return this.x || DefaultDuration;
   }
 
   get range(): number {
-    return this.y ?? DefaultRange;
+    return this.y || DefaultRange;
+  }
+
+  get imbalance(): number {
+    return this.i || 0;
   }
 
   getCoinName(): string {
@@ -202,7 +213,7 @@ export class TradeMemo extends PricesHolder {
   stopLimitCrossedDown(): boolean {
     return (
       this.currentPrice < this.stopLimitPrice &&
-      this.prices[this.prices.length - 2] >= this.stopLimitPrice
+      this.previousPrice >= this.stopLimitPrice
     );
   }
 }

@@ -4,6 +4,7 @@ import {
   IPriceProvider,
   PriceHoldersMap,
   PricesHolder,
+  StableCoinKeys,
   StableUSDCoin,
 } from "../../lib/index";
 import {
@@ -14,7 +15,6 @@ import {
 import { TraderPlugin } from "../traders/plugin/api";
 import { CacheProxy } from "../CacheProxy";
 
-type StableCoinKeys = keyof typeof StableUSDCoin;
 type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap };
 
 export class PriceProvider implements IPriceProvider {
@@ -37,7 +37,7 @@ export class PriceProvider implements IPriceProvider {
   }
 
   get(stableCoin: StableUSDCoin): PriceHoldersMap {
-    return this.#priceMaps[stableCoin] || {};
+    return this.#priceMaps[stableCoin] ?? {};
   }
 
   update(): boolean {

@@ -2,18 +2,16 @@ import { Config, IStore, MarketTrend, MASK, StableUSDCoin } from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
-  StableBalance: -1, // -1 is to initiate using all available balance.
+  StableBalance: -1, // -1 Auto detect
+  FeesBudget: -1, // -1 Auto detect
   SellAtStopLimit: true,
   MarketTrend: -1, // -1 Auto detect
   AutoMarketTrend: MarketTrend.SIDEWAYS,
   AdvancedAccess: false,
   ViewOnly: false,
   HideBalances: false,
-  /**
-   * ExitImbalanceCheck - check imbalance when smart-exit is crossed down.
-   * Disabled by default in v3.2.1, because it needs more back-testing.
-   */
-  ExitImbalanceCheck: false,
+  EntryImbalanceCheck: true,
+  ExitImbalanceCheck: true,
 });
 
 export class ConfigDao {
@@ -23,13 +21,9 @@ export class ConfigDao {
     this.store = store;
   }
 
-  isInitialized(): boolean {
-    return !!this.store.get(`Config`);
-  }
-
   get(): Config {
     const defaultConfig = DefaultConfig();
-    let config: Config = this.store.getOrSet(`Config`, defaultConfig);
+    let config: Config = this.store.get(`Config`) || defaultConfig;
     // apply existing config on top of default one
     config = Object.assign(defaultConfig, config);
     return config;

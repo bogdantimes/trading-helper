@@ -1,7 +1,8 @@
 import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
-import { Log } from "./Common";
+import { backTestSorter, Log } from "./Common";
 import {
+  BNB,
   CoinName,
   Config,
   ExchangeSymbol,
@@ -11,6 +12,7 @@ import {
   floorToOptimalGrid,
   Key,
   MarketTrend,
+  MIN_BUY,
   PriceMove,
   PricesHolder,
   StableUSDCoin,
@@ -22,13 +24,11 @@ import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
-import { TradeAction, TradeRequest, TraderPlugin } from "./traders/plugin/api";
+import { SignalType, Signal, TraderPlugin } from "./traders/plugin/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
 import { TrendProvider } from "./TrendProvider";
-
-const MIN_BUY = 15;
 
 export class TradeManager {
   #config: Config;
@@ -76,10 +76,23 @@ export class TradeManager {
   trade(): void {
     this.#prepare();
 
-    const { advancedAccess, requests } = this.plugin.trade({
+    const trades = this.tradesDao.getList();
+    const invested = trades.filter((t) => t.tradeResult.quantity).length;
+    this.#canInvest = Math.max(0, this.#optimalInvestRatio - invested);
+
+    // First process !BUY state assets (some might get sold and free up $)
+    trades
+      .filter((tm) => !tm.stateIs(TradeState.BUY))
+      .forEach((tm) => this.#tryCheckTrade(tm));
+
+    // Run plugin to update candidates and also get buy candidates if we can invest
+    const { advancedAccess, signals } = this.plugin.trade({
       marketTrend: this.#mktTrend,
       channelsDao: this.channelsDao,
-      prices: this.priceProvider.get(StableUSDCoin.BUSD),
+      prices: this.priceProvider.get(this.#config.StableCoin),
+      stableCoin: this.#config.StableCoin,
+      provideSignals: this.#getMoneyToInvest() > 0,
+      checkImbalance: this.#config.EntryImbalanceCheck,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
@@ -88,41 +101,18 @@ export class TradeManager {
     }
 
     if (!this.#config.ViewOnly) {
-      requests.forEach((r) => {
-        if (r.action === TradeAction.Buy) {
-          this.#setBuyState(r);
-        } else if (r.action === TradeAction.Sell) {
-          this.#setSellState(r);
-        }
-      });
+      signals
+        .filter((r) => r.type === SignalType.Buy)
+        .forEach((r) => this.#setBuyState(r));
     }
 
-    const trades = this.tradesDao.getList();
-    const inv = trades.filter((t) => t.tradeResult.quantity > 0);
-    this.#canInvest = Math.max(0, this.#optimalInvestRatio - inv.length);
-
-    trades.sort(
-      isNode
-        ? // For back-testing, sorting to ensure tests consistency
-          (a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1)
-        : // For production, randomizing the order to avoid biases
-          () => Math.random() - 0.5
-    );
-
-    const trs = [
-      // First process existing trades (some might get sold and free up space to buy new ones)
-      ...trades.filter((tm) => !tm.stateIs(TradeState.BUY)),
-      // Now process those which were requested to buy
-      ...trades.filter((tm) => tm.stateIs(TradeState.BUY)),
-    ];
-    trs.forEach((tm) => {
-      try {
-        this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
-      } catch (e) {
-        Log.alert(`Failed to trade ${tm.getCoinName()}: ${e.message}`);
-        Log.error(e);
-      }
-    });
+    // Now process trades which are yet to be bought
+    // For back-testing, sort by name to ensure tests consistency
+    // For production, randomizing the order to avoid biases
+    this.tradesDao
+      .getList(TradeState.BUY)
+      .sort(backTestSorter)
+      .forEach((tm) => this.#tryCheckTrade(tm));
 
     this.#finalize();
   }
@@ -130,28 +120,30 @@ export class TradeManager {
   buy(coin: CoinName): void {
     this.#prepare();
     const ch = this.channelsDao.get(coin);
-    const rangePercent = 1 - ch[Key.MIN] / ch[Key.MAX];
     this.#setBuyState({
-      action: TradeAction.Buy,
+      type: SignalType.Buy,
       coin,
-      x: ch[Key.DURATION],
-      y: rangePercent,
+      duration: ch?.[Key.DURATION],
+      rangeSize: ch?.[Key.SIZE],
+      imbalance: ch?.[Key.IMBALANCE],
     });
   }
 
   sell(coin: CoinName): void {
     this.#prepare();
-    this.#setSellState({ action: TradeAction.Sell, coin, x: 0, y: 0 });
+    this.#setSellState(coin);
   }
 
-  sellAll(sellNow = false): void {
+  sellAll(): void {
     this.#prepare();
 
     this.tradesDao.iterate((tm) => {
+      // Reset potential BUY state to avoid buying for the time being
       tm.resetState();
       if (tm.tradeResult.quantity > 0) {
-        tm.setState(TradeState.SELL);
-        sellNow && this.#sell(tm);
+        this.#sell(tm);
+      } else {
+        Log.alert(`⚠️ Can't sell ${tm.getCoinName()}. Current value is 0`);
       }
       return tm;
     });
@@ -160,14 +152,14 @@ export class TradeManager {
   }
 
   #prepare(): void {
-    this.#initBalance();
+    this.#initStableBalance();
     this.#mktTrend = this.trendProvider.get();
     const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
-    const cs = this.channelsDao.getCandidates(percentile);
+    const cs = this.plugin.getCandidates(this.channelsDao, percentile);
     this.#optimalInvestRatio = Math.max(1, Math.min(3, Object.keys(cs).length));
   }
 
-  #initBalance(): void {
+  #initStableBalance(): void {
     this.#config = this.configDao.get();
     this.#balance = this.#config.StableBalance;
     if (this.#balance === -1 && this.#config.KEY && this.#config.SECRET) {
@@ -190,30 +182,52 @@ export class TradeManager {
     }
   }
 
-  #finalize(): void {
-    const diff = this.#balance - this.#config.StableBalance;
-    if (diff !== 0) {
-      this.#config = this.configDao.get();
-      this.#config.StableBalance += diff;
-      this.#balance = this.#config.StableBalance;
-      this.configDao.set(this.#config);
-      Log.info(`Free balance: $${f2(this.#balance)}`);
+  #updateFeesBudget(): void {
+    if (this.#config.KEY && this.#config.SECRET) {
+      try {
+        const base = this.#config.StableCoin;
+        const price = this.priceProvider.get(base)[BNB]?.currentPrice;
+        this.#config.FeesBudget = this.exchange.getBalance(BNB) * price;
+      } catch (e) {
+        Log.alert(
+          `⚠️ Couldn't update fees budget. It was reset to 0. Next attempt is after next trade or during balance auto-detect.`
+        );
+        this.#config.FeesBudget = 0;
+      }
     }
   }
 
-  #setBuyState(r: TradeRequest): void {
+  #finalize(): void {
+    // Update balances only if the balance changed
+    // Or if BNBStableBalance is not set
+    const diff = this.#balance - this.#config.StableBalance;
+    if (diff !== 0 || this.#config.FeesBudget === -1) {
+      this.#config = this.configDao.get();
+      this.#config.StableBalance += diff;
+      this.#balance = this.#config.StableBalance;
+      this.#updateFeesBudget();
+      this.configDao.set(this.#config);
+      Log.info(
+        `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
+      );
+      Log.info(`Fees budget: ~$${f2(this.#config.FeesBudget)}`);
+    }
+  }
+
+  #setBuyState(r: Signal): void {
     const stableCoin = this.#config.StableCoin;
     const symbol = new ExchangeSymbol(r.coin, stableCoin);
     this.tradesDao.update(
       r.coin,
       (tm) => {
         tm.setState(TradeState.BUY);
+        tm.setSignalMetadata(r);
         tm.tradeResult.symbol = symbol;
         return tm;
       },
       () => {
         const tm = new TradeMemo(new TradeResult(symbol));
-        tm.setRequestParams({ x: r.x, y: r.y });
+        tm.setSignalMetadata(r);
         tm.prices = this.priceProvider.get(stableCoin)[r.coin]?.prices;
         tm.setState(TradeState.BUY);
         return tm;
@@ -221,8 +235,8 @@ export class TradeManager {
     );
   }
 
-  #setSellState(r: TradeRequest): void {
-    this.tradesDao.update(r.coin, (tm) => {
+  #setSellState(coin: CoinName): void {
+    this.tradesDao.update(coin, (tm) => {
       if (tm.tradeResult.quantity > 0) {
         tm.setState(TradeState.SELL);
       }
@@ -230,8 +244,17 @@ export class TradeManager {
     });
   }
 
+  #tryCheckTrade(tm: TradeMemo): void {
+    try {
+      this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
+    } catch (e) {
+      Log.alert(`Failed to process ${tm.getCoinName()}: ${e.message}`);
+      Log.error(e);
+    }
+  }
+
   #checkTrade(tm: TradeMemo): TradeMemo {
-    this.pushNewPrice(tm);
+    this.#pushNewPrice(tm);
 
     if (tm.tradeResult.quantity > 0) {
       this.#processBoughtState(tm);
@@ -250,27 +273,27 @@ export class TradeManager {
       // or the price does not go up anymore
       // this allows to wait if price continues to go up
       this.#sell(tm);
-    } else if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
-      // buy only if price stopped going down
-      // this allows to wait if price continues to fall
-      const toInvest = this.#getMoneyToInvest(tm);
-      if (toInvest > 0) {
-        this.#buy(tm, toInvest);
+    }
+
+    // buy only if price stopped going down
+    // this allows to wait if price continues to fall
+    if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
+      const money = this.#getMoneyToInvest();
+      // do not invest into the same coin
+      if (tm.tradeResult.quantity <= 0 && money > 0) {
+        this.#buy(tm, money);
       } else {
         Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - not enough balance`);
-        tm.resetState();
+        tm.resetState(); // Cancel BUY state
       }
     }
+
     return tm;
   }
 
-  #getMoneyToInvest(tm: TradeMemo): number {
-    if (
-      this.#balance === -1 ||
-      this.#canInvest <= 0 ||
-      tm.tradeResult.quantity > 0
-    ) {
-      // Return 0 if we can't invest or if we already have some coins
+  #getMoneyToInvest(): number {
+    if (this.#balance === -1 || this.#canInvest <= 0) {
+      // Return 0 if we can not invest
       return 0;
     }
     const result = Math.floor(this.#balance / this.#canInvest);
@@ -300,7 +323,7 @@ export class TradeManager {
     const precision = tm.precision;
     const slCrossedDown = tm.stopLimitCrossedDown();
 
-    if (tm.stopLimitPrice === 0) {
+    if (!tm.stopLimitPrice) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
       tm.stopLimitPrice = floorToOptimalGrid(ch[Key.MIN], precision).result;
@@ -331,50 +354,51 @@ export class TradeManager {
 
     // quantize stop limit to stick it to the grid
     newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
+    // Apply new stop limit if it is higher.
+    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
     if (
       this.#config.ExitImbalanceCheck &&
       slCrossedDown &&
-      curTTL < maxTTL &&
-      tm.currentPrice > bottomPrice &&
-      this.#isOrderBookBullish(tm)
+      tm.profit() <= 0 &&
+      tm.currentPrice > bottomPrice
     ) {
+      this.#handleEarlyExit(tm);
+    }
+  }
+
+  #handleEarlyExit(tm: TradeMemo): void {
+    const msg = `${tm.getCoinName()} smart exit was crossed down at ${f8(
+      tm.stopLimitPrice
+    )}`;
+    try {
       // Allow stop-limit be lowered when it is crossed down,
       // but the order book imbalance is bullish (more buyers than sellers),
       // to avoid selling at turnarounds.
-      tm.stopLimitPrice = newStopLimit;
-    } else {
-      // Apply new stop limit if it is higher.
-      tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
-    }
-  }
-
-  #isOrderBookBullish(tm: TradeMemo): boolean {
-    try {
-      if (this.#checkImbalance(tm)) {
+      if (this.#lowerStopLimitIfSupportIsPresent(tm)) {
         this.#config.SellAtStopLimit &&
           Log.alert(
-            `⚠ ${tm.getCoinName()} smart exit was crossed down, but there are buyers to support the price. Not selling yet.`
+            `⚠ ${msg}, but there are buyers to support the price. Not selling yet.`
           );
-        return true;
       } else {
-        Log.info(
-          `${tm.getCoinName()} buyers are not enough to support the price.`
-        );
+        Log.info(`${msg} and there are no enough buyers to support the price.`);
       }
     } catch (e) {
       this.#config.SellAtStopLimit &&
-        Log.info(`ℹ Couldn't check the buyers support for ${tm.getCoinName()}`);
+        Log.info(`${msg}. Couldn't check the buyers support for the price.`);
     }
-    return false;
   }
 
-  #checkImbalance(tm: TradeMemo): boolean {
+  #lowerStopLimitIfSupportIsPresent(tm: TradeMemo): boolean {
     const symbol = tm.tradeResult.symbol;
     const precision = this.exchange.getPricePrecision(symbol);
-    const floor = floorToOptimalGrid(tm.currentPrice, precision);
-    const optimalLimit = Math.pow(10, floor.precisionDiff) * 2;
-    const bidCutOffPrice = floor.result;
+    const bidCutOffPrice = tm.stopLimitBottomPrice;
+
+    // calculate how many records for imbalance we need for this cut off price
+    const step = 1 / Math.pow(10, precision);
+    const diff = tm.currentPrice - bidCutOffPrice;
+    const optimalLimit = 2 * Math.floor(diff / step);
+
     const imbalance = this.exchange.getImbalance(
       symbol,
       optimalLimit,
@@ -383,28 +407,39 @@ export class TradeManager {
     Log.debug(
       `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
     );
-    return imbalance > 0.15;
+    const supportIsPresent = imbalance > 0.15;
+    if (supportIsPresent) {
+      const floor = floorToOptimalGrid(tm.currentPrice, precision);
+      tm.stopLimitPrice = floor.result;
+      tm.ttl -= 240; // Cool down
+    }
+    return supportIsPresent;
   }
 
-  private forceUpdateStopLimit(tm: TradeMemo): void {
+  #forceUpdateStopLimit(tm: TradeMemo): void {
     tm.ttl = 0;
     tm.stopLimitPrice = 0;
     this.#updateStopLimit(tm);
   }
 
-  private pushNewPrice(tm: TradeMemo): void {
+  #pushNewPrice(tm: TradeMemo): void {
     const priceHolder = this.#getPrices(tm.tradeResult.symbol);
+
+    if (isNode && !priceHolder?.currentPrice) {
+      // Only for back-testing, force selling this asset
+      // The back-testing exchange mock will use the previous price
+      this.#sell(tm);
+      return;
+    }
+
     const symbol = `${tm.getCoinName()}${this.#config.StableCoin}`;
-    if (priceHolder) {
+    if (priceHolder?.currentPrice) {
       tm.pushPrice(priceHolder.currentPrice);
     } else if (tm.tradeResult.quantity) {
       // no price available, but we have quantity, which means we bought something earlier
-      Log.alert(`Exchange does not have price for ${symbol}.`);
-      if (isNode) {
-        // Only for back-testing, force selling this asset
-        // The back-testing exchange mock will use the previous price
-        this.#sell(tm);
-      }
+      Log.alert(
+        `Exchange does not have price for ${symbol}. Try another Stable Coin in Settings.`
+      );
     } else {
       // no price available, and no quantity, which means we haven't bought anything yet
       // could be a non-existing symbol, or not yet published in the exchange
@@ -427,15 +462,15 @@ export class TradeManager {
       try {
         this.#canInvest = Math.max(0, this.#canInvest - 1);
         this.#balance -= tradeResult.paid;
-        // flatten out prices to make them not cross any limits right after the trade
-        tm.prices = [tm.currentPrice];
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
         // set the stop limit according to the current settings
-        this.forceUpdateStopLimit(tm);
-        this.processBuyFee(tradeResult);
-        Log.alert(
-          `${tm.getCoinName()} asset average price: ${tm.tradeResult.avgPrice}`
+        this.#forceUpdateStopLimit(tm);
+        this.#processBuyFee(tradeResult);
+        Log.info(
+          `${tm.getCoinName()} asset avg. price: $${f8(
+            tm.tradeResult.avgPrice
+          )}`
         );
         Log.debug(tm);
       } catch (e) {
@@ -445,6 +480,7 @@ export class TradeManager {
       }
     } else {
       Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`);
+      Log.debug(tradeResult);
       Log.debug(tm);
       tm.resetState();
     }
@@ -463,16 +499,16 @@ export class TradeManager {
           this.#canInvest + 1
         );
         this.#balance += exit.gained;
-        const fee = this.processSellFee(memo, exit);
-        const profit = f2(exit.gained - entry.paid - fee);
-        const profitPercentage = f2(100 * (profit / entry.paid));
+        const fee = this.#processSellFee(entry, exit);
+        const profit = exit.gained - entry.paid - fee;
+        const profitPercentage = 100 * (profit / entry.paid);
 
         exit.paid = entry.paid + fee;
 
         Log.alert(
           `ℹ️ Gained: $${f2(exit.gained)} | ${
             profit >= 0 ? `Profit` : `Loss`
-          }: $${profit} (${profitPercentage}%)`
+          }: $${f2(profit)} (${f2(profitPercentage)}%)`
         );
 
         // Alert the following CSV string:
@@ -494,7 +530,7 @@ export class TradeManager {
           )}</td><td>${profitPercentage}%</td></tr></table>`
         );
 
-        this.updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit);
+        this.#updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit);
       } catch (e) {
         Log.error(e);
       } finally {
@@ -503,53 +539,87 @@ export class TradeManager {
         memo.setState(TradeState.SOLD);
       }
     } else {
+      Log.debug(exit);
       Log.debug(memo);
       memo.setState(TradeState.BOUGHT);
-      Log.alert(`An issue happened while selling ${symbol}.`);
-      Log.alert(exit.toString());
+      Log.alert(`An issue happened while selling ${symbol}: ${exit}`);
     }
   }
 
-  private updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
+  #updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
     if (StableUSDCoin[gainedCoin]) {
       this.stats.addProfit(profit);
     }
   }
 
-  private processBuyFee(buyResult: TradeResult): void {
-    if (this.updateBNBBalance(-buyResult.commission)) {
+  #processBuyFee(entry: TradeResult): void {
+    if (
+      // If non BNB asset was bought, try to reduce existing BNB assets qty if it exists
+      entry.symbol.quantityAsset !== BNB &&
+      this.#reduceBNBBalance(entry.commission)
+    ) {
       // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
-      buyResult.commission = 0;
+      entry.commission = 0;
     }
   }
 
-  private processSellFee(tm: TradeMemo, sellResult: TradeResult): number {
-    if (this.updateBNBBalance(-sellResult.commission)) {
+  #processSellFee(entry: TradeResult, exit: TradeResult): number {
+    if (
+      // If non BNB asset was sold, try to reduce existing BNB assets qty if it exists
+      entry.symbol.quantityAsset !== BNB &&
+      this.#reduceBNBBalance(exit.commission)
+    ) {
       // if fee paid by existing BNB asset balance, commission can be zeroed in the trade result
-      sellResult.commission = 0;
+      exit.commission = 0;
     }
-    const buyFee = this.getBNBCommissionCost(tm.tradeResult.commission);
-    const sellFee = this.getBNBCommissionCost(sellResult.commission);
+    // Calculate the final summary fee (buy + sell)
+    const buyFee = this.#getBNBCommissionCost(entry.commission);
+    const sellFee = this.#getBNBCommissionCost(exit.commission);
     return buyFee + sellFee;
   }
 
-  private getBNBCommissionCost(commission: number): number {
+  #getBNBCommissionCost(commission: number): number {
+    if (!commission) return 0;
     const bnbPriceHolder = this.#getPrices(
-      new ExchangeSymbol(`BNB`, this.#config.StableCoin)
+      new ExchangeSymbol(BNB, this.#config.StableCoin)
     );
     return bnbPriceHolder ? commission * bnbPriceHolder.currentPrice : 0;
   }
 
-  private updateBNBBalance(quantity: number): boolean {
+  #reduceBNBBalance(reduceQty: number): boolean {
+    if (reduceQty <= 0) return false;
+
     let updated = false;
-    this.tradesDao.update(`BNB`, (tm) => {
-      // Changing only quantity, but not cost. This way the BNB amount is reduced, but the paid amount is not.
-      // As a result, the BNB profit/loss correctly reflects losses due to paid fees.
-      tm.tradeResult.addQuantity(quantity, 0);
-      Log.alert(`BNB balance updated by ${quantity}`);
+    this.tradesDao.update(BNB, (tm) => {
+      // Do nothing if the BNB asset is not owned
+      if (tm.tradeResult.quantity <= 0) return;
+
+      const curBNB = this.exchange.getBalance(BNB);
+      const remainingQty = Math.max(0, curBNB - reduceQty);
+
+      if (remainingQty >= tm.tradeResult.quantity) {
+        // Do nothing if the BNB asset qty is not affected
+        return;
+      }
+
+      if (remainingQty <= 0) {
+        Log.alert(
+          `After paying fees, there is no more ${BNB} asset remaining and it is being removed from the portfolio.`
+        );
+        tm.deleted = true;
+        return tm;
+      }
+
+      // Set remaining BNB asset qty.
+      // The asset BNB profit/loss correctly reflects "losses" due to paid fees.
+      tm.tradeResult.setQuantity(remainingQty);
+      Log.alert(
+        `Remaining ${BNB} asset quantity was reduced after paying the trade fees.`
+      );
       updated = true;
       return tm;
     });
+
     return updated;
   }
 

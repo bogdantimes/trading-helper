@@ -1,6 +1,7 @@
 import { StableUSDCoin } from "./Types";
 
 export type AutoDetect = -1;
+
 export enum MarketTrend {
   DOWN = 1,
   SIDEWAYS = 2,
@@ -15,7 +16,11 @@ export interface Config {
    * Balance of free money. If set to -1, means it should be initialized by reading from the account.
    * Otherwise, if it is >= 0, it tells the program how much money it has and can use.
    */
-  StableBalance: number;
+  StableBalance: number | AutoDetect;
+  /**
+   * FeesBudget is total value of account's BNB in the StableCoin value.
+   */
+  FeesBudget: number;
   /**
    * MarketTrend affects the profit goal and the stop limit aggressiveness.
    * For mark-up trend, it makes the profit goal lower and the stop limit more aggressive.
@@ -32,6 +37,7 @@ export interface Config {
   AdvancedAccess: boolean;
   ViewOnly: boolean;
   HideBalances: boolean;
+  EntryImbalanceCheck: boolean;
   ExitImbalanceCheck: boolean;
 }
 
@@ -39,3 +45,6 @@ export const DefaultRange = 0.14;
 export const DefaultDuration = 4000;
 export const MASK = `********`;
 export const SHORT_MASK = `👻`;
+export const BNB = `BNB`;
+export const BNBFee = 0.00075;
+export const MIN_BUY = 15;

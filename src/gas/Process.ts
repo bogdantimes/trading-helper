@@ -16,7 +16,7 @@ export class Process {
         CacheProxy.remove(`OutageCounter`);
         manager.trade();
       } else {
-        const outageCounter = +(CacheProxy.get(`OutageCounter`) || 0) + 1;
+        const outageCounter = +(CacheProxy.get(`OutageCounter`) ?? 0) + 1;
         if (outageCounter === 10 || outageCounter % 30 === 0) {
           const trades = new TradesDao(DefaultStore);
           if (trades.getList(TradeState.BOUGHT).length > 0) {

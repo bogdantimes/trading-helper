@@ -89,9 +89,7 @@ export class PricesHolder {
 
 export type CoinName = string;
 
-export interface PriceHoldersMap {
-  [key: CoinName]: PricesHolder;
-}
+export type PriceHoldersMap = Record<CoinName, PricesHolder>;
 
 export interface IPriceProvider {
   get: (stableCoin: StableUSDCoin) => PriceHoldersMap;

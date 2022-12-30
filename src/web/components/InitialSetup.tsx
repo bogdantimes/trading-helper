@@ -33,9 +33,9 @@ export function InitialSetup({
 
   const [params, setParams] = useState<InitialSetupParams>({
     dbURL: firebaseURL,
-    binanceAPIKey: config?.KEY,
-    binanceSecretKey: config?.SECRET,
-    viewOnly: config?.ViewOnly,
+    binanceAPIKey: config.KEY,
+    binanceSecretKey: config.SECRET,
+    viewOnly: config.ViewOnly,
   });
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>): void {
