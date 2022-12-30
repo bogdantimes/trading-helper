@@ -14,29 +14,35 @@ No one, except you, have access to the WEB-application and the data. If you trus
 * Monitors the market 24/7 and shows great investment candidates.
 * Gmail notifications.
 * Optional external database (Firebase).
-
-### Available for Patrons only
-
-* Fully-autonomous trading on Binance Spot without manual interventions whatsoever.
 * Info page with balance changes since Day 1.
+* Fully-autonomous trading on Binance Spot without manual interventions whatsoever:
+  * 🤙🏻 Reach out to me if you want to test it for free (see [Contact](#contact) section).
+  * Or you can get it enabled automatically once you become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes).
 
 ## Back-testing
 
 Running on a historical data like if it was trading in the past.
 
-**Dates:** November 2021 -> November 2022 (downtrend/sideways market 📉)
+**Dates:** May 2022 -> December 2022 (6 months)
 
-**Best Result:** `$1,000 -> $9,360 (+836%, 8.3x profit)`
-**Worst Result:** `$1,000 -> $5,734 (+473%, 4.7x profit)`
+**Best Result:** `$1,000 -> $4,540 (+354% profit)`
+**Worst Result:** `$1,000 -> $2,511 (+151% profit)`
 
-![r1-best.png](img/r1-best.png)
+![6m.png](img/6m.png)![6m.png](img/6m.png)
 
-**Dates:** November 2020 -> November 2022 (uptrend/downtrend/sideways market 📈)
+**Dates:** December 2021 -> December 2022 (1 year)
 
-**Best Result:** `$1,000 -> $126,537 (+12553%, 125x profit)`
-**Worst Result:** `$1,000 -> $60,918 (+6091%, 60x profit)`
+**Best Result:** `$1,000 -> $4,587 (+358% profit)`
+**Worst Result:** `$1,000 -> $3,153 (+215% profit)`
 
-![r1-best.png](img/r2-best.png)
+![1y.png](img/1y.png)![1y.png](img/1y.png)
+
+**Dates:** November 2020 -> November 2022 (2 years)
+
+**Best Result:** `$1,000 -> $5,434 (+443% profit)`
+**Worst Result:** `$1,000 -> $4,147 (+314% profit)`
+
+![2y.png](img/2y.png)![2y.png](img/2y.png)
 
 ## Screenshots
 
