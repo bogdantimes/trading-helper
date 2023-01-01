@@ -2,6 +2,7 @@ import { Statistics } from "./Statistics";
 import { Exchange, IExchange } from "./Exchange";
 import { backTestSorter, Log } from "./Common";
 import {
+  AUTO_DETECT,
   BNB,
   CoinName,
   Config,
@@ -24,7 +25,7 @@ import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
-import { SignalType, Signal, TraderPlugin } from "./traders/plugin/api";
+import { Signal, SignalType, TraderPlugin } from "./traders/plugin/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
@@ -78,7 +79,7 @@ export class TradeManager {
 
     const trades = this.tradesDao.getList();
     const invested = trades.filter((t) => t.tradeResult.quantity).length;
-    this.#canInvest = Math.max(0, this.#optimalInvestRatio - invested);
+    this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
 
     // First process !BUY state assets (some might get sold and free up $)
     trades
@@ -162,7 +163,11 @@ export class TradeManager {
   #initStableBalance(): void {
     this.#config = this.configDao.get();
     this.#balance = this.#config.StableBalance;
-    if (this.#balance === -1 && this.#config.KEY && this.#config.SECRET) {
+    if (
+      this.#balance === AUTO_DETECT &&
+      this.#config.KEY &&
+      this.#config.SECRET
+    ) {
       try {
         this.#balance = this.exchange.getBalance(this.#config.StableCoin);
         // if balance > 0 it will be saved in #finalize()
@@ -201,7 +206,7 @@ export class TradeManager {
     // Update balances only if the balance changed
     // Or if BNBStableBalance is not set
     const diff = this.#balance - this.#config.StableBalance;
-    if (diff !== 0 || this.#config.FeesBudget === -1) {
+    if (diff !== 0 || this.#config.FeesBudget === AUTO_DETECT) {
       this.#config = this.configDao.get();
       this.#config.StableBalance += diff;
       this.#balance = this.#config.StableBalance;
@@ -292,12 +297,14 @@ export class TradeManager {
   }
 
   #getMoneyToInvest(): number {
-    if (this.#balance === -1 || this.#canInvest <= 0) {
-      // Return 0 if we can not invest
-      return 0;
+    if (
+      this.#canInvest <= 0 ||
+      this.#balance === AUTO_DETECT ||
+      this.#balance < MIN_BUY
+    ) {
+      return 0; // Return 0 if we can not invest
     }
-    const result = Math.floor(this.#balance / this.#canInvest);
-    return result < MIN_BUY ? 0 : result;
+    return Math.max(MIN_BUY, Math.floor(this.#balance / this.#canInvest));
   }
 
   #processBoughtState(tm: TradeMemo): void {

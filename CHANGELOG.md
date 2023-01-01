@@ -1,3 +1,7 @@
+# v3.3.1
+
+* Minor fix in the balance management to improve efficiency.
+
 # v3.3.0
 
 * "Imbalance Check" is improved and re-enabled on "Smart exit".
