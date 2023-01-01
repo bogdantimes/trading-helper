@@ -5,6 +5,7 @@ import {
   ICacheProxy,
   PriceMove,
   StableUSDCoin,
+  AUTO_DETECT,
 } from "../lib/index";
 import { IExchange } from "./Exchange";
 import { ConfigDao } from "./dao/Config";
@@ -23,7 +24,7 @@ export class TrendProvider {
 
   get(): MarketTrend {
     const marketTrend = this.configDao.get().MarketTrend;
-    if (marketTrend !== -1) {
+    if (marketTrend !== AUTO_DETECT) {
       return marketTrend;
     }
     const autoMarketTrend = this.cache.get(cacheKey);
