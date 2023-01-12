@@ -1,3 +1,7 @@
+# v3.3.2
+
+* Trading Library updated to v20 with more accurate candidates strength visualization on UI.
+
 # v3.3.1
 
 * Minor fix in the balance management to improve efficiency.
