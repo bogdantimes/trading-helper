@@ -364,12 +364,7 @@ export class TradeManager {
     // Apply new stop limit if it is higher.
     tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
 
-    if (
-      this.#config.ExitImbalanceCheck &&
-      slCrossedDown &&
-      tm.profit() <= 0 &&
-      tm.currentPrice > bottomPrice
-    ) {
+    if (slCrossedDown && tm.profit() <= 0 && tm.currentPrice > bottomPrice) {
       this.#handleEarlyExit(tm);
     }
   }

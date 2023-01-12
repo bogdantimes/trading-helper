@@ -18,7 +18,6 @@ export const DefaultConfig: () => Config = () => ({
   ViewOnly: false,
   HideBalances: false,
   EntryImbalanceCheck: true,
-  ExitImbalanceCheck: true,
 });
 
 export class ConfigDao {

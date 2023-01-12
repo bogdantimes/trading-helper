@@ -1,3 +1,7 @@
+# v3.3.3
+
+* Fixed: ExitImbalanceCheck feature was disabled for old installations.
+
 # v3.3.2
 
 * Trading Library updated to v20 with more accurate candidates strength visualization on UI.
