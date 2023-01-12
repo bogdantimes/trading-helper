@@ -143,7 +143,7 @@ export class TradeManager {
       tm.resetState();
       if (tm.tradeResult.quantity > 0) {
         this.#sell(tm);
-      } else {
+      } else if (tm.getState() === TradeState.BOUGHT) {
         Log.alert(`⚠️ Can't sell ${tm.getCoinName()}. Current value is 0`);
       }
       return tm;
@@ -534,7 +534,7 @@ export class TradeManager {
             entry.quantity
           }</td><td>$${entryPrice}</td><td>${exitDate}</td><td>$${exitPrice}</td><td>$${f2(
             exit.gained
-          )}</td><td>${profitPercentage}%</td></tr></table>`
+          )}</td><td>${f2(profitPercentage)}%</td></tr></table>`
         );
 
         this.#updatePLStatistics(symbol.priceAsset as StableUSDCoin, profit);
