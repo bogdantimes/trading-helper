@@ -38,7 +38,6 @@ export interface Config {
   ViewOnly: boolean;
   HideBalances: boolean;
   EntryImbalanceCheck: boolean;
-  ExitImbalanceCheck: boolean;
 }
 
 export const DefaultRange = 0.14;
