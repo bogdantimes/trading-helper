@@ -45,7 +45,7 @@ export default function App(): JSX.Element {
     candidates: {},
     config: DefaultConfig(),
     firebaseURL: ``,
-    info: { TotalProfit: 0, DailyProfit: {} },
+    info: { TotalProfit: 0, TotalWithdraw: 0, DailyProfit: {} },
   });
   const [initialSetup, setInitialSetup] = React.useState(true);
   const [fetchingData, setFetchingData] = React.useState(true);

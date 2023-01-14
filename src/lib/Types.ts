@@ -18,6 +18,7 @@ export type PriceMap = Record<string, number>;
 
 export interface Stats {
   TotalProfit: number;
+  TotalWithdraw: number;
   DailyProfit: PriceMap;
 }
 
