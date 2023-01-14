@@ -9,27 +9,16 @@ import {
   TradeResult,
 } from "../lib";
 import { IExchange } from "./Exchange";
-import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
+import { APIKeysProvider } from "./dao/Config";
 
 export class Binance implements IExchange {
-  private readonly key: string;
-  private readonly secret: string;
-  private readonly defaultReqOpts: URLFetchRequestOptions;
-  private readonly tradeReqOpts: URLFetchRequestOptions;
   private readonly serverIds: number[];
   readonly #balances: Record<string, number> = {};
   readonly #cloudURL: string;
 
   #curServerId: number;
 
-  constructor(key?: string, secret?: string) {
-    this.key = key ?? ``;
-    this.secret = secret ?? ``;
-    this.defaultReqOpts = {
-      headers: { "X-MBX-APIKEY": this.key },
-      muteHttpExceptions: true,
-    };
-    this.tradeReqOpts = Object.assign({ method: `post` }, this.defaultReqOpts);
+  constructor(private readonly provider: APIKeysProvider) {
     this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
     this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
@@ -46,9 +35,13 @@ export class Binance implements IExchange {
     const resource = `account`;
     const query = ``;
     try {
+      const { key, secret } = this.#getAPIKeysOrDie();
       const accountData = this.fetch(
-        () => `${resource}?${this.addSignature(query)}`,
-        this.defaultReqOpts
+        () => `${resource}?${this.#addSignature(query, secret)}`,
+        {
+          headers: { "X-MBX-APIKEY": key },
+          muteHttpExceptions: true,
+        }
       );
       accountData.balances.forEach((balance: any) => {
         this.#balances[balance.asset] = +(balance.free || 0);
@@ -70,7 +63,7 @@ export class Binance implements IExchange {
     const resource = `klines`;
     const query = `symbol=${symbol}&interval=${interval}&limit=${limit}`;
     try {
-      return this.fetch(() => `${resource}?${query}`, this.defaultReqOpts).map(
+      return this.fetch(() => `${resource}?${query}`, {}).map(
         (kline: any) => +kline[1]
       );
     } catch (e: any) {
@@ -174,9 +167,14 @@ export class Binance implements IExchange {
 
   marketTrade(symbol: ExchangeSymbol, query: string): TradeResult {
     try {
+      const { key, secret } = this.#getAPIKeysOrDie();
       const order = this.fetch(
-        () => `order?${this.addSignature(query)}`,
-        this.tradeReqOpts
+        () => `order?${this.#addSignature(query, secret)}`,
+        {
+          method: `post`,
+          headers: { "X-MBX-APIKEY": key },
+          muteHttpExceptions: true,
+        }
       );
       Log.debug(order);
       const tradeResult = new TradeResult(symbol);
@@ -208,10 +206,10 @@ export class Binance implements IExchange {
     return fees;
   }
 
-  private addSignature(data: string): string {
+  #addSignature(data: string, secret: string): string {
     const timestamp = Number(new Date().getTime()).toFixed(0);
     const sigData = `${data}${data ? `&` : ``}timestamp=${timestamp}`;
-    const sig = Utilities.computeHmacSha256Signature(sigData, this.secret)
+    const sig = Utilities.computeHmacSha256Signature(sigData, secret)
       .map((e) => {
         const v = (e < 0 ? e + 256 : e).toString(16);
         return v.length === 1 ? `0` + v : v;
@@ -219,6 +217,14 @@ export class Binance implements IExchange {
       .join(``);
 
     return `${sigData}&signature=${sig}`;
+  }
+
+  #getAPIKeysOrDie(): { key: string; secret: string } {
+    const { key, secret } = this.provider.getAPIKeys();
+    if (!key || !secret) {
+      throw new Error(`No Binance API Key or Secret configured.`);
+    }
+    return { key, secret };
   }
 
   fetch(
@@ -290,7 +296,7 @@ export class Binance implements IExchange {
   ): number {
     const data: { bids: any[]; asks: any[] } = this.fetch(
       () => `depth?symbol=${symbol}&limit=${limit}`,
-      this.defaultReqOpts
+      {}
     );
 
     // Sum volume of bids above bidCutOffPrice or use best bid size

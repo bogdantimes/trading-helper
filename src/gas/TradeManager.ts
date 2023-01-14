@@ -40,8 +40,7 @@ export class TradeManager {
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
-    const config = configDao.get();
-    const exchange = new Exchange(config.KEY, config.SECRET);
+    const exchange = new Exchange(configDao);
     const statistics = new Statistics(DefaultStore);
     const tradesDao = new TradesDao(DefaultStore);
     const priceProvider = PriceProvider.default();

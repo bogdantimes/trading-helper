@@ -21,6 +21,7 @@ import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
 import { TraderPlugin } from "./traders/plugin/api";
+import { WithdrawManager } from "./WithdrawManager";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -189,7 +190,7 @@ function getConfig(): Config {
   const config = configDao.get();
   const trendProvider = new TrendProvider(
     configDao,
-    new Exchange(config.KEY, config.SECRET),
+    new Exchange(configDao),
     CacheProxy
   );
   config.AutoMarketTrend = trendProvider.get();
@@ -231,6 +232,23 @@ function sell(coin: CoinName): string {
   });
 }
 
+function addWithdraw(amount: number): string {
+  return catchError(() => {
+    if (!isFinite(+amount)) throw new Error(`Amount is not a number.`);
+
+    const configDao = new ConfigDao(DefaultStore);
+    const mgr = new WithdrawManager(
+      configDao,
+      new Exchange(configDao),
+      new Statistics(DefaultStore)
+    );
+    const { balance } = mgr.addWithdraw(amount);
+    const msg = `Withdraw of $${amount} was added to the statistics and the balance was updated: $${balance}`;
+    Log.alert(msg);
+    return msg;
+  });
+}
+
 global.doGet = doGet;
 global.doPost = doPost;
 global.tick = tick;
@@ -253,3 +271,4 @@ global.upgrade = () => {
     return result;
   });
 };
+global.addWithdraw = addWithdraw;

@@ -26,6 +26,7 @@ export class Statistics {
     }
     const stats = this.getAll();
     stats.TotalWithdraw = stats.TotalWithdraw + amount;
+    stats.TotalProfit = stats.TotalProfit - amount;
   }
 
   getAll(): Stats {
