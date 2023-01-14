@@ -231,27 +231,6 @@ function sell(coin: CoinName): string {
   });
 }
 
-function testEmail(): string {
-  return catchError(() => {
-    Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
-    Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
-    Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
-
-    Log.info(`ℹ️ Trading Helper is up to date.`);
-    Log.info(`ℹ️ Trading Helper is up to date.`);
-    Log.info(`ℹ️ Trading Helper is up to date.`);
-
-    Log.debug(`Got 400 response code from Binance`);
-    Log.debug(`Got 400 response code from Binance`);
-    Log.debug(`Got 400 response code from Binance`);
-
-    Log.error(new Error(`Failed to parse response from Binance`));
-    Log.error(new Error(`Failed to parse response from Binance`));
-    Log.error(new Error(`Failed to parse response from Binance`));
-    return `A test email was sent`;
-  });
-}
-
 global.doGet = doGet;
 global.doPost = doPost;
 global.tick = tick;
@@ -274,4 +253,3 @@ global.upgrade = () => {
     return result;
   });
 };
-global.testEmail = testEmail;

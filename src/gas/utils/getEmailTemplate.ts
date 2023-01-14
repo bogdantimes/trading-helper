@@ -1,15 +1,15 @@
 interface Params {
-	alerts: string[];
-	errLog: Error[];
-	debugLog: any[];
+  alerts: string[];
+  errLog: Error[];
+  debugLog: any[];
 }
 
 export default function getEmailTemplate({
-	alerts,
-	errLog,
-	debugLog,
+  alerts,
+  errLog,
+  debugLog,
 }: Params): string {
-	return `<!DOCTYPE htmlPUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  return `<!DOCTYPE htmlPUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
   <html lang="en">
   
   <head>
@@ -41,30 +41,30 @@ export default function getEmailTemplate({
                     <p
                       style="font-size:16px;line-height:26px;margin:16px 0;font-family:&#x27;Open Sans&#x27;, &#x27;HelveticaNeue-Light&#x27;, &#x27;Helvetica Neue Light&#x27;, &#x27;Helvetica Neue&#x27;, Helvetica, Arial, &#x27;Lucida Grande&#x27;, sans-serif;font-weight:300;color:#404040">
                       ${
-												alerts.length > 0
-													? `${alerts.join(`<br />`)}<br /><br />`
-													: ``
-											}</p>
+                        alerts.length > 0
+                          ? `${alerts.join(`<br />`)}<br /><br />`
+                          : ``
+                      }</p>
   
                     ${
-											errLog.length > 0
-												? `<p
+                      errLog.length > 0
+                        ? `<p
                       style="font-size:16px;line-height:26px;margin:16px 0;font-family:&#x27;Open Sans&#x27;, &#x27;HelveticaNeue-Light&#x27;, &#x27;Helvetica Neue Light&#x27;, &#x27;Helvetica Neue&#x27;, Helvetica, Arial, &#x27;Lucida Grande&#x27;, sans-serif;font-weight:300;color:#404040">
                       Errors:<br /></p>
                     <code
                       style="display:inline-block;padding:16px 4.5%;width:90.5%;background-color:#f4f4f4;border-radius:5px;border:1px solid #eee;color:#333">${`${errLog
-												.map((e) => `Stack: ${e.stack}`)
-												.join(`<br/>`)}<br/><br/>`}</code>`
-												: ``
-										}
+                        .map((e) => `Stack: ${e.stack}`)
+                        .join(`<br/>`)}<br/><br/>`}</code>`
+                        : ``
+                    }
   
                     <p
                       style="font-size:16px;line-height:26px;margin:16px 0;font-family:&#x27;Open Sans&#x27;, &#x27;HelveticaNeue-Light&#x27;, &#x27;Helvetica Neue Light&#x27;, &#x27;Helvetica Neue&#x27;, Helvetica, Arial, &#x27;Lucida Grande&#x27;, sans-serif;font-weight:300;color:#404040">
                       ${
-												debugLog.length > 0
-													? `Debug info:<br />${debugLog.join(`<br /><br />`)}`
-													: ``
-											}</p>
+                        debugLog.length > 0
+                          ? `Debug info:<br />${debugLog.join(`<br /><br />`)}`
+                          : ``
+                      }</p>
                   </td>
                 </tr>
               </tbody>
