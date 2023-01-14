@@ -20,12 +20,12 @@ export class Statistics {
     return stats.TotalProfit;
   }
 
-  addWithdraw(amount: number): void {
+  addWithdrawal(amount: number): void {
     if (amount <= 0) {
       throw Error(`Invalid amount: ${amount}`);
     }
     const stats = this.getAll();
-    stats.TotalWithdraw = stats.TotalWithdraw + amount;
+    stats.TotalWithdrawals = stats.TotalWithdrawals + amount;
     stats.TotalProfit = stats.TotalProfit - amount;
   }
 

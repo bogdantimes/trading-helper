@@ -242,8 +242,8 @@ function addWithdraw(amount: number): string {
       new Exchange(configDao),
       new Statistics(DefaultStore)
     );
-    const { balance } = mgr.addWithdraw(amount);
-    const msg = `Withdraw of $${amount} was added to the statistics and the balance was updated: $${balance}`;
+    const { balance } = mgr.addWithdrawal(amount);
+    const msg = `Withdrawal of $${amount} was added to the statistics and the balance was updated: $${balance}`;
     Log.alert(msg);
     return msg;
   });
