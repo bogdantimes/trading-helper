@@ -1,5 +1,6 @@
 import { CoinName, enumKeys, StableUSDCoin } from "../lib";
 import { isNode } from "browser-or-node";
+import getEmailTemplate from "./utils/getEmailTemplate";
 
 export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60;
@@ -41,27 +42,11 @@ export class Log {
   }
 
   static print(): string {
-    return `${
-      this.alerts.length > 0 ? `${this.alerts.join(`<br/>`)}<br/><br/>` : ``
-    }
-${
-  this.errLog.length > 0
-    ? `Errors:<br/>${this.errLog
-        .map((e) => `Stack: ${e.stack}`)
-        .join(`<br/>`)}<br/><br/>`
-    : ``
-}
-${
-  this.infoLog.length > 0
-    ? `Info:<br/>${this.infoLog.join(`<br/>`)}<br/><br/>`
-    : ``
-}
-${
-  this.debugLog.length > 0
-    ? `Debug:<br/>${this.debugLog.join(`<br/><br/>`)}`
-    : ``
-}
-`;
+    return getEmailTemplate({
+      alerts: this.alerts,
+      errLog: this.errLog,
+      debugLog: this.debugLog,
+    });
   }
 
   static ifUsefulDumpAsEmail(): void {
