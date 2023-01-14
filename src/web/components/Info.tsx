@@ -23,7 +23,7 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
   if (stats) {
     const { TotalProfit: tp, TotalWithdrawals: tw, DailyProfit } = stats;
     const totalTimeFrame = `Total (- withdrawals: $${f2(tw)})`;
-    rows.push({ id: 1, timeFrame: totalTimeFrame, profit: f2(tp + tw) });
+    rows.push({ id: 1, timeFrame: totalTimeFrame, profit: f2(tp) });
     Object.keys(DailyProfit)
       .sort((a, b) => (new Date(a) < new Date(b) ? 1 : -1))
       .forEach((d, i) => {
