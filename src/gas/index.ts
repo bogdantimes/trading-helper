@@ -232,7 +232,7 @@ function sell(coin: CoinName): string {
   });
 }
 
-function addWithdraw(amount: number): string {
+function addWithdrawal(amount: number): string {
   return catchError(() => {
     if (!isFinite(+amount)) throw new Error(`Amount is not a number.`);
 
@@ -259,6 +259,7 @@ global.sellAll = sellAll;
 global.dropCoin = dropCoin;
 global.setConfig = setConfig;
 global.setFirebaseURL = setFirebaseURL;
+global.addWithdrawal = addWithdrawal;
 global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
@@ -271,4 +272,3 @@ global.upgrade = () => {
     return result;
   });
 };
-global.addWithdraw = addWithdraw;

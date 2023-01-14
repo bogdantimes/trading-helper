@@ -16,7 +16,7 @@ export class Statistics {
     stats.DailyProfit[date] = f2(dailyProfit);
     stats.TotalProfit = stats.TotalProfit + profit;
 
-    this.store.set(`Statistics`, stats);
+    this.saveAll(stats);
     return stats.TotalProfit;
   }
 
@@ -27,13 +27,14 @@ export class Statistics {
     const stats = this.getAll();
     stats.TotalWithdrawals = stats.TotalWithdrawals + amount;
     stats.TotalProfit = stats.TotalProfit - amount;
+    this.saveAll(stats);
   }
 
   getAll(): Stats {
-    const statistics = this.store.get(`Statistics`) || {};
+    const statistics: Stats = this.store.get(`Statistics`) || {};
     statistics.DailyProfit = statistics.DailyProfit || {};
     statistics.TotalProfit = statistics.TotalProfit || 0;
-    statistics.TotalWithdraw = statistics.TotalWithdraw || 0;
+    statistics.TotalWithdrawals = statistics.TotalWithdrawals || 0;
     return statistics;
   }
 
