@@ -10,7 +10,6 @@ import {
   InitialSetupParams,
   IStore,
   MASK,
-  PriceChannelsDataResponse,
 } from "../lib";
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
@@ -178,13 +177,6 @@ function setFirebaseURL(url: string): string {
   });
 }
 
-function setPriceChannelsData(data: PriceChannelsDataResponse): string {
-  return catchError(() => {
-    new ChannelsDao(DefaultStore).setAll(data);
-    return `OK`;
-  });
-}
-
 function getConfig(): Config {
   const configDao = new ConfigDao(DefaultStore);
   const config = configDao.get();
@@ -260,7 +252,6 @@ global.dropCoin = dropCoin;
 global.setConfig = setConfig;
 global.setFirebaseURL = setFirebaseURL;
 global.addWithdrawal = addWithdrawal;
-global.setPriceChannelsData = setPriceChannelsData;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;

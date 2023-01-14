@@ -114,6 +114,7 @@ export default function App(): JSX.Element {
 
   const [terminalOpen, setTerminalOpen] = React.useState(false);
   const [terminalOutput, setTerminalOutput] = React.useState(``);
+  const [prompt, setPrompt] = React.useState(``);
   const openTerminal = useDoubleTap((event) => {
     event.preventDefault();
     setTerminalOpen(true);
@@ -193,6 +194,7 @@ export default function App(): JSX.Element {
         >
           <Terminal
             name="API"
+            prompt={prompt}
             colorMode={
               theme.palette.mode === `dark` ? ColorMode.Dark : ColorMode.Light
             }
@@ -202,14 +204,28 @@ export default function App(): JSX.Element {
               // JSON parse the args
               const parsedArgs = args.map((arg) => JSON.parse(arg));
               // call the function
-              google.script.run
-                .withSuccessHandler((resp) => {
-                  setTerminalOutput(JSON.stringify(resp, null, 2));
-                })
-                .withFailureHandler((resp) => {
-                  setTerminalOutput(resp.message);
-                })
-                [cmd](...parsedArgs);
+              // Run spinner ... in the terminal output while waiting for the response
+              setPrompt(`⏳`);
+              const spinner = setInterval(() => {
+                setPrompt((p) => (p === `⏳` ? `⌛` : `⏳`));
+              }, 1000);
+
+              try {
+                google.script.run
+                  .withSuccessHandler((resp) => {
+                    setPrompt(`$`);
+                    clearInterval(spinner);
+                    setTerminalOutput(JSON.stringify(resp, null, 2));
+                  })
+                  .withFailureHandler((resp) => {
+                    setPrompt(`$`);
+                    clearInterval(spinner);
+                    setTerminalOutput(resp.message);
+                  })
+                  [cmd](...parsedArgs);
+              } catch (e) {
+                clearInterval(spinner);
+              }
             }}
           >
             {terminalOutput}
