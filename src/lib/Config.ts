@@ -13,7 +13,7 @@ export interface Config {
   SECRET?: string;
   StableCoin: StableUSDCoin;
   /**
-   * Balance of free money. If set to -1, means it should be initialized by reading from the account.
+   * Balance of free money. If set to AUTO_DETECT, means it should be initialized by reading from the account.
    * Otherwise, if it is >= 0, it tells the program how much money it has and can use.
    */
   StableBalance: number | AutoDetect;
@@ -26,7 +26,7 @@ export interface Config {
    * For mark-up trend, it makes the profit goal lower and the stop limit more aggressive.
    * This allows to trade shorter and save profit when the market suddenly turns down.
    * Mark-down is the opposite: higher profit goal and less aggressive stop limit.
-   * Set to -1 to auto-detect the market trend.
+   * Set to AUTO_DETECT to auto-detect the market trend.
    */
   MarketTrend: AutoDetect | MarketTrend;
   AutoMarketTrend: MarketTrend;
@@ -38,7 +38,6 @@ export interface Config {
   ViewOnly: boolean;
   HideBalances: boolean;
   EntryImbalanceCheck: boolean;
-  ExitImbalanceCheck: boolean;
 }
 
 export const DefaultRange = 0.14;
@@ -48,3 +47,4 @@ export const SHORT_MASK = `👻`;
 export const BNB = `BNB`;
 export const BNBFee = 0.00075;
 export const MIN_BUY = 15;
+export const AUTO_DETECT: AutoDetect = -1;

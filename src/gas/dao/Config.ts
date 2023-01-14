@@ -1,17 +1,23 @@
-import { Config, IStore, MarketTrend, MASK, StableUSDCoin } from "../../lib";
+import {
+  AUTO_DETECT,
+  Config,
+  IStore,
+  MarketTrend,
+  MASK,
+  StableUSDCoin,
+} from "../../lib";
 
 export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
-  StableBalance: -1, // -1 Auto detect
-  FeesBudget: -1, // -1 Auto detect
+  StableBalance: AUTO_DETECT,
+  FeesBudget: AUTO_DETECT,
   SellAtStopLimit: true,
-  MarketTrend: -1, // -1 Auto detect
+  MarketTrend: AUTO_DETECT,
   AutoMarketTrend: MarketTrend.SIDEWAYS,
   AdvancedAccess: false,
   ViewOnly: false,
   HideBalances: false,
   EntryImbalanceCheck: true,
-  ExitImbalanceCheck: true,
 });
 
 export class ConfigDao {

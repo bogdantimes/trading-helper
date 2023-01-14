@@ -25,24 +25,24 @@ Running on a historical data like if it was trading in the past.
 
 **Dates:** May 2022 -> December 2022 (6 months)
 
-**Best Result:** `$1,000 -> $4,540 (+354% profit)`
-**Worst Result:** `$1,000 -> $2,511 (+151% profit)`
+**Best Result:** `$1,000 -> $3,619 (+261% profit)`
+**Worst Result:** `$1,000 -> $2,590 (+159% profit)`
 
-![6m.png](img/6m.png)![6m.png](img/6m.png)
+![6m.png](img/6m.png)
 
 **Dates:** December 2021 -> December 2022 (1 year)
 
-**Best Result:** `$1,000 -> $4,587 (+358% profit)`
-**Worst Result:** `$1,000 -> $3,153 (+215% profit)`
+**Best Result:** `$1,000 -> $3,794 (+279% profit)`
+**Worst Result:** `$1,000 -> $3,494 (+249% profit)`
 
-![1y.png](img/1y.png)![1y.png](img/1y.png)
+![1y.png](img/1y.png)
 
 **Dates:** November 2020 -> November 2022 (2 years)
 
-**Best Result:** `$1,000 -> $5,434 (+443% profit)`
-**Worst Result:** `$1,000 -> $4,147 (+314% profit)`
+**Best Result:** `$1,000 -> $6,198 (+519% profit)`
+**Worst Result:** `$1,000 -> $3,798 (+279% profit)`
 
-![2y.png](img/2y.png)![2y.png](img/2y.png)
+![2y.png](img/2y.png)
 
 ## Screenshots
 
