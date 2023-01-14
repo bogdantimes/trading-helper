@@ -1,6 +1,6 @@
 import { CoinName, enumKeys, StableUSDCoin } from "../lib";
 import { isNode } from "browser-or-node";
-import getEmailTemplate from "../web/utils/getEmailTemplate";
+import getEmailTemplate from "./utils/getEmailTemplate";
 
 export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60;
