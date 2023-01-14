@@ -1,5 +1,6 @@
 import { Binance } from "./Binance";
 import { ExchangeSymbol, TradeResult } from "../lib";
+import { APIKeysProvider } from "./dao/Config";
 
 export interface IExchange {
   getBalance: (assetName: string) => number;
@@ -28,8 +29,8 @@ export interface IExchange {
 export class Exchange implements IExchange {
   private readonly exchange: Binance;
 
-  constructor(key?: string, secret?: string) {
-    this.exchange = new Binance(key, secret);
+  constructor(provider: APIKeysProvider) {
+    this.exchange = new Binance(provider);
   }
 
   quantityForLotStepSize(symbol: ExchangeSymbol, quantity: number): number {
