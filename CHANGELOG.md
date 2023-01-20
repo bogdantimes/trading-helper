@@ -2,6 +2,7 @@
 
 * Trading Library updated to v21 with minor fixes in candidates analysis.
 * Back-testing updated with new 6m time-frame included.
+* Statistic improvements + `addWithdrawal` API method.
 * Email notification format updated.
 
 # v3.3.3
