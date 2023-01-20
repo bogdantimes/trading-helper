@@ -18,13 +18,13 @@ export class Log {
   private static readonly infoLog: string[] = [];
   private static readonly debugLog: any[] = [];
   private static readonly errLog: Error[] = [];
-  private static readonly alerts: string[] = [];
+  private static readonly alertsLog: string[] = [];
 
   // @ts-expect-error
   static level: LogLevel = isNode ? LogLevel.NONE : LogLevel[LOG_LEVEL];
 
   static alert(msg: string): void {
-    this.level >= LogLevel.ALERT && this.alerts.push(msg);
+    this.level >= LogLevel.ALERT && this.alertsLog.push(msg);
   }
 
   static info(msg: string): void {
@@ -43,15 +43,16 @@ export class Log {
 
   static print(): string {
     return getEmailTemplate({
-      alerts: this.alerts,
+      alertsLog: this.alertsLog,
       errLog: this.errLog,
+      infoLog: this.infoLog,
       debugLog: this.debugLog,
     });
   }
 
   static ifUsefulDumpAsEmail(): void {
     const email = Session.getEffectiveUser().getEmail();
-    if (this.alerts.length > 0 || this.errLog.length > 0) {
+    if (this.alertsLog.length > 0 || this.errLog.length > 0) {
       const subject = `Trading Helper ${
         this.errLog.length ? `Error` : `Alert`
       }`;

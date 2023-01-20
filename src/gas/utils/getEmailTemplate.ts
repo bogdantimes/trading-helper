@@ -1,14 +1,33 @@
 interface Params {
-  alerts: string[];
+  alertsLog: string[];
   errLog: Error[];
+  infoLog: string[];
   debugLog: any[];
 }
 
 export default function getEmailTemplate({
-  alerts,
+  alertsLog,
   errLog,
+  infoLog,
   debugLog,
 }: Params): string {
+  const style = `"font-size:16px;line-height:26px;margin:16px 0;font-family:&#x27;Open Sans&#x27;, &#x27;HelveticaNeue-Light&#x27;, &#x27;Helvetica Neue Light&#x27;, &#x27;Helvetica Neue&#x27;, Helvetica, Arial, &#x27;Lucida Grande&#x27;, sans-serif;font-weight:300;color:#404040"`;
+  const codeStyle = `"display:inline-block;padding:16px 4.5%;width:90.5%;background-color:#f4f4f4;border-radius:5px;border:1px solid #eee;color:#333"`;
+
+  const alerts = `<p style="${style}">${alertsLog.join(`<br/>`)}<br/><br/></p>`;
+
+  const errors = `<p style="${style}">Errors:</p><br/><code style="${codeStyle}">${errLog
+    .map((e) => `Stack: ${e.stack}`)
+    .join(`<br/>`)}<br/><br/></code>`;
+
+  const infos = ` <p style="${style}">Info:<br/>${infoLog.join(
+    `<br/>`
+  )}<br/><br/></p>`;
+
+  const debugs = `<p style="${style}">Debug:<br/></p><code style="${codeStyle}">${debugLog.join(
+    `<br/><br/>`
+  )}</code>`;
+
   return `<!DOCTYPE htmlPUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
   <html lang="en">
   
@@ -38,33 +57,10 @@ export default function getEmailTemplate({
               <tbody>
                 <tr>
                   <td>
-                    <p
-                      style="font-size:16px;line-height:26px;margin:16px 0;font-family:&#x27;Open Sans&#x27;, &#x27;HelveticaNeue-Light&#x27;, &#x27;Helvetica Neue Light&#x27;, &#x27;Helvetica Neue&#x27;, Helvetica, Arial, &#x27;Lucida Grande&#x27;, sans-serif;font-weight:300;color:#404040">
-                      ${
-                        alerts.length > 0
-                          ? `${alerts.join(`<br />`)}<br /><br />`
-                          : ``
-                      }</p>
-  
-                    ${
-                      errLog.length > 0
-                        ? `<p
-                      style="font-size:16px;line-height:26px;margin:16px 0;font-family:&#x27;Open Sans&#x27;, &#x27;HelveticaNeue-Light&#x27;, &#x27;Helvetica Neue Light&#x27;, &#x27;Helvetica Neue&#x27;, Helvetica, Arial, &#x27;Lucida Grande&#x27;, sans-serif;font-weight:300;color:#404040">
-                      Errors:<br /></p>
-                    <code
-                      style="display:inline-block;padding:16px 4.5%;width:90.5%;background-color:#f4f4f4;border-radius:5px;border:1px solid #eee;color:#333">${`${errLog
-                        .map((e) => `Stack: ${e.stack}`)
-                        .join(`<br/>`)}<br/><br/>`}</code>`
-                        : ``
-                    }
-  
-                    <p
-                      style="font-size:16px;line-height:26px;margin:16px 0;font-family:&#x27;Open Sans&#x27;, &#x27;HelveticaNeue-Light&#x27;, &#x27;Helvetica Neue Light&#x27;, &#x27;Helvetica Neue&#x27;, Helvetica, Arial, &#x27;Lucida Grande&#x27;, sans-serif;font-weight:300;color:#404040">
-                      ${
-                        debugLog.length > 0
-                          ? `Debug info:<br />${debugLog.join(`<br /><br />`)}`
-                          : ``
-                      }</p>
+                    ${alertsLog.length > 0 ? alerts : ``}</p>
+                    ${errLog.length > 0 ? errors : ``}
+                    ${infoLog.length > 0 ? infos : ``}
+                    ${debugLog.length > 0 ? debugs : ``}
                   </td>
                 </tr>
               </tbody>
