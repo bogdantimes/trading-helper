@@ -2,7 +2,7 @@ import { IExchange } from "./Exchange";
 import { Statistics } from "./Statistics";
 import { ConfigDao } from "./dao/Config";
 
-export class WithdrawManager {
+export class WithdrawalsManager {
   constructor(
     private readonly configDao: ConfigDao,
     private readonly exchange: IExchange,

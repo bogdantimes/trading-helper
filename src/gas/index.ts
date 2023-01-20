@@ -20,7 +20,7 @@ import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
 import { TraderPlugin } from "./traders/plugin/api";
-import { WithdrawManager } from "./WithdrawManager";
+import { WithdrawalsManager } from "./WithdrawalsManager";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -229,7 +229,7 @@ function addWithdrawal(amount: number): string {
     if (!isFinite(+amount)) throw new Error(`Amount is not a number.`);
 
     const configDao = new ConfigDao(DefaultStore);
-    const mgr = new WithdrawManager(
+    const mgr = new WithdrawalsManager(
       configDao,
       new Exchange(configDao),
       new Statistics(DefaultStore)
