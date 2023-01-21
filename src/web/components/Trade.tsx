@@ -80,7 +80,7 @@ export default function Trade(props: {
       );
       setTargetLine(
         chart.current.addLineSeries({
-          title: `Profit goal ${f2(tm.profitGoal)}%`,
+          title: `Profit goal ${f2(tm.profitGoal * 100)}%`,
           color: profitColor,
           lineWidth: 1,
         })
