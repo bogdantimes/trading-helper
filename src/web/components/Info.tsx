@@ -16,19 +16,21 @@ import { cardWidth } from "./Common";
 export function Info({ stats }: { stats: Stats }): JSX.Element {
   const rows: Array<{
     id: number;
-    timeFrame: string;
+    timeFrame: JSX.Element | string;
     profit: number;
   }> = [];
 
   if (stats) {
-    rows.push({ id: 1, timeFrame: `Total`, profit: f2(stats.TotalProfit) });
-    Object.keys(stats.DailyProfit)
+    const { TotalProfit: tp, TotalWithdrawals: tw, DailyProfit } = stats;
+    const totalTimeFrame = `Total (withdrawals: $${f2(tw)})`;
+    rows.push({ id: 1, timeFrame: totalTimeFrame, profit: f2(tp) });
+    Object.keys(DailyProfit)
       .sort((a, b) => (new Date(a) < new Date(b) ? 1 : -1))
       .forEach((d, i) => {
         rows.push({
           id: i + 2,
           timeFrame: d,
-          profit: f2(stats.DailyProfit[d]),
+          profit: f2(DailyProfit[d]),
         });
       });
   }
