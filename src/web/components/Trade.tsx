@@ -63,9 +63,7 @@ export default function Trade(props: {
       setPriceLine(
         chart.current.addLineSeries({
           title: `Price ${f2(
-            (tm.prices[tm.prices.length - 1] * 100) /
-              tm.tradeResult.entryPrice -
-              100
+            (tm.currentPrice * 100) / tm.tradeResult.entryPrice - 100
           )}%`,
           color: priceColor,
           lineWidth: 1,
@@ -82,7 +80,7 @@ export default function Trade(props: {
       );
       setTargetLine(
         chart.current.addLineSeries({
-          title: `Profit goal ${tm.profitPercent()}%`,
+          title: `Profit goal ${f2(tm.profitGoal)}%`,
           color: profitColor,
           lineWidth: 1,
         })
@@ -96,9 +94,7 @@ export default function Trade(props: {
       );
       setSoldPriceLine(
         chart.current.addLineSeries({
-          title: `Exit price ${f2(
-            (tm.tradeResult.soldPrice * 100) / tm.tradeResult.entryPrice - 100
-          )}%`,
+          title: `Exit price ${f2(tm.profitPercent())}%`,
           color: exitColor,
           lineWidth: 1,
         })
