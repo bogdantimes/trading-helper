@@ -56,27 +56,35 @@ export default function Trade(props: {
   const priceColor = theme.palette.mode === `light` ? `blue` : `lightblue`;
   const profitColor = theme.palette.mode === `light` ? `green` : `lightgreen`;
 
+  const priceLineLabel = `Price ${f2(
+    (tm.currentPrice * 100) / tm.tradeResult.entryPrice - 100
+  )}%`;
+  const stopLineLabel = `Smart exit ${f2(
+    (tm.stopLimitBottomPrice * 100) / tm.tradeResult.entryPrice - 100
+  )}%`;
+  const targetLineLabel = `Profit goal ${f2(tm.profitGoal * 100)}%`;
+
   useEffect(() => {
     if (!chart.current) {
       chart.current = createChart(chartContainerRef.current ?? ``, chartOpts);
 
       setPriceLine(
         chart.current.addLineSeries({
-          title: `Price`,
+          title: priceLineLabel,
           color: priceColor,
           lineWidth: 1,
         })
       );
       setStopLine(
         chart.current.addLineSeries({
-          title: `Smart exit`,
+          title: stopLineLabel,
           color: stopColor,
           lineWidth: 1,
         })
       );
       setTargetLine(
         chart.current.addLineSeries({
-          title: `Profit goal`,
+          title: targetLineLabel,
           color: profitColor,
           lineWidth: 1,
         })
@@ -90,7 +98,7 @@ export default function Trade(props: {
       );
       setSoldPriceLine(
         chart.current.addLineSeries({
-          title: `Exit price`,
+          title: `Exit price ${f2(tm.profitPercent())}%`,
           color: exitColor,
           lineWidth: 1,
         })
@@ -125,11 +133,16 @@ export default function Trade(props: {
 
     if (priceLine) {
       priceLine.setData(map(tm.prices, (v) => v));
-      priceLine.applyOptions({ color: priceColor, priceFormat });
+      priceLine.applyOptions({
+        title: priceLineLabel,
+        color: priceColor,
+        priceFormat,
+      });
     }
 
     if (stopLine) {
       stopLine.applyOptions({
+        title: stopLineLabel,
         visible: !!tm.stopLimitPrice,
         // make dashed if config SellAtStopLimit is false
         lineStyle: !cfg.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
@@ -148,6 +161,7 @@ export default function Trade(props: {
 
     if (targetLine) {
       targetLine.applyOptions({
+        title: targetLineLabel,
         color: profitColor,
         visible: !!tm.tradeResult.quantity,
         lineStyle: LineStyle.Dashed,

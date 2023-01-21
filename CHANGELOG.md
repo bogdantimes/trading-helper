@@ -1,3 +1,7 @@
+# v3.3.5
+
+* UI: Added percentages visualization on price chart labels.
+
 # v3.3.4
 
 * Trading Library updated to v21 with minor fixes in candidates analysis.

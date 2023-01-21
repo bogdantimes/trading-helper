@@ -259,7 +259,7 @@ global.keepCacheAlive = () => catchError(() => DefaultStore.keepCacheAlive());
 global.upgrade = () => {
   return catchError(() => {
     const result = Updater.upgrade();
-    result.includes(UpgradeDone) && start();
+    result.includes(UpgradeDone) && startAllProcesses();
     return result;
   });
 };
