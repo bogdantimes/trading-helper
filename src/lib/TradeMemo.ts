@@ -97,11 +97,11 @@ export class TradeMemo extends PricesHolder {
     return this.currentPrice * this.tradeResult.quantity;
   }
 
-  get stopLimitPrice(): number {
+  get smartExitPrice(): number {
     return this.stopLimit;
   }
 
-  set stopLimitPrice(price: number) {
+  set smartExitPrice(price: number) {
     this.stopLimit = Math.max(0, price);
   }
 
@@ -212,8 +212,8 @@ export class TradeMemo extends PricesHolder {
 
   stopLimitCrossedDown(): boolean {
     return (
-      this.currentPrice < this.stopLimitPrice &&
-      this.previousPrice >= this.stopLimitPrice
+      this.currentPrice < this.smartExitPrice &&
+      this.previousPrice >= this.smartExitPrice
     );
   }
 }

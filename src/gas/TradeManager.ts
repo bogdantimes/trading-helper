@@ -329,10 +329,10 @@ export class TradeManager {
     const precision = tm.precision;
     const slCrossedDown = tm.stopLimitCrossedDown();
 
-    if (!tm.stopLimitPrice) {
+    if (!tm.smartExitPrice) {
       const ch = this.channelsDao.get(tm.getCoinName());
       // Initiate stop limit via the channel lower boundary price
-      tm.stopLimitPrice = floorToOptimalGrid(ch[Key.MIN], precision).result;
+      tm.smartExitPrice = floorToOptimalGrid(ch[Key.MIN], precision).result;
       return;
     }
 
@@ -347,7 +347,7 @@ export class TradeManager {
     let c2 = curTTL / maxTTL;
 
     // if the stop limit is above the entry price, we don't want to apply TTL stop limit
-    if (tm.stopLimitPrice >= tm.tradeResult.entryPrice) {
+    if (tm.smartExitPrice >= tm.tradeResult.entryPrice) {
       c2 = 0;
     }
 
@@ -361,7 +361,7 @@ export class TradeManager {
     // quantize stop limit to stick it to the grid
     newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
     // Apply new stop limit if it is higher.
-    tm.stopLimitPrice = Math.max(tm.stopLimitPrice, newStopLimit);
+    tm.smartExitPrice = Math.max(tm.smartExitPrice, newStopLimit);
 
     if (slCrossedDown && tm.profit() <= 0 && tm.currentPrice > bottomPrice) {
       this.#handleEarlyExit(tm);
@@ -370,7 +370,7 @@ export class TradeManager {
 
   #handleEarlyExit(tm: TradeMemo): void {
     const msg = `${tm.getCoinName()} smart exit was crossed down at ${f8(
-      tm.stopLimitPrice
+      tm.smartExitPrice
     )}`;
     try {
       // Allow stop-limit be lowered when it is crossed down,
@@ -411,7 +411,7 @@ export class TradeManager {
     const supportIsPresent = imbalance > 0.15;
     if (supportIsPresent) {
       const floor = floorToOptimalGrid(tm.currentPrice, precision);
-      tm.stopLimitPrice = floor.result;
+      tm.smartExitPrice = floor.result;
       tm.ttl -= 240; // Cool down
     }
     return supportIsPresent;
@@ -419,7 +419,7 @@ export class TradeManager {
 
   #forceUpdateStopLimit(tm: TradeMemo): void {
     tm.ttl = 0;
-    tm.stopLimitPrice = 0;
+    tm.smartExitPrice = 0;
     this.#updateStopLimit(tm);
   }
 
