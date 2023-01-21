@@ -1,5 +1,6 @@
 import { CoinName, enumKeys, StableUSDCoin } from "../lib";
 import { isNode } from "browser-or-node";
+import getEmailTemplate from "./utils/getEmailTemplate";
 
 export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60;
@@ -17,13 +18,13 @@ export class Log {
   private static readonly infoLog: string[] = [];
   private static readonly debugLog: any[] = [];
   private static readonly errLog: Error[] = [];
-  private static readonly alerts: string[] = [];
+  private static readonly alertsLog: string[] = [];
 
   // @ts-expect-error
   static level: LogLevel = isNode ? LogLevel.NONE : LogLevel[LOG_LEVEL];
 
   static alert(msg: string): void {
-    this.level >= LogLevel.ALERT && this.alerts.push(msg);
+    this.level >= LogLevel.ALERT && this.alertsLog.push(msg);
   }
 
   static info(msg: string): void {
@@ -41,32 +42,17 @@ export class Log {
   }
 
   static print(): string {
-    return `${
-      this.alerts.length > 0 ? `${this.alerts.join(`<br/>`)}<br/><br/>` : ``
-    }
-${
-  this.errLog.length > 0
-    ? `Errors:<br/>${this.errLog
-        .map((e) => `Stack: ${e.stack}`)
-        .join(`<br/>`)}<br/><br/>`
-    : ``
-}
-${
-  this.infoLog.length > 0
-    ? `Info:<br/>${this.infoLog.join(`<br/>`)}<br/><br/>`
-    : ``
-}
-${
-  this.debugLog.length > 0
-    ? `Debug:<br/>${this.debugLog.join(`<br/><br/>`)}`
-    : ``
-}
-`;
+    return getEmailTemplate({
+      alertsLog: this.alertsLog,
+      errLog: this.errLog,
+      infoLog: this.infoLog,
+      debugLog: this.debugLog,
+    });
   }
 
   static ifUsefulDumpAsEmail(): void {
     const email = Session.getEffectiveUser().getEmail();
-    if (this.alerts.length > 0 || this.errLog.length > 0) {
+    if (this.alertsLog.length > 0 || this.errLog.length > 0) {
       const subject = `Trading Helper ${
         this.errLog.length ? `Error` : `Alert`
       }`;

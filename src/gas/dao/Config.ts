@@ -7,6 +7,15 @@ import {
   StableUSDCoin,
 } from "../../lib";
 
+export interface APIKeysProvider {
+  getAPIKeys: () => APIKeys;
+}
+
+export interface APIKeys {
+  key?: string;
+  secret?: string;
+}
+
 export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: AUTO_DETECT,
@@ -20,7 +29,7 @@ export const DefaultConfig: () => Config = () => ({
   EntryImbalanceCheck: true,
 });
 
-export class ConfigDao {
+export class ConfigDao implements APIKeysProvider {
   private readonly store: IStore;
 
   constructor(store: IStore) {
@@ -42,5 +51,10 @@ export class ConfigDao {
       config.SECRET = config.SECRET === MASK ? curCfg.SECRET : config.SECRET;
     }
     this.store.set(`Config`, config);
+  }
+
+  getAPIKeys(): APIKeys {
+    const config = this.get();
+    return { key: config.KEY, secret: config.SECRET };
   }
 }

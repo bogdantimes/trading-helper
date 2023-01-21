@@ -10,7 +10,6 @@ import {
   InitialSetupParams,
   IStore,
   MASK,
-  PriceChannelsDataResponse,
 } from "../lib";
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
@@ -21,6 +20,7 @@ import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
 import { TraderPlugin } from "./traders/plugin/api";
+import { WithdrawalsManager } from "./WithdrawalsManager";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -177,19 +177,12 @@ function setFirebaseURL(url: string): string {
   });
 }
 
-function setPriceChannelsData(data: PriceChannelsDataResponse): string {
-  return catchError(() => {
-    new ChannelsDao(DefaultStore).setAll(data);
-    return `OK`;
-  });
-}
-
 function getConfig(): Config {
   const configDao = new ConfigDao(DefaultStore);
   const config = configDao.get();
   const trendProvider = new TrendProvider(
     configDao,
-    new Exchange(config.KEY, config.SECRET),
+    new Exchange(configDao),
     CacheProxy
   );
   config.AutoMarketTrend = trendProvider.get();
@@ -231,6 +224,23 @@ function sell(coin: CoinName): string {
   });
 }
 
+function addWithdrawal(amount: number): string {
+  return catchError(() => {
+    if (!isFinite(+amount)) throw new Error(`Amount is not a number.`);
+
+    const configDao = new ConfigDao(DefaultStore);
+    const mgr = new WithdrawalsManager(
+      configDao,
+      new Exchange(configDao),
+      new Statistics(DefaultStore)
+    );
+    const { balance } = mgr.addWithdrawal(amount);
+    const msg = `💳 Withdrawal of $${amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
+    Log.alert(msg);
+    return msg;
+  });
+}
+
 global.doGet = doGet;
 global.doPost = doPost;
 global.tick = tick;
@@ -241,7 +251,7 @@ global.sellAll = sellAll;
 global.dropCoin = dropCoin;
 global.setConfig = setConfig;
 global.setFirebaseURL = setFirebaseURL;
-global.setPriceChannelsData = setPriceChannelsData;
+global.addWithdrawal = addWithdrawal;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;

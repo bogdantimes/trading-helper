@@ -1,6 +1,6 @@
 {
     "name": "trading-helper",
-    "version": "3.3.3",
+    "version": "3.3.4",
     "description": "",
     "scripts": {
         "glogin": "clasp login",
@@ -34,6 +34,7 @@
         "eslint-import-resolver-typescript": "3.5.2",
         "eslint-plugin-googleappsscript": "1.0.4",
         "eslint-plugin-import": "2.26.0",
+        "eslint-plugin-n": "15.6.0",
         "eslint-plugin-node": "11.1.0",
         "eslint-plugin-prettier": "4.2.1",
         "eslint-plugin-promise": "6.1.1",
