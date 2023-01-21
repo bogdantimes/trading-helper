@@ -1,3 +1,7 @@
+# v3.3.6
+
+* UI: Fixed an issue with Smart-exit label percentage.
+
 # v3.3.5
 
 * UI: Added percentages visualization on price chart labels.

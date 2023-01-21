@@ -60,7 +60,7 @@ export default function Trade(props: {
     (tm.currentPrice * 100) / tm.tradeResult.entryPrice - 100
   )}%`;
   const stopLineLabel = `Smart exit ${f2(
-    (tm.stopLimitBottomPrice * 100) / tm.tradeResult.entryPrice - 100
+    (tm.smartExitPrice * 100) / tm.tradeResult.entryPrice - 100
   )}%`;
   const targetLineLabel = `Profit goal ${f2(tm.profitGoal * 100)}%`;
 
@@ -143,12 +143,12 @@ export default function Trade(props: {
     if (stopLine) {
       stopLine.applyOptions({
         title: stopLineLabel,
-        visible: !!tm.stopLimitPrice,
+        visible: !!tm.smartExitPrice,
         // make dashed if config SellAtStopLimit is false
         lineStyle: !cfg.SellAtStopLimit ? LineStyle.Dashed : LineStyle.Solid,
         priceFormat,
       });
-      stopLine.setData(map(tm.prices, () => tm.stopLimitPrice));
+      stopLine.setData(map(tm.prices, () => tm.smartExitPrice));
     }
 
     if (entryLine) {
