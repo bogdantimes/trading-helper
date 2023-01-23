@@ -145,7 +145,7 @@ function initialSetup(params: InitialSetupParams): string {
 function sellAll(): string {
   return catchError(() => {
     TradeManager.default().sellAll();
-    return `Selling all`;
+    return `Done. Result was sent to your email.`;
   });
 }
 
@@ -220,7 +220,7 @@ function buy(coin: CoinName): string {
 function sell(coin: CoinName): string {
   return catchError(() => {
     TradeManager.default().sell(coin.toUpperCase());
-    return `${coin} was added to the selling queue`;
+    return `Done. Result was sent to your email.`;
   });
 }
 

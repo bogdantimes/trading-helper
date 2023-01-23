@@ -131,24 +131,25 @@ export class TradeManager {
 
   sell(coin: CoinName): void {
     this.#prepare();
-    this.#setSellState(coin);
+    this.tradesDao.update(coin, (t) => this.#sellNow(t));
+    this.#finalize();
   }
 
   sellAll(): void {
     this.#prepare();
-
-    this.tradesDao.iterate((tm) => {
-      // Reset potential BUY state to avoid buying for the time being
-      tm.resetState();
-      if (tm.tradeResult.quantity > 0) {
-        this.#sell(tm);
-      } else if (tm.getState() === TradeState.BOUGHT) {
-        Log.alert(`⚠️ Can't sell ${tm.getCoinName()}. Current value is 0`);
-      }
-      return tm;
-    });
-
+    this.tradesDao.iterate((t) => this.#sellNow(t));
     this.#finalize();
+  }
+
+  #sellNow(tm: TradeMemo): TradeMemo {
+    // Reset potential BUY state to avoid buying for the time being
+    tm.resetState();
+    if (tm.tradeResult.quantity > 0) {
+      this.#sell(tm);
+    } else if (tm.getState() === TradeState.BOUGHT) {
+      Log.alert(`⚠️ Can't sell ${tm.getCoinName()}. Current value is 0`);
+    }
+    return tm;
   }
 
   #prepare(): void {
