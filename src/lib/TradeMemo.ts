@@ -112,11 +112,11 @@ export class TradeMemo extends PricesHolder {
   }
 
   get duration(): number {
-    return this.x || DefaultDuration;
+    return Math.max(this.x ?? DefaultDuration, 2000);
   }
 
   get range(): number {
-    return this.y || DefaultRange;
+    return Math.max(this.y ?? DefaultRange, 0.05);
   }
 
   get imbalance(): number {
