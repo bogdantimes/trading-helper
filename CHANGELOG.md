@@ -1,3 +1,8 @@
+# v3.3.7
+
+* Fixed a bug with balance auto-detect missing $1 after initialization.
+* Minor visual improvements on the Info page.
+
 # v3.3.6
 
 * UI: Fixed an issue with Smart-exit label percentage.

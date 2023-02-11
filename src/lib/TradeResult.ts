@@ -1,5 +1,5 @@
 import { f8, sumWithMaxPrecision } from "./Functions";
-import { ExchangeSymbol } from "./Types";
+import { type ExchangeSymbol } from "./Types";
 
 export class TradeResult {
   symbol: ExchangeSymbol;

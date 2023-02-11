@@ -2,7 +2,7 @@ import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, TradeState } from "./Types";
 import { PricesHolder } from "./IPriceProvider";
 import { DefaultDuration, DefaultRange } from "./Config";
-import { Signal } from "../gas/traders/plugin/api";
+import { type Signal } from "../gas/traders/plugin/api";
 
 export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult;
@@ -112,11 +112,11 @@ export class TradeMemo extends PricesHolder {
   }
 
   get duration(): number {
-    return this.x || DefaultDuration;
+    return Math.max(this.x ?? DefaultDuration, 2000);
   }
 
   get range(): number {
-    return this.y || DefaultRange;
+    return Math.max(this.y ?? DefaultRange, 0.05);
   }
 
   get imbalance(): number {

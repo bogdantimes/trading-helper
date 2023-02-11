@@ -18,7 +18,13 @@ import {
   TextField,
 } from "@mui/material";
 import { circularProgress } from "./Common";
-import { Config, enumKeys, f2, MarketTrend, StableUSDCoin } from "../../lib";
+import {
+  type Config,
+  enumKeys,
+  f2,
+  MarketTrend,
+  StableUSDCoin,
+} from "../../lib";
 
 export function Settings(params: {
   config: Config;
@@ -43,7 +49,9 @@ export function Settings(params: {
         .withSuccessHandler(() => {
           setInitialFbURL(newFbURL);
         })
-        .withFailureHandler((e) => setError(e.message))
+        .withFailureHandler((e) => {
+          setError(e.message);
+        })
         .setFirebaseURL(newFbURL);
     }
 
@@ -85,9 +93,9 @@ export function Settings(params: {
               value={cfg.StableCoin}
               label={`Stable Coin`}
               defaultValue={StableUSDCoin.BUSD}
-              onChange={(e) =>
-                setCfg({ ...cfg, StableCoin: e.target.value as StableUSDCoin })
-              }
+              onChange={(e) => {
+                setCfg({ ...cfg, StableCoin: e.target.value as StableUSDCoin });
+              }}
             >
               {enumKeys<StableUSDCoin>(StableUSDCoin).map((coin) => (
                 <MenuItem key={coin} value={coin}>
@@ -101,7 +109,9 @@ export function Settings(params: {
             value={balance}
             placeholder={`Auto-detect`}
             label={`Balance`}
-            onChange={(e) => setBalance(e.target.value)}
+            onChange={(e) => {
+              setBalance(e.target.value);
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">$</InputAdornment>
@@ -116,7 +126,9 @@ export function Settings(params: {
             value={cfg.MarketTrend}
             label={trend}
             defaultValue={MarketTrend.SIDEWAYS}
-            onChange={(e) => setCfg({ ...cfg, MarketTrend: +e.target.value })}
+            onChange={(e) => {
+              setCfg({ ...cfg, MarketTrend: +e.target.value });
+            }}
             aria-describedby={`trend-helper-text`}
           >
             <MenuItem value={-1}>Auto-detect</MenuItem>
@@ -142,9 +154,9 @@ export function Settings(params: {
             control={
               <Switch
                 checked={cfg.SellAtStopLimit}
-                onChange={(e) =>
-                  setCfg({ ...cfg, SellAtStopLimit: e.target.checked })
-                }
+                onChange={(e) => {
+                  setCfg({ ...cfg, SellAtStopLimit: e.target.checked });
+                }}
               />
             }
             label="Smart exit"
@@ -161,9 +173,9 @@ export function Settings(params: {
             control={
               <Switch
                 checked={cfg.HideBalances}
-                onChange={(e) =>
-                  setCfg({ ...cfg, HideBalances: e.target.checked })
-                }
+                onChange={(e) => {
+                  setCfg({ ...cfg, HideBalances: e.target.checked });
+                }}
               />
             }
             label="Hide balances"
@@ -178,7 +190,9 @@ export function Settings(params: {
             control={
               <Switch
                 checked={cfg.ViewOnly}
-                onChange={(e) => setCfg({ ...cfg, ViewOnly: e.target.checked })}
+                onChange={(e) => {
+                  setCfg({ ...cfg, ViewOnly: e.target.checked });
+                }}
               />
             }
             label="View-only"
@@ -193,21 +207,27 @@ export function Settings(params: {
             type={`password`}
             value={cfg.KEY}
             label={`Binance API Key`}
-            onChange={(e) => setCfg({ ...cfg, KEY: e.target.value })}
+            onChange={(e) => {
+              setCfg({ ...cfg, KEY: e.target.value });
+            }}
             name="binanceAPIKey"
           />
           <TextField
             type={`password`}
             value={cfg.SECRET}
             label={`Binance Secret Key`}
-            onChange={(e) => setCfg({ ...cfg, SECRET: e.target.value })}
+            onChange={(e) => {
+              setCfg({ ...cfg, SECRET: e.target.value });
+            }}
             name="binanceSecretKey"
           />
         </Stack>
         <TextField
           value={newFbURL}
           label={`Firebase URL`}
-          onChange={(e) => setNewFbURL(e.target.value)}
+          onChange={(e) => {
+            setNewFbURL(e.target.value);
+          }}
           helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. External database is essential only when you switch to a newer version of the tool.`}
         />
         <Stack spacing={2}>

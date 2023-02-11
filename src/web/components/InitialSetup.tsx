@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { circularProgress } from "./Common";
-import { Config, InitialSetupParams } from "../../lib";
+import { type Config, type InitialSetupParams } from "../../lib";
 
 enum Step {
   DbConnect,

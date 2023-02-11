@@ -1,4 +1,4 @@
-import { IStore, TradeMemo, TradeState } from "../../lib";
+import { type IStore, TradeMemo, type TradeState } from "../../lib";
 import { isNode } from "browser-or-node";
 import { Log } from "../Common";
 

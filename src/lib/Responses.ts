@@ -1,7 +1,7 @@
-import { CoinName } from "./IPriceProvider";
-import { TradeMemo } from "./TradeMemo";
-import { PriceChannelData, Stats } from "./Types";
-import { Config } from "./Config";
+import { type CoinName } from "./IPriceProvider";
+import { type TradeMemo } from "./TradeMemo";
+import { type PriceChannelData, type Stats } from "./Types";
+import { type Config } from "./Config";
 
 export type PriceChannelsDataResponse = Record<CoinName, PriceChannelData>;
 

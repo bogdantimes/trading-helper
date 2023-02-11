@@ -1,6 +1,6 @@
-import { IExchange } from "./Exchange";
-import { Statistics } from "./Statistics";
-import { ConfigDao } from "./dao/Config";
+import { type IExchange } from "./Exchange";
+import { type Statistics } from "./Statistics";
+import { type ConfigDao } from "./dao/Config";
 
 export class WithdrawalsManager {
   constructor(

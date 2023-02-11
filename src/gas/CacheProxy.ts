@@ -1,6 +1,6 @@
 import Integer = GoogleAppsScript.Integer;
 import { Log, SECONDS_IN_HOUR } from "./Common";
-import { ICacheProxy } from "../lib";
+import { type ICacheProxy } from "../lib";
 
 const MAX_CACHE_VAL_SIZE_BYTES = 100 * 1024;
 

@@ -6,8 +6,8 @@ import CurrencyFormat from "react-currency-format";
 import {
   BNBFee,
   SHORT_MASK,
-  StableCoinKeys,
-  StableUSDCoin,
+  type StableCoinKeys,
+  type StableUSDCoin,
 } from "../../lib/index";
 import Tooltip from "@mui/material/Tooltip/Tooltip";
 

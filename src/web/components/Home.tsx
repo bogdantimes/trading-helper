@@ -15,12 +15,12 @@ import SemiCircleProgressBar from "react-progressbar-semicircle";
 import Balance from "./Balance";
 import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
-  AppState,
+  type AppState,
   ChannelState,
-  Config,
+  type Config,
   f0,
   Key,
-  PriceChannelsDataResponse,
+  type PriceChannelsDataResponse,
   PriceMove,
   TradeMemo,
 } from "../../lib";
@@ -56,7 +56,9 @@ function balanceCard(config: Config, assetsValue: number): JSX.Element {
         {/* Invisible divider */}
         <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
           <Chip
-            onClick={() => setHide(!hide)}
+            onClick={() => {
+              setHide(!hide);
+            }}
             label={<Typography variant={`h6`}>💰 Balance</Typography>}
           />
         </Divider>
@@ -98,7 +100,9 @@ function assetsCards(
       <Grid item xs={12}>
         <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
           <Chip
-            onClick={() => setHide(!hide)}
+            onClick={() => {
+              setHide(!hide);
+            }}
             label={
               <Typography variant={`h6`}>
                 🪙 Assets ({current.length})
@@ -183,7 +187,9 @@ function candidates(data: PriceChannelsDataResponse): JSX.Element {
       <Grid item xs={12}>
         <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
           <Chip
-            onClick={() => setHide(!hide)}
+            onClick={() => {
+              setHide(!hide);
+            }}
             label={
               <Typography variant={`h6`}>
                 {`⚖️ `}Candidates ({candidateCoins.length})

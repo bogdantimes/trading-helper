@@ -1,15 +1,15 @@
 import { Log } from "./Common";
 import {
-  ExchangeSymbol,
+  type ExchangeSymbol,
   execute,
   floor,
   getPrecision,
   INTERRUPT,
-  SymbolInfo,
+  type SymbolInfo,
   TradeResult,
 } from "../lib";
-import { IExchange } from "./Exchange";
-import { APIKeysProvider } from "./dao/Config";
+import { type IExchange } from "./Exchange";
+import { type APIKeysProvider } from "./dao/Config";
 
 export class Binance implements IExchange {
   private readonly serverIds: number[];

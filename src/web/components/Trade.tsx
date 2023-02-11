@@ -5,17 +5,25 @@ import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import CurrencyFormat from "react-currency-format";
 import {
-  ChartOptions,
+  type ChartOptions,
+  ColorType,
   createChart,
-  DeepPartial,
-  IChartApi,
-  ISeriesApi,
-  LineData,
+  type DeepPartial,
+  type IChartApi,
+  type ISeriesApi,
+  type LineData,
   LineStyle,
 } from "lightweight-charts";
-import { Box, Theme, useTheme } from "@mui/material";
+import { Box, type Theme, useTheme } from "@mui/material";
 import { TradeTitle } from "./TradeTitle";
-import { Config, f2, getPrecision, SHORT_MASK, TradeMemo } from "../../lib";
+import {
+  type Config,
+  f2,
+  getPrecision,
+  SHORT_MASK,
+  type TradeMemo,
+} from "../../lib";
+import { type SxProps } from "@mui/system/styleFunctionSx";
 
 export default function Trade(props: {
   data: TradeMemo;
@@ -244,7 +252,7 @@ export default function Trade(props: {
   );
 }
 
-const chartStyle = (theme): {} => ({
+const chartStyle = (theme): SxProps => ({
   "& .tv-lightweight-charts": {
     borderRadius: `4px`,
     border: `1px solid ${theme.palette.text.disabled}`,
@@ -254,7 +262,10 @@ const chartStyle = (theme): {} => ({
 function changeChartTheme(chart: IChartApi, theme: Theme): void {
   chart?.applyOptions({
     layout: {
-      backgroundColor: theme.palette.background.default,
+      background: {
+        type: ColorType.Solid,
+        color: theme.palette.background.default,
+      },
       textColor: theme.palette.text.primary,
     },
     grid: {

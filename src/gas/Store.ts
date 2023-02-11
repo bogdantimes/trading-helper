@@ -1,6 +1,10 @@
-import { CacheProxy, DefaultCacheProxy, ExpirationEntries } from "./CacheProxy";
+import {
+  CacheProxy,
+  type DefaultCacheProxy,
+  type ExpirationEntries,
+} from "./CacheProxy";
 import { isNode } from "browser-or-node";
-import { IStore } from "../lib/index";
+import { type IStore } from "../lib/index";
 
 export class ScriptStore implements IStore {
   delete(key: string): void {
@@ -56,7 +60,7 @@ export class FirebaseStore implements IStore {
     if (!this.#source) {
       const url = FirebaseStore.url;
       if (url) {
-        // @ts-expect-error
+        // @ts-expect-error FirebaseApp is available in GAS runtime only
         this.#source = FirebaseApp.getDatabaseByUrl(
           url,
           ScriptApp.getOAuthToken()
@@ -71,7 +75,7 @@ export class FirebaseStore implements IStore {
   }
 
   connect(dbURL: string): void {
-    // @ts-expect-error
+    // @ts-expect-error FirebaseApp is available in GAS runtime only
     this.source = FirebaseApp.getDatabaseByUrl(
       dbURL,
       ScriptApp.getOAuthToken()
@@ -92,7 +96,7 @@ export class FirebaseStore implements IStore {
     if (!this.isConnected()) {
       throw new Error(`Firebase is not connected.`);
     }
-    // @ts-expect-error
+    // @ts-expect-error method is available at runtime only
     this.source.removeData(key);
   }
 
@@ -100,12 +104,12 @@ export class FirebaseStore implements IStore {
     if (!this.isConnected()) {
       throw new Error(`Firebase is not connected.`);
     }
-    // @ts-expect-error
+    // @ts-expect-error method is available at runtime only
     return this.source.getData(key);
   }
 
   getKeys(): string[] {
-    // @ts-expect-error
+    // @ts-expect-error method is available at runtime only
     const data = this.source.getData(``);
     return data && typeof data === `object` ? Object.keys(data) : [];
   }
@@ -114,7 +118,7 @@ export class FirebaseStore implements IStore {
     if (!this.isConnected()) {
       throw new Error(`Firebase is not connected.`);
     }
-    // @ts-expect-error
+    // @ts-expect-error method is available at runtime only
     this.source.setData(key, value);
     return value;
   }
@@ -202,5 +206,5 @@ function getStore(): IStore {
   return new CachedStore(defaultStore, CacheProxy);
 }
 
-// @ts-expect-error
+// @ts-expect-error ignoring null assignment
 export const DefaultStore: IStore = isNode ? null : getStore();

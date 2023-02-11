@@ -22,7 +22,7 @@ import { Info } from "./components/Info";
 import { Home } from "./components/Home";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
-import { AppState } from "../lib";
+import { type AppState } from "../lib";
 import Terminal, { ColorMode } from "react-terminal-ui";
 import { DefaultConfig } from "../gas/dao/Config";
 
@@ -56,8 +56,12 @@ export default function App(): JSX.Element {
   useEffect(() => {
     // re-fetch config from time to time just to synchronize it in case changes
     // were made in different browser tabs, etc.
-    const interval = setInterval(() => !initialSetup && reFetchState(), 60000); // 60 seconds
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      !initialSetup && reFetchState();
+    }, 60000); // 60 seconds
+    return () => {
+      clearInterval(interval);
+    };
   }, [initialSetup]);
 
   function initialFetch(): void {
@@ -87,7 +91,9 @@ export default function App(): JSX.Element {
     }
     google.script.run
       .withSuccessHandler(handleState)
-      .withFailureHandler((resp) => setFetchDataError(resp.message))
+      .withFailureHandler((resp) => {
+        setFetchDataError(resp.message);
+      })
       .getState();
   }
 
@@ -180,21 +186,25 @@ export default function App(): JSX.Element {
           <TabPanel value={tab} index={TabId.Settings}>
             <Settings
               config={state.config}
-              setConfig={(config) => handleState({ ...state, config })}
+              setConfig={(config) => {
+                handleState({ ...state, config });
+              }}
               firebaseURL={state.firebaseURL}
             />
           </TabPanel>
         </Box>
       )}
-      <Dialog open={terminalOpen} onClose={() => setTerminalOpen(false)}>
-        <Box
-          width={600}
-          height={400}
-          sx={{ [`.react-terminal`]: { height: `290px` } }}
-        >
+      <Dialog
+        open={terminalOpen}
+        onClose={() => {
+          setTerminalOpen(false);
+        }}
+      >
+        <Box width={600} height={400}>
           <Terminal
             name="API"
             prompt={prompt}
+            height={`290px`}
             colorMode={
               theme.palette.mode === `dark` ? ColorMode.Dark : ColorMode.Light
             }

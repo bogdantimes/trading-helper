@@ -1,4 +1,9 @@
-import { Coin, CoinName, IStore, PriceChannelData } from "../../lib";
+import {
+  type Coin,
+  type CoinName,
+  type IStore,
+  type PriceChannelData,
+} from "../../lib";
 import { isNode } from "browser-or-node";
 
 const PriceChannelDataKey = `ChannelData`;
