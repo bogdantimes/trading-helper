@@ -6,6 +6,7 @@ import {
   ListItemAvatar,
   ListItemText,
   Stack,
+  Tooltip,
 } from "@mui/material";
 import { FixedSizeList } from "react-window";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
@@ -22,7 +23,7 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
 
   if (stats) {
     const { TotalProfit: tp, TotalWithdrawals: tw, DailyProfit } = stats;
-    const totalTimeFrame = `Total (withdrawals: $${f2(tw)})`;
+    const totalTimeFrame = getTotalLabelComponent(tw);
     rows.push({ id: 1, timeFrame: totalTimeFrame, profit: f2(tp) });
     Object.keys(DailyProfit)
       .sort((a, b) => (new Date(a) < new Date(b) ? 1 : -1))
@@ -39,7 +40,8 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
         <Alert sx={{ width: cardWidth }} severity={`info`}>
-          Balance changes since Day 1 including "Fees budget" spending 💸.
+          Balance changes since Day 1 with exchange fees taken into account.
+          {` `}Represents the net profit/loss 💸.
         </Alert>
         <FixedSizeList
           width={cardWidth}
@@ -78,5 +80,34 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
         </FixedSizeList>
       </Stack>
     </Box>
+  );
+}
+
+function getTotalLabelComponent(tw: number): React.ReactElement {
+  return (
+    <>
+      Total (
+      <Tooltip
+        title={
+          <>
+            To add a profit withdrawal, double tap (i) tab icon and enter
+            (example) `addWithdrawal 100` in the API console. This action will
+            reduce the free balance by the amount entered and update the total
+            profit of the bot. This is useful for tracking profit withdrawals.
+          </>
+        }
+        arrow
+      >
+        <span
+          style={{
+            textDecoration: `underline`,
+            textDecorationStyle: `dashed`,
+          }}
+        >
+          withdrawals
+        </span>
+      </Tooltip>
+      : ${f2(tw)})
+    </>
   );
 }

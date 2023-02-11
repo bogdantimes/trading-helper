@@ -200,14 +200,11 @@ export default function App(): JSX.Element {
           setTerminalOpen(false);
         }}
       >
-        <Box
-          width={600}
-          height={400}
-          sx={{ [`.react-terminal`]: { height: `290px` } }}
-        >
+        <Box width={600} height={400}>
           <Terminal
             name="API"
             prompt={prompt}
+            height={`290px`}
             colorMode={
               theme.palette.mode === `dark` ? ColorMode.Dark : ColorMode.Light
             }
