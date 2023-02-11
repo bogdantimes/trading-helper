@@ -1,4 +1,4 @@
-import { CoinName, enumKeys, StableUSDCoin } from "../lib";
+import { type CoinName, enumKeys, StableUSDCoin } from "../lib";
 import { isNode } from "browser-or-node";
 import getEmailTemplate from "./utils/getEmailTemplate";
 
@@ -20,7 +20,7 @@ export class Log {
   private static readonly errLog: Error[] = [];
   private static readonly alertsLog: string[] = [];
 
-  // @ts-expect-error
+  // @ts-expect-error LOG_LEVEL is injected by esbuild
   static level: LogLevel = isNode ? LogLevel.NONE : LogLevel[LOG_LEVEL];
 
   static alert(msg: string): void {

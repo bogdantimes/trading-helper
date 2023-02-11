@@ -1,7 +1,7 @@
 import {
   AUTO_DETECT,
-  Config,
-  IStore,
+  type Config,
+  type IStore,
   MarketTrend,
   MASK,
   StableUSDCoin,

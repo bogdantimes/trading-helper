@@ -1,6 +1,6 @@
 import { Binance } from "./Binance";
-import { ExchangeSymbol, TradeResult } from "../lib";
-import { APIKeysProvider } from "./dao/Config";
+import { type ExchangeSymbol, type TradeResult } from "../lib";
+import { type APIKeysProvider } from "./dao/Config";
 
 export interface IExchange {
   getBalance: (assetName: string) => number;

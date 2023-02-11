@@ -3,7 +3,7 @@ import * as React from "react";
 import { useState } from "react";
 import { Delete } from "@mui/icons-material";
 import Typography from "@mui/material/Typography";
-import { f2, TradeMemo } from "../../lib";
+import { f2, type TradeMemo } from "../../lib";
 import { growthIconMap } from "./Common";
 
 export function TradeTitle({
@@ -24,8 +24,12 @@ export function TradeTitle({
       disabled={!onDelete}
       onClick={() => onDelete?.(tm.getCoinName(), !tm.currentValue)}
       sx={{ color: deleteColor }}
-      onMouseEnter={() => setDeleteHover(true)}
-      onMouseLeave={() => setDeleteHover(false)}
+      onMouseEnter={() => {
+        setDeleteHover(true);
+      }}
+      onMouseLeave={() => {
+        setDeleteHover(false);
+      }}
     >
       <Delete />
     </IconButton>

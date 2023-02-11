@@ -2,13 +2,13 @@ import {
   ExchangeSymbol,
   MarketTrend,
   getPriceMove,
-  ICacheProxy,
+  type ICacheProxy,
   PriceMove,
   StableUSDCoin,
   AUTO_DETECT,
 } from "../lib/index";
-import { IExchange } from "./Exchange";
-import { ConfigDao } from "./dao/Config";
+import { type IExchange } from "./Exchange";
+import { type ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
 import { MAX_EXPIRATION } from "./CacheProxy";
 import { Log } from "./Common";

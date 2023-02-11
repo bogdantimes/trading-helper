@@ -1,4 +1,4 @@
-import { f2, IStore, Stats } from "../lib";
+import { f2, type IStore, type Stats } from "../lib";
 import { Log } from "./Common";
 
 export class Statistics {

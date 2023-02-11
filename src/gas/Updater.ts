@@ -6,14 +6,14 @@
 // GASProjectApp (1to51j1yqDvtTrJIoHzgOffCnZOK9MTCcSkky6niwRJlTLTNpxIfj3bI-)
 
 import { Log } from "./Common";
-import { UpgradeInfo } from "../lib/index";
+import { type UpgradeInfo } from "../lib/index";
 import { compare } from "compare-versions";
 
 export const UpgradeDone = `Upgrade done`;
 
 export class Updater {
   static upgrade(): string {
-    // @ts-expect-error
+    // @ts-expect-error VERSION is injected by esbuild
     const curVer = `v${VERSION}`;
     const { files, newVersion, URL }: UpgradeInfo =
       global.TradingHelperLibrary.getUpgrades(curVer);

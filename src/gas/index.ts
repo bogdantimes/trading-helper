@@ -4,11 +4,11 @@ import { Statistics } from "./Statistics";
 import { Exchange } from "./Exchange";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
-  AppState,
-  CoinName,
-  Config,
-  InitialSetupParams,
-  IStore,
+  type AppState,
+  type CoinName,
+  type Config,
+  type InitialSetupParams,
+  type IStore,
   MASK,
 } from "../lib";
 import { Process } from "./Process";
@@ -19,7 +19,7 @@ import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
-import { TraderPlugin } from "./traders/plugin/api";
+import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
@@ -32,7 +32,7 @@ function doGet(): HtmlOutput {
           `viewport`,
           `width=device-width, initial-scale=1, maximum-scale=1`
         )
-        // @ts-expect-error
+        // @ts-expect-error VERSION is injected by esbuild
         .setTitle(`TradingHelper v${VERSION}`)
     );
   });
@@ -60,7 +60,9 @@ function stop(): string {
 }
 
 function startAllProcesses(): string {
-  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t));
+  ScriptApp.getProjectTriggers().forEach((t) => {
+    ScriptApp.deleteTrigger(t);
+  });
   ScriptApp.newTrigger(Process.tick.name)
     .timeBased()
     .everyMinutes(TICK_INTERVAL_MIN)
@@ -77,7 +79,9 @@ function startAllProcesses(): string {
   const ts = new TradesDao(DefaultStore).get();
   const locked = Object.keys(ts).filter((coinName) => ts[coinName].locked);
   if (locked.length) {
-    locked.forEach((coinName) => ts[coinName].unlock());
+    locked.forEach((coinName) => {
+      ts[coinName].unlock();
+    });
     DefaultStore.set(`Trades`, ts);
     Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
   }
@@ -255,7 +259,11 @@ global.addWithdrawal = addWithdrawal;
 global.getState = getState;
 global.buy = buy;
 global.sell = sell;
-global.keepCacheAlive = () => catchError(() => DefaultStore.keepCacheAlive());
+global.keepCacheAlive = () => {
+  catchError(() => {
+    DefaultStore.keepCacheAlive();
+  });
+};
 global.upgrade = () => {
   return catchError(() => {
     const result = Updater.upgrade();

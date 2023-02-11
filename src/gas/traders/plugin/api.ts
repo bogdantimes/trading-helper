@@ -1,14 +1,14 @@
 import {
-  CoinName,
-  ExchangeSymbol,
-  MarketTrend,
-  PriceChannelData,
-  PriceHoldersMap,
-  PriceMap,
-  StableUSDCoin,
-  SymbolInfo,
+  type CoinName,
+  type ExchangeSymbol,
+  type MarketTrend,
+  type PriceChannelData,
+  type PriceHoldersMap,
+  type PriceMap,
+  type StableUSDCoin,
+  type SymbolInfo,
 } from "../../../lib/index";
-import { ChannelsDao } from "../../dao/Channels";
+import { type ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
   trade: (context: PluginContext) => PluginResult;

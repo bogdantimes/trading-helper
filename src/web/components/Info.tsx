@@ -10,7 +10,7 @@ import {
 import { FixedSizeList } from "react-window";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 import CurrencyFormat from "react-currency-format";
-import { f2, Stats } from "../../lib";
+import { f2, type Stats } from "../../lib";
 import { cardWidth } from "./Common";
 
 export function Info({ stats }: { stats: Stats }): JSX.Element {

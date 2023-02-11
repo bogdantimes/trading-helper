@@ -1,11 +1,11 @@
 import { Statistics } from "./Statistics";
-import { Exchange, IExchange } from "./Exchange";
+import { Exchange, type IExchange } from "./Exchange";
 import { backTestSorter, Log } from "./Common";
 import {
   AUTO_DETECT,
   BNB,
-  CoinName,
-  Config,
+  type CoinName,
+  type Config,
   ExchangeSymbol,
   f2,
   f8,
@@ -15,7 +15,7 @@ import {
   MarketTrend,
   MIN_BUY,
   PriceMove,
-  PricesHolder,
+  type PricesHolder,
   StableUSDCoin,
   TradeMemo,
   TradeResult,
@@ -25,7 +25,11 @@ import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
-import { Signal, SignalType, TraderPlugin } from "./traders/plugin/api";
+import {
+  type Signal,
+  SignalType,
+  type TraderPlugin,
+} from "./traders/plugin/api";
 import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
@@ -83,7 +87,9 @@ export class TradeManager {
     // First process !BUY state assets (some might get sold and free up $)
     trades
       .filter((tm) => !tm.stateIs(TradeState.BUY))
-      .forEach((tm) => this.#tryCheckTrade(tm));
+      .forEach((tm) => {
+        this.#tryCheckTrade(tm);
+      });
 
     // Run plugin to update candidates and also get buy candidates if we can invest
     const { advancedAccess, signals } = this.plugin.trade({
@@ -103,7 +109,9 @@ export class TradeManager {
     if (!this.#config.ViewOnly) {
       signals
         .filter((r) => r.type === SignalType.Buy)
-        .forEach((r) => this.#setBuyState(r));
+        .forEach((r) => {
+          this.#setBuyState(r);
+        });
     }
 
     // Now process trades which are yet to be bought
@@ -112,7 +120,9 @@ export class TradeManager {
     this.tradesDao
       .getList(TradeState.BUY)
       .sort(backTestSorter)
-      .forEach((tm) => this.#tryCheckTrade(tm));
+      .forEach((tm) => {
+        this.#tryCheckTrade(tm);
+      });
 
     this.#finalize();
   }

@@ -1,4 +1,4 @@
-import { StableUSDCoin } from "./Types";
+import { type StableUSDCoin } from "./Types";
 
 export type AutoDetect = -1;
 

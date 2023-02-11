@@ -1,5 +1,5 @@
 import { getPrecision, getPriceMove } from "./Functions";
-import { PriceMove, StableUSDCoin } from "./Types";
+import { PriceMove, type StableUSDCoin } from "./Types";
 
 export class PricesHolder {
   static readonly PRICES_MAX_CAP = 10;
@@ -19,7 +19,9 @@ export class PricesHolder {
   set prices(prices: number[]) {
     const tempHolder = new PricesHolder();
     // Using a temporary PricesHolder to ensure that prices array is of exact length
-    prices?.forEach((p) => tempHolder.pushPrice(p));
+    prices?.forEach((p) => {
+      tempHolder.pushPrice(p);
+    });
     this.p = tempHolder.p;
   }
 

@@ -2,7 +2,7 @@ import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, TradeState } from "./Types";
 import { PricesHolder } from "./IPriceProvider";
 import { DefaultDuration, DefaultRange } from "./Config";
-import { Signal } from "../gas/traders/plugin/api";
+import { type Signal } from "../gas/traders/plugin/api";
 
 export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult;

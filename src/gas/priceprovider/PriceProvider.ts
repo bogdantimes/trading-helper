@@ -1,10 +1,10 @@
 import {
   enumKeys,
-  ICacheProxy,
-  IPriceProvider,
-  PriceHoldersMap,
+  type ICacheProxy,
+  type IPriceProvider,
+  type PriceHoldersMap,
   PricesHolder,
-  StableCoinKeys,
+  type StableCoinKeys,
   StableUSDCoin,
 } from "../../lib/index";
 import {
@@ -12,7 +12,7 @@ import {
   StableCoinMatcher,
   TICK_INTERVAL_MIN,
 } from "../Common";
-import { TraderPlugin } from "../traders/plugin/api";
+import { type TraderPlugin } from "../traders/plugin/api";
 import { CacheProxy } from "../CacheProxy";
 
 type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap };
