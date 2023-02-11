@@ -204,12 +204,12 @@ export class TradeManager {
 
   #finalize(): void {
     // Update balances only if the balance changed
-    // Or if BNBStableBalance is not set
+    // Or if FeesBudget is not set
     const diff = this.#balance - this.#config.StableBalance;
     if (diff !== 0 || this.#config.FeesBudget === AUTO_DETECT) {
-      this.#config = this.configDao.get();
-      this.#config.StableBalance += diff;
-      this.#balance = this.#config.StableBalance;
+      this.#config = this.configDao.get(); // Get the latest config
+      this.#balance = Math.max(this.#config.StableBalance, 0) + diff;
+      this.#config.StableBalance = this.#balance;
       this.#updateFeesBudget();
       this.configDao.set(this.#config);
       Log.info(
