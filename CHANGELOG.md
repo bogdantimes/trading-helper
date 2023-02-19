@@ -1,3 +1,7 @@
+# v3.3.8
+
+* Improved the process ticker to make it synchronized with the exchange ticker.
+
 # v3.3.7
 
 * Fixed a bug with balance auto-detect missing $1 after initialization.
