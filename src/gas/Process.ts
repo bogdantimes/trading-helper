@@ -3,13 +3,16 @@ import { TradeManager } from "./TradeManager";
 import { DefaultStore } from "./Store";
 import { CacheProxy } from "./CacheProxy";
 import { TradesDao } from "./dao/Trades";
-import { TradeState } from "../lib/index";
+import { TradeState, waitTillCurrentSecond } from "../lib/index";
 
 export class Process {
   static tick(): void {
     const manager = TradeManager.default();
 
     try {
+      // first wait to make sure the tick is executed at the beginning of the minute (5s) is good
+      // this ensures that the price data is fresh
+      console.log(`tick waited ${waitTillCurrentSecond(5)} ms`);
       // Updating prices every tick
       // This should be the only place to call `updatePrices`.
       if (manager.updatePrices()) {
