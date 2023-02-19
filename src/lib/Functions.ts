@@ -142,3 +142,12 @@ export function execute({
     throw err;
   }
 }
+
+export function waitTillCurrentSecond(s = 0): number {
+  let waited = 0;
+  while (new Date().getSeconds() !== s) {
+    Utilities.sleep(500);
+    waited += 500;
+  }
+  return waited;
+}
