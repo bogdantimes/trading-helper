@@ -28,6 +28,9 @@ function doGet(): HtmlOutput {
     return (
       HtmlService.createTemplateFromFile(`index`)
         .evaluate()
+        .setFaviconUrl(
+          `https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png`
+        )
         .addMetaTag(
           `viewport`,
           `width=device-width, initial-scale=1, maximum-scale=1`
