@@ -45,12 +45,13 @@ export class ConfigDao implements APIKeysProvider {
   }
 
   set(config: Config): void {
-    if (config.KEY === MASK || config.SECRET === MASK) {
+    const cfg: Config = Object.assign({}, config);
+    if (cfg.KEY === MASK || cfg.SECRET === MASK) {
       const curCfg = this.get();
-      config.KEY = config.KEY === MASK ? curCfg.KEY : config.KEY;
-      config.SECRET = config.SECRET === MASK ? curCfg.SECRET : config.SECRET;
+      cfg.KEY = cfg.KEY === MASK ? curCfg.KEY : cfg.KEY;
+      cfg.SECRET = cfg.SECRET === MASK ? curCfg.SECRET : cfg.SECRET;
     }
-    this.store.set(`Config`, config);
+    this.store.set(`Config`, cfg);
   }
 
   getAPIKeys(): APIKeys {

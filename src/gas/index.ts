@@ -7,6 +7,7 @@ import {
   type AppState,
   type CoinName,
   type Config,
+  f2,
   type InitialSetupParams,
   type IStore,
   MASK,
@@ -163,10 +164,25 @@ function dropCoin(coinName: string): string {
   });
 }
 
-function setConfig(config): string {
+function setConfig(config: Config): { msg: string; config: Config } {
   return catchError(() => {
-    new ConfigDao(DefaultStore).set(config);
-    return `Config updated`;
+    let msg = `Config updated`;
+    const dao = new ConfigDao(DefaultStore);
+    const curConfig = dao.get();
+    if (curConfig.StableBalance <= 0 && config.StableBalance > 0) {
+      // Check the balance is actually present on Spot balance
+      const balance = new Exchange(dao).getBalance(config.StableCoin);
+      if (balance < config.StableBalance) {
+        msg = `\nActual balance on your Binance Spot account is $${f2(
+          balance
+        )}, which is less than $${
+          config.StableBalance
+        } you are trying to set. You might need to transfer money from the Funding account. Check the balances and try again.`;
+        config.StableBalance = curConfig.StableBalance;
+      }
+    }
+    dao.set(config);
+    return { msg, config };
   });
 }
 
