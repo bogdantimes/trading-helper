@@ -126,6 +126,24 @@ export function Settings(params: {
           <FormControlLabel
             control={
               <Switch
+                checked={cfg.AutoReplenishFees}
+                onChange={(e) => {
+                  setCfg({ ...cfg, AutoReplenishFees: e.target.checked });
+                }}
+              />
+            }
+            label="Replenish fees budget"
+            aria-describedby={`auto-replenish-fees-helper-text`}
+          />
+          <FormHelperText id={`auto-replenish-fees-helper-text`}>
+            Automatically replenishes fees budget when it's low. Disable if you
+            prefer to manage fees budget manually.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
                 checked={cfg.SellAtStopLimit}
                 onChange={(e) => {
                   setCfg({ ...cfg, SellAtStopLimit: e.target.checked });

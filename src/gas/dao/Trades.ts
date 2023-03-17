@@ -1,4 +1,4 @@
-import { type IStore, TradeMemo, type TradeState } from "../../lib";
+import { type IStore, TradeMemo, TradeState } from "../../lib";
 import { isNode } from "browser-or-node";
 import { Log } from "../Common";
 
@@ -105,6 +105,16 @@ export class TradesDao {
   getList(state?: TradeState): TradeMemo[] {
     const values = Object.values(this.get());
     return state ? values.filter((trade) => trade.stateIs(state)) : values;
+  }
+
+  /**
+   * Calculate the total assets value based on the current value of all assets in the portfolio.
+   *
+   * @returns {number} The total assets value.
+   */
+  totalAssetsValue(): number {
+    const trades = this.getList(TradeState.BOUGHT);
+    return trades.reduce((total, trade) => total + trade.currentValue, 0);
   }
 
   #set(tm: TradeMemo): void {

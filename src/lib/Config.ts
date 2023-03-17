@@ -21,6 +21,7 @@ export interface Config {
    * FeesBudget is total value of account's BNB in the StableCoin value.
    */
   FeesBudget: number;
+  AutoReplenishFees: boolean;
   /**
    * MarketTrend affects the profit goal and the stop limit aggressiveness.
    * For mark-up trend, it makes the profit goal lower and the stop limit more aggressive.

@@ -20,6 +20,7 @@ import {
   TradeMemo,
   TradeResult,
   TradeState,
+  BNBFee,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -197,7 +198,7 @@ export class TradeManager {
     }
   }
 
-  #updateFeesBudget(): void {
+  #reFetchFeesBudget(): void {
     if (this.#config.KEY && this.#config.SECRET) {
       try {
         const base = this.#config.StableCoin;
@@ -220,12 +221,54 @@ export class TradeManager {
       this.#config = this.configDao.get(); // Get the latest config
       this.#balance = Math.max(this.#config.StableBalance, 0) + diff;
       this.#config.StableBalance = this.#balance;
-      this.#updateFeesBudget();
+      this.#reFetchFeesBudget();
+      // Check if AutoReplenishFeesBudget is enabled
+      if (this.#config.AutoReplenishFees) {
+        try {
+          this.#replenishFeesBudget();
+        } catch (e) {
+          Log.error(new Error(`Failed to replenish fees budget`));
+          Log.error(e);
+        }
+      }
       this.configDao.set(this.#config);
       Log.info(
         `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
       );
       Log.info(`Fees budget: ~$${f2(this.#config.FeesBudget)}`);
+    }
+  }
+
+  #replenishFeesBudget(): void {
+    const stableBalance = this.#balance;
+    const feesBudget = this.#config.FeesBudget;
+    const assetsValue = this.tradesDao.totalAssetsValue();
+    const total = stableBalance + assetsValue;
+
+    if (total <= 0) {
+      return;
+    }
+
+    const approxTrades = Math.max(
+      0,
+      Math.floor(feesBudget / (total * BNBFee * 2))
+    );
+
+    // If the number of covered trades is below 10, buy additional BNB
+    if (approxTrades < 10) {
+      const bnbToBuy =
+        (total * BNBFee * 2 * (10 - approxTrades)) /
+        this.priceProvider.get(this.#config.StableCoin)[BNB]?.currentPrice;
+      Log.alert(
+        `Need to buy ${bnbToBuy} BNB to replenish feesBudget up to 10 trades`
+      );
+      Log.debug({
+        feesBudget,
+        stableBalance,
+        assetsValue,
+        approxTrades,
+        bnbToBuy,
+      });
     }
   }
 
