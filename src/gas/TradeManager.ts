@@ -227,7 +227,10 @@ export class TradeManager {
         try {
           this.#replenishFeesBudget();
         } catch (e) {
-          Log.error(new Error(`Failed to replenish fees budget`));
+          Log.alert(
+            `Failed to replenish fees budget. Feature was disable, check manually and re-enable if issue is resolved.`
+          );
+          this.#config.AutoReplenishFees = false;
           Log.error(e);
         }
       }
