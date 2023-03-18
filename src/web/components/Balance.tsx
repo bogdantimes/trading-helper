@@ -10,6 +10,7 @@ import {
   type StableUSDCoin,
 } from "../../lib/index";
 import Tooltip from "@mui/material/Tooltip/Tooltip";
+import { Alert } from "@mui/material";
 
 type Balances = { [key in StableCoinKeys | `feesBudget`]?: number };
 
@@ -29,10 +30,11 @@ export default function Balance({
   const stableBalance = balances[name] ?? 0;
   const feesBudget = balances.feesBudget ?? 0;
   const total = stableBalance + assetsValue;
-  const approxTrades = Math.max(
-    0,
-    Math.floor(feesBudget / (total * BNBFee * 2))
-  );
+  const feeCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
+  const feesWarn =
+    feeCover < 3
+      ? `Fees budget is low. You can replenish in the Settings.`
+      : ``;
   return (
     <Card sx={{ width: `240px` }}>
       <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
@@ -100,8 +102,22 @@ export default function Balance({
               </b>
             </Tooltip>
             <span style={{ float: `right` }}>
-              ~ {hide ? SHORT_MASK : approxTrades} trade(s)
+              ~ {hide ? SHORT_MASK : feeCover} trade(s)
             </span>
+            {feesWarn && (
+              <Alert
+                icon={false}
+                severity={`warning`}
+                sx={{
+                  padding: 0,
+                  marginTop: `5px`,
+                  fontSize: `0.8rem`,
+                  ".MuiAlert-message": { padding: 0 },
+                }}
+              >
+                {feesWarn}
+              </Alert>
+            )}
           </div>
         </Typography>
       </CardContent>
