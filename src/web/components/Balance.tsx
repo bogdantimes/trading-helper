@@ -11,7 +11,7 @@ import {
   type StableUSDCoin,
 } from "../../lib/index";
 import Tooltip from "@mui/material/Tooltip/Tooltip";
-import { Alert } from "@mui/material";
+import { Alert, Link } from "@mui/material";
 
 type Balances = { [key in StableCoinKeys | `feesBudget`]?: number };
 
@@ -90,8 +90,18 @@ export default function Balance({
           </div>
           <div>
             <Tooltip
-              title="Approximate number of trades w/ fees covered by BNB available in the account. Recommended to keep some BNB on Binance to pay less fees and not accumulate small non-sold balances that are not tracked by Trading Helper."
               arrow
+              title={
+                <Typography fontSize={`0.8rem`}>
+                  Estimated number of BNB-covered trades. Advised to maintain
+                  BNB on Binance Spot account for reduced fees and avoiding
+                  small unsold balances not tracked by Trading Helper. For more
+                  information on BNB fees, visit:{` `}
+                  <Link target={`_blank`} href={`https://binance.com/en/fee`}>
+                    https://binance.com/en/fee
+                  </Link>
+                </Typography>
+              }
             >
               <b
                 style={{
@@ -110,6 +120,7 @@ export default function Balance({
                 icon={false}
                 severity={`warning`}
                 sx={{
+                  textAlign: `center`,
                   padding: 0,
                   marginTop: `5px`,
                   fontSize: `0.8rem`,
