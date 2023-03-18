@@ -258,6 +258,16 @@ export class TradeManager {
     const stable = this.#config.StableCoin;
     const bnbSym = new ExchangeSymbol(BNB, stable);
     const budgetNeeded = total * BNBFee * 2 * (target - curCover);
+
+    if (stableBalance - budgetNeeded < MIN_BUY) {
+      Log.info(
+        `Fees budget cannot be replenished to cover ~${target} trades as free balance is not enough. It needs at least $${f2(
+          budgetNeeded + MIN_BUY
+        )}.`
+      );
+      return;
+    }
+
     const tr = this.exchange.marketBuy(bnbSym, budgetNeeded);
     this.#config.FeesBudget += budgetNeeded;
     Log.alert(
