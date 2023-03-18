@@ -245,31 +245,30 @@ export class TradeManager {
     const assetsValue = this.tradesDao.totalAssetsValue();
     const total = stableBalance + assetsValue;
 
-    if (total <= 0) {
-      return;
-    }
+    if (total <= 0) return;
 
-    const approxTrades = Math.max(
-      0,
-      Math.floor(feesBudget / (total * BNBFee * 2))
+    const curCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
+    // If the number of covered trades is below 3, buy additional BNB to cover 10 trades
+    if (curCover >= 3) return;
+
+    const target = 10;
+    const stable = this.#config.StableCoin;
+    const bnbSym = new ExchangeSymbol(BNB, stable);
+    const budgetNeeded = total * BNBFee * 2 * (target - curCover);
+    const tr = this.exchange.marketBuy(bnbSym, budgetNeeded);
+    this.#config.FeesBudget += budgetNeeded;
+    Log.alert(
+      `Fees budget replenished to cover ~${target} trades. Before: $${f2(
+        feesBudget
+      )}, added: ${tr.quantity} BNB, now: $${f2(this.#config.FeesBudget)}.`
     );
-
-    // If the number of covered trades is below 10, buy additional BNB
-    if (approxTrades < 10) {
-      const bnbToBuy =
-        (total * BNBFee * 2 * (10 - approxTrades)) /
-        this.priceProvider.get(this.#config.StableCoin)[BNB]?.currentPrice;
-      Log.alert(
-        `Need to buy ${bnbToBuy} BNB to replenish feesBudget up to 10 trades`
-      );
-      Log.debug({
-        feesBudget,
-        stableBalance,
-        assetsValue,
-        approxTrades,
-        bnbToBuy,
-      });
-    }
+    Log.debug({
+      feesBudget,
+      stableBalance,
+      assetsValue,
+      curCover,
+      budgetNeeded,
+    });
   }
 
   #setBuyState(r: Signal): void {
