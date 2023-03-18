@@ -243,6 +243,9 @@ export class TradeManager {
   }
 
   #replenishFeesBudget(): void {
+    if (this.#config.ViewOnly) {
+      return;
+    }
     const stableBalance = this.#balance;
     const feesBudget = this.#config.FeesBudget;
     const assetsValue = this.tradesDao.totalAssetsValue();
