@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import CurrencyFormat from "react-currency-format";
 import {
   BNBFee,
+  MINIMUM_FEE_COVERAGE,
   SHORT_MASK,
   type StableCoinKeys,
   type StableUSDCoin,
@@ -32,7 +33,7 @@ export default function Balance({
   const total = stableBalance + assetsValue;
   const feeCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
   const feesWarn =
-    feeCover < 3
+    feeCover < MINIMUM_FEE_COVERAGE
       ? `Fees budget is low. You can replenish in the Settings.`
       : ``;
   return (

@@ -21,6 +21,8 @@ import {
   TradeResult,
   TradeState,
   BNBFee,
+  MINIMUM_FEE_COVERAGE,
+  TARGET_FEE_COVERAGE,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -255,9 +257,9 @@ export class TradeManager {
 
     const curCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
     // If the number of covered trades is below 3, buy additional BNB to cover 10 trades
-    if (curCover >= 3) return;
+    if (curCover >= MINIMUM_FEE_COVERAGE) return;
 
-    const target = 10;
+    const target = TARGET_FEE_COVERAGE;
     const stable = this.#config.StableCoin;
     const bnbSym = new ExchangeSymbol(BNB, stable);
     const budgetNeeded = total * BNBFee * 2 * (target - curCover);

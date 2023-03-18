@@ -49,3 +49,5 @@ export const BNB = `BNB`;
 export const BNBFee = 0.00075;
 export const MIN_BUY = 15;
 export const AUTO_DETECT: AutoDetect = -1;
+export const MINIMUM_FEE_COVERAGE = 3;
+export const TARGET_FEE_COVERAGE = 10;
