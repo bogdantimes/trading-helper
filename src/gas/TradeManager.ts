@@ -277,6 +277,7 @@ export class TradeManager {
     }
     this.#config.FeesBudget += tr.paid;
     this.#balance -= tr.paid;
+    this.#config.StableBalance = this.#balance;
     Log.alert(
       `Fees budget replenished to cover ~${target} trades. Before: $${f2(
         feesBudget
