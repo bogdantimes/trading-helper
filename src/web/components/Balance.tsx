@@ -11,7 +11,7 @@ import {
   type StableUSDCoin,
 } from "../../lib/index";
 import Tooltip from "@mui/material/Tooltip/Tooltip";
-import { Alert, Link } from "@mui/material";
+import { Alert } from "@mui/material";
 
 type Balances = { [key in StableCoinKeys | `feesBudget`]?: number };
 
@@ -34,7 +34,7 @@ export default function Balance({
   const feeCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
   const feesWarn =
     feeCover < MINIMUM_FEE_COVERAGE
-      ? `Fees budget is low. You can replenish in the Settings.`
+      ? `Fees budget is low. You can turn on replenishment in the Settings.`
       : ``;
   return (
     <Card sx={{ width: `240px` }}>
@@ -95,11 +95,7 @@ export default function Balance({
                 <Typography fontSize={`0.8rem`}>
                   Estimated number of BNB-covered trades. Advised to maintain
                   BNB on Binance Spot account for reduced fees and avoiding
-                  small unsold balances not tracked by Trading Helper. For more
-                  information on BNB fees, visit:{` `}
-                  <Link target={`_blank`} href={`https://binance.com/en/fee`}>
-                    https://binance.com/en/fee
-                  </Link>
+                  small unsold balances not tracked by Trading Helper.
                 </Typography>
               }
             >
