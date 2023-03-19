@@ -272,7 +272,11 @@ export class TradeManager {
     }
 
     const tr = this.exchange.marketBuy(bnbSym, budgetNeeded);
-    this.#config.FeesBudget += budgetNeeded;
+    if (!tr.fromExchange) {
+      throw new Error(`Failed to replenish fees budget: ${tr.msg}`);
+    }
+    this.#config.FeesBudget += tr.paid;
+    this.#balance -= tr.paid;
     Log.alert(
       `Fees budget replenished to cover ~${target} trades. Before: $${f2(
         feesBudget
