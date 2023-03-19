@@ -245,13 +245,11 @@ export class TradeManager {
   }
 
   #replenishFeesBudget(): void {
-    if (this.#config.ViewOnly) {
-      return;
-    }
-    const stableBalance = this.#balance;
+    if (this.#config.ViewOnly || this.#balance <= MIN_BUY) return;
+
     const feesBudget = this.#config.FeesBudget;
     const assetsValue = this.tradesDao.totalAssetsValue();
-    const total = stableBalance + assetsValue;
+    const total = this.#balance + assetsValue;
 
     if (total <= 0) return;
 
@@ -260,11 +258,11 @@ export class TradeManager {
     if (curCover >= MINIMUM_FEE_COVERAGE) return;
 
     const target = TARGET_FEE_COVERAGE;
-    const stable = this.#config.StableCoin;
-    const bnbSym = new ExchangeSymbol(BNB, stable);
+    const stableCoin = this.#config.StableCoin;
+    const bnbSym = new ExchangeSymbol(BNB, stableCoin);
     const budgetNeeded = total * BNBFee * 2 * (target - curCover);
 
-    if (stableBalance - budgetNeeded < MIN_BUY) {
+    if (this.#balance - budgetNeeded < MIN_BUY) {
       Log.info(
         `Fees budget cannot be replenished to cover ~${target} trades as free balance is not enough. It needs at least $${f2(
           budgetNeeded + MIN_BUY
@@ -282,7 +280,7 @@ export class TradeManager {
     );
     Log.debug({
       feesBudget,
-      stableBalance,
+      freeBalance: this.#balance,
       assetsValue,
       curCover,
       budgetNeeded,
