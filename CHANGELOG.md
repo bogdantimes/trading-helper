@@ -1,3 +1,11 @@
+# v3.3.9
+
+* Added "Replenish fees budget" setting.
+* Added check for Spot balance when saving the config.
+* Added an "eye" icon to sneak-peek balances when they are hidden.
+* Removed "Market trend" setting.
+* Other minor updates along the way.
+
 # v3.3.8
 
 * Improved the process ticker to make it synchronized with the exchange ticker.

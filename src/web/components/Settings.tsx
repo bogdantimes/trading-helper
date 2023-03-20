@@ -5,12 +5,14 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Divider,
   FormControl,
   FormControlLabel,
   FormHelperText,
   InputAdornment,
   InputLabel,
+  Link,
   MenuItem,
   Select,
   Stack,
@@ -19,10 +21,10 @@ import {
 } from "@mui/material";
 import { circularProgress } from "./Common";
 import {
+  AUTO_DETECT,
   type Config,
   enumKeys,
   f2,
-  MarketTrend,
   StableUSDCoin,
 } from "../../lib";
 
@@ -33,12 +35,11 @@ export function Settings(params: {
 }): JSX.Element {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(``);
-  const [balance, setBalance] = useState(
-    params.config.StableBalance === -1
-      ? ``
-      : f2(params.config.StableBalance).toString()
-  );
+  const [saveMsg, setSaveMsg] = useState(``);
   const [cfg, setCfg] = useState(params.config);
+
+  const sBalance = (b): string => (b === AUTO_DETECT ? `` : `${f2(b)}`);
+  const [balance, setBalance] = useState(sBalance(cfg.StableBalance));
 
   const [initialFbURL, setInitialFbURL] = useState(params.firebaseURL);
   const [newFbURL, setNewFbURL] = useState(params.firebaseURL);
@@ -57,9 +58,8 @@ export function Settings(params: {
 
     setError(``);
 
-    const autoDetect = -1;
-    if (isFinite(+balance) && (+balance === autoDetect || +balance >= 0)) {
-      cfg.StableBalance = balance === `` ? autoDetect : +balance;
+    if (isFinite(+balance) && (+balance === AUTO_DETECT || +balance >= 0)) {
+      cfg.StableBalance = balance === `` ? AUTO_DETECT : +balance;
     } else if (balance !== ``) {
       setError(
         `Balance must be a positive number or empty to auto-detect it from Binance.`
@@ -67,21 +67,25 @@ export function Settings(params: {
       return;
     }
 
+    setSaveMsg(``);
     setIsSaving(true);
     google.script.run
       .withFailureHandler((r) => {
         setIsSaving(false);
         setError(r.message);
       })
-      .withSuccessHandler(() => {
+      .withSuccessHandler((result) => {
         setIsSaving(false);
         setError(``);
-        params.setConfig(cfg);
+        setSaveMsg(result.msg);
+        setBalance(sBalance(result.config.StableBalance));
+        setCfg(result.config);
+        params.setConfig(result.config);
       })
       .setConfig(cfg as any);
   };
 
-  const trend = `Market Trend (${marketTrendLabel[cfg.AutoMarketTrend]})`;
+  const tickIntervalMsg = `The tool internal update interval is 1 minute, so it may take up to 1 minute ⏳ for some changes to take effect.`;
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} sx={{ maxWidth: `400px` }} divider={<Divider />}>
@@ -119,34 +123,41 @@ export function Settings(params: {
             }}
           />
         </Stack>
-        <FormControl fullWidth>
-          <InputLabel id={`trend`}>{trend}</InputLabel>
-          <Select
-            labelId="trend"
-            value={cfg.MarketTrend}
-            label={trend}
-            defaultValue={MarketTrend.SIDEWAYS}
-            onChange={(e) => {
-              setCfg({ ...cfg, MarketTrend: +e.target.value });
-            }}
-            aria-describedby={`trend-helper-text`}
-          >
-            <MenuItem value={-1}>Auto-detect</MenuItem>
-            <MenuItem value={MarketTrend.SIDEWAYS}>
-              {marketTrendLabel[MarketTrend.SIDEWAYS]}
-            </MenuItem>
-            <MenuItem value={MarketTrend.UP}>
-              {marketTrendLabel[MarketTrend.UP]}
-            </MenuItem>
-            <MenuItem value={MarketTrend.DOWN}>
-              {marketTrendLabel[MarketTrend.DOWN]}
-            </MenuItem>
-          </Select>
-          <FormHelperText id={`trend-helper-text`}>
-            Market trend defines some characteristics of the trading algorithm.
-            In general: quicker trades when the market is trending up.
-            Auto-detect is updated every 3 days and uses the BTC price move over
-            the last 3 weeks.
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={cfg.AutoReplenishFees}
+                onChange={(e) => {
+                  setCfg({ ...cfg, AutoReplenishFees: e.target.checked });
+                }}
+              />
+            }
+            label={
+              <>
+                <Chip
+                  label="New"
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                  sx={{ mr: `8px` }}
+                />
+                Replenish fees budget
+              </>
+            }
+            aria-describedby={`auto-replenish-fees-helper-text`}
+          />
+          <FormHelperText id={`auto-replenish-fees-helper-text`}>
+            Automatically replenishes fees budget when it's low using available
+            balance. Disable if you prefer to manage fees budget manually. For
+            more information on BNB fees, visit:{` `}
+            <Link
+              target={`_blank`}
+              rel="noreferrer"
+              href={`https://binance.com/en/fee`}
+            >
+              https://binance.com/en/fee
+            </Link>
           </FormHelperText>
         </FormControl>
         <FormControl>
@@ -228,7 +239,21 @@ export function Settings(params: {
           onChange={(e) => {
             setNewFbURL(e.target.value);
           }}
-          helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. External database is essential only when you switch to a newer version of the tool.`}
+          helperText={
+            <>
+              Firebase Realtime Database can be used as a persistent storage.
+              Provide the URL to seamlessly switch to it. Remove the URL to
+              switch back to the built-in Google Apps Script storage. For more
+              information, visit:{` `}
+              <Link
+                target={`_blank`}
+                rel="noreferrer"
+                href="https://www.google.com/search?q=how+to+create+firebase+realtime+database"
+              >
+                How to create Firebase Realtime Database
+              </Link>
+            </>
+          }
         />
         <Stack spacing={2}>
           <Box alignSelf={`center`} sx={{ position: `relative` }}>
@@ -243,19 +268,11 @@ export function Settings(params: {
             </Button>
             {isSaving && circularProgress}
           </Box>
-          <Alert severity="info">
-            The tool internal update interval is 1 minute, so it may take up to
-            1 minute ⏳ for some changes to take effect.
-          </Alert>
+          {saveMsg && <Alert severity="info">{saveMsg}</Alert>}
+          <Alert severity="info">{tickIntervalMsg}</Alert>
         </Stack>
         {error && <Alert severity="error">{error.toString()}</Alert>}
       </Stack>
     </Box>
   );
 }
-
-const marketTrendLabel = {
-  [MarketTrend.UP]: `Up`,
-  [MarketTrend.DOWN]: `Down`,
-  [MarketTrend.SIDEWAYS]: `Sideways`,
-};

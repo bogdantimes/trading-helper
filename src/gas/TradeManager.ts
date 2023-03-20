@@ -20,6 +20,9 @@ import {
   TradeMemo,
   TradeResult,
   TradeState,
+  BNBFee,
+  MINIMUM_FEE_COVERAGE,
+  TARGET_FEE_COVERAGE,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -197,7 +200,7 @@ export class TradeManager {
     }
   }
 
-  #updateFeesBudget(): void {
+  #reFetchFeesBudget(): void {
     if (this.#config.KEY && this.#config.SECRET) {
       try {
         const base = this.#config.StableCoin;
@@ -220,13 +223,73 @@ export class TradeManager {
       this.#config = this.configDao.get(); // Get the latest config
       this.#balance = Math.max(this.#config.StableBalance, 0) + diff;
       this.#config.StableBalance = this.#balance;
-      this.#updateFeesBudget();
+      this.#reFetchFeesBudget();
+      // Check if AutoReplenishFeesBudget is enabled
+      if (this.#config.AutoReplenishFees) {
+        try {
+          this.#replenishFeesBudget();
+        } catch (e) {
+          Log.alert(
+            `"Replenish fees budget" feature was disable. Check manually and re-enable if issue is resolved.`
+          );
+          this.#config.AutoReplenishFees = false;
+          Log.error(e);
+        }
+      }
       this.configDao.set(this.#config);
       Log.info(
         `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
       );
       Log.info(`Fees budget: ~$${f2(this.#config.FeesBudget)}`);
     }
+  }
+
+  #replenishFeesBudget(): void {
+    if (this.#config.ViewOnly || this.#balance <= MIN_BUY) return;
+
+    const feesBudget = this.#config.FeesBudget;
+    const assetsValue = this.tradesDao.totalAssetsValue();
+    const total = this.#balance + assetsValue;
+
+    if (total <= 0) return;
+
+    const curCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
+    // If the number of covered trades is below 3, buy additional BNB to cover 10 trades
+    if (curCover >= MINIMUM_FEE_COVERAGE) return;
+
+    const target = TARGET_FEE_COVERAGE;
+    const stableCoin = this.#config.StableCoin;
+    const bnbSym = new ExchangeSymbol(BNB, stableCoin);
+    const budgetNeeded = total * BNBFee * 2 * (target - curCover);
+
+    if (this.#balance - budgetNeeded < MIN_BUY) {
+      Log.info(
+        `Fees budget cannot be replenished to cover ~${target} trades as free balance is not enough. It needs at least $${f2(
+          budgetNeeded + MIN_BUY
+        )}.`
+      );
+      return;
+    }
+
+    const tr = this.exchange.marketBuy(bnbSym, budgetNeeded);
+    if (!tr.fromExchange) {
+      throw new Error(`Failed to replenish fees budget: ${tr.msg}`);
+    }
+    this.#config.FeesBudget += tr.paid;
+    this.#balance -= tr.paid;
+    this.#config.StableBalance = this.#balance;
+    Log.alert(
+      `Fees budget replenished to cover ~${target} trades. Before: $${f2(
+        feesBudget
+      )}, added: ${tr.quantity} BNB, now: $${f2(this.#config.FeesBudget)}.`
+    );
+    Log.debug({
+      feesBudget,
+      freeBalance: this.#balance,
+      assetsValue,
+      curCover,
+      budgetNeeded,
+    });
   }
 
   #setBuyState(r: Signal): void {

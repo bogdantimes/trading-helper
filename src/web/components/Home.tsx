@@ -35,19 +35,28 @@ export function Home({
   const config = state.config;
   const assets = state.assets.map(TradeMemo.fromObject);
   const assetsValue = assets.reduce((sum, tm) => sum + tm.currentValue, 0);
+  const [hideBalances, setHideBalances] = useState(config.HideBalances);
 
+  const toggleHideBalances = (): void => {
+    setHideBalances(!hideBalances);
+  };
   return (
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
-        {balanceCard(config, assetsValue)}
-        {assetsCards(assets, config, onAssetDelete)}
+        {balanceCard(config, hideBalances, assetsValue, toggleHideBalances)}
+        {assetsCards(assets, hideBalances, config, onAssetDelete)}
         {candidates(state.candidates)}
       </Grid>
     </>
   );
 }
 
-function balanceCard(config: Config, assetsValue: number): JSX.Element {
+function balanceCard(
+  config: Config,
+  hideBalances: boolean,
+  assetsValue: number,
+  toggleHideBalances: () => void
+): JSX.Element {
   const [hide, setHide] = useState(false);
 
   return (
@@ -74,7 +83,11 @@ function balanceCard(config: Config, assetsValue: number): JSX.Element {
                   feesBudget: config.FeesBudget,
                 }}
                 assetsValue={assetsValue}
-                hide={config.HideBalances}
+                viewOnly={config.ViewOnly}
+                hide={hideBalances}
+                toggleHide={
+                  config.HideBalances ? toggleHideBalances : undefined
+                }
               />
             </Grid>
           </Grid>
@@ -86,6 +99,7 @@ function balanceCard(config: Config, assetsValue: number): JSX.Element {
 
 function assetsCards(
   elems: TradeMemo[],
+  hideBalances: boolean,
   config: Config,
   onAssetDelete?: (coinName: string, noConfirm?: boolean) => void
 ): JSX.Element {
@@ -138,7 +152,12 @@ function assetsCards(
               <Grid container justifyContent="center" spacing={2}>
                 {current.map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <Trade data={t} config={config} onDelete={onAssetDelete} />
+                    <Trade
+                      data={t}
+                      hideBalances={hideBalances}
+                      config={config}
+                      onDelete={onAssetDelete}
+                    />
                   </Grid>
                 ))}
               </Grid>
@@ -149,7 +168,12 @@ function assetsCards(
               <Grid container justifyContent="center" spacing={2}>
                 {sold.map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <Trade data={t} config={config} onDelete={onAssetDelete} />
+                    <Trade
+                      data={t}
+                      hideBalances={hideBalances}
+                      config={config}
+                      onDelete={onAssetDelete}
+                    />
                   </Grid>
                 ))}
               </Grid>

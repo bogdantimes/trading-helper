@@ -5,11 +5,14 @@ import Typography from "@mui/material/Typography";
 import CurrencyFormat from "react-currency-format";
 import {
   BNBFee,
+  MINIMUM_FEE_COVERAGE,
   SHORT_MASK,
   type StableCoinKeys,
   type StableUSDCoin,
 } from "../../lib/index";
 import Tooltip from "@mui/material/Tooltip/Tooltip";
+import { Alert, Box, IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 type Balances = { [key in StableCoinKeys | `feesBudget`]?: number };
 
@@ -18,6 +21,8 @@ interface BalanceProps {
   balances: Balances;
   assetsValue: number;
   hide: boolean;
+  toggleHide?: () => void;
+  viewOnly: boolean;
 }
 
 export default function Balance({
@@ -25,20 +30,41 @@ export default function Balance({
   balances,
   assetsValue,
   hide,
+  toggleHide,
+  viewOnly,
 }: BalanceProps): JSX.Element {
   const stableBalance = balances[name] ?? 0;
   const feesBudget = balances.feesBudget ?? 0;
   const total = stableBalance + assetsValue;
-  const approxTrades = Math.max(
-    0,
-    Math.floor(feesBudget / (total * BNBFee * 2))
-  );
+  const feeCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
+  const feesWarn =
+    !viewOnly && feeCover < MINIMUM_FEE_COVERAGE
+      ? `Fees budget is low. You can turn on replenishment in the Settings.`
+      : ``;
   return (
     <Card sx={{ width: `240px` }}>
       <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
-        <Typography variant="h5">{name}</Typography>
+        <Box
+          style={{
+            display: `flex`,
+            justifyContent: `space-between`,
+            alignItems: `center`,
+          }}
+        >
+          <Typography variant="h5">{name}</Typography>
+          {toggleHide && (
+            <IconButton
+              edge="end"
+              onClick={() => {
+                toggleHide();
+              }}
+            >
+              {hide ? <VisibilityOff /> : <Visibility />}
+            </IconButton>
+          )}
+        </Box>
         <Typography variant="body2" color="text.secondary">
-          <div>
+          <Box>
             <b>Free:</b>
             {stableBalance === -1 && <span> Wait...</span>}
             {hide && <span style={{ float: `right` }}>${SHORT_MASK}</span>}
@@ -53,8 +79,8 @@ export default function Balance({
                 prefix={`$`}
               />
             )}
-          </div>
-          <div>
+          </Box>
+          <Box>
             <b>Assets:</b>
             {hide && <span style={{ float: `right` }}>${SHORT_MASK}</span>}
             {!hide && (
@@ -68,8 +94,8 @@ export default function Balance({
                 prefix={`$`}
               />
             )}
-          </div>
-          <div>
+          </Box>
+          <Box>
             <b>Total:</b>
             {hide ? (
               <span style={{ float: `right` }}>${SHORT_MASK}</span>
@@ -84,11 +110,17 @@ export default function Balance({
                 prefix={`$`}
               />
             )}
-          </div>
-          <div>
+          </Box>
+          <Box>
             <Tooltip
-              title="Approximate number of trades w/ fees covered by BNB available in the account. Recommended to keep some BNB on Binance to pay less fees and not accumulate small non-sold balances that are not tracked by Trading Helper."
               arrow
+              title={
+                <Typography fontSize={`0.8rem`}>
+                  Estimated number of BNB-covered trades. Advised to maintain
+                  BNB on Binance Spot account for reduced fees and avoiding
+                  small unsold balances not tracked by Trading Helper.
+                </Typography>
+              }
             >
               <b
                 style={{
@@ -100,9 +132,24 @@ export default function Balance({
               </b>
             </Tooltip>
             <span style={{ float: `right` }}>
-              ~ {hide ? SHORT_MASK : approxTrades} trade(s)
+              ~ {hide ? SHORT_MASK : feeCover} trade(s)
             </span>
-          </div>
+            {feesWarn && (
+              <Alert
+                icon={false}
+                severity={`warning`}
+                sx={{
+                  textAlign: `center`,
+                  padding: 0,
+                  marginTop: `5px`,
+                  fontSize: `0.8rem`,
+                  ".MuiAlert-message": { padding: 0 },
+                }}
+              >
+                {feesWarn}
+              </Alert>
+            )}
+          </Box>
         </Typography>
       </CardContent>
     </Card>
