@@ -83,6 +83,7 @@ function balanceCard(
                   feesBudget: config.FeesBudget,
                 }}
                 assetsValue={assetsValue}
+                viewOnly={config.ViewOnly}
                 hide={hideBalances}
                 toggleHide={
                   config.HideBalances ? toggleHideBalances : undefined

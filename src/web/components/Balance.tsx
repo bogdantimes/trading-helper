@@ -22,6 +22,7 @@ interface BalanceProps {
   assetsValue: number;
   hide: boolean;
   toggleHide?: () => void;
+  viewOnly: boolean;
 }
 
 export default function Balance({
@@ -30,13 +31,14 @@ export default function Balance({
   assetsValue,
   hide,
   toggleHide,
+  viewOnly,
 }: BalanceProps): JSX.Element {
   const stableBalance = balances[name] ?? 0;
   const feesBudget = balances.feesBudget ?? 0;
   const total = stableBalance + assetsValue;
   const feeCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
   const feesWarn =
-    feeCover < MINIMUM_FEE_COVERAGE
+    !viewOnly && feeCover < MINIMUM_FEE_COVERAGE
       ? `Fees budget is low. You can turn on replenishment in the Settings.`
       : ``;
   return (
