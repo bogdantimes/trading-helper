@@ -89,7 +89,6 @@ export function Settings(params: {
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} sx={{ maxWidth: `400px` }} divider={<Divider />}>
-        {saveMsg && <Alert severity="info">{saveMsg}</Alert>}
         <Stack direction={`row`} spacing={2}>
           <FormControl fullWidth>
             <InputLabel id={`stable-coin`}>Stable Coin</InputLabel>
@@ -269,6 +268,7 @@ export function Settings(params: {
             </Button>
             {isSaving && circularProgress}
           </Box>
+          {saveMsg && <Alert severity="info">{saveMsg}</Alert>}
           <Alert severity="info">{tickIntervalMsg}</Alert>
         </Stack>
         {error && <Alert severity="error">{error.toString()}</Alert>}
