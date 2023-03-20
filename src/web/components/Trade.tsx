@@ -28,6 +28,7 @@ import { type SxProps } from "@mui/system/styleFunctionSx";
 export default function Trade(props: {
   data: TradeMemo;
   config: Config;
+  hideBalances: boolean;
   onDelete?: (coinName: string, noConfirm?: boolean) => void;
 }): JSX.Element {
   const { data: tm, config: cfg, onDelete } = props;
@@ -221,7 +222,7 @@ export default function Trade(props: {
                 <b>
                   {tm.tradeResult.soldPrice ? `Gained: ` : `Current value: `}
                 </b>
-                {cfg.HideBalances ? (
+                {props.hideBalances ? (
                   <span>${SHORT_MASK}</span>
                 ) : (
                   <>

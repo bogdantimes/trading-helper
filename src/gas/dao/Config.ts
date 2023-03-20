@@ -20,6 +20,7 @@ export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.BUSD,
   StableBalance: AUTO_DETECT,
   FeesBudget: AUTO_DETECT,
+  AutoReplenishFees: false,
   SellAtStopLimit: true,
   MarketTrend: AUTO_DETECT,
   AutoMarketTrend: MarketTrend.SIDEWAYS,

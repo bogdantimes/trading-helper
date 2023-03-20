@@ -5,12 +5,14 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Divider,
   FormControl,
   FormControlLabel,
   FormHelperText,
   InputAdornment,
   InputLabel,
+  Link,
   MenuItem,
   Select,
   Stack,
@@ -87,7 +89,6 @@ export function Settings(params: {
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2} sx={{ maxWidth: `400px` }} divider={<Divider />}>
-        {saveMsg && <Alert severity="info">{saveMsg}</Alert>}
         <Stack direction={`row`} spacing={2}>
           <FormControl fullWidth>
             <InputLabel id={`stable-coin`}>Stable Coin</InputLabel>
@@ -122,6 +123,43 @@ export function Settings(params: {
             }}
           />
         </Stack>
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={cfg.AutoReplenishFees}
+                onChange={(e) => {
+                  setCfg({ ...cfg, AutoReplenishFees: e.target.checked });
+                }}
+              />
+            }
+            label={
+              <>
+                <Chip
+                  label="New"
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                  sx={{ mr: `8px` }}
+                />
+                Replenish fees budget
+              </>
+            }
+            aria-describedby={`auto-replenish-fees-helper-text`}
+          />
+          <FormHelperText id={`auto-replenish-fees-helper-text`}>
+            Automatically replenishes fees budget when it's low using available
+            balance. Disable if you prefer to manage fees budget manually. For
+            more information on BNB fees, visit:{` `}
+            <Link
+              target={`_blank`}
+              rel="noreferrer"
+              href={`https://binance.com/en/fee`}
+            >
+              https://binance.com/en/fee
+            </Link>
+          </FormHelperText>
+        </FormControl>
         <FormControl>
           <FormControlLabel
             control={
@@ -201,7 +239,21 @@ export function Settings(params: {
           onChange={(e) => {
             setNewFbURL(e.target.value);
           }}
-          helperText={`Firebase Realtime Database can be used as a persistent storage. Provide the URL to seamlessly switch to it. Remove the URL to switch back to the built-in Google Apps Script storage. External database is essential only when you switch to a newer version of the tool.`}
+          helperText={
+            <>
+              Firebase Realtime Database can be used as a persistent storage.
+              Provide the URL to seamlessly switch to it. Remove the URL to
+              switch back to the built-in Google Apps Script storage. For more
+              information, visit:{` `}
+              <Link
+                target={`_blank`}
+                rel="noreferrer"
+                href="https://www.google.com/search?q=how+to+create+firebase+realtime+database"
+              >
+                How to create Firebase Realtime Database
+              </Link>
+            </>
+          }
         />
         <Stack spacing={2}>
           <Box alignSelf={`center`} sx={{ position: `relative` }}>
@@ -216,6 +268,7 @@ export function Settings(params: {
             </Button>
             {isSaving && circularProgress}
           </Box>
+          {saveMsg && <Alert severity="info">{saveMsg}</Alert>}
           <Alert severity="info">{tickIntervalMsg}</Alert>
         </Stack>
         {error && <Alert severity="error">{error.toString()}</Alert>}
