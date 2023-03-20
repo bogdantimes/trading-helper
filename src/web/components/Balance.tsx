@@ -11,7 +11,8 @@ import {
   type StableUSDCoin,
 } from "../../lib/index";
 import Tooltip from "@mui/material/Tooltip/Tooltip";
-import { Alert } from "@mui/material";
+import { Alert, Box, IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 type Balances = { [key in StableCoinKeys | `feesBudget`]?: number };
 
@@ -20,6 +21,7 @@ interface BalanceProps {
   balances: Balances;
   assetsValue: number;
   hide: boolean;
+  toggleHide?: () => void;
 }
 
 export default function Balance({
@@ -27,6 +29,7 @@ export default function Balance({
   balances,
   assetsValue,
   hide,
+  toggleHide,
 }: BalanceProps): JSX.Element {
   const stableBalance = balances[name] ?? 0;
   const feesBudget = balances.feesBudget ?? 0;
@@ -39,9 +42,27 @@ export default function Balance({
   return (
     <Card sx={{ width: `240px` }}>
       <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
-        <Typography variant="h5">{name}</Typography>
+        <Box
+          style={{
+            display: `flex`,
+            justifyContent: `space-between`,
+            alignItems: `center`,
+          }}
+        >
+          <Typography variant="h5">{name}</Typography>
+          {toggleHide && (
+            <IconButton
+              edge="end"
+              onClick={() => {
+                toggleHide();
+              }}
+            >
+              {hide ? <VisibilityOff /> : <Visibility />}
+            </IconButton>
+          )}
+        </Box>
         <Typography variant="body2" color="text.secondary">
-          <div>
+          <Box>
             <b>Free:</b>
             {stableBalance === -1 && <span> Wait...</span>}
             {hide && <span style={{ float: `right` }}>${SHORT_MASK}</span>}
@@ -56,8 +77,8 @@ export default function Balance({
                 prefix={`$`}
               />
             )}
-          </div>
-          <div>
+          </Box>
+          <Box>
             <b>Assets:</b>
             {hide && <span style={{ float: `right` }}>${SHORT_MASK}</span>}
             {!hide && (
@@ -71,8 +92,8 @@ export default function Balance({
                 prefix={`$`}
               />
             )}
-          </div>
-          <div>
+          </Box>
+          <Box>
             <b>Total:</b>
             {hide ? (
               <span style={{ float: `right` }}>${SHORT_MASK}</span>
@@ -87,8 +108,8 @@ export default function Balance({
                 prefix={`$`}
               />
             )}
-          </div>
-          <div>
+          </Box>
+          <Box>
             <Tooltip
               arrow
               title={
@@ -126,7 +147,7 @@ export default function Balance({
                 {feesWarn}
               </Alert>
             )}
-          </div>
+          </Box>
         </Typography>
       </CardContent>
     </Card>
