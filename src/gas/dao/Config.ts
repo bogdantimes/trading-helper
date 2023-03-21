@@ -17,7 +17,7 @@ export interface APIKeys {
 }
 
 export const DefaultConfig: () => Config = () => ({
-  StableCoin: StableUSDCoin.BUSD,
+  StableCoin: StableUSDCoin.USDT,
   StableBalance: AUTO_DETECT,
   FeesBudget: AUTO_DETECT,
   AutoReplenishFees: false,

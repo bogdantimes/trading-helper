@@ -1,8 +1,8 @@
 import Integer = GoogleAppsScript.Integer;
 
 export enum StableUSDCoin {
-  BUSD = `BUSD`,
   USDT = `USDT`,
+  BUSD = `BUSD`, // TODO: remove once it dies out
 }
 
 export enum OtherStableCoins {
