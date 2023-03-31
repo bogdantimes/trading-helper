@@ -180,7 +180,7 @@ export class TradeMemo extends PricesHolder {
       // hence here we're counting only the part that will be sold
       const qty = this.tradeResult.lotSizeQty || this.tradeResult.quantity;
       // anticipated sell commission percentage
-      const commission = 1.0001;
+      const commission = 1.001;
       return this.currentPrice * qty - this.tradeResult.paid * commission;
     };
     return this.tradeResult.realisedProfit || unrealizedProfit();
