@@ -99,4 +99,5 @@ export type PriceHoldersMap = Record<CoinName, PricesHolder>;
 
 export interface IPriceProvider {
   get: (stableCoin: StableUSDCoin) => PriceHoldersMap;
+  keepAlive: () => void;
 }

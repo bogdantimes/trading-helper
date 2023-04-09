@@ -75,8 +75,12 @@ export class TradeManager {
     return this.priceProvider.update();
   }
 
-  updatePricesDaily(): boolean {
+  updateDailyPrices(): boolean {
     return this.dailyPriceProvider.update();
+  }
+
+  keepDailyPricesAlive(): void {
+    this.dailyPriceProvider.keepAlive();
   }
 
   trade(i = 0): void {

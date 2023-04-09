@@ -13,7 +13,7 @@ import {
   TICK_INTERVAL_MIN,
 } from "../Common";
 import { type TraderPlugin } from "../traders/plugin/api";
-import { CacheProxy } from "../CacheProxy";
+import { CacheProxy, MAX_EXPIRATION } from "../CacheProxy";
 
 type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap };
 
@@ -24,6 +24,8 @@ export class PriceProvider implements IPriceProvider {
   #priceMaps: PriceMaps;
   #maxCap?: number;
   #fillIn?: boolean;
+  // Prices expire in (tick_interval - 5 seconds)
+  #expiration = TICK_INTERVAL_MIN * SECONDS_IN_MIN - 5;
 
   static default(
     plugin = global.TradingHelperLibrary,
@@ -41,6 +43,7 @@ export class PriceProvider implements IPriceProvider {
   ): PriceProvider {
     const provider = new PriceProvider(plugin, cache, 20, false);
     provider.#name = `daily`;
+    provider.#expiration = MAX_EXPIRATION;
     return provider;
   }
 
@@ -104,9 +107,7 @@ export class PriceProvider implements IPriceProvider {
       this.cache.put(this.#getKey(stableCoin), JSON.stringify(map));
     });
 
-    // Prices expire in (tick_interval - 5 seconds)
-    const priceExpiration = TICK_INTERVAL_MIN * SECONDS_IN_MIN - 5;
-    this.cache.put(updatedKey, `true`, priceExpiration);
+    this.cache.put(updatedKey, `true`, this.#expiration);
 
     return updatedPriceMaps;
   }
@@ -132,5 +133,15 @@ export class PriceProvider implements IPriceProvider {
 
   #getKey(stableCoin: string): string {
     return `PriceProvider.${this.#name}.get.${stableCoin}`;
+  }
+
+  keepAlive(): void {
+    const priceMaps = this.#getPriceMapsFromCache();
+    Object.keys(priceMaps).forEach((stableCoin) => {
+      this.cache.put(
+        this.#getKey(stableCoin),
+        JSON.stringify(priceMaps[stableCoin])
+      );
+    });
   }
 }
