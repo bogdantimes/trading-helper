@@ -1,8 +1,8 @@
 import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, TradeState } from "./Types";
 import { PricesHolder } from "./IPriceProvider";
-import { DefaultDuration, DefaultRange } from "./Config";
 import { type Signal } from "../gas/traders/plugin/api";
+import { StandardCommission } from "./Config";
 
 export class TradeMemo extends PricesHolder {
   tradeResult: TradeResult;
@@ -15,31 +15,22 @@ export class TradeMemo extends PricesHolder {
    */
   deleted: boolean;
   /**
-   * The price at which the asset should be sold automatically if {@link SellAtStopLimit}
-   * is true.
+   * Lowest detected price for a trade.
    */
-  private stopLimit = 0;
+  lowestPrice = 0;
+  /**
+   * Highest detected price for a trade.
+   */
+  highestPrice = 0;
+  /**
+   * Target profit price.
+   * @private
+   */
+  private target: number;
   /**
    * The current state of the asset.
    */
   private state: TradeState;
-  /**
-   * X represents the distance on the X axis (time in minutes) that was used for this particular trade.
-   * More detailed information is not available for the open source part of the project.
-   * Some default value is required for trades that existed before the introduction of this feature.
-   */
-  private x: number;
-  /**
-   * Y represents the range on the Y axis (price) that was used for this particular trade.
-   * More detailed information is not available for the open source part of the project.
-   * Some default value is required for trades that existed before the introduction of this feature.
-   */
-  private y: number;
-  /**
-   * Holds the latest imbalance (buyers vs sellers volume) value for this trade.
-   * @private
-   */
-  private i: number;
 
   private _lock: boolean;
 
@@ -97,30 +88,8 @@ export class TradeMemo extends PricesHolder {
     return this.currentPrice * this.tradeResult.quantity;
   }
 
-  get smartExitPrice(): number {
-    return this.stopLimit;
-  }
-
-  set smartExitPrice(price: number) {
-    this.stopLimit = Math.max(0, price);
-  }
-
   setSignalMetadata(r: Signal): void {
-    this.x = r.duration;
-    this.y = r.rangeSize;
-    this.i = r.imbalance;
-  }
-
-  get duration(): number {
-    return Math.max(this.x ?? DefaultDuration, 2000);
-  }
-
-  get range(): number {
-    return Math.max(this.y ?? DefaultRange, 0.05);
-  }
-
-  get imbalance(): number {
-    return this.i || 0;
+    this.target = r.target;
   }
 
   getCoinName(): string {
@@ -180,40 +149,26 @@ export class TradeMemo extends PricesHolder {
       // hence here we're counting only the part that will be sold
       const qty = this.tradeResult.lotSizeQty || this.tradeResult.quantity;
       // anticipated sell commission percentage
-      const commission = 1.001;
-      return this.currentPrice * qty - this.tradeResult.paid * commission;
+      return (
+        (1 - StandardCommission) * (this.currentPrice * qty) -
+        this.tradeResult.paid
+      );
     };
     return this.tradeResult.realisedProfit || unrealizedProfit();
   }
 
   /**
-   * Returns the profit goal for the trade, taking into account the duration and range.
-   * Formula: price * (1 + ((duration / 2000) * range * 0.1))
-   * @example
-   * For a trade with duration 4000 and range 0.14, the profit goal is:
-   * (4000 / 2000) * 0.14 * 0.1 = 0.028 (2.8%)
-   * If price is 10, the profit goal price is 10 * (1 + 0.028) = 10.28
+   * Returns the profit goal for the trade.
    */
   get profitGoalPrice(): number {
-    return this.tradeResult.entryPrice * (1 + this.profitGoal);
+    return this.target;
   }
 
   get profitGoal(): number {
-    return Math.min(15, Math.max(2, this.duration / 2000)) * this.range * 0.1;
-  }
-
-  get stopLimitBottomPrice(): number {
-    return this.tradeResult.entryPrice * (1 - this.range);
+    return this.profitGoalPrice / this.tradeResult.entryPrice - 1;
   }
 
   profitPercent(): number {
     return (this.profit() / this.tradeResult.paid) * 100;
-  }
-
-  stopLimitCrossedDown(): boolean {
-    return (
-      this.currentPrice < this.smartExitPrice &&
-      this.previousPrice >= this.smartExitPrice
-    );
   }
 }

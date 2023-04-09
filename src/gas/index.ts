@@ -18,7 +18,6 @@ import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
-import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
 import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
@@ -203,12 +202,6 @@ function setFirebaseURL(url: string): string {
 function getConfig(): Config {
   const configDao = new ConfigDao(DefaultStore);
   const config = configDao.get();
-  const trendProvider = new TrendProvider(
-    configDao,
-    new Exchange(configDao),
-    CacheProxy
-  );
-  config.AutoMarketTrend = trendProvider.get();
   config.KEY = config.KEY ? MASK : ``;
   config.SECRET = config.SECRET ? MASK : ``;
   return config;

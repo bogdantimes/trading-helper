@@ -61,3 +61,5 @@ export const featureDisabledInfo = (
     </Typography>
   </Alert>
 );
+
+export const ScriptApp = process.env.WEBDEV ? global.google?.script.run : null;

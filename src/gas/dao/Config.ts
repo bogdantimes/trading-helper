@@ -2,7 +2,6 @@ import {
   AUTO_DETECT,
   type Config,
   type IStore,
-  MarketTrend,
   MASK,
   StableUSDCoin,
 } from "../../lib";
@@ -21,13 +20,9 @@ export const DefaultConfig: () => Config = () => ({
   StableBalance: AUTO_DETECT,
   FeesBudget: AUTO_DETECT,
   AutoReplenishFees: false,
-  SellAtStopLimit: true,
-  MarketTrend: AUTO_DETECT,
-  AutoMarketTrend: MarketTrend.SIDEWAYS,
   AdvancedAccess: false,
   ViewOnly: false,
   HideBalances: false,
-  EntryImbalanceCheck: true,
 });
 
 export class ConfigDao implements APIKeysProvider {

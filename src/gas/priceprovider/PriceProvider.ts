@@ -20,33 +20,56 @@ type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap };
 export class PriceProvider implements IPriceProvider {
   static #instance: PriceProvider;
 
+  #name = `default`;
   #priceMaps: PriceMaps;
+  #maxCap?: number;
+  #fillIn?: boolean;
 
-  static default(): PriceProvider {
+  static default(
+    plugin = global.TradingHelperLibrary,
+    cache = CacheProxy
+  ): PriceProvider {
     PriceProvider.#instance =
-      PriceProvider.#instance ||
-      new PriceProvider(global.TradingHelperLibrary, CacheProxy);
+      PriceProvider.#instance || new PriceProvider(plugin, cache);
     return PriceProvider.#instance;
+  }
+
+  // TODO
+  static daily(
+    plugin = global.TradingHelperLibrary,
+    cache = CacheProxy
+  ): PriceProvider {
+    const provider = new PriceProvider(plugin, cache, 20, false);
+    provider.#name = `daily`;
+    return provider;
   }
 
   constructor(
     private readonly plugin: TraderPlugin,
-    private readonly cache: ICacheProxy
+    private readonly cache: ICacheProxy,
+    maxCap?: number,
+    fillIn?: boolean
   ) {
     this.#priceMaps = this.#getPriceMapsFromCache();
+    this.#maxCap = maxCap;
+    this.#fillIn = fillIn;
   }
 
   get(stableCoin: StableUSDCoin): PriceHoldersMap {
     return this.#priceMaps[stableCoin] ?? {};
   }
 
+  getDayPrices(stableCoin: StableUSDCoin): PriceHoldersMap {
+    return this.#priceMaps[stableCoin] ?? {};
+  }
+
   update(): boolean {
     this.#priceMaps = this.#update();
-    return !!this.cache.get(`PriceProvider.updated`);
+    return !!this.cache.get(`PriceProvider.${this.#name}.updated`);
   }
 
   #update(): PriceMaps {
-    const updatedKey = `PriceProvider.updated`;
+    const updatedKey = `PriceProvider.${this.#name}.updated`;
 
     if (this.cache.get(updatedKey)) {
       return this.#priceMaps;
@@ -67,7 +90,7 @@ export class PriceProvider implements IPriceProvider {
       const matcher = new StableCoinMatcher(symbol);
       if (!matcher.stableCoin || !matcher.coinName) return;
 
-      const pricesHolder = new PricesHolder();
+      const pricesHolder = new PricesHolder(this.#maxCap, this.#fillIn);
       pricesHolder.prices =
         this.#priceMaps[matcher.stableCoin]?.[matcher.coinName]?.prices ?? [];
       pricesHolder.pushPrice(prices[symbol]);
@@ -108,6 +131,6 @@ export class PriceProvider implements IPriceProvider {
   }
 
   #getKey(stableCoin: string): string {
-    return `PriceProvider.get.${stableCoin}`;
+    return `PriceProvider.${this.#name}.get.${stableCoin}`;
   }
 }

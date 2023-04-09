@@ -19,7 +19,7 @@ import {
   Switch,
   TextField,
 } from "@mui/material";
-import { circularProgress } from "./Common";
+import { circularProgress, ScriptApp } from "./Common";
 import {
   AUTO_DETECT,
   type Config,
@@ -46,10 +46,9 @@ export function Settings(params: {
 
   const onSave = (): void => {
     if (initialFbURL !== newFbURL) {
-      google.script.run
-        .withSuccessHandler(() => {
-          setInitialFbURL(newFbURL);
-        })
+      ScriptApp?.withSuccessHandler(() => {
+        setInitialFbURL(newFbURL);
+      })
         .withFailureHandler((e) => {
           setError(e.message);
         })
@@ -69,11 +68,10 @@ export function Settings(params: {
 
     setSaveMsg(``);
     setIsSaving(true);
-    google.script.run
-      .withFailureHandler((r) => {
-        setIsSaving(false);
-        setError(r.message);
-      })
+    ScriptApp?.withFailureHandler((r) => {
+      setIsSaving(false);
+      setError(r.message);
+    })
       .withSuccessHandler((result) => {
         setIsSaving(false);
         setError(``);
@@ -158,25 +156,6 @@ export function Settings(params: {
             >
               https://binance.com/en/fee
             </Link>
-          </FormHelperText>
-        </FormControl>
-        <FormControl>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={cfg.SellAtStopLimit}
-                onChange={(e) => {
-                  setCfg({ ...cfg, SellAtStopLimit: e.target.checked });
-                }}
-              />
-            }
-            label="Smart exit"
-            aria-describedby={`smart-exit-helper-text`}
-          />
-          <FormHelperText id={`smart-exit-helper-text`}>
-            Sell automatically when smart exit is <b>crossed down</b> and there
-            are <b>no</b> buyers to support the price. Recommended to always
-            keep enabled. Disable only if you need to hold the assets.
           </FormHelperText>
         </FormControl>
         <FormControl>

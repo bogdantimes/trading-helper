@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useState } from "react";
-import Trade from "./Trade";
 import {
   Chip,
   Divider,
@@ -12,7 +11,6 @@ import {
   Typography,
 } from "@mui/material";
 import SemiCircleProgressBar from "react-progressbar-semicircle";
-import Balance from "./Balance";
 import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   type AppState,
@@ -24,6 +22,8 @@ import {
   PriceMove,
   TradeMemo,
 } from "../../lib";
+import CryptoCard from "./CryptoCard";
+import BalanceCard from "./BalanceCard";
 
 export function Home({
   state,
@@ -76,19 +76,7 @@ function balanceCard(
         <Grid item xs={12}>
           <Grid container justifyContent="center" spacing={2}>
             <Grid item>
-              <Balance
-                name={config.StableCoin}
-                balances={{
-                  [config.StableCoin]: config.StableBalance,
-                  feesBudget: config.FeesBudget,
-                }}
-                assetsValue={assetsValue}
-                viewOnly={config.ViewOnly}
-                hide={hideBalances}
-                toggleHide={
-                  config.HideBalances ? toggleHideBalances : undefined
-                }
-              />
+              <BalanceCard />
             </Grid>
           </Grid>
         </Grid>
@@ -107,7 +95,6 @@ function assetsCards(
 
   const sorted = elems.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1));
   const current = sorted.filter((t) => t.currentValue);
-  const sold = sorted.filter((t) => !t.currentValue);
 
   return (
     <>
@@ -152,28 +139,7 @@ function assetsCards(
               <Grid container justifyContent="center" spacing={2}>
                 {current.map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <Trade
-                      data={t}
-                      hideBalances={hideBalances}
-                      config={config}
-                      onDelete={onAssetDelete}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-          )}
-          {!!sold.length && (
-            <Grid item xs={12}>
-              <Grid container justifyContent="center" spacing={2}>
-                {sold.map((t) => (
-                  <Grid key={t.getCoinName()} item>
-                    <Trade
-                      data={t}
-                      hideBalances={hideBalances}
-                      config={config}
-                      onDelete={onAssetDelete}
-                    />
+                    <CryptoCard tm={t} cfg={config} />
                   </Grid>
                 ))}
               </Grid>

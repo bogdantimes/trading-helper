@@ -11,12 +11,13 @@
         "gpush": "npm run build && clasp push -P ./apps-script -f",
         "gstart": "clasp push -P ./apps-script -w -f",
         "gbuild": "tsc -noEmit --project ./ && node gas-build.js",
-        "start": "parcel src/web/index.html --dist-dir ./apps-script",
+        "start": "cross-env WEBDEV=1 parcel src/web/index.html --dist-dir ./apps-script",
         "report": "parcel build src/web/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
         "build": "cross-env LOG=DEBUG npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script",
         "prod": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
         "lint": "eslint --fix --ext .ts,.tsx ./src",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "gpush-all": "cross-env LOG=DEBUG npm run build && clasp push -P ./dev -f && clasp push -P ./dev2 -f && clasp push -P ./chz -f && clasp push -P ./btc -f && clasp push -P ./usdt -f"
     },
     "devDependencies": {
         "@google/clasp": "2.4.2",
@@ -42,6 +43,7 @@
         "husky": "8.0.3",
         "parcel": "2.8.3",
         "prettier": "2.8.5",
+        "process": "^0.11.10",
         "typescript": "5.0.2"
     },
     "author": "Bohdan Kovalov",

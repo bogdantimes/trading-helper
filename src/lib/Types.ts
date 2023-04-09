@@ -80,14 +80,6 @@ export enum PriceMove {
   STRONG_UP,
 }
 
-export interface MarketMove {
-  [PriceMove.STRONG_DOWN]: number;
-  [PriceMove.DOWN]: number;
-  [PriceMove.NEUTRAL]: number;
-  [PriceMove.UP]: number;
-  [PriceMove.STRONG_UP]: number;
-}
-
 export interface InitialSetupParams {
   dbURL: string;
   binanceAPIKey?: string;
@@ -99,11 +91,6 @@ export interface ICacheProxy {
   get: (key: string) => string | null;
   put: (key: string, value: string, expirationInSeconds?: Integer) => void;
   remove: (key: string) => void;
-}
-
-export enum PriceAction {
-  NONE,
-  DOUBLE_TOP,
 }
 
 export interface IStore {
@@ -142,6 +129,7 @@ export enum Key {
   ATHTime,
   IMBALANCE,
   IS_READY,
+  MID,
 }
 
 export enum Bit {
@@ -172,7 +160,6 @@ export interface PriceChannelData {
   [Key.STRENGTH]: number;
   [Key.ATH]: number;
   [Key.ATHTime]: number;
-  [Key.IMBALANCE]: number;
   [Key.IS_READY]: Bit;
 }
 
