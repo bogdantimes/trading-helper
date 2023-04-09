@@ -62,4 +62,4 @@ export const featureDisabledInfo = (
   </Alert>
 );
 
-export const ScriptApp = process.env.WEBDEV ? global.google?.script.run : null;
+export const ScriptApp = process.env.WEBDEV ? null : google.script.run;
