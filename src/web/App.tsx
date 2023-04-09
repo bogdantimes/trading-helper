@@ -25,8 +25,8 @@ import { InitialSetup } from "./components/InitialSetup";
 import { type AppState } from "../lib";
 import Terminal, { ColorMode } from "react-terminal-ui";
 import { DefaultConfig } from "../gas/dao/Config";
-import { fakeState } from "./FakeState";
 import { ScriptApp } from "./components/Common";
+import useWebSocket from "./useWebSocket";
 
 function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
   return {
@@ -66,11 +66,16 @@ export default function App(): JSX.Element {
     };
   }, [initialSetup]);
 
+  const data = process.env.WEBDEV ? useWebSocket(`ws://localhost:3000`) : null;
+
+  useEffect(() => {
+    if (data) {
+      handleState(data);
+    }
+  }, [data]);
+
   function initialFetch(): void {
     setFetchingData(true);
-    if (process.env.WEBDEV) {
-      handleState(fakeState as any);
-    }
     ScriptApp?.withSuccessHandler(handleState)
       .withFailureHandler((resp) => {
         setFetchingData(false);

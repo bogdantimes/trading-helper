@@ -89,6 +89,7 @@ export class TradeManager {
     // First process !BUY state assets (some might get sold and free up $)
     trades
       .filter((tm) => !tm.stateIs(TradeState.BUY))
+      .sort(backTestSorter)
       .forEach((tm) => {
         this.#tryCheckTrade(tm);
       });
@@ -295,9 +296,14 @@ export class TradeManager {
     this.tradesDao.update(
       r.coin,
       (tm) => {
-        tm.setState(TradeState.BUY);
         tm.setSignalMetadata(r);
         tm.tradeResult.symbol = symbol;
+        tm.highestPrice = tm.currentPrice;
+        tm.lowestPrice = floorToOptimalGrid(
+          tm.currentPrice,
+          this.exchange.getPricePrecision(symbol)
+        ).result;
+        tm.setState(TradeState.BUY);
         return tm;
       },
       () => {
