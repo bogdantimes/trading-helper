@@ -44,7 +44,7 @@ export function Home({
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
         {balanceCard(config, hideBalances, assetsValue, toggleHideBalances)}
-        {assetsCards(assets, hideBalances, config, onAssetDelete)}
+        {assetsCards(assets, hideBalances, config)}
         {candidates(state.candidates)}
       </Grid>
     </>
@@ -88,8 +88,7 @@ function balanceCard(
 function assetsCards(
   elems: TradeMemo[],
   hideBalances: boolean,
-  config: Config,
-  onAssetDelete?: (coinName: string, noConfirm?: boolean) => void
+  config: Config
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
@@ -134,10 +133,10 @@ function assetsCards(
               </Grid>
             </Grid>
           )}
-          {!!current.length && (
+          {!!sorted.length && (
             <Grid item xs={12}>
               <Grid container justifyContent="center" spacing={2}>
-                {current.map((t) => (
+                {sorted.map((t) => (
                   <Grid key={t.getCoinName()} item>
                     <CryptoCard tm={t} cfg={config} />
                   </Grid>

@@ -7,22 +7,6 @@ import {
   Popover,
   Button,
 } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-
-const theme = createTheme({
-  components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: `1rem`,
-          width: `100%`,
-          textAlign: `left`,
-          boxShadow: `0 4px 6px rgba(0,0,0,0.1)`,
-        },
-      },
-    },
-  },
-});
 
 const InAssetsPopup = ({ anchorEl, handleClose }): JSX.Element => (
   <Popover
@@ -96,7 +80,7 @@ const BalanceCard = (): JSX.Element => {
   };
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <Card>
         <CardContent>
           <Box
@@ -138,7 +122,7 @@ const BalanceCard = (): JSX.Element => {
         handleClose={handleAssetsClose}
       />
       <PLPopup anchorEl={plAnchorEl} handleClose={handlePLClose} />
-    </ThemeProvider>
+    </>
   );
 };
 
