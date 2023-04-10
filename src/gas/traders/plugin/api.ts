@@ -10,14 +10,7 @@ import {
 import { type ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
-  trade: (context: {
-    stableCoin: StableUSDCoin;
-    dailyPrices: PriceHoldersMap;
-    channelsDao: ChannelsDao;
-    prices: PriceHoldersMap;
-    provideSignals: number;
-    I: number;
-  }) => PluginResult;
+  trade: (context: PluginContext) => PluginResult;
   getPrices: () => PriceMap;
   getCandidates: (channelsDao: ChannelsDao) => Record<string, PriceChannelData>;
   getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo | undefined;

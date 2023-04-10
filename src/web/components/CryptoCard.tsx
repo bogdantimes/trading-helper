@@ -73,7 +73,7 @@ const CryptoCard = ({ cfg, tm }: Params) => {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center">
             <Avatar
-              src={`https://s2.coinmarketcap.com/static/img/coins/64x64/${tm.getCoinName()}.png`}
+              src={`/static/images/avatar/1.jpg`}
               alt={coinName}
               sx={{ marginRight: 1 }}
             />
