@@ -1,4 +1,6 @@
 import Integer = GoogleAppsScript.Integer;
+import { enumKeys } from "./Functions";
+import { type CoinName } from "./IPriceProvider";
 
 export enum StableUSDCoin {
   USDT = `USDT`,
@@ -26,14 +28,14 @@ export class ExchangeSymbol {
   readonly quantityAsset: string;
   readonly priceAsset: string;
 
-  constructor(quantityAsset: string, priceAsset: string) {
-    if (!quantityAsset) {
-      throw Error(`Invalid quantityAsset: "${quantityAsset}"`);
+  constructor(coinName: string, priceAsset: string) {
+    if (!coinName) {
+      throw Error(`Invalid quantityAsset: "${coinName}"`);
     }
     if (!priceAsset) {
       throw Error(`Invalid priceAsset: "${priceAsset}"`);
     }
-    this.quantityAsset = quantityAsset.toUpperCase();
+    this.quantityAsset = coinName.toUpperCase();
     this.priceAsset = priceAsset.toUpperCase();
   }
 
@@ -184,4 +186,32 @@ export interface SymbolInfo {
 
 export interface ExchangeInfo {
   symbols: SymbolInfo[];
+}
+
+export interface IChannelsDao {
+  getAll: () => Record<string, PriceChannelData>;
+  get: (coin: CoinName) => PriceChannelData;
+  set: (coin: Coin, data: PriceChannelData) => void;
+  setAll: (data: Record<string, PriceChannelData>) => void;
+  delete: (coin: Coin) => void;
+}
+
+export class StableCoinMatcher {
+  private readonly symbol: string;
+  private readonly match: RegExpMatchArray | null;
+
+  constructor(symbol: string) {
+    this.symbol = symbol.toUpperCase();
+    this.match = this.symbol.match(
+      new RegExp(`^(\\w+)(${enumKeys(StableUSDCoin).join(`|`)})$`)
+    );
+  }
+
+  get coinName(): CoinName | null {
+    return this.match ? this.match[1] : null;
+  }
+
+  get stableCoin(): StableUSDCoin | null {
+    return this.match ? (this.match[2] as StableUSDCoin) : null;
+  }
 }

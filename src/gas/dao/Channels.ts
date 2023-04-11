@@ -1,6 +1,7 @@
 import {
   type Coin,
   type CoinName,
+  type IChannelsDao,
   type IStore,
   type PriceChannelData,
 } from "../../lib";
@@ -8,7 +9,7 @@ import { isNode } from "browser-or-node";
 
 const PriceChannelDataKey = `ChannelData`;
 
-export class ChannelsDao {
+export class ChannelsDao implements IChannelsDao {
   private memCache: Record<string, PriceChannelData>;
 
   constructor(private readonly store: IStore) {}

@@ -5,15 +5,12 @@ import {
   type PriceHoldersMap,
   PricesHolder,
   type StableCoinKeys,
+  StableCoinMatcher,
   StableUSDCoin,
 } from "../../lib/index";
-import {
-  SECONDS_IN_MIN,
-  StableCoinMatcher,
-  TICK_INTERVAL_MIN,
-} from "../Common";
+import { SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "../Common";
 import { type TraderPlugin } from "../traders/plugin/api";
-import { CacheProxy, MAX_EXPIRATION } from "../CacheProxy";
+import { CacheProxy } from "../CacheProxy";
 
 type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap };
 
@@ -22,10 +19,10 @@ export class PriceProvider implements IPriceProvider {
 
   #name = `default`;
   #priceMaps: PriceMaps;
-  #maxCap?: number;
-  #fillIn?: boolean;
   // Prices expire in (tick_interval - 5 seconds)
   #expiration = TICK_INTERVAL_MIN * SECONDS_IN_MIN - 5;
+  readonly #maxCap?: number;
+  readonly #fillIn?: boolean;
 
   static default(
     plugin = global.TradingHelperLibrary,
@@ -34,17 +31,6 @@ export class PriceProvider implements IPriceProvider {
     PriceProvider.#instance =
       PriceProvider.#instance || new PriceProvider(plugin, cache);
     return PriceProvider.#instance;
-  }
-
-  // TODO
-  static daily(
-    plugin = global.TradingHelperLibrary,
-    cache = CacheProxy
-  ): PriceProvider {
-    const provider = new PriceProvider(plugin, cache, 20, false);
-    provider.#name = `daily`;
-    provider.#expiration = MAX_EXPIRATION;
-    return provider;
   }
 
   constructor(
@@ -62,13 +48,15 @@ export class PriceProvider implements IPriceProvider {
     return this.#priceMaps[stableCoin] ?? {};
   }
 
-  getDayPrices(stableCoin: StableUSDCoin): PriceHoldersMap {
-    return this.#priceMaps[stableCoin] ?? {};
-  }
-
   update(): boolean {
     this.#priceMaps = this.#update();
     return !!this.cache.get(`PriceProvider.${this.#name}.updated`);
+  }
+
+  setAll(priceMaps: PriceMaps) {
+    if (priceMaps && Object.keys(priceMaps).length > 0) {
+      this.#saveMaps(priceMaps);
+    }
   }
 
   #update(): PriceMaps {
@@ -102,14 +90,18 @@ export class PriceProvider implements IPriceProvider {
       priceMap && (priceMap[matcher.coinName] = pricesHolder);
     });
 
-    Object.keys(updatedPriceMaps).forEach((stableCoin) => {
-      const map = updatedPriceMaps[stableCoin as StableUSDCoin];
-      this.cache.put(this.#getKey(stableCoin), JSON.stringify(map));
-    });
+    this.#saveMaps(updatedPriceMaps);
 
     this.cache.put(updatedKey, `true`, this.#expiration);
 
     return updatedPriceMaps;
+  }
+
+  #saveMaps(priceMaps: PriceMaps) {
+    Object.keys(priceMaps).forEach((stableCoin) => {
+      const map = priceMaps[stableCoin as StableUSDCoin];
+      this.cache.put(this.#getKey(stableCoin), JSON.stringify(map));
+    });
   }
 
   #getPriceMapsFromCache(): PriceMaps {
@@ -136,12 +128,6 @@ export class PriceProvider implements IPriceProvider {
   }
 
   keepAlive(): void {
-    const priceMaps = this.#getPriceMapsFromCache();
-    Object.keys(priceMaps).forEach((stableCoin) => {
-      this.cache.put(
-        this.#getKey(stableCoin),
-        JSON.stringify(priceMaps[stableCoin])
-      );
-    });
+    this.#saveMaps(this.#getPriceMapsFromCache());
   }
 }

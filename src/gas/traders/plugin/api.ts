@@ -1,18 +1,18 @@
 import {
   type CoinName,
   type ExchangeSymbol,
+  type IChannelsDao,
   type PriceChannelData,
   type PriceHoldersMap,
   type PriceMap,
   type StableUSDCoin,
   type SymbolInfo,
 } from "../../../lib/index";
-import { type ChannelsDao } from "../../dao/Channels";
 
 export interface TraderPlugin {
   trade: (context: PluginContext) => PluginResult;
   getPrices: () => PriceMap;
-  getCandidates: (channelsDao: ChannelsDao) => Record<string, PriceChannelData>;
+  getCandidates: (dao: IChannelsDao) => Record<string, PriceChannelData>;
   getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo | undefined;
 }
 
@@ -29,14 +29,11 @@ export interface PluginResult {
 
 export interface PluginContext {
   prices: PriceHoldersMap;
-  dailyPrices: PriceHoldersMap;
-  channelsDao: ChannelsDao;
   stableCoin: StableUSDCoin;
   /**
    * provideSignals - whether the plugin caller is interested in signals.
    */
   provideSignals: number;
-  I: number;
 }
 
 export interface Signal {

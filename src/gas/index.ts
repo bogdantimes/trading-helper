@@ -211,9 +211,9 @@ function getConfig(): Config {
  * Returns the aggregated state for the UI:
  * trades, config, statistics, candidates
  */
+const plugin: TraderPlugin = global.TradingHelperLibrary;
 function getState(): AppState {
   return catchError<AppState>(() => {
-    const plugin: TraderPlugin = global.TradingHelperLibrary;
     return {
       config: getConfig(),
       firebaseURL: FirebaseStore.url,

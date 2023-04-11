@@ -1,4 +1,3 @@
-import { type CoinName, enumKeys, StableUSDCoin } from "../lib";
 import { isNode } from "browser-or-node";
 import getEmailTemplate from "./utils/getEmailTemplate";
 
@@ -63,26 +62,6 @@ export class Log {
         // TODO: communicate to user over the app UI
       }
     }
-  }
-}
-
-export class StableCoinMatcher {
-  private readonly symbol: string;
-  private readonly match: RegExpMatchArray | null;
-
-  constructor(symbol: string) {
-    this.symbol = symbol.toUpperCase();
-    this.match = this.symbol.match(
-      new RegExp(`^(\\w+)(${enumKeys(StableUSDCoin).join(`|`)})$`)
-    );
-  }
-
-  get coinName(): CoinName | null {
-    return this.match ? this.match[1] : null;
-  }
-
-  get stableCoin(): StableUSDCoin | null {
-    return this.match ? (this.match[2] as StableUSDCoin) : null;
   }
 }
 

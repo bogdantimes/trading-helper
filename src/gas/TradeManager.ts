@@ -46,11 +46,9 @@ export class TradeManager {
     const statistics = new Statistics(DefaultStore);
     const tradesDao = new TradesDao(DefaultStore);
     const priceProvider = PriceProvider.default();
-    const dailyPriceProvider = PriceProvider.daily();
     const channelsDao = new ChannelsDao(DefaultStore);
     return new TradeManager(
       priceProvider,
-      dailyPriceProvider,
       tradesDao,
       configDao,
       channelsDao,
@@ -62,7 +60,6 @@ export class TradeManager {
 
   constructor(
     private readonly priceProvider: PriceProvider,
-    private readonly dailyPriceProvider: PriceProvider,
     private readonly tradesDao: TradesDao,
     private readonly configDao: ConfigDao,
     private readonly channelsDao: ChannelsDao,
@@ -73,14 +70,6 @@ export class TradeManager {
 
   updatePrices(): boolean {
     return this.priceProvider.update();
-  }
-
-  updateDailyPrices(): boolean {
-    return this.dailyPriceProvider.update();
-  }
-
-  keepDailyPricesAlive(): void {
-    this.dailyPriceProvider.keepAlive();
   }
 
   trade(i = 0): void {
@@ -100,12 +89,9 @@ export class TradeManager {
 
     // Run plugin to update candidates and also get buy candidates if we can invest
     const { advancedAccess, signals } = this.plugin.trade({
-      channelsDao: this.channelsDao,
       prices: this.priceProvider.get(this.#config.StableCoin),
-      dailyPrices: this.dailyPriceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
       provideSignals: this.#getMoneyToInvest() > 0 ? this.#canInvest : 0,
-      I: i,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
