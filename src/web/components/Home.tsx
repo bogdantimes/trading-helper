@@ -24,7 +24,7 @@ import {
   TradeMemo,
 } from "../../lib";
 import CryptoCard from "./CryptoCard";
-import BalanceCard from "./BalanceCard";
+import Balance from "./Balance";
 
 export function Home({
   state,
@@ -77,7 +77,19 @@ function balanceCard(
         <Grid item xs={12}>
           <Grid container justifyContent="center" spacing={2}>
             <Grid item>
-              <BalanceCard />
+              <Balance
+                name={config.StableCoin}
+                balances={{
+                  [config.StableCoin]: config.StableBalance,
+                  feesBudget: config.FeesBudget,
+                }}
+                assetsValue={assetsValue}
+                viewOnly={config.ViewOnly}
+                hide={hideBalances}
+                toggleHide={
+                  config.HideBalances ? toggleHideBalances : undefined
+                }
+              />
             </Grid>
           </Grid>
         </Grid>

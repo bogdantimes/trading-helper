@@ -120,7 +120,7 @@ const CryptoCard = ({ cfg, tm }: Params) => {
             {isSold ? `Sold for:` : `Current:`}
           </Typography>
           <Typography variant="body2">
-            ~{displayCurrentValue} {cfg.StableCoin}
+            {displayCurrentValue} {cfg.StableCoin}
           </Typography>
         </Box>
       </CardContent>
