@@ -31,7 +31,6 @@ import {
   SignalType,
   type TraderPlugin,
 } from "./traders/plugin/api";
-import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
 
 export class TradeManager {
@@ -46,12 +45,10 @@ export class TradeManager {
     const statistics = new Statistics(DefaultStore);
     const tradesDao = new TradesDao(DefaultStore);
     const priceProvider = PriceProvider.default();
-    const channelsDao = new ChannelsDao(DefaultStore);
     return new TradeManager(
       priceProvider,
       tradesDao,
       configDao,
-      channelsDao,
       exchange,
       statistics,
       global.TradingHelperLibrary
@@ -62,7 +59,6 @@ export class TradeManager {
     private readonly priceProvider: PriceProvider,
     private readonly tradesDao: TradesDao,
     private readonly configDao: ConfigDao,
-    private readonly channelsDao: ChannelsDao,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
     private readonly plugin: TraderPlugin
@@ -72,7 +68,7 @@ export class TradeManager {
     return this.priceProvider.update();
   }
 
-  trade(i = 0): void {
+  trade(step: number): void {
     this.#prepare();
 
     const trades = this.tradesDao.getList();
@@ -92,6 +88,7 @@ export class TradeManager {
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
       provideSignals: this.#getMoneyToInvest() > 0 ? this.#canInvest : 0,
+      I: step,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
@@ -122,12 +119,17 @@ export class TradeManager {
 
   buy(coin: CoinName): void {
     this.#prepare();
-    const ch = this.channelsDao.get(coin);
-    this.#setBuyState({
-      type: SignalType.Buy,
-      coin,
-      target: ch?.[Key.MAX],
-    });
+    const price = this.priceProvider.get(this.#config.StableCoin)[coin]
+      ?.currentPrice;
+    if (price) {
+      this.#setBuyState({
+        type: SignalType.Buy,
+        coin,
+        target: price * 1.02,
+      });
+    } else {
+      throw new Error(`Unknown coin ${coin}: no price information found`);
+    }
   }
 
   sell(coin: CoinName): void {
@@ -155,7 +157,7 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
-    const cs = this.plugin.getCandidates(this.channelsDao);
+    const cs = this.plugin.getCandidates().selected;
     this.#optimalInvestRatio = Math.floor(
       Math.max(1, Math.min(3, Object.keys(cs).length / 3))
     );
@@ -370,9 +372,9 @@ export class TradeManager {
 
   #processBoughtState(tm: TradeMemo): void {
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
+    tm.support = this.#getSupportLevel(tm);
 
-    const support = this.channelsDao.get(tm.getCoinName())[Key.MIN];
-    if (tm.currentPrice < support) {
+    if (tm.currentPrice < tm.support) {
       tm.setState(TradeState.SELL);
       return;
     }
@@ -386,10 +388,18 @@ export class TradeManager {
     }
   }
 
+  #getSupportLevel(tm: TradeMemo) {
+    // -10% as a safeguard if no candidate info
+    return (
+      this.plugin.getCandidates().all[tm.getCoinName()]?.[Key.MIN] ||
+      tm.tradeResult.entryPrice * 0.9
+    );
+  }
+
   #getImbalance(tm: TradeMemo): { imbalance: number; precision: number } {
     const symbol = tm.tradeResult.symbol;
     const precision = this.exchange.getPricePrecision(symbol);
-    const bidCutOffPrice = this.channelsDao.get(tm.getCoinName())[Key.MIN];
+    const bidCutOffPrice = tm.support;
 
     // calculate how many records for imbalance we need for this cut off price
     const step = 1 / Math.pow(10, precision);

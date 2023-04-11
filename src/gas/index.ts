@@ -16,7 +16,6 @@ import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
-import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
 import { Updater, UpgradeDone } from "./Updater";
 import { type TraderPlugin } from "./traders/plugin/api";
@@ -218,7 +217,7 @@ function getState(): AppState {
       config: getConfig(),
       firebaseURL: FirebaseStore.url,
       info: new Statistics(DefaultStore).getAll(),
-      candidates: plugin.getCandidates(new ChannelsDao(DefaultStore)),
+      candidates: plugin.getCandidates().selected,
       assets: new TradesDao(DefaultStore)
         .getList()
         .filter((a) => a.currentValue > 0 || a.tradeResult.soldPrice > 0),
@@ -281,5 +280,10 @@ global.upgrade = () => {
     const result = Updater.upgrade();
     result.includes(UpgradeDone) && startAllProcesses();
     return result;
+  });
+};
+global.getAllCandidates = () => {
+  return catchError(() => {
+    return plugin.getCandidates().all;
   });
 };

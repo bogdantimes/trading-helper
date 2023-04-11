@@ -1,8 +1,7 @@
 import {
+  type Candidates,
   type CoinName,
   type ExchangeSymbol,
-  type IChannelsDao,
-  type PriceChannelData,
   type PriceHoldersMap,
   type PriceMap,
   type StableUSDCoin,
@@ -12,7 +11,7 @@ import {
 export interface TraderPlugin {
   trade: (context: PluginContext) => PluginResult;
   getPrices: () => PriceMap;
-  getCandidates: (dao: IChannelsDao) => Record<string, PriceChannelData>;
+  getCandidates: () => Candidates;
   getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo | undefined;
 }
 
@@ -34,6 +33,10 @@ export interface PluginContext {
    * provideSignals - whether the plugin caller is interested in signals.
    */
   provideSignals: number;
+  /**
+   * Step number (used only for back-testing)
+   */
+  I: number;
 }
 
 export interface Signal {

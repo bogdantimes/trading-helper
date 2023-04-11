@@ -17,7 +17,7 @@ export class Process {
       // This should be the only place to call `updatePrices`.
       if (manager.updatePrices()) {
         CacheProxy.remove(`OutageCounter`);
-        manager.trade();
+        manager.trade(-1);
       } else {
         const outageCounter = +(CacheProxy.get(`OutageCounter`) ?? 0) + 1;
         if (outageCounter === 10 || outageCounter % 30 === 0) {

@@ -146,7 +146,7 @@ export enum ChannelState {
   TOP,
 }
 
-export interface PriceChannelData {
+export interface CandidateInfo {
   [Key.DURATION]: number;
   [Key.DURATION_MET]: Bit;
   [Key.MIN]: number;
@@ -163,6 +163,11 @@ export interface PriceChannelData {
   [Key.ATH]: number;
   [Key.ATHTime]: number;
   [Key.IS_READY]: Bit;
+}
+
+export interface Candidates {
+  selected: Record<string, CandidateInfo>;
+  all: Record<string, CandidateInfo>;
 }
 
 export interface UpgradeInfo {
@@ -188,11 +193,11 @@ export interface ExchangeInfo {
   symbols: SymbolInfo[];
 }
 
-export interface IChannelsDao {
-  getAll: () => Record<string, PriceChannelData>;
-  get: (coin: CoinName) => PriceChannelData;
-  set: (coin: Coin, data: PriceChannelData) => void;
-  setAll: (data: Record<string, PriceChannelData>) => void;
+export interface ICandidatesDao {
+  getAll: () => Record<string, CandidateInfo>;
+  get: (coin: CoinName) => CandidateInfo;
+  set: (coin: Coin, data: CandidateInfo) => void;
+  setAll: (data: Record<string, CandidateInfo>) => void;
   delete: (coin: Coin) => void;
 }
 

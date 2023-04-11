@@ -14,11 +14,12 @@ import SemiCircleProgressBar from "react-progressbar-semicircle";
 import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   type AppState,
+  type CandidateInfo,
   ChannelState,
+  type CoinName,
   type Config,
   f0,
   Key,
-  type PriceChannelsDataResponse,
   PriceMove,
   TradeMemo,
 } from "../../lib";
@@ -164,7 +165,7 @@ const percentileToColorMap = {
   0.9: `#66ff00`,
 };
 
-function candidates(data: PriceChannelsDataResponse): JSX.Element {
+function candidates(data: Record<CoinName, CandidateInfo>): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
     data[a][Key.STRENGTH] > data[b][Key.STRENGTH] ? -1 : 1
   );

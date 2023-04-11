@@ -23,6 +23,10 @@ export class TradeMemo extends PricesHolder {
    */
   highestPrice = 0;
   /**
+   * Current price support level.
+   */
+  support: number;
+  /**
    * Target profit price.
    * @private
    */
