@@ -288,6 +288,10 @@ export class TradeManager {
     this.tradesDao.update(
       r.coin,
       (tm) => {
+        if (tm.currentValue) {
+          // Ignore if coin is already bought.
+          return;
+        }
         tm.setSignalMetadata(r);
         tm.tradeResult.symbol = symbol;
         tm.highestPrice = tm.currentPrice;
@@ -373,6 +377,15 @@ export class TradeManager {
   #processBoughtState(tm: TradeMemo): void {
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
     tm.support = this.#getSupportLevel(tm);
+
+    // This will init fields, or just use current values
+    tm.highestPrice = tm.highestPrice || tm.currentPrice;
+    tm.lowestPrice =
+      tm.lowestPrice ||
+      floorToOptimalGrid(
+        tm.currentPrice,
+        this.exchange.getPricePrecision(tm.tradeResult.symbol)
+      ).result;
 
     if (tm.currentPrice < tm.support) {
       tm.setState(TradeState.SELL);
@@ -620,7 +633,7 @@ export class TradeManager {
   #processSoldState(tm: TradeMemo): void {
     // Delete the sold trade after a day
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
-    if (tm.ttl >= 1440) {
+    if (tm.ttl >= 2880) {
       tm.deleted = true;
     }
   }

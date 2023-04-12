@@ -7,6 +7,8 @@ import {
   KeyboardDoubleArrowDown,
   KeyboardDoubleArrowUp,
 } from "@mui/icons-material";
+import PublicEndpoints = google.script.PublicEndpoints;
+import RunnerFunctions = google.script.RunnerFunctions;
 
 export const circularProgress = (
   <>
@@ -62,4 +64,7 @@ export const featureDisabledInfo = (
   </Alert>
 );
 
-export const ScriptApp = process.env.WEBDEV ? null : google.script.run;
+export const ScriptApp: (RunnerFunctions & PublicEndpoints) | null = process.env
+  .WEBDEV
+  ? null
+  : google.script.run;
