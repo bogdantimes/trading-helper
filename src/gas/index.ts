@@ -16,9 +16,7 @@ import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
-import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
-import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
 import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
@@ -203,12 +201,6 @@ function setFirebaseURL(url: string): string {
 function getConfig(): Config {
   const configDao = new ConfigDao(DefaultStore);
   const config = configDao.get();
-  const trendProvider = new TrendProvider(
-    configDao,
-    new Exchange(configDao),
-    CacheProxy
-  );
-  config.AutoMarketTrend = trendProvider.get();
   config.KEY = config.KEY ? MASK : ``;
   config.SECRET = config.SECRET ? MASK : ``;
   return config;
@@ -218,14 +210,14 @@ function getConfig(): Config {
  * Returns the aggregated state for the UI:
  * trades, config, statistics, candidates
  */
+const plugin: TraderPlugin = global.TradingHelperLibrary;
 function getState(): AppState {
   return catchError<AppState>(() => {
-    const plugin: TraderPlugin = global.TradingHelperLibrary;
     return {
       config: getConfig(),
       firebaseURL: FirebaseStore.url,
       info: new Statistics(DefaultStore).getAll(),
-      candidates: plugin.getCandidates(new ChannelsDao(DefaultStore)),
+      candidates: plugin.getCandidates().selected,
       assets: new TradesDao(DefaultStore)
         .getList()
         .filter((a) => a.currentValue > 0 || a.tradeResult.soldPrice > 0),
@@ -288,5 +280,10 @@ global.upgrade = () => {
     const result = Updater.upgrade();
     result.includes(UpgradeDone) && startAllProcesses();
     return result;
+  });
+};
+global.getAllCandidates = () => {
+  return catchError(() => {
+    return plugin.getCandidates().all;
   });
 };

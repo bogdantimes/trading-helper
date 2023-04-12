@@ -8,7 +8,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { circularProgress } from "./Common";
+import { circularProgress, ScriptApp } from "./Common";
 import { type Config, type InitialSetupParams } from "../../lib";
 
 enum Step {
@@ -44,11 +44,10 @@ export function InitialSetup({
 
   function onClickConnect(): void {
     setIsConnecting(true);
-    google.script.run
-      .withSuccessHandler(() => {
-        setIsConnecting(false);
-        onConnect();
-      })
+    ScriptApp?.withSuccessHandler(() => {
+      setIsConnecting(false);
+      onConnect();
+    })
       .withFailureHandler((resp) => {
         setIsConnecting(false);
         setError(resp.message);

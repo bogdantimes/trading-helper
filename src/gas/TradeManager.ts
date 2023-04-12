@@ -4,6 +4,7 @@ import { backTestSorter, Log } from "./Common";
 import {
   AUTO_DETECT,
   BNB,
+  BNBFee,
   type CoinName,
   type Config,
   ExchangeSymbol,
@@ -12,17 +13,14 @@ import {
   floor,
   floorToOptimalGrid,
   Key,
-  MarketTrend,
   MIN_BUY,
-  PriceMove,
+  MINIMUM_FEE_COVERAGE,
   type PricesHolder,
   StableUSDCoin,
+  TARGET_FEE_COVERAGE,
   TradeMemo,
   TradeResult,
   TradeState,
-  BNBFee,
-  MINIMUM_FEE_COVERAGE,
-  TARGET_FEE_COVERAGE,
 } from "../lib/index";
 import { PriceProvider } from "./priceprovider/PriceProvider";
 import { TradesDao } from "./dao/Trades";
@@ -33,17 +31,13 @@ import {
   SignalType,
   type TraderPlugin,
 } from "./traders/plugin/api";
-import { ChannelsDao } from "./dao/Channels";
 import { DefaultStore } from "./Store";
-import { CacheProxy } from "./CacheProxy";
-import { TrendProvider } from "./TrendProvider";
 
 export class TradeManager {
   #config: Config;
   #canInvest = 0;
   #balance = 0;
   #optimalInvestRatio = 0;
-  #mktTrend: MarketTrend;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -51,14 +45,10 @@ export class TradeManager {
     const statistics = new Statistics(DefaultStore);
     const tradesDao = new TradesDao(DefaultStore);
     const priceProvider = PriceProvider.default();
-    const channelsDao = new ChannelsDao(DefaultStore);
-    const trendProvider = new TrendProvider(configDao, exchange, CacheProxy);
     return new TradeManager(
       priceProvider,
       tradesDao,
       configDao,
-      channelsDao,
-      trendProvider,
       exchange,
       statistics,
       global.TradingHelperLibrary
@@ -69,8 +59,6 @@ export class TradeManager {
     private readonly priceProvider: PriceProvider,
     private readonly tradesDao: TradesDao,
     private readonly configDao: ConfigDao,
-    private readonly channelsDao: ChannelsDao,
-    private readonly trendProvider: TrendProvider,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
     private readonly plugin: TraderPlugin
@@ -80,7 +68,7 @@ export class TradeManager {
     return this.priceProvider.update();
   }
 
-  trade(): void {
+  trade(step: number): void {
     this.#prepare();
 
     const trades = this.tradesDao.getList();
@@ -90,18 +78,17 @@ export class TradeManager {
     // First process !BUY state assets (some might get sold and free up $)
     trades
       .filter((tm) => !tm.stateIs(TradeState.BUY))
+      .sort(backTestSorter)
       .forEach((tm) => {
         this.#tryCheckTrade(tm);
       });
 
     // Run plugin to update candidates and also get buy candidates if we can invest
     const { advancedAccess, signals } = this.plugin.trade({
-      marketTrend: this.#mktTrend,
-      channelsDao: this.channelsDao,
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
-      provideSignals: this.#getMoneyToInvest() > 0,
-      checkImbalance: this.#config.EntryImbalanceCheck,
+      provideSignals: this.#getMoneyToInvest() > 0 ? this.#canInvest : 0,
+      I: step,
     });
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
@@ -132,14 +119,17 @@ export class TradeManager {
 
   buy(coin: CoinName): void {
     this.#prepare();
-    const ch = this.channelsDao.get(coin);
-    this.#setBuyState({
-      type: SignalType.Buy,
-      coin,
-      duration: ch?.[Key.DURATION],
-      rangeSize: ch?.[Key.SIZE],
-      imbalance: ch?.[Key.IMBALANCE],
-    });
+    const price = this.priceProvider.get(this.#config.StableCoin)[coin]
+      ?.currentPrice;
+    if (price) {
+      this.#setBuyState({
+        type: SignalType.Buy,
+        coin,
+        target: price * 1.02,
+      });
+    } else {
+      throw new Error(`Unknown coin ${coin}: no price information found`);
+    }
   }
 
   sell(coin: CoinName): void {
@@ -167,10 +157,10 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
-    this.#mktTrend = this.trendProvider.get();
-    const percentile = this.#mktTrend === MarketTrend.UP ? 0.8 : 0.85;
-    const cs = this.plugin.getCandidates(this.channelsDao, percentile);
-    this.#optimalInvestRatio = Math.max(1, Math.min(3, Object.keys(cs).length));
+    const cs = this.plugin.getCandidates().selected;
+    this.#optimalInvestRatio = Math.floor(
+      Math.max(1, Math.min(3, Object.keys(cs).length / 3))
+    );
   }
 
   #initStableBalance(): void {
@@ -298,15 +288,29 @@ export class TradeManager {
     this.tradesDao.update(
       r.coin,
       (tm) => {
-        tm.setState(TradeState.BUY);
+        if (tm.currentValue) {
+          // Ignore if coin is already bought.
+          return;
+        }
         tm.setSignalMetadata(r);
         tm.tradeResult.symbol = symbol;
+        tm.highestPrice = tm.currentPrice;
+        tm.lowestPrice = floorToOptimalGrid(
+          tm.currentPrice,
+          this.exchange.getPricePrecision(symbol)
+        ).result;
+        tm.setState(TradeState.BUY);
         return tm;
       },
       () => {
         const tm = new TradeMemo(new TradeResult(symbol));
         tm.setSignalMetadata(r);
         tm.prices = this.priceProvider.get(stableCoin)[r.coin]?.prices;
+        tm.highestPrice = tm.currentPrice;
+        tm.lowestPrice = floorToOptimalGrid(
+          tm.currentPrice,
+          this.exchange.getPricePrecision(symbol)
+        ).result;
         tm.setState(TradeState.BUY);
         return tm;
       }
@@ -340,22 +344,12 @@ export class TradeManager {
       this.#processSoldState(tm);
     }
 
-    const priceMove = tm.getPriceMove();
-
     // take action after processing
-    if (
-      tm.stateIs(TradeState.SELL) &&
-      (tm.stopLimitCrossedDown() || priceMove < PriceMove.UP)
-    ) {
-      // sell if price stop limit crossed down
-      // or the price does not go up anymore
-      // this allows to wait if price continues to go up
+    if (tm.stateIs(TradeState.SELL)) {
       this.#sell(tm);
     }
 
-    // buy only if price stopped going down
-    // this allows to wait if price continues to fall
-    if (tm.stateIs(TradeState.BUY) && priceMove > PriceMove.DOWN) {
+    if (tm.stateIs(TradeState.BUY)) {
       const money = this.#getMoneyToInvest();
       // do not invest into the same coin
       if (tm.tradeResult.quantity <= 0 && money > 0) {
@@ -382,92 +376,43 @@ export class TradeManager {
 
   #processBoughtState(tm: TradeMemo): void {
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
+    tm.support = this.#getSupportLevel(tm);
 
-    this.#updateStopLimit(tm);
+    // This will init fields, or just use current values
+    tm.highestPrice = tm.highestPrice || tm.currentPrice;
+    tm.lowestPrice =
+      tm.lowestPrice ||
+      floorToOptimalGrid(
+        tm.currentPrice,
+        this.exchange.getPricePrecision(tm.tradeResult.symbol)
+      ).result;
 
-    if (this.#config.SellAtStopLimit && tm.stopLimitCrossedDown()) {
+    if (tm.currentPrice < tm.support) {
       tm.setState(TradeState.SELL);
-    }
-  }
-
-  #updateStopLimit(tm: TradeMemo): void {
-    const symbol = tm.tradeResult.symbol;
-
-    if (!tm.tradeResult.lotSizeQty) {
-      tm.tradeResult.lotSizeQty = this.exchange.quantityForLotStepSize(
-        symbol,
-        tm.tradeResult.quantity
-      );
-    }
-
-    const precision = tm.precision;
-    const slCrossedDown = tm.stopLimitCrossedDown();
-
-    if (!tm.smartExitPrice) {
-      const ch = this.channelsDao.get(tm.getCoinName());
-      // Initiate stop limit via the channel lower boundary price
-      tm.smartExitPrice = floorToOptimalGrid(ch[Key.MIN], precision).result;
       return;
     }
 
-    // c1 is the percentage of the profit goal completion
-    // c1 is used to move the stop limit up in the "bottom price" - "goal price" range to the same level
-    const c1 = tm.profitPercent() / (tm.profitGoal * 100);
-
-    // c2 is the percentage of the TTL completion
-    // c2 is used to move the stop limit up in the "bottom price" - "goal price" range to the same level
-    const maxTTL = tm.duration / this.#mktTrend;
-    const curTTL = Math.min(tm.ttl, maxTTL);
-    let c2 = curTTL / maxTTL;
-
-    // if the stop limit is above the entry price, we don't want to apply TTL stop limit
-    if (tm.smartExitPrice >= tm.tradeResult.entryPrice) {
-      c2 = 0;
+    if (tm.currentPrice < tm.lowestPrice && tm.ttl > 5) {
+      this.#handleLowerLow(tm);
     }
 
-    // apply max of c1 and c2 to the stop limit price
-    const c = Math.max(c1, c2);
-    const bottomPrice = tm.stopLimitBottomPrice;
-    let newStopLimit = bottomPrice + (tm.profitGoalPrice - bottomPrice) * c;
-    // keep the stop limit lower than the current price
-    newStopLimit = Math.min(newStopLimit, tm.currentPrice);
-
-    // quantize stop limit to stick it to the grid
-    newStopLimit = floorToOptimalGrid(newStopLimit, precision).result;
-    // Apply new stop limit if it is higher.
-    tm.smartExitPrice = Math.max(tm.smartExitPrice, newStopLimit);
-
-    if (slCrossedDown && tm.profit() <= 0 && tm.currentPrice > bottomPrice) {
-      this.#handleEarlyExit(tm);
+    if (tm.currentPrice > tm.highestPrice && tm.ttl > 5) {
+      this.#handleHigherHigh(tm);
     }
   }
 
-  #handleEarlyExit(tm: TradeMemo): void {
-    const msg = `${tm.getCoinName()} smart exit was crossed down at ${f8(
-      tm.smartExitPrice
-    )}`;
-    try {
-      // Allow stop-limit be lowered when it is crossed down,
-      // but the order book imbalance is bullish (more buyers than sellers),
-      // to avoid selling at turnarounds.
-      if (this.#lowerStopLimitIfSupportIsPresent(tm)) {
-        this.#config.SellAtStopLimit &&
-          Log.alert(
-            `⚠ ${msg}, but there are buyers to support the price. Not selling yet.`
-          );
-      } else {
-        Log.info(`${msg} and there are no enough buyers to support the price.`);
-      }
-    } catch (e) {
-      this.#config.SellAtStopLimit &&
-        Log.info(`${msg}. Couldn't check the buyers support for the price.`);
-    }
+  #getSupportLevel(tm: TradeMemo) {
+    // -10% as a safeguard if no candidate info
+    return (
+      this.plugin.getCandidates().all[tm.getCoinName()]?.[Key.MIN] ||
+      tm.tradeResult.entryPrice * 0.9
+    );
   }
 
-  #lowerStopLimitIfSupportIsPresent(tm: TradeMemo): boolean {
+  #getImbalance(tm: TradeMemo): { imbalance: number; precision: number } {
     const symbol = tm.tradeResult.symbol;
     const precision = this.exchange.getPricePrecision(symbol);
-    const bidCutOffPrice = tm.stopLimitBottomPrice;
+    const bidCutOffPrice = tm.support;
 
     // calculate how many records for imbalance we need for this cut off price
     const step = 1 / Math.pow(10, precision);
@@ -482,19 +427,7 @@ export class TradeManager {
     Log.debug(
       `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
     );
-    const supportIsPresent = imbalance > 0.15;
-    if (supportIsPresent) {
-      const floor = floorToOptimalGrid(tm.currentPrice, precision);
-      tm.smartExitPrice = floor.result;
-      tm.ttl -= 240; // Cool down
-    }
-    return supportIsPresent;
-  }
-
-  #forceUpdateStopLimit(tm: TradeMemo): void {
-    tm.ttl = 0;
-    tm.smartExitPrice = 0;
-    this.#updateStopLimit(tm);
+    return { precision, imbalance };
   }
 
   #pushNewPrice(tm: TradeMemo): void {
@@ -539,8 +472,7 @@ export class TradeManager {
         this.#balance -= tradeResult.paid;
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
-        // set the stop limit according to the current settings
-        this.#forceUpdateStopLimit(tm);
+        tm.ttl = 0;
         this.#processBuyFee(tradeResult);
         Log.info(
           `${tm.getCoinName()} asset avg. price: $${f8(
@@ -701,8 +633,42 @@ export class TradeManager {
   #processSoldState(tm: TradeMemo): void {
     // Delete the sold trade after a day
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
-    if (tm.ttl >= 1440) {
+    if (tm.ttl >= 2880) {
       tm.deleted = true;
+    }
+  }
+
+  #handleLowerLow(tm: TradeMemo): void {
+    const { imbalance, precision } = this.#getImbalance(tm);
+
+    // Set new lowest price little lower than the current
+    const nextLowPrice = tm.currentPrice * 0.99;
+    tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
+
+    const percent = tm.profitPercent();
+    let imbThreshold = Math.abs(percent * 6) / 100;
+    if (tm.ttl >= 2000) {
+      imbThreshold *= tm.ttl / 2000;
+    }
+    if (imbalance < imbThreshold) {
+      tm.setState(TradeState.SELL);
+    }
+  }
+
+  #handleHigherHigh(tm: TradeMemo): void {
+    const { imbalance, precision } = this.#getImbalance(tm);
+
+    const nextHighPrice = tm.currentPrice * 1.01;
+    // Set new highest price little higher than the current
+    tm.highestPrice = floorToOptimalGrid(nextHighPrice, precision).result;
+
+    const percent = tm.profitPercent();
+    let imbThreshold = Math.abs(percent * 4) / 100;
+    if (tm.ttl >= 2000) {
+      imbThreshold *= tm.ttl / 2000;
+    }
+    if (imbalance < Math.min(0.6, imbThreshold)) {
+      tm.setState(TradeState.SELL);
     }
   }
 }

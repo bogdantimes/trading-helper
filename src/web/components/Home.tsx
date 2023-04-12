@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useState } from "react";
-import Trade from "./Trade";
 import {
   Chip,
   Divider,
@@ -12,18 +11,20 @@ import {
   Typography,
 } from "@mui/material";
 import SemiCircleProgressBar from "react-progressbar-semicircle";
-import Balance from "./Balance";
 import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   type AppState,
+  type CandidateInfo,
   ChannelState,
+  type CoinName,
   type Config,
   f0,
   Key,
-  type PriceChannelsDataResponse,
   PriceMove,
   TradeMemo,
 } from "../../lib";
+import CryptoCard from "./CryptoCard";
+import Balance from "./Balance";
 
 export function Home({
   state,
@@ -44,7 +45,7 @@ export function Home({
     <>
       <Grid sx={{ flexGrow: 1 }} container spacing={2}>
         {balanceCard(config, hideBalances, assetsValue, toggleHideBalances)}
-        {assetsCards(assets, hideBalances, config, onAssetDelete)}
+        {assetsCards(assets, hideBalances, config)}
         {candidates(state.candidates)}
       </Grid>
     </>
@@ -100,14 +101,12 @@ function balanceCard(
 function assetsCards(
   elems: TradeMemo[],
   hideBalances: boolean,
-  config: Config,
-  onAssetDelete?: (coinName: string, noConfirm?: boolean) => void
+  config: Config
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
   const sorted = elems.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1));
   const current = sorted.filter((t) => t.currentValue);
-  const sold = sorted.filter((t) => !t.currentValue);
 
   return (
     <>
@@ -147,33 +146,12 @@ function assetsCards(
               </Grid>
             </Grid>
           )}
-          {!!current.length && (
+          {!!sorted.length && (
             <Grid item xs={12}>
               <Grid container justifyContent="center" spacing={2}>
-                {current.map((t) => (
+                {sorted.map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <Trade
-                      data={t}
-                      hideBalances={hideBalances}
-                      config={config}
-                      onDelete={onAssetDelete}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-          )}
-          {!!sold.length && (
-            <Grid item xs={12}>
-              <Grid container justifyContent="center" spacing={2}>
-                {sold.map((t) => (
-                  <Grid key={t.getCoinName()} item>
-                    <Trade
-                      data={t}
-                      hideBalances={hideBalances}
-                      config={config}
-                      onDelete={onAssetDelete}
-                    />
+                    <CryptoCard tm={t} cfg={config} />
                   </Grid>
                 ))}
               </Grid>
@@ -199,7 +177,7 @@ const percentileToColorMap = {
   0.9: `#66ff00`,
 };
 
-function candidates(data: PriceChannelsDataResponse): JSX.Element {
+function candidates(data: Record<CoinName, CandidateInfo>): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
     data[a][Key.STRENGTH] > data[b][Key.STRENGTH] ? -1 : 1
   );

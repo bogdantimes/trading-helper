@@ -25,6 +25,8 @@ import { InitialSetup } from "./components/InitialSetup";
 import { type AppState } from "../lib";
 import Terminal, { ColorMode } from "react-terminal-ui";
 import { DefaultConfig } from "../gas/dao/Config";
+import { ScriptApp } from "./components/Common";
+import useWebSocket from "./useWebSocket";
 
 function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
   return {
@@ -64,10 +66,17 @@ export default function App(): JSX.Element {
     };
   }, [initialSetup]);
 
+  const data = process.env.WEBDEV ? useWebSocket(`ws://localhost:3000`) : null;
+
+  useEffect(() => {
+    if (data) {
+      handleState(data);
+    }
+  }, [data]);
+
   function initialFetch(): void {
     setFetchingData(true);
-    google.script.run
-      .withSuccessHandler(handleState)
+    ScriptApp?.withSuccessHandler(handleState)
       .withFailureHandler((resp) => {
         setFetchingData(false);
         setInitialSetup(true);
@@ -89,8 +98,7 @@ export default function App(): JSX.Element {
       // do not re-fetch state when on Settings tab
       return;
     }
-    google.script.run
-      .withSuccessHandler(handleState)
+    ScriptApp?.withSuccessHandler(handleState)
       .withFailureHandler((resp) => {
         setFetchDataError(resp.message);
       })
@@ -100,16 +108,15 @@ export default function App(): JSX.Element {
   function onAssetDelete(coinName: string, noConfirm = false): void {
     if (noConfirm || confirm(`Are you sure you want to remove ${coinName}?`)) {
       setDeletingAsset(true);
-      google.script.run
-        .withSuccessHandler(() => {
-          setState({
-            ...state,
-            assets: state.assets.filter(
-              (a) => a.tradeResult.symbol.quantityAsset !== coinName
-            ),
-          });
-          setDeletingAsset(false);
-        })
+      ScriptApp?.withSuccessHandler(() => {
+        setState({
+          ...state,
+          assets: state.assets.filter(
+            (a) => a.tradeResult.symbol.quantityAsset !== coinName
+          ),
+        });
+        setDeletingAsset(false);
+      })
         .withFailureHandler((err) => {
           setDeletingAsset(false);
           alert(err);
@@ -221,12 +228,11 @@ export default function App(): JSX.Element {
               }, 1000);
 
               try {
-                google.script.run
-                  .withSuccessHandler((resp) => {
-                    setPrompt(`$`);
-                    clearInterval(spinner);
-                    setTerminalOutput(JSON.stringify(resp, null, 2));
-                  })
+                ScriptApp?.withSuccessHandler((resp) => {
+                  setPrompt(`$`);
+                  clearInterval(spinner);
+                  setTerminalOutput(JSON.stringify(resp, null, 2));
+                })
                   .withFailureHandler((resp) => {
                     setPrompt(`$`);
                     clearInterval(spinner);

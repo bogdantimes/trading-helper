@@ -1,3 +1,7 @@
+# v4.0.0
+
+To be done
+
 # v3.3.10
 
 * Switched the default stable coin to USDT. BUSD will be removed by the end of 2023.
