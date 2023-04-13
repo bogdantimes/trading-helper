@@ -151,7 +151,11 @@ function assetsCards(
               <Grid container justifyContent="center" spacing={2}>
                 {sorted.map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <CryptoCard tm={t} cfg={config} />
+                    <CryptoCard
+                      tm={t}
+                      cfg={config}
+                      hideBalances={hideBalances}
+                    />
                   </Grid>
                 ))}
               </Grid>
