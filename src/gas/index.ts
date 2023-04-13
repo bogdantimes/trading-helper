@@ -21,6 +21,7 @@ import { Updater, UpgradeDone } from "./Updater";
 import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+import { CandidatesDao } from "./dao/Candidates";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -213,11 +214,12 @@ function getConfig(): Config {
 const plugin: TraderPlugin = global.TradingHelperLibrary;
 function getState(): AppState {
   return catchError<AppState>(() => {
+    const candidatesDao = new CandidatesDao(DefaultStore);
     return {
       config: getConfig(),
       firebaseURL: FirebaseStore.url,
       info: new Statistics(DefaultStore).getAll(),
-      candidates: plugin.getCandidates().selected,
+      candidates: plugin.getCandidates(candidatesDao).selected,
       assets: new TradesDao(DefaultStore)
         .getList()
         .filter((a) => a.currentValue > 0 || a.tradeResult.soldPrice > 0),
@@ -284,6 +286,6 @@ global.upgrade = () => {
 };
 global.getAllCandidates = () => {
   return catchError(() => {
-    return plugin.getCandidates().all;
+    return new CandidatesDao(DefaultStore).getAll();
   });
 };

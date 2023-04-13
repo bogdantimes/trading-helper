@@ -12,6 +12,7 @@ import {
   f8,
   floor,
   floorToOptimalGrid,
+  type ICandidatesDao,
   Key,
   MIN_BUY,
   MINIMUM_FEE_COVERAGE,
@@ -32,6 +33,7 @@ import {
   type TraderPlugin,
 } from "./traders/plugin/api";
 import { DefaultStore } from "./Store";
+import { CandidatesDao } from "./dao/Candidates";
 
 export class TradeManager {
   #config: Config;
@@ -44,10 +46,12 @@ export class TradeManager {
     const exchange = new Exchange(configDao);
     const statistics = new Statistics(DefaultStore);
     const tradesDao = new TradesDao(DefaultStore);
+    const candidatesDao = new CandidatesDao(DefaultStore);
     const priceProvider = PriceProvider.default();
     return new TradeManager(
       priceProvider,
       tradesDao,
+      candidatesDao,
       configDao,
       exchange,
       statistics,
@@ -58,6 +62,7 @@ export class TradeManager {
   constructor(
     private readonly priceProvider: PriceProvider,
     private readonly tradesDao: TradesDao,
+    private readonly candidatesDao: ICandidatesDao,
     private readonly configDao: ConfigDao,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
@@ -88,6 +93,7 @@ export class TradeManager {
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
       provideSignals: this.#getMoneyToInvest() > 0 ? this.#canInvest : 0,
+      candidatesDao: this.candidatesDao,
       I: step,
     });
 
@@ -157,7 +163,7 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
-    const cs = this.plugin.getCandidates().selected;
+    const cs = this.plugin.getCandidates(this.candidatesDao).selected;
     this.#optimalInvestRatio = Math.floor(
       Math.max(1, Math.min(3, Object.keys(cs).length / 3))
     );
@@ -404,7 +410,7 @@ export class TradeManager {
   #getSupportLevel(tm: TradeMemo) {
     // -10% as a safeguard if no candidate info
     return (
-      this.plugin.getCandidates().all[tm.getCoinName()]?.[Key.MIN] ||
+      this.candidatesDao.getAll()[tm.getCoinName()]?.[Key.MIN] ||
       tm.tradeResult.entryPrice * 0.9
     );
   }

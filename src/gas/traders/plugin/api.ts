@@ -2,6 +2,7 @@ import {
   type Candidates,
   type CoinName,
   type ExchangeSymbol,
+  type ICandidatesDao,
   type PriceHoldersMap,
   type PriceMap,
   type StableUSDCoin,
@@ -11,7 +12,7 @@ import {
 export interface TraderPlugin {
   trade: (context: PluginContext) => PluginResult;
   getPrices: () => PriceMap;
-  getCandidates: () => Candidates;
+  getCandidates: (dao: ICandidatesDao) => Candidates;
   getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo | undefined;
 }
 
@@ -28,6 +29,7 @@ export interface PluginResult {
 
 export interface PluginContext {
   prices: PriceHoldersMap;
+  candidatesDao: ICandidatesDao;
   stableCoin: StableUSDCoin;
   /**
    * provideSignals - whether the plugin caller is interested in signals.
