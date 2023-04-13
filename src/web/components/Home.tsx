@@ -104,8 +104,9 @@ function assetsCards(
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
-  const sorted = elems.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1));
+  const sorted = elems.sort((t1, t2) => (t1.ttl > t2.ttl ? 1 : -1));
   const current = sorted.filter((t) => t.currentValue);
+  const sold = sorted.filter((t) => !t.currentValue);
 
   return (
     <>
@@ -145,10 +146,25 @@ function assetsCards(
               </Grid>
             </Grid>
           )}
-          {!!sorted.length && (
+          {!!current.length && (
             <Grid item xs={12}>
               <Grid container justifyContent="center" spacing={2}>
-                {sorted.map((t) => (
+                {current.map((t) => (
+                  <Grid key={t.getCoinName()} item>
+                    <CryptoCard
+                      tm={t}
+                      cfg={config}
+                      hideBalances={hideBalances}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+          )}
+          {!!sold.length && (
+            <Grid item xs={12}>
+              <Grid container justifyContent="center" spacing={2}>
+                {sold.map((t) => (
                   <Grid key={t.getCoinName()} item>
                     <CryptoCard
                       tm={t}

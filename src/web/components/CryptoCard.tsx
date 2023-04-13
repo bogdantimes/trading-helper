@@ -3,6 +3,7 @@ import {
   Box,
   Card,
   CardContent,
+  darken,
   lighten,
   Typography,
   useTheme,
@@ -72,7 +73,9 @@ const CryptoCard = ({ cfg, tm, hideBalances }: Params) => {
             variant="body1"
             color="inherit"
             sx={{
-              backgroundColor: lighten(
+              backgroundColor: (theme.palette.mode === `light`
+                ? lighten
+                : darken)(
                 profitPercent >= 0
                   ? theme.palette.success.light
                   : theme.palette.error.light,
