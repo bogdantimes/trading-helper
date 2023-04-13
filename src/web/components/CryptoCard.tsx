@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, Card, CardContent, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  lighten,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { styled } from "@mui/system";
 import { type Config, SHORT_MASK, type TradeMemo, TradeState } from "../../lib";
 
@@ -15,7 +22,21 @@ const ProfitTypography = styled(Typography)(({ theme }) => ({
   fontWeight: `bold`,
 }));
 
+const SoldOverlay = styled(Box)(({ theme }) => ({
+  position: `absolute`,
+  bottom: 0,
+  width: `100%`,
+  height: `15%`,
+  background: theme.palette.grey[500],
+  display: `flex`,
+  alignItems: `center`,
+  justifyContent: `center`,
+  opacity: 0.6,
+  zIndex: 1,
+}));
+
 const CryptoCard = ({ cfg, tm, hideBalances }: Params) => {
+  const theme = useTheme();
   const coinName = tm.getCoinName();
   const paid = tm.tradeResult.paid;
   const currentValue = tm.currentValue || tm.tradeResult.gained;
@@ -39,6 +60,7 @@ const CryptoCard = ({ cfg, tm, hideBalances }: Params) => {
         borderColor: `divider`,
       }}
     >
+      {isSold && <SoldOverlay>Sold</SoldOverlay>}
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center">
@@ -50,7 +72,12 @@ const CryptoCard = ({ cfg, tm, hideBalances }: Params) => {
             variant="body1"
             color="inherit"
             sx={{
-              backgroundColor: `rgba(0, 0, 0, 0.1)`,
+              backgroundColor: lighten(
+                profitPercent >= 0
+                  ? theme.palette.success.light
+                  : theme.palette.error.light,
+                0.5
+              ),
             }}
           >
             {profitSign}

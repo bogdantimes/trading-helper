@@ -15,7 +15,6 @@ import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
 import {
   type AppState,
   type CandidateInfo,
-  ChannelState,
   type CoinName,
   type Config,
   f0,
@@ -230,9 +229,6 @@ function candidates(data: Record<CoinName, CandidateInfo>): JSX.Element {
                     const ch = data[coin];
                     const strength = ch[Key.STRENGTH] ?? 0;
                     const priceMove = ch[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
-                    const bold =
-                      ch[Key.ATH] > ch[Key.MAX] &&
-                      ch[Key.S0] === ChannelState.TOP;
                     return (
                       <ListItem
                         sx={{
@@ -255,7 +251,7 @@ function candidates(data: Record<CoinName, CandidateInfo>): JSX.Element {
                             <Typography
                               sx={{ display: `flex`, alignItems: `center` }}
                             >
-                              {bold ? <b>{coin}</b> : coin}
+                              {coin}
                               {growthIconMap.get(priceMove)}
                             </Typography>
                           }
