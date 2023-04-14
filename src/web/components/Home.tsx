@@ -22,8 +22,8 @@ import {
   PriceMove,
   TradeMemo,
 } from "../../lib";
-import CryptoCard from "./CryptoCard";
-import Balance from "./Balance";
+import Asset from "./cards/Asset";
+import Balance from "./cards/Balance";
 
 export function Home({
   state,
@@ -151,11 +151,7 @@ function assetsCards(
               <Grid container justifyContent="center" spacing={2}>
                 {current.map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <CryptoCard
-                      tm={t}
-                      cfg={config}
-                      hideBalances={hideBalances}
-                    />
+                    <Asset tm={t} cfg={config} hideBalances={hideBalances} />
                   </Grid>
                 ))}
               </Grid>
@@ -166,11 +162,7 @@ function assetsCards(
               <Grid container justifyContent="center" spacing={2}>
                 {sold.map((t) => (
                   <Grid key={t.getCoinName()} item>
-                    <CryptoCard
-                      tm={t}
-                      cfg={config}
-                      hideBalances={hideBalances}
-                    />
+                    <Asset tm={t} cfg={config} hideBalances={hideBalances} />
                   </Grid>
                 ))}
               </Grid>
