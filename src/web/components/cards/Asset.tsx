@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, darken, lighten, Typography, useTheme } from "@mui/material";
+import {
+  Box,
+  darken,
+  lighten,
+  LinearProgress,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import {
   type Config,
   SHORT_MASK,
@@ -22,16 +29,24 @@ const Asset = ({ cfg, tm, hideBalances }: Params) => {
   const currentValue = tm.currentValue || tm.tradeResult.gained;
   const profitPercent = tm.profitPercent();
   const displayPaid = hideBalances ? SHORT_MASK : paid.toFixed(2);
-  const profitReal = Math.abs(tm.profit());
+  const profitAbs = Math.abs(tm.profit());
   const profitSign = profitPercent >= 0 ? `+` : `-`;
   const displayCurrentValue = hideBalances
     ? SHORT_MASK
-    : `${currentValue.toFixed(2)} (${profitSign}${profitReal.toFixed(2)})`;
+    : `${currentValue.toFixed(2)} (${profitSign}${profitAbs.toFixed(2)})`;
   const tradeState = tm.getState();
   const isSold = tradeState === TradeState.SOLD;
 
   return (
-    <Home>
+    <Home
+      bColor={
+        isSold
+          ? tm.profit() >= 0
+            ? `${theme.palette.success.main}`
+            : `${theme.palette.error.main}`
+          : ``
+      }
+    >
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography
           variant="h6"
@@ -79,7 +94,15 @@ const Asset = ({ cfg, tm, hideBalances }: Params) => {
           </Typography>
         </Box>
       </Typography>
+      {!isSold && (
+        <LinearProgress
+          value={100}
+          variant={cfg.SmartExit ? `indeterminate` : `determinate`}
+          sx={{ width: `120%`, left: `-20px`, bottom: `-20px` }}
+        />
+      )}
     </Home>
   );
 };
+
 export default Asset;

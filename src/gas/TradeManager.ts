@@ -344,7 +344,9 @@ export class TradeManager {
   #checkTrade(tm: TradeMemo): TradeMemo {
     this.#pushNewPrice(tm);
 
-    if (tm.tradeResult.quantity > 0) {
+    tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
+
+    if (tm.tradeResult.quantity > 0 && this.#config.SmartExit) {
       this.#processBoughtState(tm);
     } else if (tm.tradeResult.soldPrice) {
       this.#processSoldState(tm);
@@ -381,7 +383,6 @@ export class TradeManager {
   }
 
   #processBoughtState(tm: TradeMemo): void {
-    tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
     tm.support = this.#getSupportLevel(tm);
 
     // This will init fields, or just use current values
@@ -637,8 +638,7 @@ export class TradeManager {
   }
 
   #processSoldState(tm: TradeMemo): void {
-    // Delete the sold trade after a day
-    tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
+    // Delete the sold trade after a while
     if (tm.ttl >= 2880) {
       tm.deleted = true;
     }

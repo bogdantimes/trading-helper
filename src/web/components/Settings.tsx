@@ -162,6 +162,25 @@ export function Settings(params: {
           <FormControlLabel
             control={
               <Switch
+                checked={cfg.SmartExit}
+                onChange={(e) => {
+                  setCfg({ ...cfg, SmartExit: e.target.checked });
+                }}
+              />
+            }
+            label="Smart exit"
+            aria-describedby={`smart-exit-helper-text`}
+          />
+          <FormHelperText id={`smart-exit-helper-text`}>
+            Sell automatically when conditions are no longer in favor and it is
+            better to take the profit/loss. Recommended to always keep enabled.
+            Disable only if you need to hold the assets.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Switch
                 checked={cfg.HideBalances}
                 onChange={(e) => {
                   setCfg({ ...cfg, HideBalances: e.target.checked });

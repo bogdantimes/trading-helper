@@ -17,6 +17,11 @@ export interface Config {
   FeesBudget: number;
   AutoReplenishFees: boolean;
   /**
+   * @deprecated in favor of SmartExit
+   */
+  SellAtStopLimit?: boolean | undefined;
+  SmartExit: boolean;
+  /**
    * Whether the current app has the access to advanced plugin features.
    */
   AdvancedAccess: boolean;
