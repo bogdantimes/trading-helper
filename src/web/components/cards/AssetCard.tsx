@@ -10,11 +10,12 @@ import {
 } from "@mui/material";
 import {
   type Config,
+  f0,
   SHORT_MASK,
   type TradeMemo,
   TradeState,
 } from "../../../lib/index";
-import { growthIconMap } from "../Common";
+import { growthIconMap, percentileToColorMap } from "../Common";
 import HomeCard from "./HomeCard";
 
 interface Params {
@@ -44,6 +45,8 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const tradeState = tm.getState();
   const isSold = tradeState === TradeState.SOLD;
 
+  const supplyColor =
+    percentileToColorMap[(tm.supplyDemandImbalance + 0.5).toFixed(1)];
   return (
     <HomeCard
       bColor={
@@ -98,6 +101,21 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           </Typography>
           <Typography variant="inherit">
             {displayCurrentValue} {cfg.StableCoin}
+          </Typography>
+        </Box>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="inherit" fontWeight="bold">
+            Supply:
+          </Typography>
+          <Typography
+            variant="inherit"
+            color={
+              theme.palette.mode === `light`
+                ? darken(supplyColor, 0.5)
+                : supplyColor
+            }
+          >
+            {f0(tm.supplyDemandImbalance * 100)}%
           </Typography>
         </Box>
       </Typography>

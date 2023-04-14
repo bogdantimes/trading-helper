@@ -323,15 +323,6 @@ export class TradeManager {
     );
   }
 
-  #setSellState(coin: CoinName): void {
-    this.tradesDao.update(coin, (tm) => {
-      if (tm.tradeResult.quantity > 0) {
-        tm.setState(TradeState.SELL);
-      }
-      return tm;
-    });
-  }
-
   #tryCheckTrade(tm: TradeMemo): void {
     try {
       this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
@@ -434,6 +425,7 @@ export class TradeManager {
     Log.debug(
       `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
     );
+    tm.supplyDemandImbalance = imbalance;
     return { precision, imbalance };
   }
 

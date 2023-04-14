@@ -2,7 +2,11 @@ import * as React from "react";
 import { useState } from "react";
 import { Button, Chip, Divider, Grid, Stack, Typography } from "@mui/material";
 import SemiCircleProgressBar from "react-progressbar-semicircle";
-import { featureDisabledInfo, growthIconMap } from "./Common";
+import {
+  featureDisabledInfo,
+  growthIconMap,
+  percentileToColorMap,
+} from "./Common";
 import {
   type AppState,
   type CandidateInfo,
@@ -139,20 +143,6 @@ function assetsCards(
     </Stack>
   );
 }
-
-const percentileToColorMap = {
-  // Gradient from red to green, with keys from 0.1 to 0.9 and step 0.1
-  0.0: `#ff0000`,
-  0.1: `#ff0000`,
-  0.2: `#ff3300`,
-  0.3: `#ff6600`,
-  0.4: `#ff9900`,
-  0.5: `#ffcc00`,
-  0.6: `#ffff00`,
-  0.7: `#ccff00`,
-  0.8: `#99ff00`,
-  0.9: `#66ff00`,
-};
 
 function candidates(
   title: string,

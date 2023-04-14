@@ -37,6 +37,11 @@ export class TradeMemo extends PricesHolder {
   private state: TradeState;
 
   private _lock: boolean;
+  /**
+   * Latest checked supply demand imbalance in the order book.
+   * @private
+   */
+  private imb = 0;
 
   constructor(tradeResult: TradeResult) {
     super();
@@ -174,5 +179,13 @@ export class TradeMemo extends PricesHolder {
 
   profitPercent(): number {
     return (this.profit() / this.tradeResult.paid) * 100;
+  }
+
+  get supplyDemandImbalance(): number {
+    return this.imb ?? 0;
+  }
+
+  set supplyDemandImbalance(imb: number) {
+    this.imb = imb;
   }
 }
