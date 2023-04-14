@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Box,
-  darken,
-  lighten,
-  LinearProgress,
-  styled,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, darken, lighten, Typography, useTheme } from "@mui/material";
 import {
   type Config,
   f0,
@@ -23,12 +15,6 @@ interface Params {
   tm: TradeMemo;
   hideBalances: boolean;
 }
-
-const SlowLinearProgress = styled(LinearProgress)(({ theme }) => ({
-  "& .MuiLinearProgress-bar": {
-    animationDuration: `5s`,
-  },
-}));
 
 const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const theme = useTheme();
@@ -119,13 +105,6 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           </Typography>
         </Box>
       </Typography>
-      {!isSold && (
-        <SlowLinearProgress
-          value={100}
-          variant={cfg.SmartExit ? `indeterminate` : `determinate`}
-          sx={{ width: `120%`, left: `-20px`, bottom: `-20px` }}
-        />
-      )}
     </HomeCard>
   );
 };
