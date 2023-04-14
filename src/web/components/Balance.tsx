@@ -13,6 +13,7 @@ import {
 import Tooltip from "@mui/material/Tooltip/Tooltip";
 import { Alert, Box, IconButton } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { cardWidth } from "./Common";
 
 type Balances = { [key in StableCoinKeys | `feesBudget`]?: number };
 
@@ -42,7 +43,7 @@ export default function Balance({
       ? `Fees budget is low. You can turn on replenishment in the Settings.`
       : ``;
   return (
-    <Card sx={{ width: `240px` }}>
+    <Card sx={{ width: cardWidth }}>
       <CardContent sx={{ ":last-child": { paddingBottom: `16px` } }}>
         <Box
           style={{
