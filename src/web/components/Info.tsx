@@ -12,7 +12,7 @@ import { FixedSizeList } from "react-window";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 import CurrencyFormat from "react-currency-format";
 import { f2, type Stats } from "../../lib";
-import { cardWidth } from "./Common";
+import { cardMaxWidth, cardMinWidth } from "./Common";
 
 export function Info({ stats }: { stats: Stats }): JSX.Element {
   const rows: Array<{
@@ -39,12 +39,15 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
   return (
     <Box sx={{ justifyContent: `center`, display: `flex` }}>
       <Stack spacing={2}>
-        <Alert sx={{ width: cardWidth }} severity={`info`}>
+        <Alert
+          sx={{ maxWidth: cardMaxWidth, minWidth: cardMinWidth }}
+          severity={`info`}
+        >
           Balance changes since Day 1 with exchange fees taken into account.
           {` `}Represents the net profit/loss 💸.
         </Alert>
         <FixedSizeList
-          width={cardWidth}
+          width={cardMinWidth}
           height={440}
           itemSize={55}
           itemCount={rows.length}

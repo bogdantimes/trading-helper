@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent } from "@mui/material";
-import { cardWidth } from "../Common";
+import { cardMaxWidth, cardMinWidth } from "../Common";
 
 export default function HomeCard({ children, bColor = ``, ...props }) {
   return (
@@ -8,7 +8,8 @@ export default function HomeCard({ children, bColor = ``, ...props }) {
       {...props}
       sx={{
         boxShadow: 2,
-        minWidth: cardWidth,
+        maxWidth: cardMaxWidth,
+        minWidth: cardMinWidth,
         borderRadius: `1rem`,
         border: bColor ? `${bColor} 1px solid` : undefined,
         borderInline: `none`,
