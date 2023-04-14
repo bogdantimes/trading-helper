@@ -11,7 +11,7 @@ import {
 import Tooltip from "@mui/material/Tooltip/Tooltip";
 import { Alert, Box, IconButton } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import Home from "./Home";
+import HomeCard from "./HomeCard";
 
 type Balances = { [key in StableCoinKeys | `feesBudget`]?: number };
 
@@ -24,7 +24,7 @@ interface BalanceProps {
   viewOnly: boolean;
 }
 
-export default function Balance({
+export default function BalanceCard({
   name,
   balances,
   assetsValue,
@@ -41,7 +41,7 @@ export default function Balance({
       ? `Fees budget is low. You can turn on replenishment in the Settings.`
       : ``;
   return (
-    <Home>
+    <HomeCard>
       <Box
         style={{
           display: `flex`,
@@ -149,6 +149,6 @@ export default function Balance({
           )}
         </Box>
       </Typography>
-    </Home>
+    </HomeCard>
   );
 }

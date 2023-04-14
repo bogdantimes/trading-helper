@@ -15,7 +15,7 @@ import {
   TradeState,
 } from "../../../lib/index";
 import { growthIconMap } from "../Common";
-import Home from "./Home";
+import HomeCard from "./HomeCard";
 
 interface Params {
   cfg: Config;
@@ -29,7 +29,7 @@ const SlowLinearProgress = styled(LinearProgress)(({ theme }) => ({
   },
 }));
 
-const Asset = ({ cfg, tm, hideBalances }: Params) => {
+const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const theme = useTheme();
   const coinName = tm.getCoinName();
   const paid = tm.tradeResult.paid;
@@ -45,7 +45,7 @@ const Asset = ({ cfg, tm, hideBalances }: Params) => {
   const isSold = tradeState === TradeState.SOLD;
 
   return (
-    <Home
+    <HomeCard
       bColor={
         isSold
           ? tm.profit() >= 0
@@ -108,8 +108,8 @@ const Asset = ({ cfg, tm, hideBalances }: Params) => {
           sx={{ width: `120%`, left: `-20px`, bottom: `-20px` }}
         />
       )}
-    </Home>
+    </HomeCard>
   );
 };
 
-export default Asset;
+export default AssetCard;

@@ -130,8 +130,12 @@ export enum Key {
   ATH,
   ATHTime,
   IMBALANCE,
+  /**
+   * @deprecated
+   */
   IS_READY,
   MID,
+  TREND,
 }
 
 export enum Bit {
@@ -150,6 +154,7 @@ export interface CandidateInfo {
   [Key.DURATION]: number;
   [Key.DURATION_MET]: Bit;
   [Key.MIN]: number;
+  [Key.MID]: number;
   [Key.MAX]: number;
   [Key.SIZE]: number;
   [Key.S0]: ChannelState;
@@ -162,7 +167,8 @@ export interface CandidateInfo {
   [Key.STRENGTH]: number;
   [Key.ATH]: number;
   [Key.ATHTime]: number;
-  [Key.IS_READY]: Bit;
+  [Key.IMBALANCE]?: number;
+  [Key.TREND]?: string;
 }
 
 export interface Candidates {
