@@ -55,7 +55,7 @@ export function Home({
           {assetsCards(`🪙 Current`, current, hideBalances, config)}
         </Grid>
         <Grid item xs={12} md={4} order={{ xs: 1, md: 3 }}>
-          {assetsCards(`🪙 Sold`, sold, hideBalances, config)}
+          {assetsCards(`🏦 Sold`, sold, hideBalances, config)}
         </Grid>
       </Grid>
     </>
@@ -130,7 +130,12 @@ function assetsCards(
             </Typography>
           )}
           {!!elems.length && (
-            <Grid container justifyContent="center" spacing={2}>
+            <Grid
+              container
+              justifyContent="center"
+              spacing={2}
+              ml={`-16px !important`}
+            >
               {elems.map((t) => (
                 <Grid key={t.getCoinName()} item>
                   <AssetCard tm={t} cfg={config} hideBalances={hideBalances} />
@@ -180,7 +185,12 @@ function candidates(
         </Typography>
       )}
       {!hide && (
-        <Grid container justifyContent="center" spacing={2}>
+        <Grid
+          container
+          justifyContent="center"
+          spacing={2}
+          ml={`-16px !important`}
+        >
           {displayCoins.map((coin, i) => {
             const ci = data[coin];
             const strength = ci[Key.STRENGTH] ?? 0;
