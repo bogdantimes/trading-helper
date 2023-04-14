@@ -4,6 +4,7 @@ import {
   darken,
   lighten,
   LinearProgress,
+  styled,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -21,6 +22,12 @@ interface Params {
   tm: TradeMemo;
   hideBalances: boolean;
 }
+
+const SlowLinearProgress = styled(LinearProgress)(({ theme }) => ({
+  "& .MuiLinearProgress-bar": {
+    animationDuration: `5s`,
+  },
+}));
 
 const Asset = ({ cfg, tm, hideBalances }: Params) => {
   const theme = useTheme();
@@ -87,7 +94,7 @@ const Asset = ({ cfg, tm, hideBalances }: Params) => {
         </Box>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="inherit" fontWeight="bold">
-            {isSold ? `Sold for:` : `Current:`}
+            {isSold ? `Gained:` : `Current:`}
           </Typography>
           <Typography variant="inherit">
             {displayCurrentValue} {cfg.StableCoin}
@@ -95,7 +102,7 @@ const Asset = ({ cfg, tm, hideBalances }: Params) => {
         </Box>
       </Typography>
       {!isSold && (
-        <LinearProgress
+        <SlowLinearProgress
           value={100}
           variant={cfg.SmartExit ? `indeterminate` : `determinate`}
           sx={{ width: `120%`, left: `-20px`, bottom: `-20px` }}
