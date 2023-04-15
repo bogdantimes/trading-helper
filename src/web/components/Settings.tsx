@@ -29,7 +29,7 @@ import {
   f2,
   StableUSDCoin,
 } from "../../lib";
-import HomeCard from "./cards/HomeCard";
+import BasicCard from "./cards/BasicCard";
 
 export function Settings(params: {
   config: Config;
@@ -88,7 +88,7 @@ export function Settings(params: {
 
   const tickIntervalMsg = `The tool internal update interval is 1 minute, so it may take up to 1 minute ⏳ for some changes to take effect.`;
   return (
-    <HomeCard>
+    <BasicCard>
       <Stack direction="row" alignItems="center" spacing={1}>
         <Avatar sx={{ bgcolor: `transparent` }}>⚙️</Avatar>
         <Typography variant="h6">Settings</Typography>
@@ -283,6 +283,6 @@ export function Settings(params: {
           {error && <Alert severity="error">{error.toString()}</Alert>}
         </Stack>
       </Box>
-    </HomeCard>
+    </BasicCard>
   );
 }

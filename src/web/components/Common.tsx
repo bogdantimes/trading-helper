@@ -47,7 +47,15 @@ export const cardMinWidth = `270px`;
 export const cardMaxWidth = `415px`;
 
 export const featureDisabledInfo = (
-  <Alert severity="info">
+  <Alert
+    severity="info"
+    sx={{
+      maxWidth: `675px`,
+      minWidth: cardMinWidth,
+      ml: `auto`,
+      mr: `auto`,
+    }}
+  >
     <Typography variant="body1">
       <div>Your installation is working in candidates view-only mode 👀.</div>
       <Link

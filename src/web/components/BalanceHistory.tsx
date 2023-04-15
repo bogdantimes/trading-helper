@@ -13,14 +13,14 @@ import {
 } from "@mui/material";
 import { f2, formatUSDCurrency } from "../../lib";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
-import HomeCard from "./cards/HomeCard";
+import BasicCard from "./cards/BasicCard";
 import { cardMaxWidth, cardMinWidth } from "./Common";
 
 export function BalanceHistory({ stats }) {
   const rows = buildRows(stats);
 
   return (
-    <HomeCard>
+    <BasicCard>
       <Stack direction="row" alignItems="center" spacing={1}>
         <Avatar sx={{ bgcolor: `transparent` }}>💸</Avatar>
         <Typography variant="h6">Balance History</Typography>
@@ -50,7 +50,7 @@ export function BalanceHistory({ stats }) {
           })}
         </List>
       </Box>
-    </HomeCard>
+    </BasicCard>
   );
 }
 

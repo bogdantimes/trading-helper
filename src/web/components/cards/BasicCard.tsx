@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@mui/material";
 import { cardMaxWidth, cardMinWidth } from "../Common";
 
-export default function HomeCard({ children, ...props }) {
+export default function BasicCard({ children, ...props }) {
   return (
     <Card
       {...props}

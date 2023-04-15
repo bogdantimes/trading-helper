@@ -34,21 +34,50 @@ export function Home({
   const current = sorted.filter((t) => t.currentValue);
   const sold = sorted.filter((t) => !t.currentValue);
 
+  const currentInfoMessage =
+    config.AdvancedAccess && !current.length ? (
+      <Typography variant="body1" textAlign={`center`}>
+        {config.ViewOnly
+          ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
+          : `⌚ Waiting for specific conditions to buy a candidate.`}
+      </Typography>
+    ) : undefined;
+
   return (
     <>
-      <Grid sx={{ flexGrow: 1 }} container spacing={2}>
+      <Grid
+        sx={{ flexGrow: 1 }}
+        display="flex"
+        justifyContent="center"
+        container
+        spacing={2}
+      >
         <Grid item xs={12}>
           {balanceCard(config, hideBalances, assetsValue, toggleHideBalances)}
         </Grid>
         <Grid item xs={12} md={4} order={{ xs: 2, md: 1 }}>
           {candidates(`⚖️ Candidates`, state.candidates)}
         </Grid>
-        <Grid item xs={12} md={4} order={{ xs: 1, md: 2 }}>
-          {assetsCards(`🪙 Current`, current, hideBalances, config)}
-        </Grid>
-        <Grid item xs={12} md={4} order={{ xs: 1, md: 3 }}>
-          {assetsCards(`💸 Sold`, sold, hideBalances, config)}
-        </Grid>
+        {!config.AdvancedAccess ? (
+          <Grid item xs={12} md={12} order={{ xs: 1, md: 0 }}>
+            {featureDisabledInfo}
+          </Grid>
+        ) : (
+          <>
+            <Grid item xs={12} md={4} order={{ xs: 1, md: 2 }}>
+              {assetsCards(
+                `🪙 Current`,
+                current,
+                hideBalances,
+                config,
+                currentInfoMessage
+              )}
+            </Grid>
+            <Grid item xs={12} md={4} order={{ xs: 1, md: 3 }}>
+              {assetsCards(`💸 Sold`, sold, hideBalances, config)}
+            </Grid>
+          </>
+        )}
       </Grid>
     </>
   );
@@ -92,7 +121,8 @@ function assetsCards(
   title: string,
   elems: TradeMemo[],
   hideBalances: boolean,
-  config: Config
+  config: Config,
+  topItem?: JSX.Element
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
@@ -110,29 +140,20 @@ function assetsCards(
       />
       {!hide && (
         <>
-          {!config.AdvancedAccess && featureDisabledInfo}
-          {config.AdvancedAccess && !elems.length && (
-            <Typography variant="body1">
-              {config.ViewOnly
-                ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
-                : `⌚ Waiting for specific conditions to buy a candidate.`}
-            </Typography>
-          )}
-          {!!elems.length && (
-            <Grid
-              container
-              display="flex"
-              justifyContent="center"
-              spacing={2}
-              ml={`-16px !important`}
-            >
-              {elems.map((t) => (
-                <Grid key={t.getCoinName()} item>
-                  <AssetCard tm={t} cfg={config} hideBalances={hideBalances} />
-                </Grid>
-              ))}
-            </Grid>
-          )}
+          <Grid
+            container
+            display="flex"
+            justifyContent="center"
+            spacing={2}
+            ml={`-16px !important`}
+          >
+            {topItem && <Grid item>{topItem}</Grid>}
+            {elems.map((t) => (
+              <Grid key={t.getCoinName()} item>
+                <AssetCard tm={t} cfg={config} hideBalances={hideBalances} />
+              </Grid>
+            ))}
+          </Grid>
         </>
       )}
     </Stack>

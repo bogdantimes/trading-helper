@@ -8,7 +8,7 @@ import {
   TradeState,
 } from "../../../lib/index";
 import { growthIconMap, percentileToColorMap } from "../Common";
-import HomeCard from "./HomeCard";
+import BasicCard from "./BasicCard";
 
 interface Params {
   cfg: Config;
@@ -34,7 +34,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const supplyColor =
     percentileToColorMap[(tm.supplyDemandImbalance + 0.5).toFixed(1)];
   return (
-    <HomeCard>
+    <BasicCard>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography
           variant="h6"
@@ -66,7 +66,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
       </Box>
       <Typography color="text.secondary" variant="body2" mt={1}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="inherit" fontWeight="bold">
+          <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
             Paid:
           </Typography>
           <Typography variant="inherit">
@@ -74,7 +74,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           </Typography>
         </Box>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="inherit" fontWeight="bold">
+          <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
             {isSold ? `Gained:` : `Current:`}
           </Typography>
           <Typography variant="inherit">
@@ -87,7 +87,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
             justifyContent="space-between"
             alignItems="center"
           >
-            <Typography variant="inherit" fontWeight="bold">
+            <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
               Market demand:
             </Typography>
             <Typography
@@ -103,7 +103,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           </Box>
         )}
       </Typography>
-    </HomeCard>
+    </BasicCard>
   );
 };
 
