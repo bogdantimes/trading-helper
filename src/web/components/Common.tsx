@@ -78,6 +78,8 @@ export const ScriptApp: (RunnerFunctions & PublicEndpoints) | null = process.env
   ? null
   : google.script.run;
 
+export const MarketDemandInfo = `Market demand shows the balance between buy and sell orders. A positive value means more buyers, while a negative value indicates more sellers. This affects the asset's price and reflects market sentiment.`;
+
 export const percentileToColorMap = {
   // Gradient from red to green, with keys from 0.1 to 0.9 and step 0.1
   0.0: `#ff0000`,

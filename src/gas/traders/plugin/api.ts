@@ -1,4 +1,5 @@
 import {
+  type CandidateInfo,
   type Candidates,
   type CoinName,
   type ExchangeSymbol,
@@ -15,6 +16,7 @@ export interface TraderPlugin {
   getCandidates: (dao: ICandidatesDao) => Candidates;
   getOptimalInvestRatio: (dao: ICandidatesDao) => number;
   getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo | undefined;
+  getImbalance: (coin: CoinName, c: CandidateInfo) => number;
 }
 
 export interface PluginResult {

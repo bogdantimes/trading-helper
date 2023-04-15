@@ -31,7 +31,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const tradeState = tm.getState();
   const isSold = tradeState === TradeState.SOLD;
 
-  const supplyColor =
+  const demandColor =
     percentileToColorMap[(tm.supplyDemandImbalance + 0.5).toFixed(1)];
   return (
     <BasicCard>
@@ -94,8 +94,8 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
               variant="inherit"
               color={
                 theme.palette.mode === `light`
-                  ? darken(supplyColor, 0.5)
-                  : supplyColor
+                  ? darken(demandColor, 0.5)
+                  : demandColor
               }
             >
               {f0(tm.supplyDemandImbalance * 100)}%

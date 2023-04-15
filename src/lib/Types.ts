@@ -16,14 +16,15 @@ export enum OtherStableCoins {
   USDC = `USDC`,
 }
 
+export type PriceMap = Record<string, number>;
+
 type DateString = string;
 type ProfitValue = number;
-export type PriceMap = Record<DateString, ProfitValue>;
 
 export interface Stats {
   TotalProfit: number;
   TotalWithdrawals: number;
-  DailyProfit: PriceMap;
+  DailyProfit: Record<DateString, ProfitValue>;
 }
 
 export class ExchangeSymbol {

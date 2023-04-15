@@ -204,7 +204,7 @@ function candidates(
           {displayCoins.map((coin, i) => {
             return (
               <Grid item key={coin}>
-                <CandidateCard coin={coin} candidateInfo={data[coin]} />
+                <CandidateCard coin={coin} ci={data[coin]} />
               </Grid>
             );
           })}

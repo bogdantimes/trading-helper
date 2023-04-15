@@ -1,24 +1,47 @@
-import React from "react";
+import React, { useState } from "react";
 import BasicCard from "./BasicCard";
 import Box from "@mui/material/Box";
-import { Typography } from "@mui/material";
+import { darken, Tooltip, Typography, useTheme } from "@mui/material";
 import SemiCircleProgressBar from "react-progressbar-semicircle";
-import { growthIconMap, percentileToColorMap } from "../Common";
+import {
+  growthIconMap,
+  MarketDemandInfo,
+  percentileToColorMap,
+  ScriptApp,
+} from "../Common";
 import { type CandidateInfo, f0, Key, PriceMove } from "../../../lib/index";
+import RefreshButton from "../small/RefreshButton";
 
 interface CandidateCardProps {
   coin: string;
-  candidateInfo: CandidateInfo;
+  ci: CandidateInfo;
 }
 
 export default function CandidateCard({
   coin,
-  candidateInfo,
+  ci,
 }: CandidateCardProps): JSX.Element {
-  const strength = candidateInfo[Key.STRENGTH] ?? 0;
-  const priceMove = candidateInfo[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
-  const min = candidateInfo[Key.MIN];
-  const max = candidateInfo[Key.MAX];
+  const theme = useTheme();
+  const strength = ci[Key.STRENGTH] ?? 0;
+  const priceMove = ci[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
+  const min = ci[Key.MIN];
+  const max = ci[Key.MAX];
+  const [imbalance, setImbalance] = useState(0);
+  const [imbalanceFetching, setImbalanceFetching] = useState(false);
+
+  function refreshImbalance() {
+    setImbalanceFetching(true);
+    ScriptApp?.withSuccessHandler((value) => {
+      setImbalanceFetching(false);
+      setImbalance(+value);
+    })
+      .withFailureHandler(() => {
+        setImbalanceFetching(false);
+      })
+      .getImbalance(coin, ci as any);
+  }
+
+  const demandColor = percentileToColorMap[((imbalance ?? 0) + 0.5).toFixed(1)];
 
   return (
     <BasicCard>
@@ -53,6 +76,41 @@ export default function CandidateCard({
                 Resistance:
               </Typography>
               <Typography variant="inherit">{max}</Typography>
+            </Box>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Tooltip title={MarketDemandInfo}>
+                <Typography
+                  variant="inherit"
+                  sx={{
+                    fontWeight: `bold`,
+                    mr: `5px`,
+                    textDecoration: `underline dashed`,
+                  }}
+                >
+                  Market demand:
+                </Typography>
+              </Tooltip>
+              <Typography
+                variant="inherit"
+                color={
+                  theme.palette.mode === `light`
+                    ? darken(demandColor, 0.5)
+                    : demandColor
+                }
+              >
+                {imbalance ? (
+                  <span>{f0(imbalance * 100)}%</span>
+                ) : (
+                  <RefreshButton
+                    isSpinning={imbalanceFetching}
+                    onClick={refreshImbalance}
+                  />
+                )}
+              </Typography>
             </Box>
           </Typography>
         </Box>

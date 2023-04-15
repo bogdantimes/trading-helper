@@ -5,6 +5,7 @@ import { Exchange } from "./Exchange";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   type AppState,
+  type CandidateInfo,
   type CoinName,
   type Config,
   f2,
@@ -287,5 +288,10 @@ global.upgrade = () => {
 global.getAllCandidates = () => {
   return catchError(() => {
     return new CandidatesDao(DefaultStore).getAll();
+  });
+};
+global.getImbalance = (coin: CoinName, ci: CandidateInfo) => {
+  return catchError(() => {
+    return plugin.getImbalance(coin, ci);
   });
 };
