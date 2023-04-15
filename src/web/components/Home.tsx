@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { Button, Chip, Divider, Grid, Stack, Typography } from "@mui/material";
+import { Button, Chip, Grid, Stack, Typography } from "@mui/material";
 import { featureDisabledInfo } from "./Common";
 import {
   type AppState,
@@ -47,7 +47,7 @@ export function Home({
           {assetsCards(`🪙 Current`, current, hideBalances, config)}
         </Grid>
         <Grid item xs={12} md={4} order={{ xs: 1, md: 3 }}>
-          {assetsCards(`🏦 Sold`, sold, hideBalances, config)}
+          {assetsCards(`💸 Sold`, sold, hideBalances, config)}
         </Grid>
       </Grid>
     </>
@@ -64,14 +64,13 @@ function balanceCard(
 
   return (
     <Stack spacing={1} alignItems={`center`}>
-      <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
-        <Chip
-          onClick={() => {
-            setHide(!hide);
-          }}
-          label={<Typography variant={`h6`}>💰 Balance</Typography>}
-        />
-      </Divider>
+      <Chip
+        sx={{ mb: `8px` }}
+        onClick={() => {
+          setHide(!hide);
+        }}
+        label={<Typography variant={`h6`}>💰 Balance</Typography>}
+      />
       {!hide && (
         <BalanceCard
           name={config.StableCoin}
@@ -99,18 +98,16 @@ function assetsCards(
 
   return (
     <Stack spacing={1} alignItems={`center`}>
-      <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
-        <Chip
-          onClick={() => {
-            setHide(!hide);
-          }}
-          label={
-            <Typography variant={`h6`}>
-              {title} ({elems.length})
-            </Typography>
-          }
-        />
-      </Divider>
+      <Chip
+        onClick={() => {
+          setHide(!hide);
+        }}
+        label={
+          <Typography variant={`h6`}>
+            {title} ({elems.length})
+          </Typography>
+        }
+      />
       {!hide && (
         <>
           {!config.AdvancedAccess && featureDisabledInfo}
@@ -158,18 +155,16 @@ function candidates(
 
   return (
     <Stack spacing={1} alignItems={`center`}>
-      <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
-        <Chip
-          onClick={() => {
-            setHide(!hide);
-          }}
-          label={
-            <Typography variant={`h6`}>
-              {title} ({candidateCoins.length})
-            </Typography>
-          }
-        />
-      </Divider>
+      <Chip
+        onClick={() => {
+          setHide(!hide);
+        }}
+        label={
+          <Typography variant={`h6`}>
+            {title} ({candidateCoins.length})
+          </Typography>
+        }
+      />
       {!hide && !candidateCoins.length && (
         <Typography alignSelf={`center`} variant={`body2`}>
           Nothing to show yet. Investment candidates will appear after some
