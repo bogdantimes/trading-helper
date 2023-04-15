@@ -1,5 +1,4 @@
 import { CachedStore, DefaultStore, FirebaseStore } from "./Store";
-import { TradeActions } from "./TradeActions";
 import { Statistics } from "./Statistics";
 import { Exchange } from "./Exchange";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
@@ -21,8 +20,8 @@ import { TradeManager } from "./TradeManager";
 import { Updater, UpgradeDone } from "./Updater";
 import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
-import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 import { CandidatesDao } from "./dao/Candidates";
+import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -157,10 +156,16 @@ function sellAll(): string {
   });
 }
 
-function dropCoin(coinName: string): string {
+function remove(...coins: CoinName[]): string {
   return catchError(() => {
-    TradeActions.default().drop(coinName);
-    return `Removing ${coinName}`;
+    const dao = new TradesDao(DefaultStore);
+    coins?.forEach((c) => {
+      dao.update(c, (trade) => {
+        trade.deleted = true;
+        return trade;
+      });
+    });
+    return `Removed ${coins?.join(`, `)}`;
   });
 }
 
@@ -235,10 +240,15 @@ function buy(coin: CoinName): string {
   });
 }
 
-function sell(coin: CoinName): string {
+function sell(...coins: CoinName[]): string {
   return catchError(() => {
-    TradeManager.default().sell(coin.toUpperCase());
-    return `Done. Results were sent to your email.`;
+    const mgr = TradeManager.default();
+    coins?.forEach((c) => {
+      mgr.sell(c.toUpperCase());
+    });
+    return `Done selling ${coins?.join(
+      `, `
+    )}. Results were sent to your email.`;
   });
 }
 
@@ -265,14 +275,14 @@ global.tick = tick;
 global.start = start;
 global.stop = stop;
 global.initialSetup = initialSetup;
-global.sellAll = sellAll;
-global.dropCoin = dropCoin;
 global.setConfig = setConfig;
 global.setFirebaseURL = setFirebaseURL;
-global.addWithdrawal = addWithdrawal;
-global.getState = getState;
 global.buy = buy;
 global.sell = sell;
+global.sellAll = sellAll;
+global.remove = remove;
+global.addWithdrawal = addWithdrawal;
+global.getState = getState;
 global.keepCacheAlive = () => {
   catchError(() => {
     DefaultStore.keepCacheAlive();

@@ -217,6 +217,7 @@ export default function App(): JSX.Element {
               theme.palette.mode === `dark` ? ColorMode.Dark : ColorMode.Light
             }
             onInput={(terminalInput) => {
+              setTerminalOutput(``);
               // parse terminal input: <cmd> <arg1> <arg2> ...
               const [cmd, ...args] = terminalInput.split(` `);
               // JSON parse the args
@@ -233,6 +234,7 @@ export default function App(): JSX.Element {
                   setPrompt(`$`);
                   clearInterval(spinner);
                   setTerminalOutput(JSON.stringify(resp, null, 2));
+                  reFetchState(); // re-fetch any changes on back
                 })
                   .withFailureHandler((resp) => {
                     setPrompt(`$`);
