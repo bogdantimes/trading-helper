@@ -3,19 +3,18 @@ import {
   Alert,
   Avatar,
   Box,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   Typography,
 } from "@mui/material";
 import { f2, formatUSDCurrency } from "../../lib";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 import HomeCard from "./cards/HomeCard";
+import { cardMaxWidth, cardMinWidth } from "./Common";
 
 export function BalanceHistory({ stats }) {
   const rows = buildRows(stats);
@@ -31,36 +30,25 @@ export function BalanceHistory({ stats }) {
           Balance changes since Day 1 with exchange fees taken into account.
           {` `}Represents the net profit/loss.
         </Alert>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Profit/Loss</TableCell>
-                <TableCell>Time Frame</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <Typography
-                      display={`flex`}
-                      color={row.profit >= 0 ? `success.main` : `error.main`}
-                    >
-                      {row.profit >= 0 ? (
-                        <ArrowDropUp color="inherit" />
-                      ) : (
-                        <ArrowDropDown color="inherit" />
-                      )}
-                      {formatUSDCurrency(row.profit)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{row.timeFrame}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <List sx={{ minWidth: cardMinWidth, maxWidth: cardMaxWidth }}>
+          {rows.map((r, i) => {
+            const icon =
+              r.profit >= 0 ? (
+                <ArrowDropUp color={`success`} />
+              ) : (
+                <ArrowDropDown color={`error`} />
+              );
+            return (
+              <ListItem key={i} sx={{ padding: `0 16px` }}>
+                <ListItemAvatar>{icon}</ListItemAvatar>
+                <ListItemText
+                  primary={formatUSDCurrency(r.profit)}
+                  secondary={r.timeFrame}
+                />
+              </ListItem>
+            );
+          })}
+        </List>
       </Box>
     </HomeCard>
   );
