@@ -53,6 +53,7 @@ export default function BalanceCard({
         {toggleHide && (
           <IconButton
             edge="end"
+            sx={{ padding: `0 8px` }}
             onClick={() => {
               toggleHide();
             }}

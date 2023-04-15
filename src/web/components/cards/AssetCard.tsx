@@ -34,15 +34,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const supplyColor =
     percentileToColorMap[(tm.supplyDemandImbalance + 0.5).toFixed(1)];
   return (
-    <HomeCard
-      bColor={
-        isSold
-          ? tm.profit() >= 0
-            ? `${theme.palette.success.main}`
-            : `${theme.palette.error.main}`
-          : ``
-      }
-    >
+    <HomeCard>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography
           variant="h6"
@@ -89,21 +81,27 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
             {displayCurrentValue} {cfg.StableCoin}
           </Typography>
         </Box>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="inherit" fontWeight="bold">
-            Supply:
-          </Typography>
-          <Typography
-            variant="inherit"
-            color={
-              theme.palette.mode === `light`
-                ? darken(supplyColor, 0.5)
-                : supplyColor
-            }
+        {!!tm.supplyDemandImbalance && (
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
           >
-            {f0(tm.supplyDemandImbalance * 100)}%
-          </Typography>
-        </Box>
+            <Typography variant="inherit" fontWeight="bold">
+              Market demand:
+            </Typography>
+            <Typography
+              variant="inherit"
+              color={
+                theme.palette.mode === `light`
+                  ? darken(supplyColor, 0.5)
+                  : supplyColor
+              }
+            >
+              {f0(tm.supplyDemandImbalance * 100)}%
+            </Typography>
+          </Box>
+        )}
       </Typography>
     </HomeCard>
   );

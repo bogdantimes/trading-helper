@@ -163,9 +163,8 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
-    const cs = this.plugin.getCandidates(this.candidatesDao).selected;
-    this.#optimalInvestRatio = Math.floor(
-      Math.max(1, Math.min(3, Object.keys(cs).length / 3))
+    this.#optimalInvestRatio = this.plugin.getOptimalInvestRatio(
+      this.candidatesDao
     );
   }
 

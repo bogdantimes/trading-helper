@@ -1,14 +1,18 @@
 import * as React from "react";
 import {
   Alert,
+  Avatar,
   Box,
+  Card,
+  CardContent,
+  List,
   ListItem,
   ListItemAvatar,
   ListItemText,
   Stack,
   Tooltip,
+  Typography,
 } from "@mui/material";
-import { FixedSizeList } from "react-window";
 import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 import CurrencyFormat from "react-currency-format";
 import { f2, type Stats } from "../../lib";
@@ -37,50 +41,58 @@ export function Info({ stats }: { stats: Stats }): JSX.Element {
   }
 
   return (
-    <Box sx={{ justifyContent: `center`, display: `flex` }}>
+    <Box
+      sx={{
+        display: `flex`,
+        justifyContent: `center`,
+        mt: 2,
+        mb: 2,
+        maxWidth: cardMaxWidth,
+        minWidth: cardMinWidth,
+      }}
+    >
       <Stack spacing={2}>
-        <Alert
-          sx={{ maxWidth: cardMaxWidth, minWidth: cardMinWidth }}
-          severity={`info`}
-        >
+        <Alert severity="info">
           Balance changes since Day 1 with exchange fees taken into account.
-          {` `}Represents the net profit/loss 💸.
+          Represents the net profit/loss 💸.
         </Alert>
-        <FixedSizeList
-          width={cardMinWidth}
-          height={440}
-          itemSize={55}
-          itemCount={rows.length}
-          overscanCount={5}
-        >
-          {({ index, style }) => {
-            const profit = rows[index].profit;
-            const up = profit >= 0;
-            const icon = up ? (
-              <ArrowDropUp color={`success`} />
-            ) : (
-              <ArrowDropDown color={`error`} />
-            );
-            return (
-              <ListItem style={style} key={index} component="div">
-                <ListItemAvatar>{icon}</ListItemAvatar>
-                <ListItemText
-                  primary={
-                    <CurrencyFormat
-                      value={profit}
-                      displayType={`text`}
-                      thousandSeparator={true}
-                      decimalScale={2}
-                      fixedDecimalScale={true}
-                      prefix={profit >= 0 ? `+$` : `$`}
+        <Card>
+          <CardContent>
+            <List>
+              {rows.map((row) => {
+                const profit = row.profit;
+                const up = profit >= 0;
+                const icon = up ? (
+                  <ArrowDropUp color="success" />
+                ) : (
+                  <ArrowDropDown color="error" />
+                );
+                return (
+                  <ListItem key={row.id} disablePadding>
+                    <ListItemAvatar>
+                      <Avatar sx={{ bgcolor: `transparent` }}>{icon}</Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <CurrencyFormat
+                          value={profit}
+                          displayType="text"
+                          thousandSeparator
+                          decimalScale={2}
+                          fixedDecimalScale
+                          prefix={profit >= 0 ? `+$` : `$`}
+                        />
+                      }
+                      secondary={
+                        <Typography variant="body2">{row.timeFrame}</Typography>
+                      }
                     />
-                  }
-                  secondary={rows[index].timeFrame}
-                />
-              </ListItem>
-            );
-          }}
-        </FixedSizeList>
+                  </ListItem>
+                );
+              })}
+            </List>
+          </CardContent>
+        </Card>
       </Stack>
     </Box>
   );
@@ -101,14 +113,15 @@ function getTotalLabelComponent(tw: number): React.ReactElement {
         }
         arrow
       >
-        <span
-          style={{
+        <Typography
+          component="span"
+          sx={{
             textDecoration: `underline`,
             textDecorationStyle: `dashed`,
           }}
         >
           withdrawals
-        </span>
+        </Typography>
       </Tooltip>
       : ${f2(tw)})
     </>

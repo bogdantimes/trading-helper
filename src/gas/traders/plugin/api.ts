@@ -13,6 +13,7 @@ export interface TraderPlugin {
   trade: (context: PluginContext) => PluginResult;
   getPrices: () => PriceMap;
   getCandidates: (dao: ICandidatesDao) => Candidates;
+  getOptimalInvestRatio: (dao: ICandidatesDao) => number;
   getBinanceSymbolInfo: (symbol: ExchangeSymbol) => SymbolInfo | undefined;
 }
 

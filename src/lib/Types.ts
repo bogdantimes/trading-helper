@@ -16,7 +16,9 @@ export enum OtherStableCoins {
   USDC = `USDC`,
 }
 
-export type PriceMap = Record<string, number>;
+type DateString = string;
+type ProfitValue = number;
+export type PriceMap = Record<DateString, ProfitValue>;
 
 export interface Stats {
   TotalProfit: number;
@@ -127,7 +129,13 @@ export enum Key {
   PRICE_MOVE,
   MIN_PERCENTILE,
   STRENGTH,
+  /**
+   * @deprecated
+   */
   ATH,
+  /**
+   * @deprecated
+   */
   ATHTime,
   IMBALANCE,
   /**
@@ -165,8 +173,6 @@ export interface CandidateInfo {
   [Key.MIN_PERCENTILE]: number;
   [Key.PRICE_MOVE]: PriceMove;
   [Key.STRENGTH]: number;
-  [Key.ATH]: number;
-  [Key.ATHTime]: number;
   [Key.IMBALANCE]?: number;
   [Key.TREND]?: string;
 }
