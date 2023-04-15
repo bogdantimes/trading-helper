@@ -135,6 +135,7 @@ export default function App(): JSX.Element {
 
   const [tab, setTab] = React.useState(0);
   const changeTab = (e: React.SyntheticEvent, v: number): void => {
+    if (!TabId[v]) return;
     setTab((prevState) => {
       if (prevState !== TabId.Settings && v === TabId.Settings) {
         // Reload state when opening Settings
@@ -181,16 +182,16 @@ export default function App(): JSX.Element {
               <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
             </Tabs>
           </Box>
-          <TabPanel value={tab} index={TabId.Home}>
+          <TabPanel value={tab} index={TabId.Home} onChange={changeTab}>
             <Home
               state={state}
               onAssetDelete={deletingAsset ? undefined : onAssetDelete}
             />
           </TabPanel>
-          <TabPanel value={tab} index={TabId.Info}>
+          <TabPanel value={tab} index={TabId.Info} onChange={changeTab}>
             <BalanceHistory stats={state.info} />
           </TabPanel>
-          <TabPanel value={tab} index={TabId.Settings}>
+          <TabPanel value={tab} index={TabId.Settings} onChange={changeTab}>
             <Settings
               config={state.config}
               setConfig={(config) => {
