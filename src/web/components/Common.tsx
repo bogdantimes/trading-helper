@@ -44,7 +44,7 @@ export const capitalizeWord = (s: string): string =>
   s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
 export const cardMinWidth = `270px`;
-export const cardMaxWidth = `320px`;
+export const cardMaxWidth = `415px`;
 
 export const featureDisabledInfo = (
   <Alert severity="info">

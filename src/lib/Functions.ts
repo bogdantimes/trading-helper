@@ -151,3 +151,12 @@ export function waitTillCurrentSecond(s = 0): number {
   }
   return waited;
 }
+
+export function formatUSDCurrency(value) {
+  return new Intl.NumberFormat(`en-US`, {
+    style: `currency`,
+    currency: `USD`,
+    signDisplay: `always`,
+    maximumFractionDigits: 2,
+  }).format(value);
+}

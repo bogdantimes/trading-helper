@@ -18,7 +18,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { Settings } from "./components/Settings";
-import { Info } from "./components/Info";
+import { BalanceHistory } from "./components/BalanceHistory";
 import { Home } from "./components/Home";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
@@ -188,7 +188,7 @@ export default function App(): JSX.Element {
             />
           </TabPanel>
           <TabPanel value={tab} index={TabId.Info}>
-            <Info stats={state.info} />
+            <BalanceHistory stats={state.info} />
           </TabPanel>
           <TabPanel value={tab} index={TabId.Settings}>
             <Settings

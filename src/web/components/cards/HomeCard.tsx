@@ -8,8 +8,8 @@ export default function HomeCard({ children, ...props }) {
       {...props}
       sx={{
         boxShadow: 2,
-        maxWidth: cardMaxWidth,
         minWidth: cardMinWidth,
+        maxWidth: cardMaxWidth,
         borderRadius: `1rem`,
       }}
     >
