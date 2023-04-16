@@ -79,16 +79,22 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
             {displayCurrentValue} {cfg.StableCoin}
           </Typography>
         </Box>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
-            Confidence:
-          </Typography>
-          <ImbalanceChecker
-            coinName={coinName}
-            initialValue={tm.supplyDemandImbalance}
-            formatter={(v: number) => v + 0.5}
-          />
-        </Box>
+        {!!tm.currentValue && (
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
+              Confidence:
+            </Typography>
+            <ImbalanceChecker
+              coinName={coinName}
+              initialValue={tm.supplyDemandImbalance}
+              formatter={(v: number) => v + 0.5}
+            />
+          </Box>
+        )}
       </Typography>
     </BasicCard>
   );
