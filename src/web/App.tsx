@@ -9,6 +9,8 @@ import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import {
   Alert,
+  Card,
+  Container,
   createTheme,
   CssBaseline,
   Dialog,
@@ -163,11 +165,15 @@ export default function App(): JSX.Element {
         </Alert>
       )}
       {!fetchingData && initialSetup && (
-        <InitialSetup
-          firebaseURL={state.firebaseURL}
-          config={state.config}
-          onConnect={initialFetch}
-        />
+        <Container sx={{ pt: 3 }}>
+          <Card sx={{ p: 3, boxShadow: 2, borderRadius: `1rem` }}>
+            <InitialSetup
+              firebaseURL={state.firebaseURL}
+              config={state.config}
+              onConnect={initialFetch}
+            />
+          </Card>
+        </Container>
       )}
       {!fetchingData && !initialSetup && (
         <Box sx={{ width: `100%` }}>

@@ -59,10 +59,10 @@ export function InitialSetup({
   const stepToElements = {
     [Step.DbConnect]: (
       <>
-        <Typography variant="h5" component="h3">
-          Welcome to the Trading Helper!
+        <Typography variant="h5" component="h3" textAlign={`center`}>
+          Welcome to Trading Helper!
         </Typography>
-        <Typography variant="body1" component="p">
+        <Typography variant="body1" component="p" textAlign={`center`}>
           You can connect to the Firebase Realtime Database as permanent storage
           now, or choose to do so later in the settings. This option is useful
           if your data cannot fit into the standard Google Apps Script storage,
@@ -101,10 +101,10 @@ export function InitialSetup({
     ),
     [Step.BinanceConnect]: (
       <>
-        <Typography variant="h5" component="h3">
+        <Typography variant="h5" component="h3" textAlign={`center`}>
           Almost done!
         </Typography>
-        <Typography variant="body1" component="p">
+        <Typography variant="body1" component="p" textAlign={`center`}>
           To connect to Binance, you need to set up an API key and secret. This
           connection is necessary only if you plan to enable autonomous trading.
           If you prefer to view only the candidates without connecting to
