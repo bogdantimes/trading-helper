@@ -5,11 +5,13 @@ import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   type AppState,
   type CandidateInfo,
+  Coin,
   type CoinName,
   type Config,
   f2,
   type InitialSetupParams,
   type IStore,
+  Key,
   MASK,
 } from "../lib";
 import { Process } from "./Process";
@@ -300,8 +302,21 @@ global.getAllCandidates = () => {
     return new CandidatesDao(DefaultStore).getAll();
   });
 };
-global.getImbalance = (coin: CoinName, ci: CandidateInfo) => {
+global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
   return catchError(() => {
-    return plugin.getImbalance(coin, ci);
+    const candidatesDao = new CandidatesDao(DefaultStore);
+    if (!ci) {
+      ci = candidatesDao.get(coin);
+    }
+    const imbalance = plugin.getImbalance(coin, ci);
+    if (imbalance) {
+      ci[Key.IMBALANCE] = imbalance;
+      candidatesDao.set(new Coin(coin), ci);
+      new TradesDao(DefaultStore).update(coin, (tm) => {
+        tm.supplyDemandImbalance = imbalance;
+        return tm;
+      });
+    }
+    return imbalance;
   });
 };
