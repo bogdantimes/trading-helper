@@ -63,10 +63,11 @@ export function InitialSetup({
           Welcome to the Trading Helper!
         </Typography>
         <Typography variant="body1" component="p">
-          You can connect Firebase Realtime Database as a permanent storage now
-          or do this later in the settings. Firebase allows to upgrade the tool
-          and maintain your data when a new version of Trading Helper is
-          available.
+          You can connect to the Firebase Realtime Database as permanent storage
+          now, or choose to do so later in the settings. This option is useful
+          if your data cannot fit into the standard Google Apps Script storage,
+          if you need to migrate your data to another account, or if you
+          anticipate requiring Firebase for other purposes.
         </Typography>
         <TextField
           value={params.dbURL}
@@ -104,7 +105,10 @@ export function InitialSetup({
           Almost done!
         </Typography>
         <Typography variant="body1" component="p">
-          Setup API key and secret to connect Binance.
+          To connect to Binance, you need to set up an API key and secret. This
+          connection is necessary only if you plan to enable autonomous trading.
+          If you prefer to view only the candidates without connecting to
+          Binance, simply choose the "View-only" mode below.
         </Typography>
         <TextField
           type={`password`}
