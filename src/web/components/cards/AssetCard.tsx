@@ -2,13 +2,13 @@ import React from "react";
 import { Box, darken, lighten, Typography, useTheme } from "@mui/material";
 import {
   type Config,
-  f0,
   SHORT_MASK,
   type TradeMemo,
   TradeState,
 } from "../../../lib/index";
-import { growthIconMap, percentileToColorMap } from "../Common";
+import { growthIconMap } from "../Common";
 import BasicCard from "./BasicCard";
+import ImbalanceChecker from "../small/ImbalanceChecker";
 
 interface Params {
   cfg: Config;
@@ -31,8 +31,6 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const tradeState = tm.getState();
   const isSold = tradeState === TradeState.SOLD;
 
-  const demandColor =
-    percentileToColorMap[(tm.supplyDemandImbalance + 0.5).toFixed(1)];
   return (
     <BasicCard>
       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -88,18 +86,13 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
             alignItems="center"
           >
             <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
-              Market demand:
+              Confidence:
             </Typography>
-            <Typography
-              variant="inherit"
-              color={
-                theme.palette.mode === `light`
-                  ? darken(demandColor, 0.5)
-                  : demandColor
-              }
-            >
-              {f0(tm.supplyDemandImbalance * 100)}%
-            </Typography>
+            <ImbalanceChecker
+              coinName={coinName}
+              initialValue={tm.supplyDemandImbalance}
+              formatter={(v: number) => v + 0.5}
+            />
           </Box>
         )}
       </Typography>
