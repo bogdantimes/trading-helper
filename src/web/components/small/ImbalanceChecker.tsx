@@ -41,7 +41,7 @@ const ImbalanceChecker = ({ coinName, initialValue, ci, formatter }: Props) => {
       alignItems="center"
       color={theme.palette.mode === `light` ? darken(color, 0.5) : color}
     >
-      {!!displayValue && `${displayValue}%`}
+      {!!imbalance && `${displayValue}%`}
       <RefreshButton
         isSpinning={imbalanceFetching}
         onClick={refreshImbalance}
