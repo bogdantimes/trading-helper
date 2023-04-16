@@ -28,7 +28,7 @@ export default function CandidateCard({
   return (
     <BasicCard>
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Box>
+        <Box width="100%" mr={`16px`}>
           <Typography
             variant="h6"
             fontWeight="bold"
