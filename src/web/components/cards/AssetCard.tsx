@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, darken, lighten, Typography, useTheme } from "@mui/material";
+import {
+  Box,
+  darken,
+  lighten,
+  LinearProgress,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import {
   type Config,
   SHORT_MASK,
@@ -96,6 +103,16 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           </Box>
         )}
       </Typography>
+      {tm.stateIs(TradeState.BUY) && (
+        <LinearProgress
+          sx={{
+            width: `120%`,
+            left: `-20px`,
+            bottom: `-20px`,
+            [`& .MuiLinearProgress-bar`]: { animationDuration: `5s` },
+          }}
+        />
+      )}
     </BasicCard>
   );
 };

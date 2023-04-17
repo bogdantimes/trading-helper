@@ -9,6 +9,7 @@ import {
   type Config,
   Key,
   TradeMemo,
+  TradeState,
 } from "../../lib";
 import AssetCard from "./cards/AssetCard";
 import BalanceCard from "./cards/BalanceCard";
@@ -31,8 +32,10 @@ export function Home({
   };
 
   const sorted = assets.sort((t1, t2) => (t1.ttl > t2.ttl ? 1 : -1));
-  const current = sorted.filter((t) => t.currentValue);
-  const sold = sorted.filter((t) => !t.currentValue);
+  const current = sorted.filter(
+    (t) => t.currentValue || t.stateIs(TradeState.BUY)
+  );
+  const sold = sorted.filter((t) => t.tradeResult.soldPrice);
 
   const currentInfoMessage =
     config.AdvancedAccess && !current.length ? (

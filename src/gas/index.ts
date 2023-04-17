@@ -228,9 +228,7 @@ function getState(): AppState {
       firebaseURL: FirebaseStore.url,
       info: new Statistics(DefaultStore).getAll(),
       candidates: plugin.getCandidates(candidatesDao).selected,
-      assets: new TradesDao(DefaultStore)
-        .getList()
-        .filter((a) => a.currentValue > 0 || a.tradeResult.soldPrice > 0),
+      assets: new TradesDao(DefaultStore).getList(),
     };
   });
 }
@@ -238,7 +236,7 @@ function getState(): AppState {
 function buy(coin: CoinName): string {
   return catchError(() => {
     TradeManager.default().buy(coin.toUpperCase());
-    return `${coin} was added to the buying queue`;
+    return `In progress!`;
   });
 }
 
@@ -248,9 +246,7 @@ function sell(...coins: CoinName[]): string {
     coins?.forEach((c) => {
       mgr.sell(c.toUpperCase());
     });
-    return `Done selling ${coins?.join(
-      `, `
-    )}. Results were sent to your email.`;
+    return `Done!`;
   });
 }
 
@@ -297,11 +293,6 @@ global.upgrade = () => {
     return result;
   });
 };
-global.getAllCandidates = () => {
-  return catchError(() => {
-    return new CandidatesDao(DefaultStore).getAll();
-  });
-};
 global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
   return catchError(() => {
     const candidatesDao = new CandidatesDao(DefaultStore);
@@ -319,4 +310,21 @@ global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
     }
     return imbalance;
   });
+};
+
+const helpDescriptions = {
+  start: `Starts all background processes.`,
+  stop: `Stops the trading process.`,
+  buy: `Buys a coin. Example: $ buy BTC`,
+  sell: `Sells a list of coins. Example: $ sell BTC ETH`,
+  sellAll: `Sells all coins.`,
+  remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
+  addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
+  upgrade: `Upgrades the system.`,
+};
+
+global.help = (): string => {
+  return Object.entries(helpDescriptions)
+    .map(([funcName, description]) => `${funcName}: ${description}`)
+    .join(`\n`);
 };

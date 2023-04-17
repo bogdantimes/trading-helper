@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect } from "react";
-import { useDoubleTap } from "use-double-tap";
 import InfoIcon from "@mui/icons-material/Info";
+import TerminalIcon from "@mui/icons-material/Terminal";
 import HomeIcon from "@mui/icons-material/Home";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Tabs from "@mui/material/Tabs";
@@ -13,7 +13,7 @@ import {
   Container,
   createTheme,
   CssBaseline,
-  Dialog,
+  Fab,
   LinearProgress,
   ThemeProvider,
   Typography,
@@ -25,10 +25,10 @@ import { Home } from "./components/Home";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
 import { type AppState } from "../lib";
-import Terminal, { ColorMode } from "react-terminal-ui";
 import { DefaultConfig } from "../gas/dao/Config";
 import { ScriptApp } from "./components/Common";
 import useWebSocket from "./useWebSocket";
+import { APIConsole } from "./components/APIConsole";
 
 function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
   return {
@@ -128,12 +128,6 @@ export default function App(): JSX.Element {
   }
 
   const [terminalOpen, setTerminalOpen] = React.useState(false);
-  const [terminalOutput, setTerminalOutput] = React.useState(``);
-  const [prompt, setPrompt] = React.useState(``);
-  const openTerminal = useDoubleTap((event) => {
-    event.preventDefault();
-    setTerminalOpen(true);
-  });
 
   const [tab, setTab] = React.useState(0);
   const changeTab = (e: React.SyntheticEvent, v: number): void => {
@@ -180,11 +174,7 @@ export default function App(): JSX.Element {
           <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
             <Tabs value={tab} onChange={changeTab} centered>
               <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
-              <Tab
-                icon={<InfoIcon />}
-                {...a11yProps(TabId.Info)}
-                {...openTerminal}
-              />
+              <Tab icon={<InfoIcon />} {...a11yProps(TabId.Info)} />
               <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
             </Tabs>
           </Box>
@@ -208,55 +198,26 @@ export default function App(): JSX.Element {
           </TabPanel>
         </Box>
       )}
-      <Dialog
-        open={terminalOpen}
-        onClose={() => {
-          setTerminalOpen(false);
+
+      <Fab
+        color="primary"
+        aria-label="open terminal"
+        onClick={() => {
+          setTerminalOpen(true);
+        }}
+        sx={{
+          position: `fixed`,
+          bottom: (theme) => theme.spacing(2),
+          right: (theme) => theme.spacing(2),
         }}
       >
-        <Box width={600} height={400}>
-          <Terminal
-            name="API"
-            prompt={prompt}
-            height={`290px`}
-            colorMode={
-              theme.palette.mode === `dark` ? ColorMode.Dark : ColorMode.Light
-            }
-            onInput={(terminalInput) => {
-              setTerminalOutput(``);
-              // parse terminal input: <cmd> <arg1> <arg2> ...
-              const [cmd, ...args] = terminalInput.split(` `);
-              // JSON parse the args
-              const parsedArgs = args.map((arg) => JSON.parse(arg));
-              // call the function
-              // Run spinner ... in the terminal output while waiting for the response
-              setPrompt(`⏳`);
-              const spinner = setInterval(() => {
-                setPrompt((p) => (p === `⏳` ? `⌛` : `⏳`));
-              }, 1000);
-
-              try {
-                ScriptApp?.withSuccessHandler((resp) => {
-                  setPrompt(`$`);
-                  clearInterval(spinner);
-                  setTerminalOutput(JSON.stringify(resp, null, 2));
-                  reFetchState(); // re-fetch any changes on back
-                })
-                  .withFailureHandler((resp) => {
-                    setPrompt(`$`);
-                    clearInterval(spinner);
-                    setTerminalOutput(resp.message);
-                  })
-                  [cmd](...parsedArgs);
-              } catch (e) {
-                clearInterval(spinner);
-              }
-            }}
-          >
-            {terminalOutput}
-          </Terminal>
-        </Box>
-      </Dialog>
+        <TerminalIcon />
+      </Fab>
+      <APIConsole
+        terminalOpen={terminalOpen}
+        setTerminalOpen={setTerminalOpen}
+        reFetchState={reFetchState}
+      />
     </ThemeProvider>
   );
 }
