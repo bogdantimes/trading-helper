@@ -154,7 +154,7 @@ function initialSetup(params: InitialSetupParams): string {
 function sellAll(): string {
   return catchError(() => {
     TradeManager.default().sellAll();
-    return Log.printAlerts();
+    return Log.printInfos();
   });
 }
 
@@ -246,14 +246,17 @@ function sell(...coins: CoinName[]): string {
     coins?.forEach((c) => {
       mgr.sell(c.toUpperCase());
     });
-    return Log.printAlerts();
+    return Log.printInfos();
   });
 }
 
 function importCoin(...coins: CoinName[]): any {
   return catchError(() => {
+    Log.alert(
+      `\`importCoin\` is experimental feature. If imported incorrectly, use \`remove\` command to revert.`
+    );
     TradeManager.default().import(coins);
-    return Log.printAlerts();
+    return Log.printInfos();
   });
 }
 
@@ -270,7 +273,7 @@ function addWithdrawal(amount: number): string {
     const { balance } = mgr.addWithdrawal(amount);
     const msg = `💳 Withdrawal of $${amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
     Log.alert(msg);
-    return Log.printAlerts();
+    return Log.printInfos();
   });
 }
 

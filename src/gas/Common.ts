@@ -49,8 +49,8 @@ export class Log {
     });
   }
 
-  static printAlerts(): string {
-    return this.alertsLog.join(`\n`);
+  static printInfos(): string {
+    return `${this.alertsLog.join(`\n`)}\n\n${this.infoLog.join(`\n`)}`;
   }
 
   static ifUsefulDumpAsEmail(): void {
