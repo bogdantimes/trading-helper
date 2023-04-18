@@ -85,6 +85,10 @@ export class TradesDao {
     });
   }
 
+  getRaw(): Record<string, any> {
+    return this.store.get(`Trades`) || {};
+  }
+
   get(): Record<string, TradeMemo> {
     if (isNode && this.memCache) {
       // performance optimization for back-testing
@@ -121,7 +125,7 @@ export class TradesDao {
   }
 
   #set(tm: TradeMemo): void {
-    const trades = this.get();
+    const trades = this.getRaw();
     trades[tm.getCoinName()] = tm;
     this.store.set(`Trades`, trades);
   }
@@ -131,7 +135,7 @@ export class TradesDao {
   }
 
   #delete(tm: TradeMemo): void {
-    const trades = this.get();
+    const trades = this.getRaw();
     if (trades[tm.getCoinName()]) {
       delete trades[tm.getCoinName()];
       if (Object.keys(trades).length === 0) {
