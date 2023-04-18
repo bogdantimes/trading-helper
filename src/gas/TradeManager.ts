@@ -38,9 +38,10 @@ import { Binance } from "./Binance";
 
 export class TradeManager {
   #config: Config;
-  #canInvest = 0;
   #balance = 0;
-  #optimalInvestRatio = 0;
+  // TODO: take from config
+  #numInvested = 0;
+  #maxInvested = 5;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -78,8 +79,7 @@ export class TradeManager {
     this.#prepare();
 
     const trades = this.tradesDao.getList();
-    const invested = trades.filter((t) => t.tradeResult.quantity).length;
-    this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
+    this.#numInvested = trades.filter((t) => t.tradeResult.quantity).length;
 
     // First process !BUY state assets (some might get sold and free up $)
     trades
@@ -93,7 +93,7 @@ export class TradeManager {
     const { advancedAccess, signals } = this.plugin.trade({
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
-      provideSignals: this.#getMoneyToInvest() > 0 ? this.#canInvest : 0,
+      provideSignals: this.#balance > MIN_BUY ? 5 : 0,
       candidatesDao: this.candidatesDao,
       I: step,
     });
@@ -224,9 +224,6 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
-    this.#optimalInvestRatio = this.plugin.getOptimalInvestRatio(
-      this.candidatesDao
-    );
   }
 
   #initStableBalance(): void {
@@ -410,7 +407,7 @@ export class TradeManager {
     }
 
     if (tm.stateIs(TradeState.BUY)) {
-      const money = this.#getMoneyToInvest();
+      const money = this.#getMoneyToInvest(tm);
       // do not invest into the same coin
       if (tm.tradeResult.quantity <= 0 && money > 0) {
         this.#buy(tm, money);
@@ -423,15 +420,17 @@ export class TradeManager {
     return tm;
   }
 
-  #getMoneyToInvest(): number {
-    if (
-      this.#canInvest <= 0 ||
-      this.#balance === AUTO_DETECT ||
-      this.#balance < MIN_BUY
-    ) {
-      return 0; // Return 0 if we can not invest
+  #getMoneyToInvest(tm: TradeMemo): number {
+    if (this.#balance < MIN_BUY) {
+      return 0;
     }
-    return Math.max(MIN_BUY, Math.floor(this.#balance / this.#canInvest));
+    const step = Math.min(1 / (this.#maxInvested - this.#numInvested), 1);
+    const quantizedImbalance = Math.min(
+      Math.max(Math.ceil(tm.supplyDemandImbalance * (1 / step)) * step, 0.2),
+      1
+    );
+    // get all or part of balance depending on imbalance
+    return Math.max(MIN_BUY, Math.floor(this.#balance * quantizedImbalance));
   }
 
   #processBoughtState(tm: TradeMemo): void {
@@ -528,7 +527,7 @@ export class TradeManager {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
-        this.#canInvest = Math.max(0, this.#canInvest - 1);
+        this.#numInvested = Math.max(0, this.#numInvested - 1);
         this.#balance -= tradeResult.paid;
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
@@ -561,10 +560,7 @@ export class TradeManager {
     if (exit.fromExchange) {
       // any actions should not affect changing the state to SOLD in the end
       try {
-        this.#canInvest = Math.min(
-          this.#optimalInvestRatio,
-          this.#canInvest + 1
-        );
+        this.#numInvested = Math.min(this.#maxInvested, this.#numInvested + 1);
         this.#balance += exit.gained;
         const fee = this.#processSellFee(entry, exit);
         const profit = exit.gained - entry.paid - fee;
@@ -692,7 +688,7 @@ export class TradeManager {
 
   #processSoldState(tm: TradeMemo): void {
     // Delete the sold trade after a while
-    if (tm.ttl >= 1440 * 7) {
+    if (tm.ttl >= 1440 * 2) {
       // 7 days
       tm.deleted = true;
     }
