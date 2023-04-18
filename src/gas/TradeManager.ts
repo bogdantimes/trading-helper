@@ -689,8 +689,7 @@ export class TradeManager {
 
   #processSoldState(tm: TradeMemo): void {
     // Delete the sold trade after a while
-    if (tm.ttl >= 1440 * 2) {
-      // 7 days
+    if (tm.ttl >= 1440) {
       tm.deleted = true;
     }
   }
