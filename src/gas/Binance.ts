@@ -237,6 +237,8 @@ export class Binance implements IExchange {
     let totalCost = 0;
 
     for (const trade of trades) {
+      if (!trade.isBuyer) continue;
+
       if (remainingQuantity <= 0) break;
 
       const tradeQuantity = parseFloat(trade.qty);
