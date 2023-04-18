@@ -105,7 +105,8 @@ export class TradeManager {
 
     if (!this.#config.ViewOnly) {
       signals
-        .filter((r) => r.type === SignalType.Buy)
+        // Ignore BNB buy signals cos of conflicts with fee logic
+        .filter((r) => r.type === SignalType.Buy && r.coin !== BNB)
         .forEach((r) => {
           this.#setBuyState(r);
         });
