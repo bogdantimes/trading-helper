@@ -253,7 +253,6 @@ function sell(...coins: CoinName[]): string {
 function importCoin(...coins: CoinName[]): any {
   return catchError(() => {
     TradeManager.default().import(coins);
-    Log.ifUsefulDumpAsEmail();
     return Log.printAlerts();
   });
 }
