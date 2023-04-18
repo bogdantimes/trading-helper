@@ -40,13 +40,17 @@ export class Log {
       this.errLog.push(new Error(`${err?.stack?.slice(0, 1000)}`));
   }
 
-  static print(): string {
+  static printEmail(): string {
     return getEmailTemplate({
       alertsLog: this.alertsLog,
       errLog: this.errLog,
       infoLog: this.infoLog,
       debugLog: this.debugLog,
     });
+  }
+
+  static printAlerts(): string {
+    return this.alertsLog.join(`\n`);
   }
 
   static ifUsefulDumpAsEmail(): void {
@@ -56,7 +60,7 @@ export class Log {
         this.errLog.length ? `Error` : `Alert`
       }`;
       try {
-        GmailApp.sendEmail(email, subject, ``, { htmlBody: this.print() });
+        GmailApp.sendEmail(email, subject, ``, { htmlBody: this.printEmail() });
       } catch (e) {
         Log.error(e);
         // TODO: communicate to user over the app UI

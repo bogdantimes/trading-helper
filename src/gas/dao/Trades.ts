@@ -30,7 +30,7 @@ export class TradesDao {
   update(
     coinName: string,
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined
+    notFoundFn?: () => TradeMemo | undefined | null
   ): void {
     try {
       coinName = coinName.toUpperCase();
@@ -55,8 +55,11 @@ export class TradesDao {
           : this.#set(changedTrade);
       }
     } catch (e) {
-      console.error(e);
-      Log.debug(e);
+      Log.debug(
+        `${coinName}: Failed to process trade update. Error: ${JSON.stringify(
+          e
+        )}}`
+      );
     } finally {
       this.#unlockTrade(coinName);
     }

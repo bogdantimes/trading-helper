@@ -1,5 +1,5 @@
 import { Statistics } from "./Statistics";
-import { Exchange, type IExchange } from "./Exchange";
+import { type IExchange } from "./IExchange";
 import { backTestSorter, Log } from "./Common";
 import {
   AUTO_DETECT,
@@ -34,6 +34,7 @@ import {
 } from "./traders/plugin/api";
 import { DefaultStore } from "./Store";
 import { CandidatesDao } from "./dao/Candidates";
+import { Binance } from "./Binance";
 
 export class TradeManager {
   #config: Config;
@@ -43,7 +44,7 @@ export class TradeManager {
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
-    const exchange = new Exchange(configDao);
+    const exchange = new Binance(configDao);
     const statistics = new Statistics(DefaultStore);
     const tradesDao = new TradesDao(DefaultStore);
     const candidatesDao = new CandidatesDao(DefaultStore);
@@ -140,13 +141,73 @@ export class TradeManager {
 
   sell(coin: CoinName): void {
     this.#prepare();
-    this.tradesDao.update(coin, (t) => this.#sellNow(t));
+    this.tradesDao.update(
+      coin,
+      (t) => this.#sellNow(t),
+      () => {
+        Log.alert(`${coin} not found`);
+        return null;
+      }
+    );
     this.#finalize();
   }
 
   sellAll(): void {
     this.#prepare();
     this.tradesDao.iterate((t) => this.#sellNow(t));
+    this.#finalize();
+  }
+
+  import(coins: CoinName[]): void {
+    const stableCoin = this.configDao.get().StableCoin;
+
+    const importTrade = (coinName: CoinName) => {
+      if (!this.exchange.importTrade) {
+        throw new Error(`Import is not supported by the exchange`);
+      }
+      const symbol = new ExchangeSymbol(coinName, stableCoin);
+      return this.exchange.importTrade(symbol);
+    };
+
+    const importedTradeResults = coins.map(importTrade);
+
+    this.#prepare();
+
+    importedTradeResults.forEach((importedTrade) => {
+      const coin = importedTrade.symbol.quantityAsset;
+      if (importedTrade.fromExchange) {
+        this.tradesDao.update(
+          coin,
+          (t) => {
+            // existing coin
+            Log.alert(
+              `Import cancelled: ${t.getCoinName()} already exists in the portfolio.`
+            );
+            return null;
+          },
+          () => {
+            const tm = new TradeMemo(importedTrade);
+            tm.prices = this.priceProvider.get(stableCoin)[coin]?.prices;
+            tm.highestPrice = tm.currentPrice;
+            tm.lowestPrice = floorToOptimalGrid(
+              tm.currentPrice,
+              this.exchange.getPricePrecision(importedTrade.symbol)
+            ).result;
+            tm.setState(TradeState.BOUGHT);
+            Log.alert(`➕ Imported ${coin}`);
+            Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
+            Log.info(`${coin} asset quantity: ${tm.tradeResult.quantity}`);
+            Log.info(
+              `${coin} asset avg. price: $${f8(tm.tradeResult.avgPrice)}`
+            );
+            return tm;
+          }
+        );
+      } else {
+        Log.alert(`${coin} could not be imported: ${importedTrade.msg}`);
+      }
+    });
+
     this.#finalize();
   }
 
@@ -295,7 +356,8 @@ export class TradeManager {
       (tm) => {
         if (tm.currentValue) {
           // Ignore if coin is already bought.
-          return;
+          tm.resetState();
+          return tm;
         }
         tm.setSignalMetadata(r);
         tm.tradeResult.symbol = symbol;

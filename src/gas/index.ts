@@ -1,6 +1,5 @@
 import { CachedStore, DefaultStore, FirebaseStore } from "./Store";
 import { Statistics } from "./Statistics";
-import { Exchange } from "./Exchange";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   type AppState,
@@ -23,6 +22,7 @@ import { Updater, UpgradeDone } from "./Updater";
 import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
 import { CandidatesDao } from "./dao/Candidates";
+import { Binance } from "./Binance";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -154,7 +154,7 @@ function initialSetup(params: InitialSetupParams): string {
 function sellAll(): string {
   return catchError(() => {
     TradeManager.default().sellAll();
-    return `Done. Results were sent to your email.`;
+    return Log.printAlerts();
   });
 }
 
@@ -178,7 +178,7 @@ function setConfig(config: Config): { msg: string; config: Config } {
     const curConfig = dao.get();
     if (curConfig.StableBalance <= 0 && config.StableBalance > 0) {
       // Check the balance is actually present on Spot balance
-      const balance = new Exchange(dao).getBalance(config.StableCoin);
+      const balance = new Binance(dao).getBalance(config.StableCoin);
       if (balance < config.StableBalance) {
         msg = `\nActual balance on your Binance Spot account is $${f2(
           balance
@@ -246,7 +246,15 @@ function sell(...coins: CoinName[]): string {
     coins?.forEach((c) => {
       mgr.sell(c.toUpperCase());
     });
-    return `Done!`;
+    return Log.printAlerts();
+  });
+}
+
+function importCoin(...coins: CoinName[]): any {
+  return catchError(() => {
+    TradeManager.default().import(coins);
+    Log.ifUsefulDumpAsEmail();
+    return Log.printAlerts();
   });
 }
 
@@ -257,13 +265,13 @@ function addWithdrawal(amount: number): string {
     const configDao = new ConfigDao(DefaultStore);
     const mgr = new WithdrawalsManager(
       configDao,
-      new Exchange(configDao),
+      new Binance(configDao),
       new Statistics(DefaultStore)
     );
     const { balance } = mgr.addWithdrawal(amount);
     const msg = `💳 Withdrawal of $${amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
     Log.alert(msg);
-    return msg;
+    return Log.printAlerts();
   });
 }
 
@@ -279,6 +287,7 @@ global.buy = buy;
 global.sell = sell;
 global.sellAll = sellAll;
 global.remove = remove;
+global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
 global.keepCacheAlive = () => {
@@ -319,6 +328,7 @@ const helpDescriptions = {
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
+  importCoin: `Imports a list of coins from Binance Spot portfolio. Example: $ importCoin BTC ETH`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,
 };
