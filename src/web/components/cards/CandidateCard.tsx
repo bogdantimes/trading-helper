@@ -84,7 +84,7 @@ export default function CandidateCard({
           <SemiCircleProgressBar
             diameter={80}
             percentage={f0(strength * 100)}
-            stroke={percentileToColorMap[strength.toFixed(1)]}
+            stroke={percentileToColorMap[+strength.toFixed(1)]}
             strokeWidth={10}
           />
           <Typography mt={`-7px`} color="text.secondary" variant="body2">

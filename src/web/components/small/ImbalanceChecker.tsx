@@ -32,7 +32,8 @@ const ImbalanceChecker = ({ coinName, initialValue, ci, formatter }: Props) => {
       .getImbalance(coinName, ci as any);
   }
 
-  const color = percentileToColorMap[Math.max(1, imbalance + 0.5).toFixed(1)];
+  const imbAdjusted = Math.max(0, Math.min(1, imbalance + 0.5));
+  const color = percentileToColorMap[+imbAdjusted.toFixed(1)];
   const displayValue = f0((formatter ? formatter(imbalance) : imbalance) * 100);
   return (
     <Typography
