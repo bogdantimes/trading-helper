@@ -83,10 +83,9 @@ function getTotalLabelComponent(tw) {
       <Tooltip
         title={
           <>
-            To add a profit withdrawal, double tap (i) tab icon and enter
-            (example) `addWithdrawal 100` in the API console . This action will
-            reduce the free balance by the amount entered and update the total
-            profit of the bot. This is useful for tracking profit withdrawals.
+            To add a profit withdrawal, use the API console. This action will
+            decrease the free balance by the entered amount and update the bot's
+            total profit. This is useful for tracking profit withdrawals.
           </>
         }
         arrow
