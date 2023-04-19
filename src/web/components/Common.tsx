@@ -92,4 +92,5 @@ export const percentileToColorMap = {
   0.7: `#ccff00`,
   0.8: `#99ff00`,
   0.9: `#66ff00`,
+  1.0: `#00bb00`,
 };

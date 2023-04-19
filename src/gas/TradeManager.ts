@@ -425,13 +425,12 @@ export class TradeManager {
     if (this.#balance < MIN_BUY) {
       return 0;
     }
-    const step = Math.min(1 / (this.#maxInvested - this.#numInvested), 1);
-    const quantizedImbalance = Math.min(
-      Math.max(Math.ceil(tm.supplyDemandImbalance * (1 / step)) * step, 0.2),
-      1
-    );
-    // get all or part of balance depending on imbalance
-    return Math.max(MIN_BUY, Math.floor(this.#balance * quantizedImbalance));
+    const maxAssets = 3;
+    const qtStep = 1 / Math.max(1, maxAssets - this.#numInvested);
+    const qtImb = Math.ceil(tm.supplyDemandImbalance * (1 / qtStep)) * qtStep;
+    const balanceMul = Math.min(Math.max(qtImb, 1 / maxAssets), 1);
+    // get all or part of balance depending on supplyDemandImbalance
+    return Math.max(MIN_BUY, Math.floor(this.#balance * balanceMul));
   }
 
   #processBoughtState(tm: TradeMemo): void {
