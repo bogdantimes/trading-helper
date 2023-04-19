@@ -7,6 +7,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
+import { ErrorBoundary } from "react-error-boundary";
 import {
   Alert,
   Card,
@@ -144,60 +145,62 @@ export default function App(): JSX.Element {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {fetchingData && (
-        <Box sx={{ width: `100%` }}>
-          <LinearProgress />
-        </Box>
-      )}
-      {fetchDataError && (
-        <Alert severity="error">
-          <Typography variant="caption">{fetchDataError}</Typography>
-          <Typography variant="caption">
-            {` `}Please check your network connection and that Google Apps
-            Script application is deployed and try again.
-          </Typography>
-        </Alert>
-      )}
-      {!fetchingData && initialSetup && (
-        <Container sx={{ pt: 3 }}>
-          <Card sx={{ p: 3, boxShadow: 2, borderRadius: `1rem` }}>
-            <InitialSetup
-              firebaseURL={state.firebaseURL}
-              config={state.config}
-              onConnect={initialFetch}
-            />
-          </Card>
-        </Container>
-      )}
-      {!fetchingData && !initialSetup && (
-        <Box sx={{ width: `100%` }}>
-          <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
-            <Tabs value={tab} onChange={changeTab} centered>
-              <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
-              <Tab icon={<InfoIcon />} {...a11yProps(TabId.Info)} />
-              <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
-            </Tabs>
+      <ErrorBoundary FallbackComponent={Fallback}>
+        {fetchingData && (
+          <Box sx={{ width: `100%` }}>
+            <LinearProgress />
           </Box>
-          <TabPanel value={tab} index={TabId.Home} onChange={changeTab}>
-            <Home
-              state={state}
-              onAssetDelete={deletingAsset ? undefined : onAssetDelete}
-            />
-          </TabPanel>
-          <TabPanel value={tab} index={TabId.Info} onChange={changeTab}>
-            <BalanceHistory stats={state.info} />
-          </TabPanel>
-          <TabPanel value={tab} index={TabId.Settings} onChange={changeTab}>
-            <Settings
-              config={state.config}
-              setConfig={(config) => {
-                handleState({ ...state, config });
-              }}
-              firebaseURL={state.firebaseURL}
-            />
-          </TabPanel>
-        </Box>
-      )}
+        )}
+        {fetchDataError && (
+          <Alert severity="error">
+            <Typography variant="caption">{fetchDataError}</Typography>
+            <Typography variant="caption">
+              {` `}Please check your network connection and that Google Apps
+              Script application is deployed and try again.
+            </Typography>
+          </Alert>
+        )}
+        {!fetchingData && initialSetup && (
+          <Container sx={{ pt: 3 }}>
+            <Card sx={{ p: 3, boxShadow: 2, borderRadius: `1rem` }}>
+              <InitialSetup
+                firebaseURL={state.firebaseURL}
+                config={state.config}
+                onConnect={initialFetch}
+              />
+            </Card>
+          </Container>
+        )}
+        {!fetchingData && !initialSetup && (
+          <Box sx={{ width: `100%` }}>
+            <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
+              <Tabs value={tab} onChange={changeTab} centered>
+                <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
+                <Tab icon={<InfoIcon />} {...a11yProps(TabId.Info)} />
+                <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
+              </Tabs>
+            </Box>
+            <TabPanel value={tab} index={TabId.Home} onChange={changeTab}>
+              <Home
+                state={state}
+                onAssetDelete={deletingAsset ? undefined : onAssetDelete}
+              />
+            </TabPanel>
+            <TabPanel value={tab} index={TabId.Info} onChange={changeTab}>
+              <BalanceHistory stats={state.info} />
+            </TabPanel>
+            <TabPanel value={tab} index={TabId.Settings} onChange={changeTab}>
+              <Settings
+                config={state.config}
+                setConfig={(config) => {
+                  handleState({ ...state, config });
+                }}
+                firebaseURL={state.firebaseURL}
+              />
+            </TabPanel>
+          </Box>
+        )}
+      </ErrorBoundary>
 
       <Fab
         color="primary"
@@ -219,6 +222,16 @@ export default function App(): JSX.Element {
         reFetchState={reFetchState}
       />
     </ThemeProvider>
+  );
+}
+
+function Fallback({ error }: { error: Error }): JSX.Element {
+  return (
+    <Alert severity={`error`}>
+      Something went wrong:
+      <pre>{error.message}</pre>
+      <pre>{error.stack}</pre>
+    </Alert>
   );
 }
 
