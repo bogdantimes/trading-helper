@@ -10,44 +10,28 @@ No one, except you, have access to the WEB-application and the data. If you trus
 ## Features
 
 * Free Cloud hosting on Google Apps Script.
-* Web UI (optimized for mobile).
+* Web UI (desktop/mobile).
 * Monitors the market 24/7 and shows great investment candidates.
+* Fully-autonomous trading on Binance Spot without manual interventions whatsoever:
+  * Enabled automatically once you become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes).
+  * 🤙🏻 Reach out to me if you want to test it for free (see [Contact](#contact) section).
 * Gmail notifications.
 * Optional external database (Firebase).
 * Info page with balance changes since Day 1.
-* Fully-autonomous trading on Binance Spot without manual interventions whatsoever:
-  * 🤙🏻 Reach out to me if you want to test it for free (see [Contact](#contact) section).
-  * Or you can get it enabled automatically once you become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes).
 
 ## Back-testing
 
 Running on a historical data like if it was trading in the past.
 
-**Dates:** May 2022 -> December 2022 (6 months)
-
-**Best Result:** `$1,000 -> $3,619 (+261% profit)`
-**Worst Result:** `$1,000 -> $2,590 (+159% profit)`
+**Dates:** September 2022 -> March 2023 (6 months)
+**Stable coin**: USDT
+**Best Result:** `$1,000 -> $2,711 (+171% profit)`
 
 ![6m.png](img/6m.png)
-
-**Dates:** December 2021 -> December 2022 (1 year)
-
-**Best Result:** `$1,000 -> $3,794 (+279% profit)`
-**Worst Result:** `$1,000 -> $3,494 (+249% profit)`
-
-![1y.png](img/1y.png)
-
-**Dates:** November 2020 -> November 2022 (2 years)
-
-**Best Result:** `$1,000 -> $6,198 (+519% profit)`
-**Worst Result:** `$1,000 -> $3,798 (+279% profit)`
-
-![2y.png](img/2y.png)
 
 ## Screenshots
 
 ![home.png](img/home.png)
-![info.png](img/info.png)
 ![settings.png](img/settings.png)
 
 ## How to
@@ -70,12 +54,11 @@ To set up from sources using the command line interface - see [CONTRIBUTING.md](
 ## Contact
 
 Subscribe for updates:
-* [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
 * [t.me/tradinghelperblog](https://t.me/tradinghelperblog)
 
 Be a friend:
+* [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
 * [instagram.com/bogdantimes](https://instagram.com/bogdantimes)
 
 Support the project:
 * [patreon.com/bogdantimes](https://patreon.com/bogdantimes)
-* USDT/USDC/BUSD/BNB: `0x8aed61ca4e9fe5c221839ceb82c5f3f034d6b60e` (BEP20)
