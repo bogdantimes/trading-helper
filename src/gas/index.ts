@@ -111,6 +111,12 @@ function catchError<T>(fn: () => T): T {
     Log.ifUsefulDumpAsEmail();
     return res;
   } catch (e) {
+    const awsLimit = `ConcurrentInvocationLimitExceeded`;
+    if (e.message.includes(awsLimit)) {
+      // try again after small delay
+      Utilities.sleep(500 + new Date().getMilliseconds());
+      return catchError(fn);
+    }
     const limitMsg1 = `Service invoked too many times`;
     const limitMsg2 = `Please wait a bit and try again`;
     if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
