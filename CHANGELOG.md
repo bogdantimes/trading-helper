@@ -1,6 +1,10 @@
 # v4.0.0
 
-To be done
+* New trading algorithm that provides more signals, with GPT-4 as signal noise filter.
+* New smart-exit logic that uses supply/demand imbalance as main exit reason.
+* New UI layout with focus on fully-autonomous trading.
+* Not relevant features removed from UI.
+* API console button with improved API commands.
 
 # v3.3.10
 
