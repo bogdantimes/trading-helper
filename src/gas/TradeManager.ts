@@ -38,10 +38,9 @@ import { Binance } from "./Binance";
 
 export class TradeManager {
   #config: Config;
+  #canInvest = 0;
   #balance = 0;
-  // TODO: take from config
-  #numInvested = 0;
-  #maxInvested = 5;
+  #optimalInvestRatio = 0;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -79,7 +78,8 @@ export class TradeManager {
     this.#prepare();
 
     const trades = this.tradesDao.getList();
-    this.#numInvested = trades.filter((t) => t.tradeResult.quantity).length;
+    const invested = trades.filter((t) => t.tradeResult.quantity).length;
+    this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
 
     // First process !BUY state assets (some might get sold and free up $)
     trades
@@ -93,7 +93,7 @@ export class TradeManager {
     const { advancedAccess, signals } = this.plugin.trade({
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
-      provideSignals: this.#balance > MIN_BUY ? 5 : 0,
+      provideSignals: this.#getMoneyToInvest() > 0 ? this.#canInvest : 0,
       candidatesDao: this.candidatesDao,
       I: step,
     });
@@ -188,12 +188,8 @@ export class TradeManager {
           },
           () => {
             const tm = new TradeMemo(importedTrade);
-            tm.prices = this.priceProvider.get(stableCoin)[coin]?.prices;
-            tm.highestPrice = tm.currentPrice;
-            tm.lowestPrice = floorToOptimalGrid(
-              tm.currentPrice,
-              this.exchange.getPricePrecision(importedTrade.symbol)
-            ).result;
+            tm.currentPrice =
+              this.priceProvider.get(stableCoin)[coin]?.currentPrice;
             tm.setState(TradeState.BOUGHT);
             Log.alert(`➕ Imported ${coin}`);
             Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
@@ -225,6 +221,9 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
+    this.#optimalInvestRatio = this.plugin.getOptimalInvestRatio(
+      this.candidatesDao
+    );
   }
 
   #initStableBalance(): void {
@@ -349,6 +348,7 @@ export class TradeManager {
   #setBuyState(r: Signal): void {
     const stableCoin = this.#config.StableCoin;
     const symbol = new ExchangeSymbol(r.coin, stableCoin);
+    const prices = this.priceProvider.get(stableCoin)[r.coin];
     this.tradesDao.update(
       r.coin,
       (tm) => {
@@ -359,23 +359,16 @@ export class TradeManager {
         }
         tm.setSignalMetadata(r);
         tm.tradeResult.symbol = symbol;
-        tm.highestPrice = tm.currentPrice;
-        tm.lowestPrice = floorToOptimalGrid(
-          tm.currentPrice,
-          this.exchange.getPricePrecision(symbol)
-        ).result;
+        tm.currentPrice = prices?.currentPrice;
+        tm.highestPrice = 0;
+        tm.lowestPrice = 0;
         tm.setState(TradeState.BUY);
         return tm;
       },
       () => {
         const tm = new TradeMemo(new TradeResult(symbol));
         tm.setSignalMetadata(r);
-        tm.prices = this.priceProvider.get(stableCoin)[r.coin]?.prices;
-        tm.highestPrice = tm.currentPrice;
-        tm.lowestPrice = floorToOptimalGrid(
-          tm.currentPrice,
-          this.exchange.getPricePrecision(symbol)
-        ).result;
+        tm.currentPrice = prices?.currentPrice;
         tm.setState(TradeState.BUY);
         return tm;
       }
@@ -408,10 +401,11 @@ export class TradeManager {
     }
 
     if (tm.stateIs(TradeState.BUY)) {
-      const money = this.#getMoneyToInvest(tm);
+      const money = this.#getMoneyToInvest();
       // do not invest into the same coin
       if (tm.tradeResult.quantity <= 0 && money > 0) {
         this.#buy(tm, money);
+        this.#processBoughtState(tm);
       } else {
         Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - not enough balance`);
         tm.resetState(); // Cancel BUY state
@@ -421,29 +415,29 @@ export class TradeManager {
     return tm;
   }
 
-  #getMoneyToInvest(tm: TradeMemo): number {
-    if (this.#balance < MIN_BUY) {
-      return 0;
+  #getMoneyToInvest(): number {
+    if (
+      this.#canInvest <= 0 ||
+      this.#balance === AUTO_DETECT ||
+      this.#balance < MIN_BUY
+    ) {
+      return 0; // Return 0 if we can not invest
     }
-    const maxAssets = 3;
-    const qtStep = 1 / Math.max(1, maxAssets - this.#numInvested);
-    const qtImb = Math.ceil(tm.supplyDemandImbalance * (1 / qtStep)) * qtStep;
-    const balanceMul = Math.min(Math.max(qtImb, 1 / maxAssets), 1);
-    // get all or part of balance depending on supplyDemandImbalance
-    return Math.max(MIN_BUY, Math.floor(this.#balance * balanceMul));
+    return Math.max(MIN_BUY, Math.floor(this.#balance / this.#canInvest));
   }
 
   #processBoughtState(tm: TradeMemo): void {
     tm.support = this.#getSupportLevel(tm);
 
     // This will init fields, or just use current values
-    tm.highestPrice = tm.highestPrice || tm.currentPrice;
-    tm.lowestPrice =
-      tm.lowestPrice ||
-      floorToOptimalGrid(
+    // Also, reset levels periodically
+    if (!tm.highestPrice || !tm.lowestPrice || tm.ttl % 360 === 0) {
+      tm.highestPrice = tm.currentPrice;
+      tm.lowestPrice = floorToOptimalGrid(
         tm.currentPrice,
         this.exchange.getPricePrecision(tm.tradeResult.symbol)
       ).result;
+    }
 
     if (tm.currentPrice < tm.support) {
       tm.setState(TradeState.SELL);
@@ -490,7 +484,11 @@ export class TradeManager {
   }
 
   #pushNewPrice(tm: TradeMemo): void {
-    const priceHolder = this.#getPrices(tm.tradeResult.symbol);
+    const symbol = new ExchangeSymbol(
+      tm.getCoinName(),
+      this.#config.StableCoin
+    );
+    const priceHolder = this.#getPrices(symbol);
 
     if (isNode && !priceHolder?.currentPrice) {
       // Only for back-testing, force selling this asset
@@ -499,9 +497,9 @@ export class TradeManager {
       return;
     }
 
-    const symbol = `${tm.getCoinName()}${this.#config.StableCoin}`;
     if (priceHolder?.currentPrice) {
-      tm.pushPrice(priceHolder.currentPrice);
+      tm.currentPrice = priceHolder.currentPrice;
+      tm.priceMove = priceHolder.getPriceMove();
     } else if (tm.tradeResult.quantity) {
       // no price available, but we have quantity, which means we bought something earlier
       Log.alert(
@@ -527,7 +525,7 @@ export class TradeManager {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
-        this.#numInvested = Math.max(0, this.#numInvested - 1);
+        this.#canInvest = Math.max(0, this.#canInvest - 1);
         this.#balance -= tradeResult.paid;
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
@@ -560,7 +558,10 @@ export class TradeManager {
     if (exit.fromExchange) {
       // any actions should not affect changing the state to SOLD in the end
       try {
-        this.#numInvested = Math.min(this.#maxInvested, this.#numInvested + 1);
+        this.#canInvest = Math.min(
+          this.#optimalInvestRatio,
+          this.#canInvest + 1
+        );
         this.#balance += exit.gained;
         const fee = this.#processSellFee(entry, exit);
         const profit = exit.gained - entry.paid - fee;
@@ -581,8 +582,9 @@ export class TradeManager {
         const entryDate = new Date(
           new Date().getTime() - memo.ttl * 60 * 1000
         ).toLocaleDateString();
-        const entryPrice = floor(entry.avgPrice, memo.precision);
-        const exitPrice = floor(exit.avgPrice, memo.precision);
+        const precision = this.#getPrices(symbol).precision;
+        const entryPrice = floor(entry.avgPrice, precision);
+        const exitPrice = floor(exit.avgPrice, precision);
         Log.info(
           `<table><tr><th>Entry Date</th><th>Coin/Token</th><th>Invested</th><th>Quantity</th><th>Entry Price</th><th>Exit Date</th><th>Exit Price</th><th>Gained</th><th>% Profit/Loss</th></tr><tr><td>${entryDate}</td><td>${coin}</td><td>$${f2(
             entry.paid
@@ -600,6 +602,7 @@ export class TradeManager {
         memo.tradeResult = exit;
         Log.debug(memo);
         memo.setState(TradeState.SOLD);
+        memo.deleted = isNode;
       }
     } else {
       Log.debug(exit);

@@ -86,6 +86,10 @@ export class TradesDao {
   }
 
   getRaw(): Record<string, any> {
+    if (isNode && this.memCache) {
+      // performance optimization for back-testing
+      return this.memCache;
+    }
     return this.store.get(`Trades`) || {};
   }
 

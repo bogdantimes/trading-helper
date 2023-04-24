@@ -1,10 +1,9 @@
 import { TradeResult } from "./TradeResult";
-import { ExchangeSymbol, TradeState } from "./Types";
-import { PricesHolder } from "./IPriceProvider";
+import { ExchangeSymbol, PriceMove, TradeState } from "./Types";
 import { type Signal } from "../gas/traders/plugin/api";
 import { StandardCommission } from "./Config";
 
-export class TradeMemo extends PricesHolder {
+export class TradeMemo {
   tradeResult: TradeResult;
   /**
    * TTL is within how many ticks (minutes) the trade must exceed 5% profit. Otherwise, it is automatically sold.
@@ -27,6 +26,12 @@ export class TradeMemo extends PricesHolder {
    */
   support: number;
   /**
+   * Current price move for the past 10 minutes.
+   */
+  priceMove: PriceMove = PriceMove.NEUTRAL;
+
+  private curPrice = 0;
+  /**
    * Target profit price.
    * @private
    */
@@ -44,7 +49,6 @@ export class TradeMemo extends PricesHolder {
   private imb = 0;
 
   constructor(tradeResult: TradeResult) {
-    super();
     this.tradeResult = tradeResult;
   }
 
@@ -77,7 +81,6 @@ export class TradeMemo extends PricesHolder {
     tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(
       tradeMemo.tradeResult.symbol
     );
-    tradeMemo.prices = tradeMemo.prices || [];
     return tradeMemo;
   }
 
@@ -91,6 +94,18 @@ export class TradeMemo extends PricesHolder {
 
   unlock(): void {
     this._lock = false;
+  }
+
+  getPriceMove(): PriceMove {
+    return this.priceMove;
+  }
+
+  get currentPrice(): number {
+    return this.curPrice;
+  }
+
+  set currentPrice(price: number) {
+    this.curPrice = price;
   }
 
   get currentValue(): number {
@@ -116,10 +131,6 @@ export class TradeMemo extends PricesHolder {
     }
   }
 
-  pushPrice(price: number): void {
-    super.pushPrice(price);
-  }
-
   setState(state: TradeState): void {
     if (state === TradeState.SOLD) {
       // Assign an empty trade result for SOLD state.
@@ -128,7 +139,7 @@ export class TradeMemo extends PricesHolder {
       newState.tradeResult.soldPrice = this.tradeResult.soldPrice;
       newState.tradeResult.paid = this.tradeResult.paid;
       newState.tradeResult.gained = this.tradeResult.gained;
-      newState.pushPrice(this.currentPrice);
+      newState.curPrice = this.currentPrice;
       Object.assign(this, newState);
     }
     this.state = state;

@@ -130,13 +130,7 @@ export enum Key {
   PRICE_MOVE,
   MIN_PERCENTILE,
   STRENGTH,
-  /**
-   * @deprecated
-   */
   ATH,
-  /**
-   * @deprecated
-   */
   ATHTime,
   IMBALANCE,
   /**
@@ -176,6 +170,8 @@ export interface CandidateInfo {
   [Key.STRENGTH]: number;
   [Key.IMBALANCE]?: number;
   [Key.TREND]?: string;
+  [Key.ATH]: number;
+  [Key.ATHTime]: number;
 }
 
 export interface Candidates {
