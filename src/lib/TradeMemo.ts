@@ -111,6 +111,10 @@ export class TradeMemo {
     return this._support || this.tradeResult.entryPrice * 0.9;
   }
 
+  set support(value: number) {
+    this._support = value;
+  }
+
   setSignalMetadata(r: Signal): void {
     this._support = r.support;
   }
