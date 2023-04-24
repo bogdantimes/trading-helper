@@ -13,7 +13,6 @@ import {
   floor,
   floorToOptimalGrid,
   type ICandidatesDao,
-  Key,
   MIN_BUY,
   MINIMUM_FEE_COVERAGE,
   type PricesHolder,
@@ -131,9 +130,9 @@ export class TradeManager {
       ?.currentPrice;
     if (price) {
       this.#setBuyState({
-        type: SignalType.Buy,
         coin,
-        target: price * 1.02,
+        type: SignalType.Buy,
+        support: price * 0.9,
       });
     } else {
       throw new Error(`Unknown coin ${coin}: no price information found`);
@@ -427,8 +426,6 @@ export class TradeManager {
   }
 
   #processBoughtState(tm: TradeMemo): void {
-    tm.support = this.#getSupportLevel(tm);
-
     // This will init fields, or just use current values
     // Also, reset levels periodically
     if (!tm.highestPrice || !tm.lowestPrice || tm.ttl % 360 === 0) {
@@ -451,14 +448,6 @@ export class TradeManager {
     if (tm.currentPrice > tm.highestPrice && tm.ttl > 5) {
       this.#handleHigherHigh(tm);
     }
-  }
-
-  #getSupportLevel(tm: TradeMemo) {
-    // -10% as a safeguard if no candidate info
-    return (
-      this.candidatesDao.getAll()[tm.getCoinName()]?.[Key.MIN] ||
-      tm.tradeResult.entryPrice * 0.9
-    );
   }
 
   #getImbalance(tm: TradeMemo): { imbalance: number; precision: number } {

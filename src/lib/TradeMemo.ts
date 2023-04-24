@@ -24,18 +24,13 @@ export class TradeMemo {
   /**
    * Current price support level.
    */
-  support: number;
+  _support: number;
   /**
    * Current price move for the past 10 minutes.
    */
   priceMove: PriceMove = PriceMove.NEUTRAL;
 
   private curPrice = 0;
-  /**
-   * Target profit price.
-   * @private
-   */
-  private target: number;
   /**
    * The current state of the asset.
    */
@@ -112,8 +107,12 @@ export class TradeMemo {
     return this.currentPrice * this.tradeResult.quantity;
   }
 
+  get support(): number {
+    return this._support || this.tradeResult.entryPrice * 0.9;
+  }
+
   setSignalMetadata(r: Signal): void {
-    this.target = r.target;
+    this._support = r.support;
   }
 
   getCoinName(): string {
@@ -175,17 +174,6 @@ export class TradeMemo {
       );
     };
     return this.tradeResult.realisedProfit || unrealizedProfit();
-  }
-
-  /**
-   * Returns the profit goal for the trade.
-   */
-  get profitGoalPrice(): number {
-    return this.target;
-  }
-
-  get profitGoal(): number {
-    return this.profitGoalPrice / this.tradeResult.entryPrice - 1;
   }
 
   profitPercent(): number {

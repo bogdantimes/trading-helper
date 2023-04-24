@@ -47,7 +47,7 @@ export interface PluginContext {
 export interface Signal {
   coin: CoinName;
   type: SignalType;
-  target: number;
+  support: number;
 }
 
 export enum SignalType {
