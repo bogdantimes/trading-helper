@@ -86,7 +86,7 @@ export class Binance implements IExchange {
         `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`
       );
     }
-    Log.alert(
+    Log.info(
       `➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`
     );
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
