@@ -18,6 +18,7 @@ No one, except you, have access to the WEB-application and the data. If you trus
 * Gmail notifications.
 * Optional external database (Firebase).
 * Info page with balance changes since Day 1.
+* GPT-4 (takes part in filtering the investment candidates).
 
 ## Back-testing
 
