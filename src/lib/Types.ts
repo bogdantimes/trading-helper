@@ -193,9 +193,15 @@ export interface Filter {
   tickSize?: string;
 }
 
+export enum SymbolStatus {
+  TRADING = `TRADING`,
+}
+
 export interface SymbolInfo {
   symbol: string;
   filters: Filter[];
+  status: SymbolStatus;
+  precision: number;
 }
 
 export interface ExchangeInfo {

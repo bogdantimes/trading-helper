@@ -17,6 +17,7 @@ import {
   MINIMUM_FEE_COVERAGE,
   type PricesHolder,
   StableUSDCoin,
+  SymbolStatus,
   TARGET_FEE_COVERAGE,
   TradeMemo,
   TradeResult,
@@ -452,7 +453,19 @@ export class TradeManager {
 
   #getImbalance(tm: TradeMemo): { imbalance: number; precision: number } {
     const symbol = tm.tradeResult.symbol;
-    const precision = this.exchange.getPricePrecision(symbol);
+    const symbolInfo = this.plugin.getBinanceSymbolInfo(symbol);
+    if (symbolInfo?.status !== SymbolStatus.TRADING) {
+      this.#config.SmartExit = false;
+      this.configDao.set(this.#config);
+      Log.alert(
+        `⚠️ ${symbol} is not trading on Binance Spot, current status: ${symbolInfo?.status}`
+      );
+      Log.alert(
+        `⚠️ Smart-exit was disable. Please, resolve the problem with ${symbol} manually using API console and than re-enable Smart-exit.`
+      );
+      throw new Error(`Couldn't check imbalance for ${symbol}`);
+    }
+    const precision = symbolInfo?.precision;
     const bidCutOffPrice = tm.support;
 
     // calculate how many records for imbalance we need for this cut off price
