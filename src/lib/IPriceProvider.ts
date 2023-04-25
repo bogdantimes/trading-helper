@@ -4,9 +4,13 @@ import { PriceMove, type StableUSDCoin } from "./Types";
 export class PricesHolder {
   static readonly PRICES_MAX_CAP = 10;
   protected p: number[];
+  maxCap: number;
+  fillIn: boolean;
 
-  constructor() {
-    this.p = new Array(PricesHolder.PRICES_MAX_CAP).fill(0);
+  constructor(maxCap = PricesHolder.PRICES_MAX_CAP, fillIn = true) {
+    this.maxCap = maxCap;
+    this.fillIn = fillIn;
+    this.p = new Array(maxCap).fill(0);
   }
 
   /**
@@ -17,7 +21,7 @@ export class PricesHolder {
   }
 
   set prices(prices: number[]) {
-    const tempHolder = new PricesHolder();
+    const tempHolder = new PricesHolder(this.maxCap, this.fillIn);
     // Using a temporary PricesHolder to ensure that prices array is of exact length
     prices?.forEach((p) => {
       tempHolder.pushPrice(p);
@@ -45,12 +49,12 @@ export class PricesHolder {
   }
 
   pushPrice(price: number): void {
-    if (!this.p.length || this.p[0] === 0) {
-      this.p = new Array(PricesHolder.PRICES_MAX_CAP).fill(price);
+    if (this.fillIn && (!this.p.length || this.p[0] === 0)) {
+      this.p = new Array(this.maxCap).fill(price);
     } else {
       this.p.push(price);
       // remove old prices and keep only the last PriceMemoMaxCapacity
-      this.p.splice(0, this.p.length - PricesHolder.PRICES_MAX_CAP);
+      this.p.splice(0, this.p.length - this.maxCap);
     }
   }
 
@@ -71,7 +75,7 @@ export class PricesHolder {
   }
 
   getPriceMove(): PriceMove {
-    return getPriceMove(PricesHolder.PRICES_MAX_CAP, this.p);
+    return getPriceMove(this.maxCap, this.p);
   }
 
   getMinMax(): { min: number; max: number } {

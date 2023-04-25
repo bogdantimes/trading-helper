@@ -2,7 +2,6 @@ import {
   AUTO_DETECT,
   type Config,
   type IStore,
-  MarketTrend,
   MASK,
   StableUSDCoin,
 } from "../../lib";
@@ -21,13 +20,10 @@ export const DefaultConfig: () => Config = () => ({
   StableBalance: AUTO_DETECT,
   FeesBudget: AUTO_DETECT,
   AutoReplenishFees: false,
-  SellAtStopLimit: true,
-  MarketTrend: AUTO_DETECT,
-  AutoMarketTrend: MarketTrend.SIDEWAYS,
   AdvancedAccess: false,
   ViewOnly: false,
   HideBalances: false,
-  EntryImbalanceCheck: true,
+  SmartExit: true,
 });
 
 export class ConfigDao implements APIKeysProvider {
@@ -40,6 +36,11 @@ export class ConfigDao implements APIKeysProvider {
   get(): Config {
     const defaultConfig = DefaultConfig();
     let config: Config = this.store.get(`Config`) || defaultConfig;
+
+    // Back-ward compatibility with v3
+    config.SmartExit = config.SellAtStopLimit ?? config.SmartExit;
+    config.SellAtStopLimit = undefined;
+
     // apply existing config on top of default one
     config = Object.assign(defaultConfig, config);
     return config;

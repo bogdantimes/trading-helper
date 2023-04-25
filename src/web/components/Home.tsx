@@ -1,29 +1,19 @@
 import * as React from "react";
 import { useState } from "react";
-import Trade from "./Trade";
-import {
-  Chip,
-  Divider,
-  Grid,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Typography,
-} from "@mui/material";
-import SemiCircleProgressBar from "react-progressbar-semicircle";
-import Balance from "./Balance";
-import { cardWidth, featureDisabledInfo, growthIconMap } from "./Common";
+import { Button, Chip, Grid, Stack, Typography } from "@mui/material";
+import { featureDisabledInfo } from "./Common";
 import {
   type AppState,
-  ChannelState,
+  type CandidateInfo,
+  type CoinName,
   type Config,
-  f0,
   Key,
-  type PriceChannelsDataResponse,
-  PriceMove,
   TradeMemo,
+  TradeState,
 } from "../../lib";
+import AssetCard from "./cards/AssetCard";
+import BalanceCard from "./cards/BalanceCard";
+import CandidateCard from "./cards/CandidateCard";
 
 export function Home({
   state,
@@ -40,12 +30,57 @@ export function Home({
   const toggleHideBalances = (): void => {
     setHideBalances(!hideBalances);
   };
+
+  const sorted = assets.sort((t1, t2) => (t1.ttl > t2.ttl ? 1 : -1));
+  const current = sorted.filter(
+    (t) => t.currentValue || t.stateIs(TradeState.BUY)
+  );
+  const sold = sorted.filter((t) => t.tradeResult.soldPrice);
+
+  const currentInfoMessage =
+    config.AdvancedAccess && !current.length ? (
+      <Typography variant="body1" textAlign={`center`}>
+        {config.ViewOnly
+          ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
+          : `⌚ Waiting for specific conditions to buy a candidate.`}
+      </Typography>
+    ) : undefined;
+
   return (
     <>
-      <Grid sx={{ flexGrow: 1 }} container spacing={2}>
-        {balanceCard(config, hideBalances, assetsValue, toggleHideBalances)}
-        {assetsCards(assets, hideBalances, config, onAssetDelete)}
-        {candidates(state.candidates)}
+      <Grid
+        sx={{ flexGrow: 1 }}
+        display="flex"
+        justifyContent="center"
+        container
+        spacing={2}
+      >
+        <Grid item xs={12}>
+          {balanceCard(config, hideBalances, assetsValue, toggleHideBalances)}
+        </Grid>
+        <Grid item xs={12} md={4} order={{ xs: 2, md: 1 }}>
+          {candidates(`⚖️ Candidates`, state.candidates)}
+        </Grid>
+        {!config.AdvancedAccess ? (
+          <Grid item xs={12} md={12} order={{ xs: 1, md: 0 }}>
+            {featureDisabledInfo}
+          </Grid>
+        ) : (
+          <>
+            <Grid item xs={12} md={4} order={{ xs: 1, md: 2 }}>
+              {assetsCards(
+                `🪙 Current`,
+                current,
+                hideBalances,
+                config,
+                currentInfoMessage
+              )}
+            </Grid>
+            <Grid item xs={12} md={4} order={{ xs: 1, md: 3 }}>
+              {assetsCards(`💸 Sold`, sold, hideBalances, config)}
+            </Grid>
+          </>
+        )}
       </Grid>
     </>
   );
@@ -60,234 +95,144 @@ function balanceCard(
   const [hide, setHide] = useState(false);
 
   return (
-    <>
-      <Grid item xs={12}>
-        {/* Invisible divider */}
-        <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
-          <Chip
-            onClick={() => {
-              setHide(!hide);
-            }}
-            label={<Typography variant={`h6`}>💰 Balance</Typography>}
-          />
-        </Divider>
-      </Grid>
+    <Stack spacing={1} alignItems={`center`}>
+      <Chip
+        sx={{ mb: `8px` }}
+        onClick={() => {
+          setHide(!hide);
+        }}
+        label={<Typography variant={`h6`}>💰 Balance</Typography>}
+      />
       {!hide && (
-        <Grid item xs={12}>
-          <Grid container justifyContent="center" spacing={2}>
-            <Grid item>
-              <Balance
-                name={config.StableCoin}
-                balances={{
-                  [config.StableCoin]: config.StableBalance,
-                  feesBudget: config.FeesBudget,
-                }}
-                assetsValue={assetsValue}
-                viewOnly={config.ViewOnly}
-                hide={hideBalances}
-                toggleHide={
-                  config.HideBalances ? toggleHideBalances : undefined
-                }
-              />
-            </Grid>
-          </Grid>
-        </Grid>
+        <BalanceCard
+          name={config.StableCoin}
+          balances={{
+            [config.StableCoin]: config.StableBalance,
+            feesBudget: config.FeesBudget,
+          }}
+          assetsValue={assetsValue}
+          viewOnly={config.ViewOnly}
+          hide={hideBalances}
+          toggleHide={toggleHideBalances}
+        />
       )}
-    </>
+    </Stack>
   );
 }
 
 function assetsCards(
+  title: string,
   elems: TradeMemo[],
   hideBalances: boolean,
   config: Config,
-  onAssetDelete?: (coinName: string, noConfirm?: boolean) => void
+  topItem?: JSX.Element
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
-  const sorted = elems.sort((t1, t2) => (t1.profit() < t2.profit() ? 1 : -1));
-  const current = sorted.filter((t) => t.currentValue);
-  const sold = sorted.filter((t) => !t.currentValue);
-
   return (
-    <>
-      <Grid item xs={12}>
-        <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
-          <Chip
-            onClick={() => {
-              setHide(!hide);
-            }}
-            label={
-              <Typography variant={`h6`}>
-                🪙 Assets ({current.length})
-              </Typography>
-            }
-          />
-        </Divider>
-      </Grid>
+    <Stack spacing={1} alignItems={`center`}>
+      <Chip
+        onClick={() => {
+          setHide(!hide);
+        }}
+        label={
+          <Typography variant={`h6`}>
+            {title} ({elems.length})
+          </Typography>
+        }
+      />
       {!hide && (
         <>
-          {!config.AdvancedAccess && (
-            <Grid item xs={12}>
-              <Grid container justifyContent="center" spacing={2}>
-                <Grid item>{featureDisabledInfo}</Grid>
+          <Grid
+            container
+            display="flex"
+            justifyContent="center"
+            spacing={2}
+            ml={`-16px !important`}
+          >
+            {topItem && <Grid item>{topItem}</Grid>}
+            {elems.map((t) => (
+              <Grid key={t.getCoinName()} item>
+                <AssetCard tm={t} cfg={config} hideBalances={hideBalances} />
               </Grid>
-            </Grid>
-          )}
-          {config.AdvancedAccess && !sorted.length && (
-            <Grid item xs={12}>
-              <Grid container justifyContent="center" spacing={2}>
-                <Grid item>
-                  <Typography variant="body1">
-                    {config.ViewOnly
-                      ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
-                      : `⌚ Waiting for specific conditions to buy a candidate.`}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-          )}
-          {!!current.length && (
-            <Grid item xs={12}>
-              <Grid container justifyContent="center" spacing={2}>
-                {current.map((t) => (
-                  <Grid key={t.getCoinName()} item>
-                    <Trade
-                      data={t}
-                      hideBalances={hideBalances}
-                      config={config}
-                      onDelete={onAssetDelete}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-          )}
-          {!!sold.length && (
-            <Grid item xs={12}>
-              <Grid container justifyContent="center" spacing={2}>
-                {sold.map((t) => (
-                  <Grid key={t.getCoinName()} item>
-                    <Trade
-                      data={t}
-                      hideBalances={hideBalances}
-                      config={config}
-                      onDelete={onAssetDelete}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-          )}
+            ))}
+          </Grid>
         </>
       )}
-    </>
+    </Stack>
   );
 }
 
-const percentileToColorMap = {
-  // Gradient from red to green, with keys from 0.1 to 0.9 and step 0.1
-  0.0: `#ff0000`,
-  0.1: `#ff0000`,
-  0.2: `#ff3300`,
-  0.3: `#ff6600`,
-  0.4: `#ff9900`,
-  0.5: `#ffcc00`,
-  0.6: `#ffff00`,
-  0.7: `#ccff00`,
-  0.8: `#99ff00`,
-  0.9: `#66ff00`,
-};
-
-function candidates(data: PriceChannelsDataResponse): JSX.Element {
+function candidates(
+  title: string,
+  data: Record<CoinName, CandidateInfo>
+): JSX.Element {
   const candidateCoins = Object.keys(data).sort((a, b) =>
     data[a][Key.STRENGTH] > data[b][Key.STRENGTH] ? -1 : 1
   );
 
   const [hide, setHide] = useState(false);
 
+  const defaultShow = 10;
+  const [itemsToShow, setItemsToShow] = useState(defaultShow);
+  const displayCoins = hide ? [] : candidateCoins.slice(0, itemsToShow);
+
   return (
-    <>
-      <Grid item xs={12}>
-        <Divider sx={{ [`::before,::after`]: { borderTop: `none` } }}>
-          <Chip
-            onClick={() => {
-              setHide(!hide);
-            }}
-            label={
-              <Typography variant={`h6`}>
-                {`⚖️ `}Candidates ({candidateCoins.length})
-              </Typography>
-            }
-          />
-        </Divider>
-      </Grid>
+    <Stack spacing={1} alignItems={`center`}>
+      <Chip
+        onClick={() => {
+          setHide(!hide);
+        }}
+        label={
+          <Typography variant={`h6`}>
+            {title} ({candidateCoins.length})
+          </Typography>
+        }
+      />
+      {!hide && !candidateCoins.length && (
+        <Typography alignSelf={`center`} variant={`body2`}>
+          Nothing to show yet. Investment candidates will appear after some
+          {` `}
+          period of observation.
+        </Typography>
+      )}
       {!hide && (
-        <Grid item xs={12}>
-          <Grid container justifyContent="center" spacing={2}>
-            <Grid item>
-              {!candidateCoins.length && (
-                <Typography alignSelf={`center`} variant={`body2`}>
-                  Nothing to show yet. Investment candidates will appear after
-                  some
-                  {` `}
-                  period of observation.
-                </Typography>
-              )}
-              {!!candidateCoins.length && (
-                <List
-                  sx={{
-                    padding: 0,
-                    marginTop: 0,
-                    width: cardWidth,
-                    overflow: `auto`,
-                    maxHeight: 440,
-                  }}
-                >
-                  {candidateCoins.map((coin, i) => {
-                    const ch = data[coin];
-                    const strength = ch[Key.STRENGTH] ?? 0;
-                    const priceMove = ch[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
-                    const bold =
-                      ch[Key.ATH] > ch[Key.MAX] &&
-                      ch[Key.S0] === ChannelState.TOP;
-                    return (
-                      <ListItem
-                        sx={{
-                          padding: `0 0 6px 60px`,
-                        }}
-                        key={i}
-                        disablePadding={true}
-                      >
-                        <ListItemAvatar>
-                          <SemiCircleProgressBar
-                            diameter={80}
-                            percentage={f0(strength * 100)}
-                            stroke={percentileToColorMap[strength.toFixed(1)]}
-                            strokeWidth={10}
-                          />
-                        </ListItemAvatar>
-                        <ListItemText
-                          sx={{ margin: `-3px 0 0 8px` }}
-                          primary={
-                            <Typography
-                              sx={{ display: `flex`, alignItems: `center` }}
-                            >
-                              {bold ? <b>{coin}</b> : coin}
-                              {growthIconMap.get(priceMove)}
-                            </Typography>
-                          }
-                          secondary={`Strength: ${f0(strength * 100)}`}
-                        />
-                      </ListItem>
-                    );
-                  })}
-                </List>
-              )}
-            </Grid>
-          </Grid>
+        <Grid
+          container
+          display="flex"
+          justifyContent="center"
+          spacing={2}
+          ml={`-16px !important`}
+        >
+          {displayCoins.map((coin, i) => {
+            return (
+              <Grid item key={coin}>
+                <CandidateCard coin={coin} ci={data[coin]} />
+              </Grid>
+            );
+          })}
         </Grid>
       )}
-    </>
+      {!hide && itemsToShow === defaultShow && (
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setItemsToShow(candidateCoins.length);
+          }}
+        >
+          Show more
+        </Button>
+      )}
+      {!hide && itemsToShow !== defaultShow && (
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setItemsToShow(defaultShow);
+          }}
+        >
+          Show less
+        </Button>
+      )}
+    </Stack>
   );
 }

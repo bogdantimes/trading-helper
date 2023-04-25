@@ -8,7 +8,7 @@ import {
   type SymbolInfo,
   TradeResult,
 } from "../lib";
-import { type IExchange } from "./Exchange";
+import { type IExchange } from "./IExchange";
 import { type APIKeysProvider } from "./dao/Config";
 
 export class Binance implements IExchange {
@@ -86,7 +86,7 @@ export class Binance implements IExchange {
         `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`
       );
     }
-    Log.alert(
+    Log.info(
       `➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`
     );
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
@@ -187,6 +187,81 @@ export class Binance implements IExchange {
     } catch (e: any) {
       throw new Error(`Failed to trade ${symbol}: ${e.message}`);
     }
+  }
+
+  importTrade(symbol: ExchangeSymbol): TradeResult {
+    const qty = this.getBalance(symbol.quantityAsset);
+
+    if (!qty) {
+      return new TradeResult(
+        symbol,
+        `Binance Sport portfolio does not have ${symbol.quantityAsset}`
+      );
+    }
+
+    const { cost, fees } = this.#getTotalCostForQuantity(symbol, qty);
+    const tradeResult = new TradeResult(symbol);
+    tradeResult.fromExchange = true;
+    tradeResult.quantity = qty - fees.origQty;
+    tradeResult.cost = cost - fees.quoteQty;
+    tradeResult.commission = fees.BNB;
+    tradeResult.paid = cost;
+
+    return tradeResult;
+  }
+
+  #getTotalCostForQuantity(
+    symbol: ExchangeSymbol,
+    currentQuantity: number
+  ): {
+    fees: { BNB: number; origQty: number; quoteQty: number };
+    cost: number;
+  } {
+    const { key, secret } = this.#getAPIKeysOrDie();
+    const resource = `myTrades`;
+    const query = `symbol=${symbol}&recvWindow=60000&limit=1000`;
+
+    const trades: any[] = this.fetch(
+      () => `${resource}?${this.#addSignature(query, secret)}`,
+      {
+        headers: { "X-MBX-APIKEY": key },
+        muteHttpExceptions: true,
+      }
+    );
+
+    trades.reverse();
+
+    Log.debug(trades);
+
+    let remainingQuantity = currentQuantity;
+    let totalCost = 0;
+
+    for (const trade of trades) {
+      if (!trade.isBuyer) continue;
+
+      if (remainingQuantity <= 0) break;
+
+      const tradeQuantity = parseFloat(trade.qty);
+      const tradePrice = parseFloat(trade.price);
+
+      if (tradeQuantity >= remainingQuantity) {
+        totalCost += remainingQuantity * tradePrice;
+        remainingQuantity = 0;
+      } else {
+        totalCost += tradeQuantity * tradePrice;
+        remainingQuantity -= tradeQuantity;
+      }
+    }
+
+    if (remainingQuantity > 0) {
+      throw new Error(
+        `Trade history is insufficient to cover the requested quantity for ${symbol}`
+      );
+    }
+
+    const fees = this.#getFees(symbol, trades);
+
+    return { cost: totalCost, fees };
   }
 
   #getFees(

@@ -1,4 +1,6 @@
 import Integer = GoogleAppsScript.Integer;
+import { enumKeys } from "./Functions";
+import { type CoinName } from "./IPriceProvider";
 
 export enum StableUSDCoin {
   USDT = `USDT`,
@@ -16,24 +18,27 @@ export enum OtherStableCoins {
 
 export type PriceMap = Record<string, number>;
 
+type DateString = string;
+type ProfitValue = number;
+
 export interface Stats {
   TotalProfit: number;
   TotalWithdrawals: number;
-  DailyProfit: PriceMap;
+  DailyProfit: Record<DateString, ProfitValue>;
 }
 
 export class ExchangeSymbol {
   readonly quantityAsset: string;
   readonly priceAsset: string;
 
-  constructor(quantityAsset: string, priceAsset: string) {
-    if (!quantityAsset) {
-      throw Error(`Invalid quantityAsset: "${quantityAsset}"`);
+  constructor(coinName: string, priceAsset: string) {
+    if (!coinName) {
+      throw Error(`Invalid quantityAsset: "${coinName}"`);
     }
     if (!priceAsset) {
       throw Error(`Invalid priceAsset: "${priceAsset}"`);
     }
-    this.quantityAsset = quantityAsset.toUpperCase();
+    this.quantityAsset = coinName.toUpperCase();
     this.priceAsset = priceAsset.toUpperCase();
   }
 
@@ -80,14 +85,6 @@ export enum PriceMove {
   STRONG_UP,
 }
 
-export interface MarketMove {
-  [PriceMove.STRONG_DOWN]: number;
-  [PriceMove.DOWN]: number;
-  [PriceMove.NEUTRAL]: number;
-  [PriceMove.UP]: number;
-  [PriceMove.STRONG_UP]: number;
-}
-
 export interface InitialSetupParams {
   dbURL: string;
   binanceAPIKey?: string;
@@ -99,11 +96,6 @@ export interface ICacheProxy {
   get: (key: string) => string | null;
   put: (key: string, value: string, expirationInSeconds?: Integer) => void;
   remove: (key: string) => void;
-}
-
-export enum PriceAction {
-  NONE,
-  DOUBLE_TOP,
 }
 
 export interface IStore {
@@ -141,7 +133,12 @@ export enum Key {
   ATH,
   ATHTime,
   IMBALANCE,
+  /**
+   * @deprecated
+   */
   IS_READY,
+  MID,
+  TREND,
 }
 
 export enum Bit {
@@ -156,10 +153,11 @@ export enum ChannelState {
   TOP,
 }
 
-export interface PriceChannelData {
+export interface CandidateInfo {
   [Key.DURATION]: number;
   [Key.DURATION_MET]: Bit;
   [Key.MIN]: number;
+  [Key.MID]: number;
   [Key.MAX]: number;
   [Key.SIZE]: number;
   [Key.S0]: ChannelState;
@@ -170,10 +168,15 @@ export interface PriceChannelData {
   [Key.MIN_PERCENTILE]: number;
   [Key.PRICE_MOVE]: PriceMove;
   [Key.STRENGTH]: number;
+  [Key.IMBALANCE]?: number;
+  [Key.TREND]?: string;
   [Key.ATH]: number;
   [Key.ATHTime]: number;
-  [Key.IMBALANCE]: number;
-  [Key.IS_READY]: Bit;
+}
+
+export interface Candidates {
+  selected: Record<string, CandidateInfo>;
+  all: Record<string, CandidateInfo>;
 }
 
 export interface UpgradeInfo {
@@ -190,11 +193,45 @@ export interface Filter {
   tickSize?: string;
 }
 
+export enum SymbolStatus {
+  TRADING = `TRADING`,
+}
+
 export interface SymbolInfo {
   symbol: string;
   filters: Filter[];
+  status: SymbolStatus;
+  precision: number;
 }
 
 export interface ExchangeInfo {
   symbols: SymbolInfo[];
+}
+
+export interface ICandidatesDao {
+  getAll: () => Record<string, CandidateInfo>;
+  get: (coin: CoinName) => CandidateInfo;
+  set: (coin: Coin, data: CandidateInfo) => void;
+  setAll: (data: Record<string, CandidateInfo>) => void;
+  delete: (coin: Coin) => void;
+}
+
+export class StableCoinMatcher {
+  private readonly symbol: string;
+  private readonly match: RegExpMatchArray | null;
+
+  constructor(symbol: string) {
+    this.symbol = symbol.toUpperCase();
+    this.match = this.symbol.match(
+      new RegExp(`^(\\w+)(${enumKeys(StableUSDCoin).join(`|`)})$`)
+    );
+  }
+
+  get coinName(): CoinName | null {
+    return this.match ? this.match[1] : null;
+  }
+
+  get stableCoin(): StableUSDCoin | null {
+    return this.match ? (this.match[2] as StableUSDCoin) : null;
+  }
 }

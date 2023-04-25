@@ -1,4 +1,3 @@
-import { type CoinName, enumKeys, StableUSDCoin } from "../lib";
 import { isNode } from "browser-or-node";
 import getEmailTemplate from "./utils/getEmailTemplate";
 
@@ -41,13 +40,17 @@ export class Log {
       this.errLog.push(new Error(`${err?.stack?.slice(0, 1000)}`));
   }
 
-  static print(): string {
+  static printEmail(): string {
     return getEmailTemplate({
       alertsLog: this.alertsLog,
       errLog: this.errLog,
       infoLog: this.infoLog,
       debugLog: this.debugLog,
     });
+  }
+
+  static printInfos(): string {
+    return `${this.alertsLog.join(`\n`)}\n\n${this.infoLog.join(`\n`)}`;
   }
 
   static ifUsefulDumpAsEmail(): void {
@@ -57,32 +60,12 @@ export class Log {
         this.errLog.length ? `Error` : `Alert`
       }`;
       try {
-        GmailApp.sendEmail(email, subject, ``, { htmlBody: this.print() });
+        GmailApp.sendEmail(email, subject, ``, { htmlBody: this.printEmail() });
       } catch (e) {
         Log.error(e);
         // TODO: communicate to user over the app UI
       }
     }
-  }
-}
-
-export class StableCoinMatcher {
-  private readonly symbol: string;
-  private readonly match: RegExpMatchArray | null;
-
-  constructor(symbol: string) {
-    this.symbol = symbol.toUpperCase();
-    this.match = this.symbol.match(
-      new RegExp(`^(\\w+)(${enumKeys(StableUSDCoin).join(`|`)})$`)
-    );
-  }
-
-  get coinName(): CoinName | null {
-    return this.match ? this.match[1] : null;
-  }
-
-  get stableCoin(): StableUSDCoin | null {
-    return this.match ? (this.match[2] as StableUSDCoin) : null;
   }
 }
 

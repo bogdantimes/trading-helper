@@ -30,7 +30,7 @@ export class TradesDao {
   update(
     coinName: string,
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined
+    notFoundFn?: () => TradeMemo | undefined | null
   ): void {
     try {
       coinName = coinName.toUpperCase();
@@ -55,8 +55,11 @@ export class TradesDao {
           : this.#set(changedTrade);
       }
     } catch (e) {
-      console.error(e);
-      Log.debug(e);
+      Log.debug(
+        `${coinName}: Failed to process trade update. Error: ${JSON.stringify(
+          e
+        )}}`
+      );
     } finally {
       this.#unlockTrade(coinName);
     }
@@ -80,6 +83,14 @@ export class TradesDao {
         this.#unlockTrade(coinName);
       }
     });
+  }
+
+  getRaw(): Record<string, any> {
+    if (isNode && this.memCache) {
+      // performance optimization for back-testing
+      return this.memCache;
+    }
+    return this.store.get(`Trades`) || {};
   }
 
   get(): Record<string, TradeMemo> {
@@ -118,7 +129,7 @@ export class TradesDao {
   }
 
   #set(tm: TradeMemo): void {
-    const trades = this.get();
+    const trades = this.getRaw();
     trades[tm.getCoinName()] = tm;
     this.store.set(`Trades`, trades);
   }
@@ -128,7 +139,7 @@ export class TradesDao {
   }
 
   #delete(tm: TradeMemo): void {
-    const trades = this.get();
+    const trades = this.getRaw();
     if (trades[tm.getCoinName()]) {
       delete trades[tm.getCoinName()];
       if (Object.keys(trades).length === 0) {

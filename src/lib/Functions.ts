@@ -31,7 +31,7 @@ export function floorToOptimalGrid(v: number, precision?: number): FloorResult {
   let p = precision ?? getPrecision(v);
   const originalPrecision = p;
   // keep flooring each decimal until price step exceeds 0.075% step
-  for (; v / result < 1.000075; p--) {
+  for (; p >= 0 && v / result < 1.000075; p--) {
     result = floor(v, p);
   }
   return { result, precision: p, precisionDiff: originalPrecision - p };
@@ -150,4 +150,13 @@ export function waitTillCurrentSecond(s = 0): number {
     waited += 500;
   }
   return waited;
+}
+
+export function formatUSDCurrency(value) {
+  return new Intl.NumberFormat(`en-US`, {
+    style: `currency`,
+    currency: `USD`,
+    signDisplay: `always`,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

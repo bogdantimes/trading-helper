@@ -1,27 +1,28 @@
 import { CachedStore, DefaultStore, FirebaseStore } from "./Store";
-import { TradeActions } from "./TradeActions";
 import { Statistics } from "./Statistics";
-import { Exchange } from "./Exchange";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   type AppState,
+  type CandidateInfo,
+  Coin,
   type CoinName,
   type Config,
   f2,
   type InitialSetupParams,
   type IStore,
+  Key,
   MASK,
 } from "../lib";
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
-import { ChannelsDao } from "./dao/Channels";
 import { TradeManager } from "./TradeManager";
-import { TrendProvider } from "./TrendProvider";
 import { Updater, UpgradeDone } from "./Updater";
 import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
+import { CandidatesDao } from "./dao/Candidates";
+import { Binance } from "./Binance";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -110,6 +111,12 @@ function catchError<T>(fn: () => T): T {
     Log.ifUsefulDumpAsEmail();
     return res;
   } catch (e) {
+    const awsLimit = `ConcurrentInvocationLimitExceeded`;
+    if (e.message.includes(awsLimit)) {
+      // try again after small delay
+      Utilities.sleep(500 + new Date().getMilliseconds());
+      return catchError(fn);
+    }
     const limitMsg1 = `Service invoked too many times`;
     const limitMsg2 = `Please wait a bit and try again`;
     if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
@@ -153,14 +160,20 @@ function initialSetup(params: InitialSetupParams): string {
 function sellAll(): string {
   return catchError(() => {
     TradeManager.default().sellAll();
-    return `Done. Results were sent to your email.`;
+    return Log.printInfos();
   });
 }
 
-function dropCoin(coinName: string): string {
+function remove(...coins: CoinName[]): string {
   return catchError(() => {
-    TradeActions.default().drop(coinName);
-    return `Removing ${coinName}`;
+    const dao = new TradesDao(DefaultStore);
+    coins?.forEach((c) => {
+      dao.update(c, (trade) => {
+        trade.deleted = true;
+        return trade;
+      });
+    });
+    return `Removed ${coins?.join(`, `)}`;
   });
 }
 
@@ -171,7 +184,7 @@ function setConfig(config: Config): { msg: string; config: Config } {
     const curConfig = dao.get();
     if (curConfig.StableBalance <= 0 && config.StableBalance > 0) {
       // Check the balance is actually present on Spot balance
-      const balance = new Exchange(dao).getBalance(config.StableCoin);
+      const balance = new Binance(dao).getBalance(config.StableCoin);
       if (balance < config.StableBalance) {
         msg = `\nActual balance on your Binance Spot account is $${f2(
           balance
@@ -203,12 +216,6 @@ function setFirebaseURL(url: string): string {
 function getConfig(): Config {
   const configDao = new ConfigDao(DefaultStore);
   const config = configDao.get();
-  const trendProvider = new TrendProvider(
-    configDao,
-    new Exchange(configDao),
-    CacheProxy
-  );
-  config.AutoMarketTrend = trendProvider.get();
   config.KEY = config.KEY ? MASK : ``;
   config.SECRET = config.SECRET ? MASK : ``;
   return config;
@@ -218,17 +225,16 @@ function getConfig(): Config {
  * Returns the aggregated state for the UI:
  * trades, config, statistics, candidates
  */
+const plugin: TraderPlugin = global.TradingHelperLibrary;
 function getState(): AppState {
   return catchError<AppState>(() => {
-    const plugin: TraderPlugin = global.TradingHelperLibrary;
+    const candidatesDao = new CandidatesDao(DefaultStore);
     return {
       config: getConfig(),
       firebaseURL: FirebaseStore.url,
       info: new Statistics(DefaultStore).getAll(),
-      candidates: plugin.getCandidates(new ChannelsDao(DefaultStore)),
-      assets: new TradesDao(DefaultStore)
-        .getList()
-        .filter((a) => a.currentValue > 0 || a.tradeResult.soldPrice > 0),
+      candidates: plugin.getCandidates(candidatesDao).selected,
+      assets: new TradesDao(DefaultStore).getList(),
     };
   });
 }
@@ -236,14 +242,27 @@ function getState(): AppState {
 function buy(coin: CoinName): string {
   return catchError(() => {
     TradeManager.default().buy(coin.toUpperCase());
-    return `${coin} was added to the buying queue`;
+    return `In progress!`;
   });
 }
 
-function sell(coin: CoinName): string {
+function sell(...coins: CoinName[]): string {
   return catchError(() => {
-    TradeManager.default().sell(coin.toUpperCase());
-    return `Done. Results were sent to your email.`;
+    const mgr = TradeManager.default();
+    coins?.forEach((c) => {
+      mgr.sell(c.toUpperCase());
+    });
+    return Log.printInfos();
+  });
+}
+
+function importCoin(...coins: CoinName[]): any {
+  return catchError(() => {
+    Log.alert(
+      `\`importCoin\` is experimental feature. If imported incorrectly, use \`remove\` command to revert.`
+    );
+    TradeManager.default().import(coins);
+    return Log.printInfos();
   });
 }
 
@@ -254,13 +273,13 @@ function addWithdrawal(amount: number): string {
     const configDao = new ConfigDao(DefaultStore);
     const mgr = new WithdrawalsManager(
       configDao,
-      new Exchange(configDao),
+      new Binance(configDao),
       new Statistics(DefaultStore)
     );
     const { balance } = mgr.addWithdrawal(amount);
     const msg = `💳 Withdrawal of $${amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
     Log.alert(msg);
-    return msg;
+    return Log.printInfos();
   });
 }
 
@@ -270,14 +289,15 @@ global.tick = tick;
 global.start = start;
 global.stop = stop;
 global.initialSetup = initialSetup;
-global.sellAll = sellAll;
-global.dropCoin = dropCoin;
 global.setConfig = setConfig;
 global.setFirebaseURL = setFirebaseURL;
-global.addWithdrawal = addWithdrawal;
-global.getState = getState;
 global.buy = buy;
 global.sell = sell;
+global.sellAll = sellAll;
+global.remove = remove;
+global.importCoin = importCoin;
+global.addWithdrawal = addWithdrawal;
+global.getState = getState;
 global.keepCacheAlive = () => {
   catchError(() => {
     DefaultStore.keepCacheAlive();
@@ -289,4 +309,40 @@ global.upgrade = () => {
     result.includes(UpgradeDone) && startAllProcesses();
     return result;
   });
+};
+global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
+  return catchError(() => {
+    const candidatesDao = new CandidatesDao(DefaultStore);
+    if (!ci) {
+      ci = candidatesDao.get(coin);
+    }
+    const imbalance = plugin.getImbalance(coin, ci);
+    if (imbalance) {
+      ci[Key.IMBALANCE] = imbalance;
+      candidatesDao.set(new Coin(coin), ci);
+      new TradesDao(DefaultStore).update(coin, (tm) => {
+        tm.supplyDemandImbalance = imbalance;
+        return tm;
+      });
+    }
+    return imbalance;
+  });
+};
+
+const helpDescriptions = {
+  start: `Starts all background processes.`,
+  stop: `Stops the trading process.`,
+  buy: `Buys a coin. Example: $ buy BTC`,
+  sell: `Sells a list of coins. Example: $ sell BTC ETH`,
+  sellAll: `Sells all coins.`,
+  remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
+  importCoin: `Imports a list of coins from Binance Spot portfolio. Example: $ importCoin BTC ETH`,
+  addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
+  upgrade: `Upgrades the system.`,
+};
+
+global.help = (): string => {
+  return Object.entries(helpDescriptions)
+    .map(([funcName, description]) => `${funcName}: ${description}`)
+    .join(`\n`);
 };

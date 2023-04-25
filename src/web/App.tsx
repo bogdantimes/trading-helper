@@ -1,30 +1,35 @@
 import * as React from "react";
 import { useEffect } from "react";
-import { useDoubleTap } from "use-double-tap";
 import InfoIcon from "@mui/icons-material/Info";
+import TerminalIcon from "@mui/icons-material/Terminal";
 import HomeIcon from "@mui/icons-material/Home";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
+import { ErrorBoundary } from "react-error-boundary";
 import {
   Alert,
+  Card,
+  Container,
   createTheme,
   CssBaseline,
-  Dialog,
+  Fab,
   LinearProgress,
   ThemeProvider,
   Typography,
   useMediaQuery,
 } from "@mui/material";
 import { Settings } from "./components/Settings";
-import { Info } from "./components/Info";
+import { BalanceHistory } from "./components/BalanceHistory";
 import { Home } from "./components/Home";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
 import { type AppState } from "../lib";
-import Terminal, { ColorMode } from "react-terminal-ui";
 import { DefaultConfig } from "../gas/dao/Config";
+import { ScriptApp } from "./components/Common";
+import useWebSocket from "./useWebSocket";
+import { APIConsole } from "./components/APIConsole";
 
 function a11yProps(index: number): { id: string; [`aria-controls`]: string } {
   return {
@@ -64,10 +69,17 @@ export default function App(): JSX.Element {
     };
   }, [initialSetup]);
 
+  const data = process.env.WEBDEV ? useWebSocket(`ws://localhost:3000`) : null;
+
+  useEffect(() => {
+    if (data) {
+      handleState(data);
+    }
+  }, [data]);
+
   function initialFetch(): void {
     setFetchingData(true);
-    google.script.run
-      .withSuccessHandler(handleState)
+    ScriptApp?.withSuccessHandler(handleState)
       .withFailureHandler((resp) => {
         setFetchingData(false);
         setInitialSetup(true);
@@ -89,8 +101,7 @@ export default function App(): JSX.Element {
       // do not re-fetch state when on Settings tab
       return;
     }
-    google.script.run
-      .withSuccessHandler(handleState)
+    ScriptApp?.withSuccessHandler(handleState)
       .withFailureHandler((resp) => {
         setFetchDataError(resp.message);
       })
@@ -100,16 +111,15 @@ export default function App(): JSX.Element {
   function onAssetDelete(coinName: string, noConfirm = false): void {
     if (noConfirm || confirm(`Are you sure you want to remove ${coinName}?`)) {
       setDeletingAsset(true);
-      google.script.run
-        .withSuccessHandler(() => {
-          setState({
-            ...state,
-            assets: state.assets.filter(
-              (a) => a.tradeResult.symbol.quantityAsset !== coinName
-            ),
-          });
-          setDeletingAsset(false);
-        })
+      ScriptApp?.withSuccessHandler(() => {
+        setState({
+          ...state,
+          assets: state.assets.filter(
+            (a) => a.tradeResult.symbol.quantityAsset !== coinName
+          ),
+        });
+        setDeletingAsset(false);
+      })
         .withFailureHandler((err) => {
           setDeletingAsset(false);
           alert(err);
@@ -119,15 +129,10 @@ export default function App(): JSX.Element {
   }
 
   const [terminalOpen, setTerminalOpen] = React.useState(false);
-  const [terminalOutput, setTerminalOutput] = React.useState(``);
-  const [prompt, setPrompt] = React.useState(``);
-  const openTerminal = useDoubleTap((event) => {
-    event.preventDefault();
-    setTerminalOpen(true);
-  });
 
   const [tab, setTab] = React.useState(0);
   const changeTab = (e: React.SyntheticEvent, v: number): void => {
+    if (!TabId[v]) return;
     setTab((prevState) => {
       if (prevState !== TabId.Settings && v === TabId.Settings) {
         // Reload state when opening Settings
@@ -140,109 +145,93 @@ export default function App(): JSX.Element {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {fetchingData && (
-        <Box sx={{ width: `100%` }}>
-          <LinearProgress />
-        </Box>
-      )}
-      {fetchDataError && (
-        <Alert severity="error">
-          <Typography variant="caption">{fetchDataError}</Typography>
-          <Typography variant="caption">
-            {` `}Please check your network connection and that Google Apps
-            Script application is deployed and try again.
-          </Typography>
-        </Alert>
-      )}
-      {!fetchingData && initialSetup && (
-        <InitialSetup
-          firebaseURL={state.firebaseURL}
-          config={state.config}
-          onConnect={initialFetch}
-        />
-      )}
-      {!fetchingData && !initialSetup && (
-        <Box sx={{ width: `100%` }}>
-          <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
-            <Tabs value={tab} onChange={changeTab} centered>
-              <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
-              <Tab
-                icon={<InfoIcon />}
-                {...a11yProps(TabId.Info)}
-                {...openTerminal}
-              />
-              <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
-            </Tabs>
+      <ErrorBoundary FallbackComponent={Fallback}>
+        {fetchingData && (
+          <Box sx={{ width: `100%` }}>
+            <LinearProgress />
           </Box>
-          <TabPanel value={tab} index={TabId.Home}>
-            <Home
-              state={state}
-              onAssetDelete={deletingAsset ? undefined : onAssetDelete}
-            />
-          </TabPanel>
-          <TabPanel value={tab} index={TabId.Info}>
-            <Info stats={state.info} />
-          </TabPanel>
-          <TabPanel value={tab} index={TabId.Settings}>
-            <Settings
-              config={state.config}
-              setConfig={(config) => {
-                handleState({ ...state, config });
-              }}
-              firebaseURL={state.firebaseURL}
-            />
-          </TabPanel>
-        </Box>
-      )}
-      <Dialog
-        open={terminalOpen}
-        onClose={() => {
-          setTerminalOpen(false);
+        )}
+        {fetchDataError && (
+          <Alert severity="error">
+            <Typography variant="caption">{fetchDataError}</Typography>
+            <Typography variant="caption">
+              {` `}Please check your network connection and that Google Apps
+              Script application is deployed and try again.
+            </Typography>
+          </Alert>
+        )}
+        {!fetchingData && initialSetup && (
+          <Container sx={{ pt: 3 }}>
+            <Card sx={{ p: 3, boxShadow: 2, borderRadius: `1rem` }}>
+              <InitialSetup
+                firebaseURL={state.firebaseURL}
+                config={state.config}
+                onConnect={initialFetch}
+              />
+            </Card>
+          </Container>
+        )}
+        {!fetchingData && !initialSetup && (
+          <Box sx={{ width: `100%` }}>
+            <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
+              <Tabs value={tab} onChange={changeTab} centered>
+                <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
+                <Tab icon={<InfoIcon />} {...a11yProps(TabId.Info)} />
+                <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
+              </Tabs>
+            </Box>
+            <TabPanel value={tab} index={TabId.Home} onChange={changeTab}>
+              <Home
+                state={state}
+                onAssetDelete={deletingAsset ? undefined : onAssetDelete}
+              />
+            </TabPanel>
+            <TabPanel value={tab} index={TabId.Info} onChange={changeTab}>
+              <BalanceHistory stats={state.info} />
+            </TabPanel>
+            <TabPanel value={tab} index={TabId.Settings} onChange={changeTab}>
+              <Settings
+                config={state.config}
+                setConfig={(config) => {
+                  handleState({ ...state, config });
+                }}
+                firebaseURL={state.firebaseURL}
+              />
+            </TabPanel>
+          </Box>
+        )}
+      </ErrorBoundary>
+
+      <Fab
+        color="primary"
+        aria-label="open terminal"
+        onClick={() => {
+          setTerminalOpen(true);
+        }}
+        sx={{
+          position: `fixed`,
+          bottom: (theme) => theme.spacing(2),
+          right: (theme) => theme.spacing(2),
         }}
       >
-        <Box width={600} height={400}>
-          <Terminal
-            name="API"
-            prompt={prompt}
-            height={`290px`}
-            colorMode={
-              theme.palette.mode === `dark` ? ColorMode.Dark : ColorMode.Light
-            }
-            onInput={(terminalInput) => {
-              // parse terminal input: <cmd> <arg1> <arg2> ...
-              const [cmd, ...args] = terminalInput.split(` `);
-              // JSON parse the args
-              const parsedArgs = args.map((arg) => JSON.parse(arg));
-              // call the function
-              // Run spinner ... in the terminal output while waiting for the response
-              setPrompt(`⏳`);
-              const spinner = setInterval(() => {
-                setPrompt((p) => (p === `⏳` ? `⌛` : `⏳`));
-              }, 1000);
-
-              try {
-                google.script.run
-                  .withSuccessHandler((resp) => {
-                    setPrompt(`$`);
-                    clearInterval(spinner);
-                    setTerminalOutput(JSON.stringify(resp, null, 2));
-                  })
-                  .withFailureHandler((resp) => {
-                    setPrompt(`$`);
-                    clearInterval(spinner);
-                    setTerminalOutput(resp.message);
-                  })
-                  [cmd](...parsedArgs);
-              } catch (e) {
-                clearInterval(spinner);
-              }
-            }}
-          >
-            {terminalOutput}
-          </Terminal>
-        </Box>
-      </Dialog>
+        <TerminalIcon />
+      </Fab>
+      <APIConsole
+        terminalOpen={terminalOpen}
+        setTerminalOpen={setTerminalOpen}
+        reFetchState={reFetchState}
+      />
     </ThemeProvider>
+  );
+}
+
+function Fallback({ error }: { error: Error }): JSX.Element {
+  return (
+    <Alert severity={`error`}>
+      Something went wrong:
+      <pre>{error.message}</pre>
+      <pre>{error.stack}</pre>
+    </Alert>
   );
 }
 

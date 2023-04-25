@@ -1,4 +1,4 @@
-import { type IExchange } from "./Exchange";
+import { type IExchange } from "./IExchange";
 import { type Statistics } from "./Statistics";
 import { type ConfigDao } from "./dao/Config";
 
