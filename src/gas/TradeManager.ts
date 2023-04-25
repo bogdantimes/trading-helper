@@ -461,7 +461,7 @@ export class TradeManager {
         `⚠️ ${symbol} is not trading on Binance Spot, current status: ${symbolInfo?.status}`
       );
       Log.alert(
-        `⚠️ Smart-exit was disable. Please, resolve the problem with ${symbol} manually using API console and than re-enable Smart-exit.`
+        `⚠️ Smart-exit was disabled. Please, resolve the problem with ${symbol} manually using API console and than re-enable Smart-exit.`
       );
       throw new Error(`Couldn't check imbalance for ${symbol}`);
     }
