@@ -1,3 +1,7 @@
+# v4.0.1
+
+* Trading Library updated to v32 with a safeguard against pump&dump cases added.
+
 # v4.0.0
 
 * New trading algorithm that provides more signals, with GPT-4 as signal noise filter.
