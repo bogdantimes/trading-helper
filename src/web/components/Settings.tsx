@@ -6,7 +6,6 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
   Divider,
   FormControl,
   FormControlLabel,
@@ -142,18 +141,7 @@ export function Settings(params: {
                   }}
                 />
               }
-              label={
-                <>
-                  <Chip
-                    label="New"
-                    size="small"
-                    color="info"
-                    variant="outlined"
-                    sx={{ mr: `8px` }}
-                  />
-                  Replenish fees budget
-                </>
-              }
+              label={`Replenish fees budget`}
               aria-describedby={`auto-replenish-fees-helper-text`}
             />
             <FormHelperText id={`auto-replenish-fees-helper-text`}>

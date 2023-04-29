@@ -7,6 +7,7 @@ import {
   Coin,
   type CoinName,
   type Config,
+  f0,
   f2,
   type InitialSetupParams,
   type IStore,
@@ -226,6 +227,7 @@ function getConfig(): Config {
  * trades, config, statistics, candidates
  */
 const plugin: TraderPlugin = global.TradingHelperLibrary;
+
 function getState(): AppState {
   return catchError<AppState>(() => {
     const candidatesDao = new CandidatesDao(DefaultStore);
@@ -310,6 +312,22 @@ global.upgrade = () => {
     return result;
   });
 };
+global.info = (coin: CoinName) => {
+  return catchError(() => {
+    const candidatesDao = new CandidatesDao(DefaultStore);
+    const ci = candidatesDao.get(coin);
+    const imbalance = plugin.getImbalance(coin, ci);
+    const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
+      ci?.[Key.MAX_PERCENTILE] * 100
+    )}`;
+    return `
+Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
+Demand (-100..100): ${f2(imbalance) * 100}%
+Support: ${ci?.[Key.MIN]}
+Resistance: ${ci?.[Key.MAX]}
+Current price zone (0..100): ${curRange}%`;
+  });
+};
 global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
   return catchError(() => {
     const candidatesDao = new CandidatesDao(DefaultStore);
@@ -332,6 +350,7 @@ global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
 const helpDescriptions = {
   start: `Starts all background processes.`,
   stop: `Stops the trading process.`,
+  info: `Returns system information about a coin. Example: $ info BTC`,
   buy: `Buys a coin. Example: $ buy BTC`,
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
   sellAll: `Sells all coins.`,
