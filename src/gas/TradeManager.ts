@@ -283,7 +283,7 @@ export class TradeManager {
           this.#replenishFeesBudget();
         } catch (e) {
           Log.alert(
-            `"Replenish fees budget" feature was disable. Check manually and re-enable if issue is resolved.`
+            `ℹ️ "Replenish fees budget" feature was disabled. Check manually and re-enable if issue is resolved.`
           );
           this.#config.AutoReplenishFees = false;
           Log.error(e);
@@ -313,7 +313,7 @@ export class TradeManager {
     const target = TARGET_FEE_COVERAGE;
     const stableCoin = this.#config.StableCoin;
     const bnbSym = new ExchangeSymbol(BNB, stableCoin);
-    const budgetNeeded = total * BNBFee * 2 * (target - curCover);
+    const budgetNeeded = Math.floor(total * BNBFee * 2 * (target - curCover));
 
     if (this.#balance - budgetNeeded < MIN_BUY) {
       Log.info(
