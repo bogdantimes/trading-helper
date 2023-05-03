@@ -314,6 +314,7 @@ global.upgrade = () => {
 };
 global.info = (coin: CoinName) => {
   return catchError(() => {
+    coin = coin?.toUpperCase();
     const candidatesDao = new CandidatesDao(DefaultStore);
     const ci = candidatesDao.get(coin);
     const imbalance = plugin.getImbalance(coin, ci);

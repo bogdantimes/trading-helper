@@ -9,6 +9,8 @@ import {
 } from "@mui/material";
 import {
   type Config,
+  floor,
+  getPrecision,
   SHORT_MASK,
   type TradeMemo,
   TradeState,
@@ -70,6 +72,20 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
         </Typography>
       </Box>
       <Typography color="text.secondary" variant="body2" mt={1}>
+        {tm.currentValue && (
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
+              Entry price:
+            </Typography>
+            <Typography variant="inherit">
+              {floor(tm.tradeResult.entryPrice, getPrecision(tm.currentPrice))}
+            </Typography>
+          </Box>
+        )}
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
             Paid:
