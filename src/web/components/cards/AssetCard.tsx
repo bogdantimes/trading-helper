@@ -72,7 +72,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
         </Typography>
       </Box>
       <Typography color="text.secondary" variant="body2" mt={1}>
-        {tm.currentValue && (
+        {!!tm.currentValue && (
           <Box
             display="flex"
             justifyContent="space-between"
