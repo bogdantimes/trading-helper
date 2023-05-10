@@ -6,7 +6,6 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
   Divider,
   FormControl,
   FormControlLabel,
@@ -20,6 +19,7 @@ import {
   Switch,
   TextField,
   Typography,
+  Slider,
 } from "@mui/material";
 import { circularProgress, ScriptApp } from "./Common";
 import {
@@ -133,6 +133,35 @@ export function Settings(params: {
             />
           </Stack>
           <FormControl>
+            <Typography id="budget-split-slider" gutterBottom>
+              Minimum budget split
+            </Typography>
+            <Slider
+              sx={{ ml: 1, width: `96%` }}
+              defaultValue={1}
+              value={cfg.BudgetSplitMin}
+              step={1}
+              marks={Array.from({ length: 10 }, (_, i) => ({
+                value: i + 1,
+                label: i + 1,
+              }))}
+              min={1}
+              max={10}
+              onChange={(e, newValue) => {
+                setCfg({ ...cfg, BudgetSplitMin: newValue as number });
+              }}
+              aria-labelledby="budget-split-slider"
+            />
+            <FormHelperText>
+              This setting limits the budget fraction per trade. A lower value
+              (1) removes the limit and allows to use the entire budget for a
+              single trade, while a higher value (10) allows to allocate only
+              1/10th per trade, reducing the total profit/loss fluctuations.
+              Recommended to increase the limit during unstable markets and
+              reduce during widespread bullish markets.
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
             <FormControlLabel
               control={
                 <Switch
@@ -142,18 +171,7 @@ export function Settings(params: {
                   }}
                 />
               }
-              label={
-                <>
-                  <Chip
-                    label="New"
-                    size="small"
-                    color="info"
-                    variant="outlined"
-                    sx={{ mr: `8px` }}
-                  />
-                  Replenish fees budget
-                </>
-              }
+              label={`Replenish fees budget`}
               aria-describedby={`auto-replenish-fees-helper-text`}
             />
             <FormHelperText id={`auto-replenish-fees-helper-text`}>

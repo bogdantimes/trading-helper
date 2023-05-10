@@ -1,3 +1,12 @@
+# v4.1.0
+
+* New "Minimum budget split" setting.
+* New `info COIN` API command.
+* Added "Entry price" on the current asset cards.
+* Adjusted "Confidence" to be more accurate with respect to the Smart Exit logic.
+* Trading Library updated to v33 with minor adjustments to candidates selection.
+* Fixed BNB budget replenishment issue.
+
 # v4.0.1
 
 * Trading Library updated to v32 with a safeguard against pump&dump cases added.

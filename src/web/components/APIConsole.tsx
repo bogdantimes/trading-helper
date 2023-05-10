@@ -1,12 +1,9 @@
 import * as React from "react";
-import Terminal, {
-  ColorMode,
-  TerminalInput,
-  TerminalOutput,
-} from "react-terminal-ui";
-import { Dialog } from "@mui/material";
+import Terminal, { ColorMode, TerminalOutput } from "react-terminal-ui";
+import { Dialog, IconButton, Tooltip } from "@mui/material";
 import { useTheme } from "@mui/system";
 import { ScriptApp } from "./Common";
+import { ClearAll } from "@mui/icons-material";
 
 interface Props {
   terminalOpen: boolean;
@@ -21,20 +18,12 @@ export const APIConsole: React.FC<Props> = ({
 }) => {
   const theme = useTheme();
   const themeMode = theme.palette.mode;
-  const [terminalOutput, setTerminalOutput] = React.useState<
-    JSX.Element | string
-  >(
-    <>
-      <TerminalOutput>Welcome to the API console!</TerminalOutput>
-      <TerminalOutput></TerminalOutput>
-      <TerminalOutput>
-        Please be aware that any manual actions are at your own risk.
-      </TerminalOutput>
-      <TerminalOutput>
-        Type `help` to see the available commands.
-      </TerminalOutput>
-    </>
-  );
+  const [terminalOutput, setTerminalOutput] = React.useState<string[]>([
+    `Welcome to the API console!`,
+    ``,
+    `Please be aware that any manual actions are at your own risk.`,
+    `Type \`help\` to see the available commands.`,
+  ]);
   const [prompt, setPrompt] = React.useState(`$`);
 
   const handleResize = () => {
@@ -58,20 +47,17 @@ export const APIConsole: React.FC<Props> = ({
 
   const onCommand = (command) => {
     if (command.toLocaleLowerCase().trim() === `clear`) {
-      setTerminalOutput(``);
+      setTerminalOutput([]);
       return;
     }
-    setTerminalOutput(<TerminalInput>{command}</TerminalInput>);
+    terminalOutput.push(`$ ${command}`);
+    setTerminalOutput(terminalOutput);
 
     const [cmd, ...args] = command.split(` `);
 
     if (!ScriptApp?.withSuccessHandler(() => {})[cmd]) {
-      setTerminalOutput(
-        <>
-          <TerminalInput>{command}</TerminalInput>
-          <TerminalOutput>Unrecognized command</TerminalOutput>
-        </>
-      );
+      terminalOutput.push(`Unrecognized command`);
+      setTerminalOutput(terminalOutput);
       return;
     }
 
@@ -84,24 +70,19 @@ export const APIConsole: React.FC<Props> = ({
       ScriptApp?.withSuccessHandler((resp) => {
         setPrompt(`$`);
         clearInterval(spinner);
-        setTerminalOutput(
-          <>
-            <TerminalInput>{command}</TerminalInput>
-            {resp.trim ? (
-              resp.split(`\n`).map((s, i) => {
-                return <TerminalOutput key={i}>{s}</TerminalOutput>;
-              })
-            ) : (
-              <TerminalOutput>{JSON.stringify(resp, null, 2)}</TerminalOutput>
-            )}
-          </>
-        );
+        if (resp.trim) {
+          terminalOutput.push(...resp.split(`\n`));
+        } else {
+          terminalOutput.push(JSON.stringify(resp, null, 2));
+        }
+        setTerminalOutput(terminalOutput);
         reFetchState();
       })
         .withFailureHandler((resp) => {
           setPrompt(`$`);
           clearInterval(spinner);
-          setTerminalOutput(resp.message);
+          terminalOutput.push(resp.message);
+          setTerminalOutput(terminalOutput);
         })
         [cmd](...args);
     } catch (e) {
@@ -120,6 +101,22 @@ export const APIConsole: React.FC<Props> = ({
         setTerminalOpen(false);
       }}
     >
+      <Tooltip title="Clear">
+        <IconButton
+          aria-label="clear"
+          onClick={() => {
+            setTerminalOutput([]);
+          }}
+          sx={{
+            position: `absolute`,
+            top: `8px`,
+            right: `8px`,
+            zIndex: 1,
+          }}
+        >
+          <ClearAll color={`primary`} />
+        </IconButton>
+      </Tooltip>
       <Terminal
         name="API"
         prompt={prompt}
@@ -128,7 +125,11 @@ export const APIConsole: React.FC<Props> = ({
         colorMode={themeMode === `dark` ? ColorMode.Dark : ColorMode.Light}
         onInput={onCommand}
       >
-        {terminalOutput}
+        <>
+          {terminalOutput.map((o, i) => (
+            <TerminalOutput key={i}>{o}</TerminalOutput>
+          ))}
+        </>
       </Terminal>
     </Dialog>
   );

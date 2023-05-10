@@ -221,8 +221,9 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
-    this.#optimalInvestRatio = this.plugin.getOptimalInvestRatio(
-      this.candidatesDao
+    this.#optimalInvestRatio = Math.max(
+      this.#config.BudgetSplitMin,
+      this.plugin.getOptimalInvestRatio(this.candidatesDao)
     );
   }
 
@@ -283,7 +284,7 @@ export class TradeManager {
           this.#replenishFeesBudget();
         } catch (e) {
           Log.alert(
-            `"Replenish fees budget" feature was disable. Check manually and re-enable if issue is resolved.`
+            `ℹ️ "Replenish fees budget" feature was disabled. Check manually and re-enable if issue is resolved.`
           );
           this.#config.AutoReplenishFees = false;
           Log.error(e);
@@ -313,7 +314,7 @@ export class TradeManager {
     const target = TARGET_FEE_COVERAGE;
     const stableCoin = this.#config.StableCoin;
     const bnbSym = new ExchangeSymbol(BNB, stableCoin);
-    const budgetNeeded = total * BNBFee * 2 * (target - curCover);
+    const budgetNeeded = Math.floor(total * BNBFee * 2 * (target - curCover));
 
     if (this.#balance - budgetNeeded < MIN_BUY) {
       Log.info(
@@ -705,12 +706,8 @@ export class TradeManager {
     const nextLowPrice = tm.currentPrice * 0.99;
     tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
 
-    const percent = tm.profitPercent();
-    let imbThreshold = Math.abs(percent * 6) / 100;
-    if (tm.ttl >= 2000) {
-      imbThreshold *= tm.ttl / 2000;
-    }
-    if (imbalance < imbThreshold) {
+    const downMultiplier = 6;
+    if (imbalance < tm.imbalanceThreshold(downMultiplier)) {
       tm.setState(TradeState.SELL);
     }
   }
@@ -722,12 +719,9 @@ export class TradeManager {
     // Set new highest price little higher than the current
     tm.highestPrice = floorToOptimalGrid(nextHighPrice, precision).result;
 
-    const percent = tm.profitPercent();
-    let imbThreshold = Math.abs(percent * 4) / 100;
-    if (tm.ttl >= 2000) {
-      imbThreshold *= tm.ttl / 2000;
-    }
-    if (imbalance < Math.min(0.6, imbThreshold)) {
+    const upMultiplier = 4;
+    const threshold = tm.imbalanceThreshold(upMultiplier);
+    if (imbalance < Math.min(0.6, threshold)) {
       tm.setState(TradeState.SELL);
     }
   }

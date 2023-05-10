@@ -18,6 +18,7 @@ export class CandidatesDao implements ICandidatesDao {
   }
 
   get(coin: CoinName): CandidateInfo {
+    coin = coin?.toUpperCase();
     return this.getAll()[coin];
   }
 

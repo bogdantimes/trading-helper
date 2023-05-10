@@ -27,6 +27,7 @@ export interface Config {
   AdvancedAccess: boolean;
   ViewOnly: boolean;
   HideBalances: boolean;
+  BudgetSplitMin: number;
 }
 
 export const MASK = `********`;
