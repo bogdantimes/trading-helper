@@ -24,6 +24,7 @@ export const DefaultConfig: () => Config = () => ({
   ViewOnly: false,
   HideBalances: false,
   SmartExit: true,
+  BudgetSplitMin: 1,
 });
 
 export class ConfigDao implements APIKeysProvider {

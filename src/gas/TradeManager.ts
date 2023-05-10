@@ -221,8 +221,9 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
-    this.#optimalInvestRatio = this.plugin.getOptimalInvestRatio(
-      this.candidatesDao
+    this.#optimalInvestRatio = Math.max(
+      this.#config.BudgetSplitMin,
+      this.plugin.getOptimalInvestRatio(this.candidatesDao)
     );
   }
 
