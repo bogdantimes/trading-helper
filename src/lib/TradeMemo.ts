@@ -191,4 +191,13 @@ export class TradeMemo {
   set supplyDemandImbalance(imb: number) {
     this.imb = imb;
   }
+
+  imbalanceThreshold(mul = 5): number {
+    const p = this.profitPercent();
+    let t = Math.abs(p * mul) / 100;
+    if (this.ttl >= 2000) {
+      t *= this.ttl / 2000;
+    }
+    return t;
+  }
 }

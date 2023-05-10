@@ -705,12 +705,8 @@ export class TradeManager {
     const nextLowPrice = tm.currentPrice * 0.99;
     tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
 
-    const percent = tm.profitPercent();
-    let imbThreshold = Math.abs(percent * 6) / 100;
-    if (tm.ttl >= 2000) {
-      imbThreshold *= tm.ttl / 2000;
-    }
-    if (imbalance < imbThreshold) {
+    const downMultiplier = 6;
+    if (imbalance < tm.imbalanceThreshold(downMultiplier)) {
       tm.setState(TradeState.SELL);
     }
   }
@@ -722,12 +718,9 @@ export class TradeManager {
     // Set new highest price little higher than the current
     tm.highestPrice = floorToOptimalGrid(nextHighPrice, precision).result;
 
-    const percent = tm.profitPercent();
-    let imbThreshold = Math.abs(percent * 4) / 100;
-    if (tm.ttl >= 2000) {
-      imbThreshold *= tm.ttl / 2000;
-    }
-    if (imbalance < Math.min(0.6, imbThreshold)) {
+    const upMultiplier = 4;
+    const threshold = tm.imbalanceThreshold(upMultiplier);
+    if (imbalance < Math.min(0.6, threshold)) {
       tm.setState(TradeState.SELL);
     }
   }
