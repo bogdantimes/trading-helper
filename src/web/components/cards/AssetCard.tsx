@@ -72,17 +72,20 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
         </Typography>
       </Box>
       <Typography color="text.secondary" variant="body2" mt={1}>
-        {!!tm.currentValue && (
+        {!!tm.tradeResult.entryPrice && (
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
           >
             <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
-              Entry price:
+              {tm.tradeResult.soldPrice ? `Exit price:` : `Entry price:`}
             </Typography>
             <Typography variant="inherit">
-              {floor(tm.tradeResult.entryPrice, getPrecision(tm.currentPrice))}
+              {floor(
+                tm.tradeResult.soldPrice || tm.tradeResult.entryPrice,
+                getPrecision(tm.currentPrice)
+              )}
             </Typography>
           </Box>
         )}
@@ -114,7 +117,9 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
             <ImbalanceChecker
               coinName={coinName}
               initialValue={tm.supplyDemandImbalance}
-              valueFormatter={(v: number) => tm.imbalanceThreshold() - v}
+              valueFormatter={(v: number) =>
+                v * Math.min(1, 1 - tm.imbalanceThreshold() / v)
+              }
               displayFormatter={(v: number) =>
                 Math.max(0, Math.min(1, v + 0.5))
               }
