@@ -35,7 +35,7 @@ export function Home({
   const current = sorted.filter(
     (t) => t.currentValue || t.stateIs(TradeState.BUY)
   );
-  const sold = sorted.filter((t) => t.tradeResult.soldPrice);
+  const sold = sorted.filter((t) => t.stateIs(TradeState.SOLD));
 
   const currentInfoMessage =
     config.AdvancedAccess && !current.length ? (

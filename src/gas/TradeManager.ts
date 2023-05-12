@@ -466,8 +466,9 @@ export class TradeManager {
       );
       throw new Error(`Couldn't check imbalance for ${symbol}`);
     }
+    const minimalGap = 0.95;
     const precision = symbolInfo?.precision;
-    const bidCutOffPrice = tm.support;
+    const bidCutOffPrice = Math.min(tm.support, tm.currentPrice * minimalGap);
 
     // calculate how many records for imbalance we need for this cut off price
     const step = 1 / Math.pow(10, precision);

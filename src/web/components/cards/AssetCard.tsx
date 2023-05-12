@@ -118,7 +118,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
               coinName={coinName}
               initialValue={tm.supplyDemandImbalance}
               valueFormatter={(v: number) =>
-                v * Math.min(1, 1 - tm.imbalanceThreshold() / v)
+                v && v * Math.min(1, 1 - tm.imbalanceThreshold() / v)
               }
               displayFormatter={(v: number) =>
                 Math.max(0, Math.min(1, v + 0.5))
