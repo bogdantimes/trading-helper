@@ -24,9 +24,9 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 Running on the historical data (using Binance Spot prices and order book history).
 
-**Stable coin**: USDT
-**Dates:** January 2023 -> May 2023
-**Best Result:** `$1,000 -> $1,612 (+61% profit, +15% per month average)`
+* **Stable coin**: USDT
+* **Dates:** January 2023 -> May 2023
+* **Best Result:** `$1,000 -> $1,612 (+61% profit, +15% per month average)`
 
 ![1-1-2023_5-9-2023.png](img/1-1-2023_5-9-2023.png)
 ![1-1-2023_5-9-2023_candidates.png](img/1-1-2023_5-9-2023_candidates.png)
