@@ -1,3 +1,8 @@
+# v4.1.1
+
+* Trading Library updated to v35 with improvements to candidates selection.
+* Minor UI bugfixes.
+
 # v4.1.0
 
 * New "Minimum budget split" setting.

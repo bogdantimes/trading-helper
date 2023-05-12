@@ -326,7 +326,7 @@ Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
 Demand (-100..100): ${f2(imbalance) * 100}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
-Current price zone (0..100): ${curRange}%`;
+Current price zone (-|0..100|+): ${curRange}%`;
   });
 };
 global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {

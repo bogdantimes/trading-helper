@@ -139,6 +139,7 @@ export enum Key {
   IS_READY,
   MID,
   TREND,
+  DAY_PRICE_MOVE,
 }
 
 export enum Bit {
@@ -172,6 +173,7 @@ export interface CandidateInfo {
   [Key.TREND]?: string;
   [Key.ATH]: number;
   [Key.ATHTime]: number;
+  [Key.DAY_PRICE_MOVE]: number;
 }
 
 export interface Candidates {

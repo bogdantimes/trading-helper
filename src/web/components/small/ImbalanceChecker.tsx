@@ -8,10 +8,17 @@ interface Props {
   coinName: CoinName;
   initialValue: number;
   ci?: CandidateInfo;
-  formatter?: (v: number) => number;
+  valueFormatter?: (v: number) => number;
+  displayFormatter?: (v: number) => number;
 }
 
-const ImbalanceChecker = ({ coinName, initialValue, ci, formatter }: Props) => {
+const ImbalanceChecker = ({
+  coinName,
+  initialValue,
+  ci,
+  valueFormatter,
+  displayFormatter,
+}: Props) => {
   const theme = useTheme();
   const [imbalance, setImbalance] = useState(initialValue);
   const [imbalanceFetching, setImbalanceFetching] = useState(false);
@@ -32,9 +39,12 @@ const ImbalanceChecker = ({ coinName, initialValue, ci, formatter }: Props) => {
       .getImbalance(coinName, ci as any);
   }
 
-  const imbAdjusted = Math.max(0, Math.min(1, imbalance + 0.5));
-  const color = percentileToColorMap[+imbAdjusted.toFixed(1)];
-  const displayValue = f0((formatter ? formatter(imbalance) : imbalance) * 100);
+  const value = valueFormatter ? valueFormatter(imbalance) : imbalance;
+  const colorVal = Math.max(0, Math.min(1, value + 0.5));
+  const color = percentileToColorMap[+colorVal.toFixed(1)];
+  const displayValue = f0(
+    (displayFormatter ? displayFormatter(value) : value) * 100
+  );
   return (
     <Typography
       variant="inherit"
