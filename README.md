@@ -14,7 +14,7 @@ No one, except you, have access to the WEB-application and the data. If you trus
 * Monitors the market 24/7 and shows great investment candidates.
 * Fully-autonomous trading on Binance Spot without manual interventions whatsoever:
   * Enabled automatically once you become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes).
-  * 🤙🏻 Reach out to me if you want to test it for free (see [Contact](#contact) section).
+  * 🤙🏻 Reach out to me if you need help (see [Contact](#contact) section).
 * Gmail notifications.
 * Optional external database (Firebase).
 * Info page with balance changes since Day 1.
@@ -22,13 +22,14 @@ No one, except you, have access to the WEB-application and the data. If you trus
 
 ## Back-testing
 
-Running on a historical data like if it was trading in the past.
+Running on the historical data (using Binance Spot prices and order book history).
 
-**Dates:** September 2022 -> March 2023 (6 months)
 **Stable coin**: USDT
-**Best Result:** `$1,000 -> $2,711 (+171% profit)`
+**Dates:** January 2023 -> May 2023
+**Best Result:** `$1,000 -> $1,612 (+61% profit, +15% per month average)`
 
-![6m.png](img/6m.png)
+![1-1-2023_5-9-2023.png](img/1-1-2023_5-9-2023.png)
+![1-1-2023_5-9-2023_candidates.png](img/1-1-2023_5-9-2023_candidates.png)
 
 ## Screenshots
 
