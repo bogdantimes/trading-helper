@@ -14,6 +14,26 @@
 
     gtag("config", "G-CG7SS3SS57");
   </script>
+  <!-- Google Translate -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: "en",
+        includedLanguages: "en,uk,ru,zh,es,hi,fr,ar,bn,pt,id",
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false,
+        multilanguagePage: true
+      }, "google_translate_element");
+
+      setTimeout(5000, () => {
+      // Close translation bar
+      document.getElementById(':2.close').click()
+      document.body.style.top = '0px';
+      })
+    }
+  </script>
+  <script type="text/javascript"
+          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
@@ -45,9 +65,15 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
       @keyframes gradient {
-          0% {background-position: 0% 50%;}
-          50% {background-position: 100% 50%;}
-          100% {background-position: 0% 50%;}
+          0% {
+              background-position: 0% 50%;
+          }
+          50% {
+              background-position: 100% 50%;
+          }
+          100% {
+              background-position: 0% 50%;
+          }
       }
 
       body {
@@ -68,7 +94,7 @@
           color: #fff;
           text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
           border-bottom: 5px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+          box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
       }
 
       header img {
@@ -167,9 +193,31 @@
               grid-template-columns: 1fr;
           }
       }
+
+      /* Adding some styles for the Google Translate widget */
+      .translate {
+          text-align: right;
+          background-color: transparent;
+          position: fixed;
+          width: 100%;
+      }
+
+      .translate a {
+          color: #fff;
+      }
+
+      [class="skiptranslate"]:not([class*=" "]) {
+          display: none !important;
+      }
+
+      body {
+          top: 0 !important;
+      }
   </style>
 </head>
 <body>
+<div class="translate" id="google_translate_element"></div>
+
 <header>
   <img src="https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png"
        alt="Trading Helper Logo">
