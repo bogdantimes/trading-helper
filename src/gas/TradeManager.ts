@@ -8,6 +8,7 @@ import {
   type CoinName,
   type Config,
   ExchangeSymbol,
+  f0,
   f2,
   f8,
   floor,
@@ -439,6 +440,9 @@ export class TradeManager {
     }
 
     if (tm.currentPrice < tm.support) {
+      Log.info(
+        `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}}`
+      );
       tm.setState(TradeState.SELL);
       return;
     }
@@ -708,7 +712,13 @@ export class TradeManager {
     tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
 
     const downMultiplier = 6;
-    if (imbalance < tm.imbalanceThreshold(downMultiplier)) {
+    const threshold = tm.imbalanceThreshold(downMultiplier);
+    if (imbalance < threshold) {
+      Log.info(
+        `Selling at price going down, as the current demand ${f0(
+          imbalance * 100
+        )}% is below the required threshold ${f0(threshold * 100)}%`
+      );
       tm.setState(TradeState.SELL);
     }
   }
@@ -722,7 +732,13 @@ export class TradeManager {
 
     const upMultiplier = 4;
     const threshold = tm.imbalanceThreshold(upMultiplier);
-    if (imbalance < Math.min(0.6, threshold)) {
+    const reqThreshold = Math.min(0.6, threshold);
+    if (imbalance < reqThreshold) {
+      Log.info(
+        `Selling at price going up, as the current demand ${f0(
+          imbalance * 100
+        )}% is below the required threshold ${f0(threshold * 100)}%`
+      );
       tm.setState(TradeState.SELL);
     }
   }
