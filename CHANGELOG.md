@@ -1,3 +1,7 @@
+# v4.1.2
+
+* Continuous demand scanning for TH+ subscribers to show candidates with high demand.
+
 # v4.1.1
 
 * Trading Library updated to v35 with improvements to candidates selection.
