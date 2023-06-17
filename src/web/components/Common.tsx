@@ -63,9 +63,13 @@ export const featureDisabledInfo = (
         target="_blank"
         rel="noopener noreferrer"
       >
-        Become a Patron!
+        Unlock Trading Helper+
       </Link>
-      {` `}to unlock "buy" signals and activate the fully-autonomous trading.
+      {` `}(free trial available) with the following features:
+      <ul>
+        <li>Continuous demand scanning for more candidates</li>
+        <li>"Buy" signals for fully-autonomous trading</li>
+      </ul>
     </Typography>
     <Typography variant="caption">
       <b>Important: use the same Google account in Patreon.</b>

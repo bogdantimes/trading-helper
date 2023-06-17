@@ -32,14 +32,14 @@ export class TradesDao {
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
     notFoundFn?: () => TradeMemo | undefined | null
   ): void {
+    coinName = coinName.toUpperCase();
+
+    if (!this.#lockTrade(coinName)) {
+      Log.info(this.#lockSkipMsg(coinName));
+      return;
+    }
+
     try {
-      coinName = coinName.toUpperCase();
-
-      if (!this.#lockTrade(coinName)) {
-        Log.info(this.#lockSkipMsg(coinName));
-        return;
-      }
-
       const trade = this.get()[coinName];
       // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
       // otherwise changedTrade is null.
@@ -159,9 +159,9 @@ export class TradesDao {
    * @returns {boolean} true if the trade memo was locked, false if it was already locked
    */
   #lockTrade(coinName: string): boolean {
-    // if we cannot acquire lock within 2 attempts with 1 second interval - then give up
+    // if we cannot acquire lock within 5 attempts with 1 second interval - then give up
     let trades;
-    const maxAttempts = 2;
+    const maxAttempts = 5;
     for (let i = 0; i < maxAttempts; i++) {
       trades = this.get();
       if (!trades[coinName]?.locked) break;

@@ -1,3 +1,10 @@
+# v4.1.2
+
+* Continuous demand scanning for TH+ subscribers to show candidates with high demand.
+* BUY signals, when unlocked, are sent via email in View-only mode.
+* Bug-fixes.
+* Landing page updates.
+
 # v4.1.1
 
 * Trading Library updated to v35 with improvements to candidates selection.

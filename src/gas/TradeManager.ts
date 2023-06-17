@@ -8,6 +8,7 @@ import {
   type CoinName,
   type Config,
   ExchangeSymbol,
+  f0,
   f2,
   f8,
   floor,
@@ -103,14 +104,18 @@ export class TradeManager {
       this.configDao.set(this.#config);
     }
 
-    if (!this.#config.ViewOnly) {
-      signals
-        // Ignore BNB buy signals cos of conflicts with fee logic
-        .filter((r) => r.type === SignalType.Buy && r.coin !== BNB)
-        .forEach((r) => {
+    signals
+      // Ignore BNB buy signals cos of conflicts with fee logic
+      .filter((r) => r.type === SignalType.Buy && r.coin !== BNB)
+      .forEach((r) => {
+        if (this.#config.ViewOnly) {
+          Log.alert(
+            `${r.coin} - BUY signal. Support price: ${r.support}. Disable View-Only mode to buy automatically.`
+          );
+        } else {
           this.#setBuyState(r);
-        });
-    }
+        }
+      });
 
     // Now process trades which are yet to be bought
     // For back-testing, sort by name to ensure tests consistency
@@ -299,7 +304,7 @@ export class TradeManager {
   }
 
   #replenishFeesBudget(): void {
-    if (this.#config.ViewOnly || this.#balance <= MIN_BUY) return;
+    if (this.#balance <= MIN_BUY) return;
 
     const feesBudget = this.#config.FeesBudget;
     const assetsValue = this.tradesDao.totalAssetsValue();
@@ -439,6 +444,9 @@ export class TradeManager {
     }
 
     if (tm.currentPrice < tm.support) {
+      Log.info(
+        `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}}`
+      );
       tm.setState(TradeState.SELL);
       return;
     }
@@ -708,7 +716,13 @@ export class TradeManager {
     tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
 
     const downMultiplier = 6;
-    if (imbalance < tm.imbalanceThreshold(downMultiplier)) {
+    const threshold = tm.imbalanceThreshold(downMultiplier);
+    if (imbalance < threshold) {
+      Log.info(
+        `Selling at price going down, as the current demand ${f0(
+          imbalance * 100
+        )}% is below the required threshold ${f0(threshold * 100)}%`
+      );
       tm.setState(TradeState.SELL);
     }
   }
@@ -722,7 +736,13 @@ export class TradeManager {
 
     const upMultiplier = 4;
     const threshold = tm.imbalanceThreshold(upMultiplier);
-    if (imbalance < Math.min(0.6, threshold)) {
+    const reqThreshold = Math.min(0.6, threshold);
+    if (imbalance < reqThreshold) {
+      Log.info(
+        `Selling at price going up, as the current demand ${f0(
+          imbalance * 100
+        )}% is below the required threshold ${f0(threshold * 100)}%`
+      );
       tm.setState(TradeState.SELL);
     }
   }
