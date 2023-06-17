@@ -238,6 +238,7 @@ export function Settings(params: {
             />
             <FormHelperText id={`view-only-helper-text`}>
               Disables autonomous trading and makes Binance API keys optional.
+              "Buy" signals, when unlocked, are sent via email.
             </FormHelperText>
           </FormControl>
           <Stack spacing={2}>
