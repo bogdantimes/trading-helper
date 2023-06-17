@@ -104,14 +104,18 @@ export class TradeManager {
       this.configDao.set(this.#config);
     }
 
-    if (!this.#config.ViewOnly) {
-      signals
-        // Ignore BNB buy signals cos of conflicts with fee logic
-        .filter((r) => r.type === SignalType.Buy && r.coin !== BNB)
-        .forEach((r) => {
+    signals
+      // Ignore BNB buy signals cos of conflicts with fee logic
+      .filter((r) => r.type === SignalType.Buy && r.coin !== BNB)
+      .forEach((r) => {
+        if (this.#config.ViewOnly) {
+          Log.alert(
+            `${r.coin} - BUY signal. Support price: ${r.support}. Disable View-Only mode to buy automatically.`
+          );
+        } else {
           this.#setBuyState(r);
-        });
-    }
+        }
+      });
 
     // Now process trades which are yet to be bought
     // For back-testing, sort by name to ensure tests consistency
