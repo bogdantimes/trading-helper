@@ -304,7 +304,7 @@ export class TradeManager {
   }
 
   #replenishFeesBudget(): void {
-    if (this.#config.ViewOnly || this.#balance <= MIN_BUY) return;
+    if (this.#balance <= MIN_BUY) return;
 
     const feesBudget = this.#config.FeesBudget;
     const assetsValue = this.tradesDao.totalAssetsValue();

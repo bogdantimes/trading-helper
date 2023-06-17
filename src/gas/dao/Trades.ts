@@ -32,14 +32,14 @@ export class TradesDao {
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
     notFoundFn?: () => TradeMemo | undefined | null
   ): void {
+    coinName = coinName.toUpperCase();
+
+    if (!this.#lockTrade(coinName)) {
+      Log.info(this.#lockSkipMsg(coinName));
+      return;
+    }
+
     try {
-      coinName = coinName.toUpperCase();
-
-      if (!this.#lockTrade(coinName)) {
-        Log.info(this.#lockSkipMsg(coinName));
-        return;
-      }
-
       const trade = this.get()[coinName];
       // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
       // otherwise changedTrade is null.
