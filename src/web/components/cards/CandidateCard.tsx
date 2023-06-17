@@ -25,6 +25,8 @@ export default function CandidateCard({
   const min = ci[Key.MIN];
   const max = ci[Key.MAX];
 
+  const imbalance = ci[Key.IMBALANCE];
+  const imbalanceInit = imbalance && imbalance !== -1 ? imbalance : 0;
   return (
     <BasicCard>
       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -76,7 +78,11 @@ export default function CandidateCard({
                   Demand:
                 </Typography>
               </Tooltip>
-              <ImbalanceChecker coinName={coin} initialValue={0} ci={ci} />
+              <ImbalanceChecker
+                coinName={coin}
+                initialValue={imbalanceInit}
+                ci={ci}
+              />
             </Box>
           </Typography>
         </Box>

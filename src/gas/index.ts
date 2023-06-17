@@ -315,12 +315,16 @@ global.upgrade = () => {
 global.info = (coin: CoinName) => {
   return catchError(() => {
     coin = coin?.toUpperCase();
+
+    if (!coin) return `Please, enter a coin name.`;
+
     const candidatesDao = new CandidatesDao(DefaultStore);
     const ci = candidatesDao.get(coin);
     if (!ci) {
       return `${coin} is not tracked as a candidate; either it does not exist or it lacks historical price data yet.`;
     }
     const imbalance = plugin.getImbalance(coin, ci);
+    candidatesDao.set(new Coin(coin), ci);
     const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
       ci?.[Key.MAX_PERCENTILE] * 100
     )}`;

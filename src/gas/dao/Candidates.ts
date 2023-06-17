@@ -1,8 +1,8 @@
 import {
   type CandidateInfo,
-  type ICandidatesDao,
   type Coin,
   type CoinName,
+  type ICandidatesDao,
   type IStore,
 } from "../../lib";
 
