@@ -2,6 +2,7 @@
 
 * Continuous demand scanning for TH+ subscribers to show candidates with high demand.
 * "Buy" signals, when unlocked, are sent via email in View-only mode.
+* Landing page updates.
 
 # v4.1.1
 
