@@ -135,7 +135,7 @@ export class TradesDao {
         TradeMemo.unlock(tm); // it is locked - we can unlock and replace
         tradesRaw[tm.getCoinName()] = tm;
       } else {
-        Log.alert(`${tm.getCoinName()} is already unlocked`);
+        Log.info(`Couldn't set a new state for ${tm.getCoinName()}`);
       }
     });
 
