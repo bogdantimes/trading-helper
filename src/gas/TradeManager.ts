@@ -160,7 +160,7 @@ export class TradeManager {
 
   sellAll(): void {
     this.#prepare();
-    this.tradesDao.iterate((t) => this.#sellNow(t));
+    this.tradesDao.iterate((t) => this.#sellNow(t), TradeState.BOUGHT);
     this.#finalize();
   }
 

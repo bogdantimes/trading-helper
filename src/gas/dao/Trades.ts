@@ -70,8 +70,11 @@ export class TradesDao {
     }
   }
 
-  iterate(mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
-    this.getList().forEach((tm) => {
+  iterate(
+    mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
+    state?: TradeState
+  ): void {
+    this.getList(state).forEach((tm) => {
       const coinName = tm.getCoinName();
       if (!this.#lockTrade(coinName)) {
         Log.info(this.#lockSkipMsg(coinName));
