@@ -166,8 +166,8 @@ export class TradesDao {
   #lockTrade(coinName: string): boolean {
     // if we cannot acquire lock within max attempts with 1 second interval - then give up
     let trades;
-    const maxAttempts = 2;
-    for (let i = 0; i < maxAttempts; i++) {
+    const maxAttempts = 3;
+    for (let i = 0; true; i++) {
       trades = this.get();
       if (!trades[coinName]?.locked) break;
       if (i === maxAttempts - 1) return false;
