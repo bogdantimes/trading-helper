@@ -18,6 +18,7 @@ import {
 import { growthIconMap } from "../Common";
 import BasicCard from "./BasicCard";
 import ImbalanceChecker from "../small/ImbalanceChecker";
+import LockIcon from "@mui/icons-material/Lock";
 
 interface Params {
   cfg: Config;
@@ -50,6 +51,8 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           alignItems="center"
         >
           {coinName} {growthIconMap.get(tm.getPriceMove())}
+          {` `}
+          {tm.locked && <LockIcon fontSize={`small`} color={`info`} />}
         </Typography>
         <Typography
           variant="body2"
