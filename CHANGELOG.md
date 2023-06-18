@@ -1,3 +1,7 @@
+# v4.1.3
+
+* Bug-fixes.
+
 # v4.1.2
 
 * Continuous demand scanning for TH+ subscribers to show candidates with high demand.

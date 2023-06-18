@@ -70,29 +70,6 @@ export class TradesDao {
     }
   }
 
-  iterate(
-    mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    state?: TradeState
-  ): void {
-    this.getList(state).forEach((tm) => {
-      const coinName = tm.getCoinName();
-      if (!this.#lockTrade(coinName)) {
-        Log.info(this.#lockSkipMsg(coinName));
-        return;
-      }
-      try {
-        const changedTrade = mutateFn(tm);
-        if (changedTrade) {
-          changedTrade.deleted
-            ? this.#delete(changedTrade)
-            : this.#set(changedTrade);
-        }
-      } finally {
-        this.#unlockTrade(coinName);
-      }
-    });
-  }
-
   getRaw(): Record<string, any> {
     if (isNode && this.memCache) {
       // performance optimization for back-testing
@@ -121,9 +98,48 @@ export class TradesDao {
     return tradeMemos;
   }
 
-  getList(state?: TradeState): TradeMemo[] {
-    const values = Object.values(this.get());
-    return state ? values.filter((trade) => trade.stateIs(state)) : values;
+  getList(filter?: (state: TradeState) => boolean): TradeMemo[] {
+    const trades = Object.values(this.get());
+    return filter ? trades.filter((tm) => filter(tm.state)) : trades;
+  }
+
+  updateList(
+    filter: (state: TradeState) => boolean,
+    mutate: (trades: TradeMemo[]) => TradeMemo[]
+  ) {
+    this.#setListAndUnlock(mutate(this.#getListAndLock(filter)));
+  }
+
+  #getListAndLock(filter?: (state: TradeState) => boolean): TradeMemo[] {
+    const tradesRaw = this.getRaw();
+
+    const unlocked = Object.values(tradesRaw).filter(TradeMemo.isUnlocked);
+    const selected = filter
+      ? unlocked.filter((tm) => filter(tm.state))
+      : unlocked;
+
+    // Lock all selected
+    selected.forEach(TradeMemo.lock);
+    this.store.set(`Trades`, tradesRaw);
+
+    return selected.map(TradeMemo.fromObject);
+  }
+
+  #setListAndUnlock(trades: TradeMemo[]): void {
+    if (!trades.length) return;
+
+    const tradesRaw = this.getRaw();
+
+    trades.forEach((tm) => {
+      if (TradeMemo.isLocked(tradesRaw[tm.getCoinName()])) {
+        TradeMemo.unlock(tm); // it is locked - we can unlock and replace
+        tradesRaw[tm.getCoinName()] = tm;
+      } else {
+        Log.alert(`${tm.getCoinName()} is already unlocked`);
+      }
+    });
+
+    this.store.set(`Trades`, tradesRaw);
   }
 
   /**
@@ -132,7 +148,7 @@ export class TradesDao {
    * @returns {number} The total assets value.
    */
   totalAssetsValue(): number {
-    const trades = this.getList(TradeState.BOUGHT);
+    const trades = this.getList((s) => s === TradeState.BOUGHT);
     return trades.reduce((total, trade) => total + trade.currentValue, 0);
   }
 

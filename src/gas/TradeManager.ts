@@ -78,17 +78,21 @@ export class TradeManager {
   trade(step: number): void {
     this.#prepare();
 
-    const trades = this.tradesDao.getList();
-    const invested = trades.filter((t) => t.tradeResult.quantity).length;
+    const invested = this.tradesDao.getList(
+      (s) => s === TradeState.BOUGHT
+    ).length;
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
 
     // First process !BUY state assets (some might get sold and free up $)
-    trades
-      .filter((tm) => !tm.stateIs(TradeState.BUY))
-      .sort(backTestSorter)
-      .forEach((tm) => {
-        this.#tryCheckTrade(tm);
-      });
+    this.tradesDao.updateList(
+      (s) => s !== TradeState.BUY,
+      (trades) => {
+        return trades.sort(backTestSorter).map((tm) => {
+          this.#tryCheckTrade(tm);
+          return tm;
+        });
+      }
+    );
 
     // Run plugin to update candidates and also get buy candidates if we can invest
     const { advancedAccess, signals } = this.plugin.trade({
@@ -120,12 +124,15 @@ export class TradeManager {
     // Now process trades which are yet to be bought
     // For back-testing, sort by name to ensure tests consistency
     // For production, randomizing the order to avoid biases
-    this.tradesDao
-      .getList(TradeState.BUY)
-      .sort(backTestSorter)
-      .forEach((tm) => {
-        this.#tryCheckTrade(tm);
-      });
+    this.tradesDao.updateList(
+      (s) => s === TradeState.BUY,
+      (trades) => {
+        return trades.sort(backTestSorter).map((tm) => {
+          this.#tryCheckTrade(tm);
+          return tm;
+        });
+      }
+    );
 
     this.#finalize();
   }
@@ -160,7 +167,15 @@ export class TradeManager {
 
   sellAll(): void {
     this.#prepare();
-    this.tradesDao.iterate((t) => this.#sellNow(t), TradeState.BOUGHT);
+    this.tradesDao.updateList(
+      (s) => s === TradeState.BOUGHT,
+      (trades) => {
+        return trades.map((tm) => {
+          this.#sellNow(tm);
+          return tm;
+        });
+      }
+    );
     this.#finalize();
   }
 
@@ -218,7 +233,7 @@ export class TradeManager {
     tm.resetState();
     if (tm.tradeResult.quantity > 0) {
       this.#sell(tm);
-    } else if (tm.getState() === TradeState.BOUGHT) {
+    } else if (tm.stateIs(TradeState.BOUGHT)) {
       Log.alert(`⚠️ Can't sell ${tm.getCoinName()}. Current value is 0`);
     }
     return tm;
@@ -383,7 +398,7 @@ export class TradeManager {
 
   #tryCheckTrade(tm: TradeMemo): void {
     try {
-      this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
+      this.#checkTrade(tm);
     } catch (e) {
       Log.alert(`Failed to process ${tm.getCoinName()}: ${e.message}`);
       Log.error(e);
