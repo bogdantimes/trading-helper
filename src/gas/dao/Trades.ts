@@ -32,7 +32,12 @@ export class TradesDao {
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
     notFoundFn?: () => TradeMemo | undefined | null
   ): void {
-    coinName = coinName.toUpperCase();
+    coinName = coinName.trim().toUpperCase();
+
+    if (!coinName) {
+      Log.info(`Empty coin name. Operation skipped.`);
+      return;
+    }
 
     if (!this.#lockTrade(coinName)) {
       Log.info(this.#lockSkipMsg(coinName));
@@ -58,7 +63,7 @@ export class TradesDao {
       Log.debug(
         `${coinName}: Failed to process trade update. Error: ${JSON.stringify(
           e
-        )}}`
+        )}`
       );
     } finally {
       this.#unlockTrade(coinName);
