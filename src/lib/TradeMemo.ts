@@ -30,11 +30,12 @@ export class TradeMemo {
    */
   priceMove: PriceMove = PriceMove.NEUTRAL;
 
+  state: TradeState;
+
   private curPrice = 0;
   /**
    * The current state of the asset.
    */
-  private state: TradeState;
 
   private _lock: boolean;
   /**
@@ -83,12 +84,20 @@ export class TradeMemo {
     return this._lock;
   }
 
-  lock(): void {
-    this._lock = true;
+  static lock(tm: TradeMemo): void {
+    tm._lock = true;
   }
 
-  unlock(): void {
-    this._lock = false;
+  static unlock(tm: TradeMemo): void {
+    tm._lock = false;
+  }
+
+  static isLocked(tm: TradeMemo): boolean {
+    return !!tm?._lock;
+  }
+
+  static isUnlocked(tm: TradeMemo): boolean {
+    return !tm?._lock;
   }
 
   getPriceMove(): PriceMove {
@@ -158,10 +167,6 @@ export class TradeMemo {
     } else {
       this.tradeResult = tradeResult;
     }
-  }
-
-  getState(): TradeState {
-    return this.state;
   }
 
   profit(): number {

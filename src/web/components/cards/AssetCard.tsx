@@ -4,6 +4,7 @@ import {
   darken,
   lighten,
   LinearProgress,
+  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -18,6 +19,7 @@ import {
 import { growthIconMap } from "../Common";
 import BasicCard from "./BasicCard";
 import ImbalanceChecker from "../small/ImbalanceChecker";
+import LockIcon from "@mui/icons-material/Lock";
 
 interface Params {
   cfg: Config;
@@ -37,7 +39,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const displayCurrentValue = hideBalances
     ? SHORT_MASK
     : `${currentValue.toFixed(2)} (${profitSign}${profitAbs.toFixed(2)})`;
-  const tradeState = tm.getState();
+  const tradeState = tm.state;
   const isSold = tradeState === TradeState.SOLD;
 
   return (
@@ -49,7 +51,23 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           display="flex"
           alignItems="center"
         >
-          {coinName} {growthIconMap.get(tm.getPriceMove())}
+          {coinName} {!!tm.currentValue && growthIconMap.get(tm.getPriceMove())}
+          {` `}
+          {tm.locked && (
+            <Tooltip
+              arrow
+              title={
+                <Typography fontSize={`0.8rem`}>
+                  The lock indicates that the trade is currently being
+                  processed. If the lock remains active indefinitely, giving the
+                  impression that the asset is stuck, please restart the bot
+                  (API: `start`).
+                </Typography>
+              }
+            >
+              <LockIcon fontSize={`small`} color={`info`} />
+            </Tooltip>
+          )}
         </Typography>
         <Typography
           variant="body2"
