@@ -168,22 +168,22 @@ export class TradesDao {
     let trades;
     const maxAttempts = 3;
     for (let i = 0; true; i++) {
-      trades = this.get();
-      if (!trades[coinName]?.locked) break;
+      trades = this.getRaw();
+      if (!TradeMemo.isLocked(trades[coinName])) break;
       if (i === maxAttempts - 1) return false;
       Utilities.sleep(1000);
     }
     if (trades[coinName]) {
-      trades[coinName].lock();
+      TradeMemo.lock(trades[coinName]);
       this.store.set(`Trades`, trades);
     }
     return true;
   }
 
   #unlockTrade(coinName: string): void {
-    const trades = this.get();
+    const trades = this.getRaw();
     if (trades[coinName]) {
-      trades[coinName].unlock();
+      TradeMemo.unlock(trades[coinName]);
       this.store.set(`Trades`, trades);
     }
   }

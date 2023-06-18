@@ -83,12 +83,16 @@ export class TradeMemo {
     return this._lock;
   }
 
-  lock(): void {
-    this._lock = true;
+  static lock(tm: TradeMemo): void {
+    tm._lock = true;
   }
 
-  unlock(): void {
-    this._lock = false;
+  static unlock(tm: TradeMemo): void {
+    tm._lock = false;
+  }
+
+  static isLocked(tm: TradeMemo): boolean {
+    return !!tm?._lock;
   }
 
   getPriceMove(): PriceMove {

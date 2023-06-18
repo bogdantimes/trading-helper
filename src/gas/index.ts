@@ -13,6 +13,7 @@ import {
   type IStore,
   Key,
   MASK,
+  TradeMemo,
 } from "../lib";
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
@@ -86,7 +87,7 @@ function startAllProcesses(): string {
   const locked = Object.keys(ts).filter((coinName) => ts[coinName].locked);
   if (locked.length) {
     locked.forEach((coinName) => {
-      ts[coinName].unlock();
+      TradeMemo.unlock(ts[coinName]);
     });
     DefaultStore.set(`Trades`, ts);
     Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
