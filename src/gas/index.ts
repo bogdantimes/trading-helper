@@ -244,7 +244,7 @@ function getState(): AppState {
 function buy(coin: CoinName): string {
   return catchError(() => {
     TradeManager.default().buy(coin.toUpperCase());
-    return `In progress!`;
+    return Log.printInfos() || `In progress!`;
   });
 }
 

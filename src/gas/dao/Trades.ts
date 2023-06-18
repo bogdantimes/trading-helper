@@ -68,11 +68,11 @@ export class TradesDao {
   iterate(mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null): void {
     this.getList().forEach((tm) => {
       const coinName = tm.getCoinName();
+      if (!this.#lockTrade(coinName)) {
+        Log.info(this.#lockSkipMsg(coinName));
+        return;
+      }
       try {
-        if (!this.#lockTrade(coinName)) {
-          Log.info(this.#lockSkipMsg(coinName));
-          return;
-        }
         const changedTrade = mutateFn(tm);
         if (changedTrade) {
           changedTrade.deleted
@@ -159,9 +159,9 @@ export class TradesDao {
    * @returns {boolean} true if the trade memo was locked, false if it was already locked
    */
   #lockTrade(coinName: string): boolean {
-    // if we cannot acquire lock within 5 attempts with 1 second interval - then give up
+    // if we cannot acquire lock within max attempts with 1 second interval - then give up
     let trades;
-    const maxAttempts = 5;
+    const maxAttempts = 2;
     for (let i = 0; i < maxAttempts; i++) {
       trades = this.get();
       if (!trades[coinName]?.locked) break;

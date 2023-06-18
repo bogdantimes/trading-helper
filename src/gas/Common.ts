@@ -50,7 +50,7 @@ export class Log {
   }
 
   static printInfos(): string {
-    return `${this.alertsLog.join(`\n`)}\n\n${this.infoLog.join(`\n`)}`;
+    return `${this.alertsLog.join(`\n`)}\n\n${this.infoLog.join(`\n`)}`.trim();
   }
 
   static ifUsefulDumpAsEmail(): void {
