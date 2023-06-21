@@ -1,4 +1,10 @@
-import { type IStore, TradeMemo, TradeState } from "../../lib";
+import {
+  type IStore,
+  StoreDeleteProp,
+  StoreNoOp,
+  TradeMemo,
+  TradeState,
+} from "../../lib";
 import { isNode } from "browser-or-node";
 import { Log } from "../Common";
 
@@ -70,12 +76,27 @@ export class TradesDao {
     }
   }
 
-  getRaw(): Record<string, any> {
-    if (isNode && this.memCache) {
-      // performance optimization for back-testing
-      return this.memCache;
-    }
-    return this.store.get(`Trades`) || {};
+  iterate(
+    mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
+    state?: TradeState
+  ): void {
+    this.getList(state).forEach((tm) => {
+      const coinName = tm.getCoinName();
+      if (!this.#lockTrade(coinName)) {
+        Log.info(this.#lockSkipMsg(coinName));
+        return;
+      }
+      try {
+        const changedTrade = mutateFn(tm);
+        if (changedTrade) {
+          changedTrade.deleted
+            ? this.#delete(changedTrade)
+            : this.#set(changedTrade);
+        }
+      } finally {
+        this.#unlockTrade(coinName);
+      }
+    });
   }
 
   get(): Record<string, TradeMemo> {
@@ -84,62 +105,22 @@ export class TradesDao {
       return this.memCache;
     }
 
-    const trades = this.store.get(`Trades`) || {};
     // Convert raw trades to TradeMemo objects
-    const tradeMemos = Object.keys(trades).reduce<Record<string, TradeMemo>>(
-      (acc, key) => {
-        acc[key] = TradeMemo.fromObject(trades[key]);
-        return acc;
-      },
-      {}
+    const trades = this.store.get(`Trades`) || {};
+    const tradeMemos = Object.fromEntries<TradeMemo>(
+      Object.entries(trades).map(([coinName, tm]) => [
+        coinName,
+        TradeMemo.fromObject(tm),
+      ])
     );
 
     this.memCache = tradeMemos;
     return tradeMemos;
   }
 
-  getList(filter?: (state: TradeState) => boolean): TradeMemo[] {
-    const trades = Object.values(this.get());
-    return filter ? trades.filter((tm) => filter(tm.state)) : trades;
-  }
-
-  updateList(
-    filter: (state: TradeState) => boolean,
-    mutate: (trades: TradeMemo[]) => TradeMemo[]
-  ) {
-    this.#setListAndUnlock(mutate(this.#getListAndLock(filter)));
-  }
-
-  #getListAndLock(filter?: (state: TradeState) => boolean): TradeMemo[] {
-    const tradesRaw = this.getRaw();
-
-    const unlocked = Object.values(tradesRaw).filter(TradeMemo.isUnlocked);
-    const selected = filter
-      ? unlocked.filter((tm) => filter(tm.state))
-      : unlocked;
-
-    // Lock all selected
-    selected.forEach(TradeMemo.lock);
-    this.store.set(`Trades`, tradesRaw);
-
-    return selected.map(TradeMemo.fromObject);
-  }
-
-  #setListAndUnlock(trades: TradeMemo[]): void {
-    if (!trades.length) return;
-
-    const tradesRaw = this.getRaw();
-
-    trades.forEach((tm) => {
-      if (TradeMemo.isLocked(tradesRaw[tm.getCoinName()])) {
-        TradeMemo.unlock(tm); // it is locked - we can unlock and replace
-        tradesRaw[tm.getCoinName()] = tm;
-      } else {
-        Log.info(`Skipped ${tm.getCoinName()}: the state was already modified`);
-      }
-    });
-
-    this.store.set(`Trades`, tradesRaw);
+  getList(state?: TradeState): TradeMemo[] {
+    const values = Object.values(this.get());
+    return state ? values.filter((trade) => trade.stateIs(state)) : values;
   }
 
   /**
@@ -148,14 +129,27 @@ export class TradesDao {
    * @returns {number} The total assets value.
    */
   totalAssetsValue(): number {
-    const trades = this.getList((s) => s === TradeState.BOUGHT);
+    const trades = this.getList(TradeState.BOUGHT);
     return trades.reduce((total, trade) => total + trade.currentValue, 0);
   }
 
+  unlockAllTrades(): void {
+    this.store.update<Record<string, TradeMemo>>(`Trades`, (ts) => {
+      const locked = Object.values(ts).filter(TradeMemo.isLocked);
+      if (locked.length) {
+        locked.forEach(TradeMemo.unlock);
+        Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
+        return ts;
+      }
+      return StoreNoOp;
+    });
+  }
+
   #set(tm: TradeMemo): void {
-    const trades = this.getRaw();
-    trades[tm.getCoinName()] = tm;
-    this.store.set(`Trades`, trades);
+    this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
+      trades[tm.getCoinName()] = tm;
+      return trades;
+    });
   }
 
   #lockSkipMsg(coinName: string): string {
@@ -163,15 +157,13 @@ export class TradesDao {
   }
 
   #delete(tm: TradeMemo): void {
-    const trades = this.getRaw();
-    if (trades[tm.getCoinName()]) {
-      delete trades[tm.getCoinName()];
-      if (Object.keys(trades).length === 0) {
-        this.store.delete(`Trades`);
-      } else {
-        this.store.set(`Trades`, trades);
+    this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
+      if (trades[tm.getCoinName()]) {
+        delete trades[tm.getCoinName()];
+        return Object.keys(trades).length ? trades : StoreDeleteProp;
       }
-    }
+      return StoreNoOp;
+    });
   }
 
   /**
@@ -183,27 +175,34 @@ export class TradesDao {
    * @returns {boolean} true if the trade memo was locked, false if it was already locked
    */
   #lockTrade(coinName: string): boolean {
-    // if we cannot acquire lock within max attempts with 1 second interval - then give up
-    let trades;
-    const maxAttempts = 3;
-    for (let i = 0; true; i++) {
-      trades = this.getRaw();
-      if (!TradeMemo.isLocked(trades[coinName])) break;
-      if (i === maxAttempts - 1) return false;
-      Utilities.sleep(1000);
-    }
-    if (trades[coinName]) {
+    let lockAcquired = false;
+
+    this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
+      if (TradeMemo.isLocked(trades[coinName])) {
+        // Already locked
+        return StoreNoOp;
+      }
+
+      lockAcquired = true;
+      if (!trades[coinName]) {
+        // Nothing to lock
+        return StoreNoOp;
+      }
+
       TradeMemo.lock(trades[coinName]);
-      this.store.set(`Trades`, trades);
-    }
-    return true;
+      return trades;
+    });
+
+    return lockAcquired;
   }
 
   #unlockTrade(coinName: string): void {
-    const trades = this.getRaw();
-    if (trades[coinName]) {
-      TradeMemo.unlock(trades[coinName]);
-      this.store.set(`Trades`, trades);
-    }
+    this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
+      if (trades[coinName]) {
+        TradeMemo.unlock(trades[coinName]);
+        return trades;
+      }
+      return StoreNoOp;
+    });
   }
 }

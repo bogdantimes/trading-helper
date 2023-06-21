@@ -78,21 +78,17 @@ export class TradeManager {
   trade(step: number): void {
     this.#prepare();
 
-    const invested = this.tradesDao.getList(
-      (s) => s === TradeState.BOUGHT
-    ).length;
+    const trades = this.tradesDao.getList();
+    const invested = trades.filter((t) => t.tradeResult.quantity).length;
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
 
     // First process !BUY state assets (some might get sold and free up $)
-    this.tradesDao.updateList(
-      (s) => s !== TradeState.BUY,
-      (trades) => {
-        return trades.sort(backTestSorter).map((tm) => {
-          this.#tryCheckTrade(tm);
-          return tm;
-        });
-      }
-    );
+    trades
+      .filter((tm) => !tm.stateIs(TradeState.BUY))
+      .sort(backTestSorter)
+      .forEach((tm) => {
+        this.#tryCheckTrade(tm);
+      });
 
     // Run plugin to update candidates and also get buy candidates if we can invest
     const { advancedAccess, signals } = this.plugin.trade({
@@ -103,10 +99,12 @@ export class TradeManager {
       I: step,
     });
 
-    if (advancedAccess !== this.#config.AdvancedAccess) {
-      this.#config.AdvancedAccess = advancedAccess;
-      this.configDao.set(this.#config);
-    }
+    this.configDao.update((cfg) => {
+      if (advancedAccess !== cfg.AdvancedAccess) {
+        cfg.AdvancedAccess = advancedAccess;
+        return cfg;
+      }
+    });
 
     signals
       // Ignore BNB buy signals cos of conflicts with fee logic
@@ -124,15 +122,12 @@ export class TradeManager {
     // Now process trades which are yet to be bought
     // For back-testing, sort by name to ensure tests consistency
     // For production, randomizing the order to avoid biases
-    this.tradesDao.updateList(
-      (s) => s === TradeState.BUY,
-      (trades) => {
-        return trades.sort(backTestSorter).map((tm) => {
-          this.#tryCheckTrade(tm);
-          return tm;
-        });
-      }
-    );
+    this.tradesDao
+      .getList(TradeState.BUY)
+      .sort(backTestSorter)
+      .forEach((tm) => {
+        this.#tryCheckTrade(tm);
+      });
 
     this.#finalize();
   }
@@ -167,15 +162,7 @@ export class TradeManager {
 
   sellAll(): void {
     this.#prepare();
-    this.tradesDao.updateList(
-      (s) => s === TradeState.BOUGHT,
-      (trades) => {
-        return trades.map((tm) => {
-          this.#sellNow(tm);
-          return tm;
-        });
-      }
-    );
+    this.tradesDao.iterate((t) => this.#sellNow(t), TradeState.BOUGHT);
     this.#finalize();
   }
 
@@ -248,30 +235,22 @@ export class TradeManager {
   }
 
   #initStableBalance(): void {
-    this.#config = this.configDao.get();
-    this.#balance = this.#config.StableBalance;
-    if (
-      this.#balance === AUTO_DETECT &&
-      this.#config.KEY &&
-      this.#config.SECRET
-    ) {
-      try {
-        this.#balance = this.exchange.getBalance(this.#config.StableCoin);
-        // if balance > 0 it will be saved in #finalize()
-        // otherwise the tool will try to get it again next time
-        this.#config.StableBalance = 0;
-      } catch (e) {
-        Log.alert(
-          `⚠️ Couldn't read the initial ${
-            this.#config.StableCoin
-          } balance. It was set to $0, you can change in the Settings.`
-        );
-        // It should stop trying to get the balance if it failed. Setting it to 0 will do that.
-        this.#balance = 0;
-        this.#config.StableBalance = 0;
-        this.configDao.set(this.#config);
+    const initFn = (cfg) => {
+      if (cfg.StableBalance === AUTO_DETECT && cfg.KEY && cfg.SECRET) {
+        try {
+          cfg.StableBalance = this.exchange.getBalance(cfg.StableCoin);
+        } catch (e) {
+          Log.alert(
+            `⚠️ Couldn't read the initial ${cfg.StableCoin} balance. It was set to $0, you can change in the Settings.`
+          );
+          // It should stop trying to get the balance if it failed. Setting it to 0 will do that.
+          cfg.StableBalance = 0;
+        }
+        return cfg;
       }
-    }
+    };
+    this.#config = this.configDao.update(initFn);
+    this.#balance = this.#config.StableBalance;
   }
 
   #reFetchFeesBudget(): void {
@@ -292,36 +271,35 @@ export class TradeManager {
   #finalize(): void {
     // Update balances only if the balance changed
     // Or if FeesBudget is not set
-    const diff = this.#balance - this.#config.StableBalance;
-    if (diff !== 0 || this.#config.FeesBudget === AUTO_DETECT) {
-      this.#config = this.configDao.get(); // Get the latest config
-      this.#balance = Math.max(this.#config.StableBalance, 0) + diff;
-      this.#config.StableBalance = this.#balance;
-      this.#reFetchFeesBudget();
-      // Check if AutoReplenishFeesBudget is enabled
-      if (this.#config.AutoReplenishFees) {
-        try {
-          this.#replenishFeesBudget();
-        } catch (e) {
-          Log.alert(
-            `ℹ️ "Replenish fees budget" feature was disabled. Check manually and re-enable if issue is resolved.`
-          );
-          this.#config.AutoReplenishFees = false;
-          Log.error(e);
+    this.configDao.update((config: Config): Config | undefined => {
+      const diff = this.#balance - config.StableBalance;
+      if (diff !== 0 || config.FeesBudget === AUTO_DETECT) {
+        this.#balance = Math.max(config.StableBalance, 0) + diff;
+        config.StableBalance = this.#balance;
+        this.#reFetchFeesBudget();
+        // Check if AutoReplenishFeesBudget is enabled
+        if (config.AutoReplenishFees) {
+          try {
+            this.#replenishFeesBudget(config);
+          } catch (e) {
+            Log.alert(
+              `ℹ️ "Replenish fees budget" feature was disabled. Check manually and re-enable if issue is resolved.`
+            );
+            config.AutoReplenishFees = false;
+            Log.error(e);
+          }
         }
+        Log.info(`Free ${config.StableCoin} balance: $${f2(this.#balance)}`);
+        Log.info(`Fees budget: ~$${f2(config.FeesBudget)}`);
+        return config;
       }
-      this.configDao.set(this.#config);
-      Log.info(
-        `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
-      );
-      Log.info(`Fees budget: ~$${f2(this.#config.FeesBudget)}`);
-    }
+    });
   }
 
-  #replenishFeesBudget(): void {
+  #replenishFeesBudget(config: Config): void {
     if (this.#balance <= MIN_BUY) return;
 
-    const feesBudget = this.#config.FeesBudget;
+    const feesBudget = config.FeesBudget;
     const assetsValue = this.tradesDao.totalAssetsValue();
     const total = this.#balance + assetsValue;
 
@@ -332,7 +310,7 @@ export class TradeManager {
     if (curCover >= MINIMUM_FEE_COVERAGE) return;
 
     const target = TARGET_FEE_COVERAGE;
-    const stableCoin = this.#config.StableCoin;
+    const stableCoin = config.StableCoin;
     const bnbSym = new ExchangeSymbol(BNB, stableCoin);
     const budgetNeeded = Math.floor(total * BNBFee * 2 * (target - curCover));
 
@@ -349,13 +327,13 @@ export class TradeManager {
     if (!tr.fromExchange) {
       throw new Error(`Failed to replenish fees budget: ${tr.msg}`);
     }
-    this.#config.FeesBudget += tr.paid;
+    config.FeesBudget += tr.paid;
     this.#balance -= tr.paid;
-    this.#config.StableBalance = this.#balance;
+    config.StableBalance = this.#balance;
     Log.alert(
       `Fees budget replenished to cover ~${target} trades. Before: $${f2(
         feesBudget
-      )}, added: ${tr.quantity} BNB, now: $${f2(this.#config.FeesBudget)}.`
+      )}, added: ${tr.quantity} BNB, now: $${f2(config.FeesBudget)}.`
     );
     Log.debug({
       feesBudget,
@@ -398,7 +376,7 @@ export class TradeManager {
 
   #tryCheckTrade(tm: TradeMemo): void {
     try {
-      this.#checkTrade(tm);
+      this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
     } catch (e) {
       Log.alert(`Failed to process ${tm.getCoinName()}: ${e.message}`);
       Log.error(e);
@@ -479,8 +457,11 @@ export class TradeManager {
     const symbol = tm.tradeResult.symbol;
     const symbolInfo = this.plugin.getBinanceSymbolInfo(symbol);
     if (symbolInfo?.status !== SymbolStatus.TRADING) {
-      this.#config.SmartExit = false;
-      this.configDao.set(this.#config);
+      this.configDao.update((config) => {
+        config.SmartExit = false;
+        this.#config = config;
+        return config;
+      });
       Log.alert(
         `⚠️ ${symbol} is not trading on Binance Spot, current status: ${symbolInfo?.status}`
       );

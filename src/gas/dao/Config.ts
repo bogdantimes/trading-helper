@@ -4,6 +4,7 @@ import {
   type IStore,
   MASK,
   StableUSDCoin,
+  StoreNoOp,
 } from "../../lib";
 
 export interface APIKeysProvider {
@@ -35,8 +36,12 @@ export class ConfigDao implements APIKeysProvider {
   }
 
   get(): Config {
+    return this.#mergeDefault(this.store.get(`Config`));
+  }
+
+  #mergeDefault(cfg?: Config): Config {
     const defaultConfig = DefaultConfig();
-    let config: Config = this.store.get(`Config`) || defaultConfig;
+    let config: Config = cfg || defaultConfig;
 
     // Back-ward compatibility with v3
     config.SmartExit = config.SellAtStopLimit ?? config.SmartExit;
@@ -47,14 +52,23 @@ export class ConfigDao implements APIKeysProvider {
     return config;
   }
 
-  set(config: Config): void {
-    const cfg: Config = Object.assign({}, config);
-    if (cfg.KEY === MASK || cfg.SECRET === MASK) {
-      const curCfg = this.get();
-      cfg.KEY = cfg.KEY === MASK ? curCfg.KEY : cfg.KEY;
-      cfg.SECRET = cfg.SECRET === MASK ? curCfg.SECRET : cfg.SECRET;
-    }
-    this.store.set(`Config`, cfg);
+  update(mutateFn: (curCfg: Config) => Config | undefined): Config {
+    return this.store.update<Config>(`Config`, (curCfg) => {
+      curCfg = this.#mergeDefault(curCfg);
+      const mutCfg = mutateFn(curCfg);
+      if (mutCfg) {
+        const cfg = Object.assign({}, mutCfg);
+        if (cfg.KEY === MASK || cfg.SECRET === MASK) {
+          cfg.KEY = cfg.KEY === MASK ? curCfg.KEY : cfg.KEY;
+          cfg.SECRET = cfg.SECRET === MASK ? curCfg.SECRET : cfg.SECRET;
+        }
+        return cfg;
+      } else if (curCfg) {
+        return StoreNoOp;
+      } else {
+        return curCfg;
+      }
+    })!;
   }
 
   getAPIKeys(): APIKeys {

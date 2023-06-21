@@ -10,27 +10,31 @@ export class WithdrawalsManager {
   ) {}
 
   addWithdrawal(amount: number): { amount: number; balance: number } {
-    const config = this.configDao.get();
+    const addWithdrawalFn = (config) => {
+      // Check internal balance
+      if (amount > config.StableBalance) {
+        throw new Error(
+          `Withdrawal amount is greater than the current balance.`
+        );
+      }
 
-    // Check internal balance
-    if (amount > config.StableBalance) {
-      throw new Error(`Withdrawal amount is greater than the current balance.`);
-    }
+      const balance = this.exchange.getBalance(config.StableCoin);
 
-    const balance = this.exchange.getBalance(config.StableCoin);
+      // Check external balance
+      if (amount > balance) {
+        throw new Error(
+          `Withdrawal amount is greater than the factual ${config.StableCoin} balance on the exchange: $${balance}.`
+        );
+      }
 
-    // Check external balance
-    if (amount > balance) {
-      throw new Error(
-        `Withdrawal amount is greater than the factual ${config.StableCoin} balance on the exchange: $${balance}.`
-      );
-    }
+      // We can proceed adding withdraw.
+      config.StableBalance -= amount;
+      this.statistics.addWithdrawal(amount);
+      return config;
+    };
 
-    // We can proceed adding withdraw.
-    const latestConfig = this.configDao.get();
-    latestConfig.StableBalance -= amount;
-    this.statistics.addWithdrawal(amount);
-    this.configDao.set(latestConfig);
+    const latestConfig = this.configDao.update(addWithdrawalFn);
+
     return {
       amount,
       balance: latestConfig.StableBalance,

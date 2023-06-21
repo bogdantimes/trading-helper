@@ -4,7 +4,6 @@ import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   type AppState,
   type CandidateInfo,
-  Coin,
   type CoinName,
   type Config,
   f0,
@@ -13,7 +12,6 @@ import {
   type IStore,
   Key,
   MASK,
-  TradeMemo,
 } from "../lib";
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
@@ -82,16 +80,8 @@ function startAllProcesses(): string {
   Log.alert(
     `ℹ️ Background processes started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
   );
-  // Low level unlock of all trades (in case of any issues with them).
-  const ts = new TradesDao(DefaultStore).get();
-  const locked = Object.keys(ts).filter((coinName) => ts[coinName].locked);
-  if (locked.length) {
-    locked.forEach((coinName) => {
-      TradeMemo.unlock(ts[coinName]);
-    });
-    DefaultStore.set(`Trades`, ts);
-    Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
-  }
+  // Unlock all trades (in case of any issues with them).
+  new TradesDao(DefaultStore).unlockAllTrades();
   return `OK`;
 }
 
@@ -145,15 +135,15 @@ function initialSetup(params: InitialSetupParams): string {
       Log.alert(`Connected to Firebase: ${params.dbURL}`);
       store = new CachedStore(fbStore, CacheProxy);
     }
-    const configDao = new ConfigDao(store);
-    const config = configDao.get();
-    config.KEY = params.binanceAPIKey ?? config.KEY;
-    config.SECRET = params.binanceSecretKey ?? config.SECRET;
-    config.ViewOnly = params.viewOnly;
+    const config = new ConfigDao(store).update((config) => {
+      config.KEY = params.binanceAPIKey ?? config.KEY;
+      config.SECRET = params.binanceSecretKey ?? config.SECRET;
+      config.ViewOnly = params.viewOnly;
+      return config;
+    });
     if (config.ViewOnly || (config.KEY && config.SECRET)) {
       startAllProcesses();
     }
-    configDao.set(config);
     Log.alert(`✨ Initial setup done.`);
     return `OK`;
   });
@@ -183,20 +173,21 @@ function setConfig(config: Config): { msg: string; config: Config } {
   return catchError(() => {
     let msg = `Config updated`;
     const dao = new ConfigDao(DefaultStore);
-    const curConfig = dao.get();
-    if (curConfig.StableBalance <= 0 && config.StableBalance > 0) {
-      // Check the balance is actually present on Spot balance
-      const balance = new Binance(dao).getBalance(config.StableCoin);
-      if (balance < config.StableBalance) {
-        msg = `\nActual balance on your Binance Spot account is $${f2(
-          balance
-        )}, which is less than $${
-          config.StableBalance
-        } you are trying to set. You might need to transfer money from the Funding account. Check the balances and try again.`;
-        config.StableBalance = curConfig.StableBalance;
+    dao.update((cfg) => {
+      if (cfg.StableBalance <= 0 && config.StableBalance > 0) {
+        // Check the balance is actually present on Spot balance
+        const balance = new Binance(dao).getBalance(config.StableCoin);
+        if (balance < config.StableBalance) {
+          msg = `\nActual balance on your Binance Spot account is $${f2(
+            balance
+          )}, which is less than $${
+            config.StableBalance
+          } you are trying to set. You might need to transfer money from the Funding account. Check the balances and try again.`;
+          config.StableBalance = cfg.StableBalance;
+        }
       }
-    }
-    dao.set(config);
+      return config;
+    });
     return { msg, config };
   });
 }
@@ -319,39 +310,53 @@ global.info = (coin: CoinName) => {
 
     if (!coin) return `Please, enter a coin name.`;
 
+    let result = ``;
     const candidatesDao = new CandidatesDao(DefaultStore);
-    const ci = candidatesDao.get(coin);
-    if (!ci) {
-      return `${coin} is not tracked as a candidate; either it does not exist or it lacks historical price data yet.`;
-    }
-    const imbalance = plugin.getImbalance(coin, ci);
-    candidatesDao.set(new Coin(coin), ci);
-    const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
-      ci?.[Key.MAX_PERCENTILE] * 100
-    )}`;
-    return `
+
+    candidatesDao.update((all) => {
+      const ci = all[coin];
+      if (!ci) {
+        result = `${coin} is not tracked as a candidate; either it does not exist or it lacks historical price data yet.`;
+      }
+
+      const imbalance = plugin.getImbalance(coin, ci);
+      ci[Key.IMBALANCE] = imbalance;
+
+      const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
+        ci?.[Key.MAX_PERCENTILE] * 100
+      )}`;
+      result = `
 Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
 Demand (-100..100): ${f2(imbalance) * 100}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
 Current price zone (-|0..100|+): ${curRange}%`;
+
+      return all;
+    });
+    return result;
   });
 };
 global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
   return catchError(() => {
     const candidatesDao = new CandidatesDao(DefaultStore);
-    if (!ci) {
-      ci = candidatesDao.get(coin);
-    }
-    const imbalance = plugin.getImbalance(coin, ci);
+    const imbalance = plugin.getImbalance(coin, ci || candidatesDao.get(coin));
+
     if (imbalance) {
-      ci[Key.IMBALANCE] = imbalance;
-      candidatesDao.set(new Coin(coin), ci);
-      new TradesDao(DefaultStore).update(coin, (tm) => {
+      candidatesDao.update((all) => {
+        if (all[coin]) {
+          all[coin][Key.IMBALANCE] = imbalance;
+        }
+        return all;
+      });
+
+      const tradesDao = new TradesDao(DefaultStore);
+      tradesDao.update(coin, (tm) => {
         tm.supplyDemandImbalance = imbalance;
         return tm;
       });
     }
+
     return imbalance;
   });
 };

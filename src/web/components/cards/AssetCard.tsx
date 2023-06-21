@@ -39,7 +39,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const displayCurrentValue = hideBalances
     ? SHORT_MASK
     : `${currentValue.toFixed(2)} (${profitSign}${profitAbs.toFixed(2)})`;
-  const tradeState = tm.state;
+  const tradeState = tm.getState();
   const isSold = tradeState === TradeState.SOLD;
 
   return (

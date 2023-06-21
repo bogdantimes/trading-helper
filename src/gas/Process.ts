@@ -22,7 +22,7 @@ export class Process {
         const outageCounter = +(CacheProxy.get(`OutageCounter`) ?? 0) + 1;
         if (outageCounter === 10 || outageCounter % 30 === 0) {
           const trades = new TradesDao(DefaultStore);
-          if (trades.getList((s) => s === TradeState.BOUGHT).length > 0) {
+          if (trades.getList(TradeState.BOUGHT).length > 0) {
             Log.alert(
               `⚠️ Service outage detected. Please, monitor your assets manually on the exchange. This message will be repeated every 30 minutes until the service is restored.`
             );
