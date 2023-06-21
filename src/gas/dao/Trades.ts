@@ -69,7 +69,7 @@ export class TradesDao {
         return Object.keys(trades).length ? trades : StoreDeleteProp;
       });
     } catch (e) {
-      Log.alert(`${coinName}: Failed to compute trade. Error: ${e.message}`);
+      Log.alert(`${coinName}: Failed to process. Error: ${e.message}`);
     }
   }
 
@@ -107,7 +107,7 @@ export class TradesDao {
           return Object.keys(trades).length ? trades : StoreDeleteProp;
         });
       } catch (e) {
-        Log.alert(`${coinName}: Failed to compute trade. Error: ${e.message}`);
+        Log.alert(`${coinName}: Failed to process. Error: ${e.message}`);
       }
     });
   }

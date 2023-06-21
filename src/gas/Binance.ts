@@ -96,10 +96,9 @@ export class Binance implements IExchange {
       this.#updateBalance(symbol.priceAsset, -tradeResult.cost);
       return tradeResult;
     } catch (e: any) {
-      if (e.message.includes(`Market is closed`)) {
-        return new TradeResult(symbol, `Market is closed for ${symbol}.`);
-      }
-      throw e;
+      const msg = `❌ Buying ${symbol.quantityAsset} failed. Reason: ${e.message}`;
+      Log.info(msg);
+      return new TradeResult(symbol, msg);
     }
   }
 
