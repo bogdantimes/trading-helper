@@ -142,6 +142,7 @@ export class TradeManager {
         type: SignalType.Buy,
         support: price * 0.9,
       });
+      this.#tryCheckTrade(this.tradesDao.get()[coin]);
     } else {
       throw new Error(`Unknown coin ${coin}: no price information found`);
     }
@@ -151,9 +152,9 @@ export class TradeManager {
     this.#prepare();
     this.tradesDao.update(
       coin,
-      (t) => this.#sellNow(t),
+      (t) => this.#sell(t),
       () => {
-        Log.alert(`${coin} not found`);
+        Log.info(`${coin} not found`);
         return null;
       }
     );
@@ -162,7 +163,7 @@ export class TradeManager {
 
   sellAll(): void {
     this.#prepare();
-    this.tradesDao.iterate((t) => this.#sellNow(t), TradeState.BOUGHT);
+    this.tradesDao.iterate((t) => this.#sell(t), TradeState.BOUGHT);
     this.#finalize();
   }
 
@@ -213,17 +214,6 @@ export class TradeManager {
     });
 
     this.#finalize();
-  }
-
-  #sellNow(tm: TradeMemo): TradeMemo {
-    // Reset potential BUY state to avoid buying for the time being
-    tm.resetState();
-    if (tm.tradeResult.quantity > 0) {
-      this.#sell(tm);
-    } else if (tm.stateIs(TradeState.BOUGHT)) {
-      Log.alert(`⚠️ Can't sell ${tm.getCoinName()}. Current value is 0`);
-    }
-    return tm;
   }
 
   #prepare(): void {
@@ -585,9 +575,17 @@ export class TradeManager {
     }
   }
 
-  #sell(memo: TradeMemo): void {
-    const entry = memo.tradeResult;
-    const coin = memo.getCoinName();
+  #sell(tm: TradeMemo): TradeMemo {
+    if (tm.tradeResult.quantity <= 0) {
+      Log.alert(
+        `⚠️ Can't sell ${tm.getCoinName()}. Current value is 0. The asset will be removed.`
+      );
+      tm.resetState();
+      return tm;
+    }
+
+    const entry = tm.tradeResult;
+    const coin = tm.getCoinName();
     const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
     const exit = this.exchange.marketSell(symbol, entry.quantity);
     if (exit.fromExchange) {
@@ -615,7 +613,7 @@ export class TradeManager {
         const exitDate = new Date().toLocaleDateString();
         // Derive entry date using ttl minutes
         const entryDate = new Date(
-          new Date().getTime() - memo.ttl * 60 * 1000
+          new Date().getTime() - tm.ttl * 60 * 1000
         ).toLocaleDateString();
         const precision = this.#getPrices(symbol).precision;
         const entryPrice = floor(entry.avgPrice, precision);
@@ -634,17 +632,19 @@ export class TradeManager {
       } catch (e) {
         Log.error(e);
       } finally {
-        memo.tradeResult = exit;
-        Log.debug(memo);
-        memo.setState(TradeState.SOLD);
-        memo.deleted = isNode;
+        tm.tradeResult = exit;
+        Log.debug(tm);
+        tm.setState(TradeState.SOLD);
+        tm.deleted = isNode;
       }
     } else {
       Log.debug(exit);
-      Log.debug(memo);
-      memo.setState(TradeState.BOUGHT);
+      Log.debug(tm);
+      tm.setState(TradeState.BOUGHT);
       Log.alert(`An issue happened while selling ${symbol}: ${exit}`);
     }
+
+    return tm;
   }
 
   #updatePLStatistics(gainedCoin: StableUSDCoin, profit: number): void {
