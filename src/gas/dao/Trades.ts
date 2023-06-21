@@ -47,11 +47,15 @@ export class TradesDao {
 
     try {
       this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
-        const trade = trades[coinName];
+        if (!trades?.[coinName]) {
+          return StoreNoOp;
+        }
+
+        const tm = TradeMemo.fromObject(trades[coinName]);
         // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
         // otherwise changedTrade is null.
-        const changedTrade = trade
-          ? mutateFn(trade)
+        const changedTrade = tm
+          ? mutateFn(tm)
           : notFoundFn
           ? notFoundFn()
           : null;
@@ -64,14 +68,12 @@ export class TradesDao {
         } else {
           trades[coinName] = changedTrade;
         }
+
+        // TODO: double check why deleting is important
         return Object.keys(trades).length ? trades : StoreDeleteProp;
       });
     } catch (e) {
-      Log.debug(
-        `${coinName}: Failed to process trade update. Error: ${JSON.stringify(
-          e
-        )}`
-      );
+      Log.alert(`${coinName}: Failed to compute trade. Error: ${e.message}`);
     }
   }
 
@@ -79,11 +81,20 @@ export class TradesDao {
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
     state?: TradeState
   ): void {
-    this.getList(state).forEach((tm) => {
-      const coinName = tm.getCoinName();
+    const tradesRaw = this.store.get(`Trades`) || {};
+
+    Object.keys(tradesRaw).forEach((coinName) => {
       try {
         this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
-          const tm = trades[coinName];
+          if (!trades?.[coinName]) {
+            return StoreNoOp;
+          }
+
+          const tm = TradeMemo.fromObject(trades[coinName]);
+          if (state && !tm.stateIs(state)) {
+            return StoreNoOp;
+          }
+
           const changedTrade = mutateFn(tm);
 
           if (!changedTrade) {
@@ -96,14 +107,11 @@ export class TradesDao {
             trades[coinName] = changedTrade;
           }
 
-          return trades;
+          // TODO: double check why deleting is important
+          return Object.keys(trades).length ? trades : StoreDeleteProp;
         });
       } catch (e) {
-        Log.debug(
-          `${coinName}: Failed to process trade update. Error: ${JSON.stringify(
-            e
-          )}`
-        );
+        Log.alert(`${coinName}: Failed to compute trade. Error: ${e.message}`);
       }
     });
   }
