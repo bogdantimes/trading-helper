@@ -45,34 +45,33 @@ export class TradesDao {
       return;
     }
 
-    if (!this.#lockTrade(coinName)) {
-      Log.info(this.#lockSkipMsg(coinName));
-      return;
-    }
-
     try {
-      const trade = this.get()[coinName];
-      // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
-      // otherwise changedTrade is null.
-      const changedTrade = trade
-        ? mutateFn(trade)
-        : notFoundFn
-        ? notFoundFn()
-        : null;
+      this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
+        const trade = trades[coinName];
+        // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
+        // otherwise changedTrade is null.
+        const changedTrade = trade
+          ? mutateFn(trade)
+          : notFoundFn
+          ? notFoundFn()
+          : null;
 
-      if (changedTrade) {
-        changedTrade.deleted
-          ? this.#delete(changedTrade)
-          : this.#set(changedTrade);
-      }
+        if (!changedTrade) {
+          return StoreNoOp;
+        }
+        if (changedTrade.deleted) {
+          delete trades[coinName];
+        } else {
+          trades[coinName] = changedTrade;
+        }
+        return Object.keys(trades).length ? trades : StoreDeleteProp;
+      });
     } catch (e) {
       Log.debug(
         `${coinName}: Failed to process trade update. Error: ${JSON.stringify(
           e
         )}`
       );
-    } finally {
-      this.#unlockTrade(coinName);
     }
   }
 
@@ -82,19 +81,29 @@ export class TradesDao {
   ): void {
     this.getList(state).forEach((tm) => {
       const coinName = tm.getCoinName();
-      if (!this.#lockTrade(coinName)) {
-        Log.info(this.#lockSkipMsg(coinName));
-        return;
-      }
       try {
-        const changedTrade = mutateFn(tm);
-        if (changedTrade) {
-          changedTrade.deleted
-            ? this.#delete(changedTrade)
-            : this.#set(changedTrade);
-        }
-      } finally {
-        this.#unlockTrade(coinName);
+        this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
+          const tm = trades[coinName];
+          const changedTrade = mutateFn(tm);
+
+          if (!changedTrade) {
+            return StoreNoOp;
+          }
+
+          if (changedTrade.deleted) {
+            delete trades[coinName];
+          } else {
+            trades[coinName] = changedTrade;
+          }
+
+          return trades;
+        });
+      } catch (e) {
+        Log.debug(
+          `${coinName}: Failed to process trade update. Error: ${JSON.stringify(
+            e
+          )}`
+        );
       }
     });
   }
@@ -131,78 +140,5 @@ export class TradesDao {
   totalAssetsValue(): number {
     const trades = this.getList(TradeState.BOUGHT);
     return trades.reduce((total, trade) => total + trade.currentValue, 0);
-  }
-
-  unlockAllTrades(): void {
-    this.store.update<Record<string, TradeMemo>>(`Trades`, (ts) => {
-      const locked = Object.values(ts).filter(TradeMemo.isLocked);
-      if (locked.length) {
-        locked.forEach(TradeMemo.unlock);
-        Log.alert(`ℹ️ Some trades were locked and are unlocked now`);
-        return ts;
-      }
-      return StoreNoOp;
-    });
-  }
-
-  #set(tm: TradeMemo): void {
-    this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
-      trades[tm.getCoinName()] = tm;
-      return trades;
-    });
-  }
-
-  #lockSkipMsg(coinName: string): string {
-    return `${coinName} was skipped as it is already being processed by another process right now. Try again.`;
-  }
-
-  #delete(tm: TradeMemo): void {
-    this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
-      if (trades[tm.getCoinName()]) {
-        delete trades[tm.getCoinName()];
-        return Object.keys(trades).length ? trades : StoreDeleteProp;
-      }
-      return StoreNoOp;
-    });
-  }
-
-  /**
-   * #lockTrade and #unlockTrade are used to prevent multiple processes from updating the same trade memo object.
-   * This is needed because Google Apps Script runs every 1 minute and if the process takes longer than 1 minute
-   * to complete, it will be started again.
-   * @param coinName
-   * @private
-   * @returns {boolean} true if the trade memo was locked, false if it was already locked
-   */
-  #lockTrade(coinName: string): boolean {
-    let lockAcquired = false;
-
-    this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
-      if (TradeMemo.isLocked(trades[coinName])) {
-        // Already locked
-        return StoreNoOp;
-      }
-
-      lockAcquired = true;
-      if (!trades[coinName]) {
-        // Nothing to lock
-        return StoreNoOp;
-      }
-
-      TradeMemo.lock(trades[coinName]);
-      return trades;
-    });
-
-    return lockAcquired;
-  }
-
-  #unlockTrade(coinName: string): void {
-    this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
-      if (trades[coinName]) {
-        TradeMemo.unlock(trades[coinName]);
-        return trades;
-      }
-      return StoreNoOp;
-    });
   }
 }

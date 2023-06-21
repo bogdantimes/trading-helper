@@ -80,8 +80,6 @@ function startAllProcesses(): string {
   Log.alert(
     `ℹ️ Background processes started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
   );
-  // Unlock all trades (in case of any issues with them).
-  new TradesDao(DefaultStore).unlockAllTrades();
   return `OK`;
 }
 
