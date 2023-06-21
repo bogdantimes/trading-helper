@@ -71,6 +71,27 @@ export class ConfigDao implements APIKeysProvider {
     })!;
   }
 
+  updateWithRetry(
+    mutateFn: (curCfg: Config) => Config | undefined,
+    maxRetries: number,
+    retryIntervalMs: number
+  ): Config {
+    let retries = 0;
+    while (retries < maxRetries) {
+      try {
+        return this.update(mutateFn);
+      } catch (error) {
+        retries++;
+        if (retries === maxRetries) {
+          throw error; // Max retries reached, re-throw the error
+        } else {
+          Utilities.sleep(retryIntervalMs);
+        }
+      }
+    }
+    throw new Error(`Failed to update config after ${maxRetries}`);
+  }
+
   getAPIKeys(): APIKeys {
     const config = this.get();
     return { key: config.KEY, secret: config.SECRET };

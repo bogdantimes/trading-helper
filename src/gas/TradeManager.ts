@@ -269,37 +269,64 @@ export class TradeManager {
   }
 
   #finalize(): void {
-    // Update balances only if the balance changed
-    // Or if FeesBudget is not set
-    this.configDao.update((config: Config): Config | undefined => {
-      const diff = this.#balance - config.StableBalance;
-      if (diff !== 0 || config.FeesBudget === AUTO_DETECT) {
-        this.#balance = Math.max(config.StableBalance, 0) + diff;
-        config.StableBalance = this.#balance;
-        this.#reFetchFeesBudget();
-        // Check if AutoReplenishFeesBudget is enabled
-        if (config.AutoReplenishFees) {
-          try {
-            this.#replenishFeesBudget(config);
-          } catch (e) {
-            Log.alert(
-              `ℹ️ "Replenish fees budget" feature was disabled. Check manually and re-enable if issue is resolved.`
-            );
-            config.AutoReplenishFees = false;
-            Log.error(e);
-          }
+    let balanceChanged = false;
+
+    const maxRetries = 5;
+    const retryIntervalMs = 1000;
+    // To update diff we want retry a few times before giving up
+    this.configDao.updateWithRetry(
+      (config: Config): Config | undefined => {
+        this.#config = config;
+        const diff = this.#balance - this.#config.StableBalance;
+        // Update balances only if the balance changed
+        // Or if FeesBudget is not set
+        if (diff !== 0) {
+          balanceChanged = true;
+          this.#balance = Math.max(this.#config.StableBalance, 0) + diff;
+          this.#config.StableBalance = this.#balance;
+          Log.info(
+            `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
+          );
+          return this.#config;
         }
-        Log.info(`Free ${config.StableCoin} balance: $${f2(this.#balance)}`);
-        Log.info(`Fees budget: ~$${f2(config.FeesBudget)}`);
+      },
+      maxRetries,
+      retryIntervalMs
+    );
+
+    if (balanceChanged) {
+      // Refetch fees budget
+      this.configDao.update((config: Config): Config | undefined => {
+        this.#config = config;
+        this.#reFetchFeesBudget();
+        Log.info(`Fees budget: ~$${f2(this.#config.FeesBudget)}`);
         return config;
-      }
-    });
+      });
+    }
+
+    // Replenish fees budget
+    // Check if AutoReplenishFeesBudget is enabled
+    if (balanceChanged && this.#config.AutoReplenishFees) {
+      this.configDao.update((config: Config): Config | undefined => {
+        this.#config = config;
+        try {
+          this.#replenishFeesBudget();
+        } catch (e) {
+          Log.alert(
+            `ℹ️ "Replenish fees budget" feature was disabled. Check manually and re-enable if the issue is resolved.`
+          );
+          this.#config.AutoReplenishFees = false;
+          Log.error(e);
+        }
+        return this.#config;
+      });
+    }
   }
 
-  #replenishFeesBudget(config: Config): void {
+  #replenishFeesBudget(): void {
     if (this.#balance <= MIN_BUY) return;
 
-    const feesBudget = config.FeesBudget;
+    const feesBudget = this.#config.FeesBudget;
     const assetsValue = this.tradesDao.totalAssetsValue();
     const total = this.#balance + assetsValue;
 
@@ -310,7 +337,7 @@ export class TradeManager {
     if (curCover >= MINIMUM_FEE_COVERAGE) return;
 
     const target = TARGET_FEE_COVERAGE;
-    const stableCoin = config.StableCoin;
+    const stableCoin = this.#config.StableCoin;
     const bnbSym = new ExchangeSymbol(BNB, stableCoin);
     const budgetNeeded = Math.floor(total * BNBFee * 2 * (target - curCover));
 
@@ -327,13 +354,13 @@ export class TradeManager {
     if (!tr.fromExchange) {
       throw new Error(`Failed to replenish fees budget: ${tr.msg}`);
     }
-    config.FeesBudget += tr.paid;
+    this.#config.FeesBudget += tr.paid;
     this.#balance -= tr.paid;
-    config.StableBalance = this.#balance;
+    this.#config.StableBalance = this.#balance;
     Log.alert(
       `Fees budget replenished to cover ~${target} trades. Before: $${f2(
         feesBudget
-      )}, added: ${tr.quantity} BNB, now: $${f2(config.FeesBudget)}.`
+      )}, added: ${tr.quantity} BNB, now: $${f2(this.#config.FeesBudget)}.`
     );
     Log.debug({
       feesBudget,
