@@ -96,7 +96,7 @@ export class Binance implements IExchange {
       this.#updateBalance(symbol.priceAsset, -tradeResult.cost);
       return tradeResult;
     } catch (e: any) {
-      const msg = `❌ Buying ${symbol.quantityAsset} failed. Reason: ${e.message}`;
+      const msg = `❌ Couldn't buy ${symbol.quantityAsset}. Reason: ${e.message}`;
       Log.info(msg);
       return new TradeResult(symbol, msg);
     }

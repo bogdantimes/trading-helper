@@ -572,10 +572,10 @@ export class TradeManager {
         tm.setState(TradeState.BOUGHT);
       }
     } else {
-      Log.alert(`${symbol.quantityAsset} could not be bought: ${tradeResult}`);
       Log.debug(tradeResult);
       Log.debug(tm);
       tm.resetState();
+      Log.alert(`⚠️ An issue happened while buying ${symbol}: ${tradeResult}`);
     }
   }
 
@@ -645,7 +645,7 @@ export class TradeManager {
       Log.debug(exit);
       Log.debug(tm);
       tm.setState(TradeState.BOUGHT);
-      Log.alert(`An issue happened while selling ${symbol}: ${exit}`);
+      Log.alert(`⚠️ An issue happened while selling ${symbol}: ${exit}`);
     }
 
     return tm;
