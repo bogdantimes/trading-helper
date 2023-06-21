@@ -78,12 +78,9 @@ export class TradeManager {
   trade(step: number): void {
     this.#prepare();
 
-    const trades = this.tradesDao.getList();
-    const invested = trades.filter((t) => t.tradeResult.quantity).length;
-    this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
-
     // First process !BUY state assets (some might get sold and free up $)
-    trades
+    this.tradesDao
+      .getList()
       .filter((tm) => !tm.stateIs(TradeState.BUY))
       .sort(backTestSorter)
       .forEach((tm) => {
@@ -222,6 +219,9 @@ export class TradeManager {
       this.#config.BudgetSplitMin,
       this.plugin.getOptimalInvestRatio(this.candidatesDao)
     );
+    const trades = this.tradesDao.getList();
+    const invested = trades.filter((t) => t.tradeResult.quantity).length;
+    this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
   }
 
   #initStableBalance(): void {
@@ -405,9 +405,11 @@ export class TradeManager {
 
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
 
-    if (tm.tradeResult.quantity > 0 && this.#config.SmartExit) {
+    if (tm.stateIs(TradeState.BOUGHT) && this.#config.SmartExit) {
       this.#processBoughtState(tm);
-    } else if (tm.tradeResult.soldPrice) {
+    }
+
+    if (tm.stateIs(TradeState.SOLD)) {
       this.#processSoldState(tm);
     }
 
@@ -416,10 +418,12 @@ export class TradeManager {
       this.#sell(tm);
     }
 
-    if (tm.stateIs(TradeState.BUY)) {
+    if (tm.stateIs(TradeState.BUY) && tm.tradeResult.quantity > 0) {
+      Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - already in portfolio`);
+      tm.resetState(); // Cancel BUY state
+    } else if (tm.stateIs(TradeState.BUY)) {
       const money = this.#getMoneyToInvest();
-      // do not invest into the same coin
-      if (tm.tradeResult.quantity <= 0 && money > 0) {
+      if (money > 0) {
         this.#buy(tm, money);
         this.#processBoughtState(tm);
       } else {
