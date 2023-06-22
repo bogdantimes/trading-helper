@@ -1,5 +1,6 @@
 import { isNode } from "browser-or-node";
 import getEmailTemplate from "./utils/getEmailTemplate";
+import { type Signal } from "./traders/plugin/api";
 
 export const SECONDS_IN_MIN = 60;
 export const SECONDS_IN_HOUR = SECONDS_IN_MIN * 60;
@@ -69,6 +70,10 @@ export class Log {
   }
 }
 
-export const backTestSorter = isNode
+export const tmSorter = isNode
   ? (a, b) => (a.getCoinName() > b.getCoinName() ? 1 : -1)
+  : () => Math.random() - 0.5;
+
+export const signalSorter = isNode
+  ? (a: Signal, b: Signal) => (a.coin > b.coin ? 1 : -1)
   : () => Math.random() - 0.5;

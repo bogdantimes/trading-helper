@@ -1,6 +1,6 @@
 import { Statistics } from "./Statistics";
 import { type IExchange } from "./IExchange";
-import { backTestSorter, Log } from "./Common";
+import { tmSorter, Log, signalSorter } from "./Common";
 import {
   AUTO_DETECT,
   BNB,
@@ -82,10 +82,13 @@ export class TradeManager {
     this.tradesDao
       .getList()
       .filter((tm) => !tm.stateIs(TradeState.BUY))
-      .sort(backTestSorter)
+      .sort(tmSorter)
       .forEach((tm) => {
-        this.#tryCheckTrade(tm);
+        this.#tryCheckTrade(tm.getCoinName());
       });
+
+    // Interim balances update after previous operations
+    this.#updateBalances();
 
     // Run plugin to update candidates and also get buy candidates if we can invest
     const { advancedAccess, signals } = this.plugin.trade({
@@ -103,30 +106,7 @@ export class TradeManager {
       });
     }
 
-    signals
-      // Ignore BNB buy signals cos of conflicts with fee logic
-      .filter((r) => r.type === SignalType.Buy && r.coin !== BNB)
-      .forEach((r) => {
-        if (this.#config.ViewOnly) {
-          Log.alert(
-            `${r.coin} - BUY signal. Support price: ${r.support}. Disable View-Only mode to buy automatically.`
-          );
-        } else {
-          this.#setBuyState(r);
-        }
-      });
-
-    // Now process trades which are yet to be bought
-    // For back-testing, sort by name to ensure tests consistency
-    // For production, randomizing the order to avoid biases
-    this.tradesDao
-      .getList(TradeState.BUY)
-      .sort(backTestSorter)
-      .forEach((tm) => {
-        this.#tryCheckTrade(tm);
-      });
-
-    this.#finalize();
+    this.#handleBuySignals(signals);
   }
 
   buy(coin: CoinName): void {
@@ -134,16 +114,15 @@ export class TradeManager {
     const price = this.priceProvider.get(this.#config.StableCoin)[coin]
       ?.currentPrice;
     if (price) {
-      this.#setBuyState({
+      this.#buyNow({
         coin,
         type: SignalType.Buy,
         support: price * 0.9,
       });
-      this.#tryCheckTrade(this.tradesDao.get()[coin]);
     } else {
       throw new Error(`Unknown coin ${coin}: no price information found`);
     }
-    this.#finalize();
+    this.#updateBalances();
   }
 
   sell(coin: CoinName): void {
@@ -156,13 +135,13 @@ export class TradeManager {
         return null;
       }
     );
-    this.#finalize();
+    this.#updateBalances();
   }
 
   sellAll(): void {
     this.#prepare();
     this.tradesDao.iterate((t) => this.#sell(t), TradeState.BOUGHT);
-    this.#finalize();
+    this.#updateBalances();
   }
 
   import(coins: CoinName[]): void {
@@ -211,7 +190,7 @@ export class TradeManager {
       }
     });
 
-    this.#finalize();
+    this.#updateBalances();
   }
 
   #prepare(): void {
@@ -259,31 +238,32 @@ export class TradeManager {
     }
   }
 
-  #finalize(): void {
-    let balanceChanged = false;
+  #updateBalances(): void {
+    const balanceChanged = !!(this.#balance - this.#config.StableBalance);
 
-    const maxRetries = 5;
-    const retryIntervalMs = 1000;
-    // To update diff we want retry a few times before giving up
-    this.configDao.updateWithRetry(
-      (config: Config): Config | undefined => {
-        this.#config = config;
-        const diff = this.#balance - this.#config.StableBalance;
-        // Update balances only if the balance changed
-        // Or if FeesBudget is not set
-        if (diff !== 0) {
-          balanceChanged = true;
-          this.#balance = Math.max(this.#config.StableBalance, 0) + diff;
-          this.#config.StableBalance = this.#balance;
-          Log.info(
-            `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
-          );
-          return this.#config;
-        }
-      },
-      maxRetries,
-      retryIntervalMs
-    );
+    if (balanceChanged) {
+      const maxRetries = 5;
+      const retryIntervalMs = 1000;
+      // To update diff we want retry a few times before giving up
+      this.configDao.updateWithRetry(
+        (config: Config): Config | undefined => {
+          this.#config = config; // Memorize latest config
+          const curDiff = this.#balance - this.#config.StableBalance;
+          // Update balances only if the balance changed
+          // Or if FeesBudget is not set
+          if (curDiff) {
+            this.#balance = Math.max(this.#config.StableBalance, 0) + curDiff;
+            this.#config.StableBalance = this.#balance;
+            Log.info(
+              `Free ${this.#config.StableCoin} balance: $${f2(this.#balance)}`
+            );
+            return this.#config;
+          }
+        },
+        maxRetries,
+        retryIntervalMs
+      );
+    }
 
     if (balanceChanged) {
       // Refetch fees budget
@@ -362,41 +342,39 @@ export class TradeManager {
     });
   }
 
-  #setBuyState(r: Signal): void {
-    const stableCoin = this.#config.StableCoin;
-    const symbol = new ExchangeSymbol(r.coin, stableCoin);
-    const prices = this.priceProvider.get(stableCoin)[r.coin];
-    this.tradesDao.update(
-      r.coin,
-      (tm) => {
-        if (tm.currentValue) {
-          // Ignore if coin is already bought.
-          tm.resetState();
-          return tm;
-        }
-        tm.setSignalMetadata(r);
-        tm.tradeResult.symbol = symbol;
-        tm.currentPrice = prices?.currentPrice;
-        tm.highestPrice = 0;
-        tm.lowestPrice = 0;
-        tm.setState(TradeState.BUY);
-        return tm;
-      },
-      () => {
-        const tm = new TradeMemo(new TradeResult(symbol));
-        tm.setSignalMetadata(r);
-        tm.currentPrice = prices?.currentPrice;
-        tm.setState(TradeState.BUY);
-        return tm;
-      }
-    );
+  #handleBuySignals(signals: Signal[]) {
+    if (this.#config.ViewOnly) {
+      signals
+        .filter((s) => s.type === SignalType.Buy)
+        .forEach(({ coin, support }) => {
+          Log.alert(
+            `${coin} - BUY signal. Support price: ${support}. Disable View-Only mode to buy automatically.`
+          );
+        });
+      return;
+    }
+
+    signals
+      .filter((s) => {
+        const isBuy = s.type === SignalType.Buy;
+        const isNotFeeCoin = s.coin !== BNB;
+        const isNew = !this.tradesDao.get()[s.coin]?.currentValue;
+        return isBuy && isNotFeeCoin && isNew;
+      })
+      // For back-testing, sort by name to ensure tests consistency
+      // For production, randomizing the order to avoid biases
+      .sort(signalSorter)
+      .forEach((r) => {
+        this.#buyNow(r);
+        this.#updateBalances();
+      });
   }
 
-  #tryCheckTrade(tm: TradeMemo): void {
+  #tryCheckTrade(coin: CoinName): void {
     try {
-      this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
+      this.tradesDao.update(coin, (t) => this.#checkTrade(t));
     } catch (e) {
-      Log.alert(`Failed to process ${tm.getCoinName()}: ${e.message}`);
+      Log.alert(`Failed to process ${coin}: ${e.message}`);
       Log.error(e);
     }
   }
@@ -417,20 +395,6 @@ export class TradeManager {
     // take action after processing
     if (tm.stateIs(TradeState.SELL)) {
       this.#sell(tm);
-    }
-
-    if (tm.stateIs(TradeState.BUY) && tm.tradeResult.quantity > 0) {
-      Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - already in portfolio`);
-      tm.resetState(); // Cancel BUY state
-    } else if (tm.stateIs(TradeState.BUY)) {
-      const money = this.#getMoneyToInvest();
-      if (money > 0) {
-        this.#buy(tm, money);
-        this.#processBoughtState(tm);
-      } else {
-        Log.info(`ℹ️ Can't buy ${tm.getCoinName()} - not enough balance`);
-        tm.resetState(); // Cancel BUY state
-      }
     }
 
     return tm;
@@ -549,7 +513,34 @@ export class TradeManager {
     ];
   }
 
-  #buy(tm: TradeMemo, cost: number): void {
+  #buyNow(signal: Signal): TradeMemo | undefined {
+    const money = this.#getMoneyToInvest();
+    if (money <= 0) {
+      Log.info(`ℹ️ Can't buy ${signal.coin} - not enough balance`);
+      return;
+    }
+
+    const symbol = new ExchangeSymbol(signal.coin, this.#config.StableCoin);
+    const newTm = new TradeMemo(new TradeResult(symbol));
+    newTm.setSignalMetadata(signal);
+    newTm.setState(TradeState.BUY);
+
+    this.tradesDao.update(
+      signal.coin,
+      (curTm) => {
+        if (curTm.currentValue) {
+          Log.info(`ℹ️ Can't buy ${signal.coin} - already in portfolio`);
+        } else {
+          return this.#buy(newTm, money);
+        }
+      },
+      () => this.#buy(newTm, money)
+    );
+
+    return newTm;
+  }
+
+  #buy(tm: TradeMemo, cost: number): TradeMemo {
     const symbol = tm.tradeResult.symbol;
     const tradeResult = this.exchange.marketBuy(symbol, cost);
     if (tradeResult.fromExchange) {
@@ -559,7 +550,6 @@ export class TradeManager {
         this.#balance -= tradeResult.paid;
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
-        tm.ttl = 0;
         this.#processBuyFee(tradeResult);
         Log.info(
           `${tm.getCoinName()} asset avg. price: $${f8(
@@ -570,7 +560,10 @@ export class TradeManager {
       } catch (e) {
         Log.error(e);
       } finally {
+        tm.ttl = 0;
+        tm.currentPrice = tm.tradeResult.avgPrice;
         tm.setState(TradeState.BOUGHT);
+        this.#processBoughtState(tm);
       }
     } else {
       Log.debug(tradeResult);
@@ -578,6 +571,7 @@ export class TradeManager {
       tm.resetState();
       Log.alert(`⚠️ An issue happened while buying ${symbol}: ${tradeResult}`);
     }
+    return tm;
   }
 
   #sell(tm: TradeMemo): TradeMemo {
