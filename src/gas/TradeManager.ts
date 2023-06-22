@@ -84,7 +84,7 @@ export class TradeManager {
       .filter((tm) => !tm.stateIs(TradeState.BUY))
       .sort(tmSorter)
       .forEach((tm) => {
-        this.#tryCheckTrade(tm.getCoinName());
+        this.tradesDao.update(tm.getCoinName(), (t) => this.#checkTrade(t));
       });
 
     // Interim balances update after previous operations
@@ -368,15 +368,6 @@ export class TradeManager {
         this.#buyNow(r);
         this.#updateBalances();
       });
-  }
-
-  #tryCheckTrade(coin: CoinName): void {
-    try {
-      this.tradesDao.update(coin, (t) => this.#checkTrade(t));
-    } catch (e) {
-      Log.alert(`Failed to process ${coin}: ${e.message}`);
-      Log.error(e);
-    }
   }
 
   #checkTrade(tm: TradeMemo): TradeMemo {
