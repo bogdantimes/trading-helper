@@ -408,7 +408,7 @@ export class TradeManager {
   #processBoughtState(tm: TradeMemo): void {
     if (!tm.currentPrice) {
       Log.alert(
-        `⚠️ ${tm.getCoinName()}: current price is unknown. If problem persists - please, trade the asset manually on the exchange.`
+        `⚠️ ${tm.tradeResult.symbol}: current price is unknown. If problem persists - please, trade the asset manually on the exchange.`
       );
       return;
     }
