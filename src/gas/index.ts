@@ -323,8 +323,7 @@ global.info = (coin: CoinName) => {
       const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
         ci?.[Key.MAX_PERCENTILE] * 100
       )}`;
-      result = `
-Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
+      result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
 Demand (-100..100): ${f2(imbalance) * 100}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
