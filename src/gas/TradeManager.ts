@@ -96,12 +96,12 @@ export class TradeManager {
       I: step,
     });
 
-    this.configDao.update((cfg) => {
-      if (advancedAccess !== cfg.AdvancedAccess) {
+    if (advancedAccess !== this.#config.AdvancedAccess) {
+      this.configDao.update((cfg) => {
         cfg.AdvancedAccess = advancedAccess;
         return cfg;
-      }
-    });
+      });
+    }
 
     signals
       // Ignore BNB buy signals cos of conflicts with fee logic
