@@ -406,6 +406,13 @@ export class TradeManager {
   }
 
   #processBoughtState(tm: TradeMemo): void {
+    if (!tm.currentPrice) {
+      Log.alert(
+        `⚠️ ${tm.getCoinName()}: current price is unknown. If problem persists - please, trade the asset manually on the exchange.`
+      );
+      return;
+    }
+
     // This will init fields, or just use current values
     // Also, reset levels periodically
     if (!tm.highestPrice || !tm.lowestPrice || tm.ttl % 360 === 0) {
@@ -416,7 +423,7 @@ export class TradeManager {
       ).result;
     }
 
-    if (tm.currentPrice && tm.currentPrice < tm.support) {
+    if (tm.currentPrice < tm.support) {
       Log.info(
         `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}}`
       );
