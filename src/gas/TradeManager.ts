@@ -111,8 +111,8 @@ export class TradeManager {
 
   buy(coin: CoinName): void {
     this.#prepare();
-    const price = this.priceProvider.get(this.#config.StableCoin)[coin]
-      ?.currentPrice;
+    const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
+    const price = this.#getPrices(symbol)?.currentPrice;
     if (price) {
       this.#buyNow({
         coin,
@@ -173,14 +173,17 @@ export class TradeManager {
           },
           () => {
             const tm = new TradeMemo(importedTrade);
-            tm.currentPrice =
-              this.priceProvider.get(stableCoin)[coin]?.currentPrice;
+            const ph = this.#getPrices(tm.tradeResult.symbol);
+            tm.currentPrice = ph?.currentPrice;
             tm.setState(TradeState.BOUGHT);
             Log.alert(`➕ Imported ${coin}`);
             Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
             Log.info(`${coin} asset quantity: ${tm.tradeResult.quantity}`);
             Log.info(
-              `${coin} asset avg. price: $${f8(tm.tradeResult.avgPrice)}`
+              `${coin} asset avg. price: $${floor(
+                tm.tradeResult.avgPrice,
+                ph.precision
+              )}`
             );
             return tm;
           }
@@ -226,8 +229,8 @@ export class TradeManager {
   #reFetchFeesBudget(): void {
     if (this.#config.KEY && this.#config.SECRET) {
       try {
-        const base = this.#config.StableCoin;
-        const price = this.priceProvider.get(base)[BNB]?.currentPrice;
+        const symbol = new ExchangeSymbol(BNB, this.#config.StableCoin);
+        const price = this.#getPrices(symbol)?.currentPrice;
         this.#config.FeesBudget = this.exchange.getBalance(BNB) * price;
       } catch (e) {
         Log.alert(
@@ -552,7 +555,10 @@ export class TradeManager {
         Log.error(e);
       } finally {
         tm.ttl = 0;
-        tm.currentPrice = tm.tradeResult.avgPrice;
+        tm.currentPrice = floor(
+          tm.tradeResult.avgPrice,
+          this.#getPrices(symbol)?.precision
+        );
         tm.setState(TradeState.BOUGHT);
         this.#processBoughtState(tm);
       }
