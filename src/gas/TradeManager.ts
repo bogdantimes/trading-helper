@@ -143,6 +143,7 @@ export class TradeManager {
     } else {
       throw new Error(`Unknown coin ${coin}: no price information found`);
     }
+    this.#finalize();
   }
 
   sell(coin: CoinName): void {
