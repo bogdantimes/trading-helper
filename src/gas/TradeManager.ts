@@ -416,7 +416,7 @@ export class TradeManager {
       ).result;
     }
 
-    if (tm.currentPrice < tm.support) {
+    if (tm.currentPrice && tm.currentPrice < tm.support) {
       Log.info(
         `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}}`
       );
