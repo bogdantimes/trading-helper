@@ -441,6 +441,8 @@ export class TradeManager {
   }
 
   #getImbalance(tm: TradeMemo): { imbalance: number; precision: number } {
+    // TODO: split into two functions
+
     const symbol = tm.tradeResult.symbol;
     const symbolInfo = this.plugin.getBinanceSymbolInfo(symbol);
     if (symbolInfo?.status !== SymbolStatus.TRADING) {
@@ -457,22 +459,11 @@ export class TradeManager {
       );
       throw new Error(`Couldn't check imbalance for ${symbol}`);
     }
-    const minimalGap = 0.95;
+
     const precision = symbolInfo?.precision;
-    const bidCutOffPrice = Math.min(tm.support, tm.currentPrice * minimalGap);
-
-    // calculate how many records for imbalance we need for this cut off price
-    const step = 1 / Math.pow(10, precision);
-    const diff = tm.currentPrice - bidCutOffPrice;
-    const optimalLimit = 2 * Math.floor(diff / step);
-
-    const imbalance = this.exchange.getImbalance(
-      symbol,
-      optimalLimit,
-      bidCutOffPrice
-    );
-    Log.debug(
-      `Imbalance: ${f2(imbalance)} (bidCutOffPrice: ${f8(bidCutOffPrice)})`
+    const imbalance = this.plugin.getImbalance(
+      tm.getCoinName(),
+      this.candidatesDao.get(tm.getCoinName())
     );
     tm.supplyDemandImbalance = imbalance;
     return { precision, imbalance };
