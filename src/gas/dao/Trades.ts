@@ -70,6 +70,7 @@ export class TradesDao {
       });
     } catch (e) {
       Log.alert(`${coinName}: Failed to process. Error: ${e.message}`);
+      Log.debug(e.stack);
     }
   }
 
