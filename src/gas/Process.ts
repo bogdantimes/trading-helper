@@ -31,12 +31,10 @@ export class Process {
         CacheProxy.put(`OutageCounter`, outageCounter.toString());
       }
     } catch (e) {
-      if (e.message.includes(`ConcurrentInvocationLimitExceeded`)) {
-        Log.info(`Process tick failed: ${e.message}`);
-      } else {
-        Log.alert(`Process tick failed: ${e.message}`);
-        Log.error(e);
-      }
+      const suppressedMsg = /ConcurrentInvocationLimitExceeded|Lock timeout/gi;
+      const logFn = e.message.match(suppressedMsg) ? `alert` : `info`;
+      Log[logFn](`⚠️ Process tick failed: ${e.message}`);
+      Log.debug(e.stack);
     }
   }
 }
