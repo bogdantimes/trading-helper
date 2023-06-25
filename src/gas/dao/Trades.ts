@@ -70,7 +70,7 @@ export class TradesDao {
       });
     } catch (e) {
       const suppressedMsg = /Lock timeout/gi;
-      const logFn = e.message.match(suppressedMsg) ? `alert` : `info`;
+      const logFn = e.message.match(suppressedMsg) ? `info` : `alert`;
       Log[logFn](`⚠️ ${coinName}: Failed to process. Error: ${e.message}`);
       Log.debug(e.stack);
     }

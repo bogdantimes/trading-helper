@@ -32,7 +32,7 @@ export class Process {
       }
     } catch (e) {
       const suppressedMsg = /ConcurrentInvocationLimitExceeded|Lock timeout/gi;
-      const logFn = e.message.match(suppressedMsg) ? `alert` : `info`;
+      const logFn = e.message.match(suppressedMsg) ? `info` : `alert`;
       Log[logFn](`⚠️ Process tick failed: ${e.message}`);
       Log.debug(e.stack);
     }
