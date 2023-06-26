@@ -553,10 +553,7 @@ export class TradeManager {
         Log.error(e);
       } finally {
         tm.ttl = 0;
-        tm.currentPrice = floor(
-          tm.tradeResult.avgPrice,
-          this.#getPrices(symbol)?.precision
-        );
+        tm.currentPrice = this.#getPrices(symbol).currentPrice;
         tm.setState(TradeState.BOUGHT);
         this.#processBoughtState(tm);
       }

@@ -5,12 +5,9 @@ import {
   TradeMemo,
   TradeState,
 } from "../../lib";
-import { isNode } from "browser-or-node";
 import { Log } from "../Common";
 
 export class TradesDao {
-  private memCache: Record<string, TradeMemo>;
-
   constructor(private readonly store: IStore) {}
 
   has(coinName: string): boolean {
@@ -80,7 +77,7 @@ export class TradesDao {
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
     state?: TradeState
   ): void {
-    const tradesRaw = this.store.get(`Trades`) || {};
+    const tradesRaw = this.store.get<object>(`Trades`) || {};
 
     Object.keys(tradesRaw).forEach((coinName) => {
       try {
@@ -116,22 +113,14 @@ export class TradesDao {
   }
 
   get(): Record<string, TradeMemo> {
-    if (isNode && this.memCache) {
-      // performance optimization for back-testing
-      return this.memCache;
-    }
-
     // Convert raw trades to TradeMemo objects
-    const trades = this.store.get(`Trades`) || {};
-    const tradeMemos = Object.fromEntries<TradeMemo>(
+    const trades = this.store.get<object>(`Trades`) || {};
+    return Object.fromEntries<TradeMemo>(
       Object.entries(trades).map(([coinName, tm]) => [
         coinName,
         TradeMemo.fromObject(tm),
       ])
     );
-
-    this.memCache = tradeMemos;
-    return tradeMemos;
   }
 
   getList(state?: TradeState): TradeMemo[] {
