@@ -1,3 +1,8 @@
+# v4.1.4
+
+* More frequent demand re-scan for TH+ (every 4 hours - reset).
+* Stability fixes.
+
 # v4.1.3
 
 * Bug-fixes.
