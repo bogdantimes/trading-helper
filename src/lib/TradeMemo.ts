@@ -30,14 +30,12 @@ export class TradeMemo {
    */
   priceMove: PriceMove = PriceMove.NEUTRAL;
 
-  state: TradeState;
-
   private curPrice = 0;
   /**
    * The current state of the asset.
    */
+  private state: TradeState;
 
-  private _lock: boolean;
   /**
    * Latest checked supply demand imbalance in the order book.
    * @private
@@ -78,26 +76,6 @@ export class TradeMemo {
       tradeMemo.tradeResult.symbol
     );
     return tradeMemo;
-  }
-
-  get locked(): boolean {
-    return this._lock;
-  }
-
-  static lock(tm: TradeMemo): void {
-    tm._lock = true;
-  }
-
-  static unlock(tm: TradeMemo): void {
-    tm._lock = false;
-  }
-
-  static isLocked(tm: TradeMemo): boolean {
-    return !!tm?._lock;
-  }
-
-  static isUnlocked(tm: TradeMemo): boolean {
-    return !tm?._lock;
   }
 
   getPriceMove(): PriceMove {
@@ -167,6 +145,10 @@ export class TradeMemo {
     } else {
       this.tradeResult = tradeResult;
     }
+  }
+
+  getState(): TradeState {
+    return this.state;
   }
 
   profit(): number {

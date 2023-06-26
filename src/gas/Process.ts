@@ -22,7 +22,7 @@ export class Process {
         const outageCounter = +(CacheProxy.get(`OutageCounter`) ?? 0) + 1;
         if (outageCounter === 10 || outageCounter % 30 === 0) {
           const trades = new TradesDao(DefaultStore);
-          if (trades.getList((s) => s === TradeState.BOUGHT).length > 0) {
+          if (trades.getList(TradeState.BOUGHT).length > 0) {
             Log.alert(
               `⚠️ Service outage detected. Please, monitor your assets manually on the exchange. This message will be repeated every 30 minutes until the service is restored.`
             );
@@ -31,12 +31,10 @@ export class Process {
         CacheProxy.put(`OutageCounter`, outageCounter.toString());
       }
     } catch (e) {
-      if (e.message.includes(`ConcurrentInvocationLimitExceeded`)) {
-        Log.info(`Process tick failed: ${e.message}`);
-      } else {
-        Log.alert(`Process tick failed: ${e.message}`);
-        Log.error(e);
-      }
+      const suppressedMsg = /ConcurrentInvocationLimitExceeded|Lock timeout/gi;
+      const logFn = e.message.match(suppressedMsg) ? `info` : `alert`;
+      Log[logFn](`⚠️ Process tick failed: ${e.message}`);
+      Log.debug(e.stack);
     }
   }
 }

@@ -1,10 +1,13 @@
-import { type IStore, TradeMemo, TradeState } from "../../lib";
-import { isNode } from "browser-or-node";
+import {
+  type IStore,
+  StoreDeleteProp,
+  StoreNoOp,
+  TradeMemo,
+  TradeState,
+} from "../../lib";
 import { Log } from "../Common";
 
 export class TradesDao {
-  private memCache: Record<string, TradeMemo>;
-
   constructor(private readonly store: IStore) {}
 
   has(coinName: string): boolean {
@@ -39,107 +42,90 @@ export class TradesDao {
       return;
     }
 
-    if (!this.#lockTrade(coinName)) {
-      Log.info(this.#lockSkipMsg(coinName));
-      return;
-    }
-
     try {
-      const trade = this.get()[coinName];
-      // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
-      // otherwise changedTrade is null.
-      const changedTrade = trade
-        ? mutateFn(trade)
-        : notFoundFn
-        ? notFoundFn()
-        : null;
+      this.store.update<Record<string, TradeMemo>>(`Trades`, (trades = {}) => {
+        const tm = trades[coinName];
+        // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
+        // otherwise changedTrade is null.
+        const changedTrade = tm
+          ? mutateFn(TradeMemo.fromObject(tm))
+          : notFoundFn
+          ? notFoundFn()
+          : null;
 
-      if (changedTrade) {
-        changedTrade.deleted
-          ? this.#delete(changedTrade)
-          : this.#set(changedTrade);
-      }
+        if (!changedTrade) {
+          return StoreNoOp;
+        }
+        if (changedTrade.deleted) {
+          delete trades[coinName];
+        } else {
+          trades[coinName] = changedTrade;
+        }
+
+        // TODO: double check why deleting is important
+        return Object.keys(trades).length ? trades : StoreDeleteProp;
+      });
     } catch (e) {
-      Log.debug(
-        `${coinName}: Failed to process trade update. Error: ${JSON.stringify(
-          e
-        )}`
-      );
-    } finally {
-      this.#unlockTrade(coinName);
+      const suppressedMsg = /Lock timeout/gi;
+      const logFn = e.message.match(suppressedMsg) ? `info` : `alert`;
+      Log[logFn](`⚠️ ${coinName}: Failed to process. Error: ${e.message}`);
+      Log.debug(e.stack);
     }
   }
 
-  getRaw(): Record<string, any> {
-    if (isNode && this.memCache) {
-      // performance optimization for back-testing
-      return this.memCache;
-    }
-    return this.store.get(`Trades`) || {};
+  iterate(
+    mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
+    state?: TradeState
+  ): void {
+    const tradesRaw = this.store.get<object>(`Trades`) || {};
+
+    Object.keys(tradesRaw).forEach((coinName) => {
+      try {
+        this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
+          if (!trades?.[coinName]) {
+            return StoreNoOp;
+          }
+
+          const tm = TradeMemo.fromObject(trades[coinName]);
+          if (state && !tm.stateIs(state)) {
+            return StoreNoOp;
+          }
+
+          const changedTrade = mutateFn(tm);
+
+          if (!changedTrade) {
+            return StoreNoOp;
+          }
+
+          if (changedTrade.deleted) {
+            delete trades[coinName];
+          } else {
+            trades[coinName] = changedTrade;
+          }
+
+          // TODO: double check why deleting is important
+          return Object.keys(trades).length ? trades : StoreDeleteProp;
+        });
+      } catch (e) {
+        Log.alert(`${coinName}: Failed to process. Error: ${e.message}`);
+      }
+    });
   }
 
   get(): Record<string, TradeMemo> {
-    if (isNode && this.memCache) {
-      // performance optimization for back-testing
-      return this.memCache;
-    }
-
-    const trades = this.store.get(`Trades`) || {};
     // Convert raw trades to TradeMemo objects
-    const tradeMemos = Object.keys(trades).reduce<Record<string, TradeMemo>>(
-      (acc, key) => {
-        acc[key] = TradeMemo.fromObject(trades[key]);
-        return acc;
-      },
-      {}
+    const trades = this.store.get<object>(`Trades`) || {};
+    return Object.fromEntries<TradeMemo>(
+      Object.entries(trades).map(([coinName, tm]) => [
+        coinName,
+        TradeMemo.fromObject(tm),
+      ])
     );
-
-    this.memCache = tradeMemos;
-    return tradeMemos;
   }
 
-  getList(filter?: (state: TradeState) => boolean): TradeMemo[] {
-    const trades = Object.values(this.get());
-    return filter ? trades.filter((tm) => filter(tm.state)) : trades;
-  }
-
-  updateList(
-    filter: (state: TradeState) => boolean,
-    mutate: (trades: TradeMemo[]) => TradeMemo[]
-  ) {
-    this.#setListAndUnlock(mutate(this.#getListAndLock(filter)));
-  }
-
-  #getListAndLock(filter?: (state: TradeState) => boolean): TradeMemo[] {
-    const tradesRaw = this.getRaw();
-
-    const unlocked = Object.values(tradesRaw).filter(TradeMemo.isUnlocked);
-    const selected = filter
-      ? unlocked.filter((tm) => filter(tm.state))
-      : unlocked;
-
-    // Lock all selected
-    selected.forEach(TradeMemo.lock);
-    this.store.set(`Trades`, tradesRaw);
-
-    return selected.map(TradeMemo.fromObject);
-  }
-
-  #setListAndUnlock(trades: TradeMemo[]): void {
-    if (!trades.length) return;
-
-    const tradesRaw = this.getRaw();
-
-    trades.forEach((tm) => {
-      if (TradeMemo.isLocked(tradesRaw[tm.getCoinName()])) {
-        TradeMemo.unlock(tm); // it is locked - we can unlock and replace
-        tradesRaw[tm.getCoinName()] = tm;
-      } else {
-        Log.info(`Skipped ${tm.getCoinName()}: the state was already modified`);
-      }
-    });
-
-    this.store.set(`Trades`, tradesRaw);
+  getList(state?: TradeState): TradeMemo[] {
+    const values = Object.values(this.get());
+    return state ? values.filter((trade) => trade.stateIs(state)) : values;
   }
 
   /**
@@ -148,62 +134,7 @@ export class TradesDao {
    * @returns {number} The total assets value.
    */
   totalAssetsValue(): number {
-    const trades = this.getList((s) => s === TradeState.BOUGHT);
+    const trades = this.getList(TradeState.BOUGHT);
     return trades.reduce((total, trade) => total + trade.currentValue, 0);
-  }
-
-  #set(tm: TradeMemo): void {
-    const trades = this.getRaw();
-    trades[tm.getCoinName()] = tm;
-    this.store.set(`Trades`, trades);
-  }
-
-  #lockSkipMsg(coinName: string): string {
-    return `${coinName} was skipped as it is already being processed by another process right now. Try again.`;
-  }
-
-  #delete(tm: TradeMemo): void {
-    const trades = this.getRaw();
-    if (trades[tm.getCoinName()]) {
-      delete trades[tm.getCoinName()];
-      if (Object.keys(trades).length === 0) {
-        this.store.delete(`Trades`);
-      } else {
-        this.store.set(`Trades`, trades);
-      }
-    }
-  }
-
-  /**
-   * #lockTrade and #unlockTrade are used to prevent multiple processes from updating the same trade memo object.
-   * This is needed because Google Apps Script runs every 1 minute and if the process takes longer than 1 minute
-   * to complete, it will be started again.
-   * @param coinName
-   * @private
-   * @returns {boolean} true if the trade memo was locked, false if it was already locked
-   */
-  #lockTrade(coinName: string): boolean {
-    // if we cannot acquire lock within max attempts with 1 second interval - then give up
-    let trades;
-    const maxAttempts = 3;
-    for (let i = 0; true; i++) {
-      trades = this.getRaw();
-      if (!TradeMemo.isLocked(trades[coinName])) break;
-      if (i === maxAttempts - 1) return false;
-      Utilities.sleep(1000);
-    }
-    if (trades[coinName]) {
-      TradeMemo.lock(trades[coinName]);
-      this.store.set(`Trades`, trades);
-    }
-    return true;
-  }
-
-  #unlockTrade(coinName: string): void {
-    const trades = this.getRaw();
-    if (trades[coinName]) {
-      TradeMemo.unlock(trades[coinName]);
-      this.store.set(`Trades`, trades);
-    }
   }
 }

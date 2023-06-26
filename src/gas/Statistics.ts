@@ -31,7 +31,8 @@ export class Statistics {
   }
 
   getAll(): Stats {
-    const statistics: Stats = this.store.get(`Statistics`) || {};
+    const statistics =
+      this.store.get<Stats>(`Statistics`) ?? ({} as any as Stats);
     statistics.DailyProfit = statistics.DailyProfit || {};
     statistics.TotalProfit = statistics.TotalProfit || 0;
     statistics.TotalWithdrawals = statistics.TotalWithdrawals || 0;
@@ -40,12 +41,14 @@ export class Statistics {
 
   saveAll(stats: Stats): void {
     try {
-      this.store.set(`Statistics`, stats);
+      this.store.update(`Statistics`, () => stats);
     } catch (e) {
       Log.error(e);
       // Free up some space and try again
-      this.#compressOldestMonth(stats);
-      this.store.set(`Statistics`, stats);
+      this.store.update(`Statistics`, () => {
+        this.#compressOldestMonth(stats);
+        return stats;
+      });
     }
   }
 

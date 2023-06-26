@@ -17,11 +17,5 @@ export interface IExchange {
 
   quantityForLotStepSize: (symbol: ExchangeSymbol, quantity: number) => number;
 
-  getImbalance: (
-    symbol: ExchangeSymbol,
-    limit: number,
-    bidCutOffPrice: number
-  ) => number;
-
   getPricePrecision: (symbol: ExchangeSymbol) => number;
 }

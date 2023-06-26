@@ -98,14 +98,15 @@ export interface ICacheProxy {
   remove: (key: string) => void;
 }
 
+export const StoreNoOp = Symbol(`StoreNoOp`);
+export const StoreDeleteProp = Symbol(`StoreDeleteProp`);
+
 export interface IStore {
-  get: (key: string) => any;
+  get: <T>(key: string) => T | undefined;
 
   getKeys: () => string[];
 
-  set: (key: string, value: any) => any;
-
-  delete: (key: string) => void;
+  update: <T>(key: string, mutateFn: (v: T) => T | symbol) => T | undefined;
 
   isConnected: () => boolean;
 
@@ -213,9 +214,11 @@ export interface ExchangeInfo {
 export interface ICandidatesDao {
   getAll: () => Record<string, CandidateInfo>;
   get: (coin: CoinName) => CandidateInfo;
-  set: (coin: Coin, data: CandidateInfo) => void;
-  setAll: (data: Record<string, CandidateInfo>) => void;
-  delete: (coin: Coin) => void;
+  update: (
+    mutateFn: (
+      data: Record<string, CandidateInfo>
+    ) => Record<string, CandidateInfo>
+  ) => void;
 }
 
 export class StableCoinMatcher {

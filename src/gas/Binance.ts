@@ -96,10 +96,9 @@ export class Binance implements IExchange {
       this.#updateBalance(symbol.priceAsset, -tradeResult.cost);
       return tradeResult;
     } catch (e: any) {
-      if (e.message.includes(`Market is closed`)) {
-        return new TradeResult(symbol, `Market is closed for ${symbol}.`);
-      }
-      throw e;
+      const msg = `❌ Couldn't buy ${symbol.quantityAsset}. Reason: ${e.message}`;
+      Log.info(msg);
+      return new TradeResult(symbol, msg);
     }
   }
 
@@ -362,42 +361,5 @@ export class Binance implements IExchange {
   #rotateServer(): void {
     this.#curServerId = this.serverIds.shift() ?? this.#curServerId;
     this.serverIds.push(this.#curServerId);
-  }
-
-  getImbalance(
-    symbol: ExchangeSymbol,
-    limit: number,
-    bidCutOffPrice: number
-  ): number {
-    const data: { bids: any[]; asks: any[] } = this.fetch(
-      () => `depth?symbol=${symbol}&limit=${limit}`,
-      {}
-    );
-
-    // Sum volume of bids above bidCutOffPrice or use best bid size
-    let bidsVol = +data.bids[0]?.[1] || 0;
-    for (const [price, size] of data.bids.slice(1)) {
-      if (+price < bidCutOffPrice) break;
-      bidsVol += +size;
-    }
-
-    const bestBidPrice = data.bids[0]?.[0] || 0;
-    const bestAskPrice = data.asks[0]?.[0] || 0;
-    const midPrice = (+bestBidPrice + +bestAskPrice) / 2;
-    // askCutOffPrice  is the price on the same distance from midPrice as
-    // bidCutOffPrice is from bestBidPrice, aka cut-off prices form a range around midPrice
-    const askCutOffPrice = midPrice * (midPrice / bidCutOffPrice);
-
-    // Sum volume of asks below askCutOffPrice  or use best ask size
-    let asksVol = +data.asks[0]?.[1] || 0;
-    for (const [price, size] of data.asks.slice(1)) {
-      if (+price > askCutOffPrice) break;
-      asksVol += +size;
-    }
-
-    const imb = (bidsVol - asksVol) / (bidsVol + asksVol);
-    // if NaN, return -1
-    // NaN can happen if there are no bids and asks
-    return imb || -1;
   }
 }
