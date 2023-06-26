@@ -11,14 +11,20 @@ import {
   StoreNoOp,
 } from "../lib/index";
 
-abstract class CommonStore {
+export abstract class CommonStore {
   protected abstract get(key: string): any;
   protected abstract set(key: string, value: any): any;
   protected abstract delete(key: string): void;
+  protected abstract lockService: {
+    getScriptLock: () => {
+      waitLock: (n: number) => void;
+      releaseLock: () => void;
+    };
+  };
 
   update<T>(key, mutateFn): T | undefined {
-    const lock = LockService.getScriptLock();
-    lock.waitLock(DEFAULT_WAIT_LOCK);
+    const lock = this.lockService?.getScriptLock();
+    lock?.waitLock(DEFAULT_WAIT_LOCK);
     try {
       const curValue = this.get(key);
       const newValue = mutateFn(curValue);
@@ -33,12 +39,14 @@ abstract class CommonStore {
       this.set(key, newValue);
       return newValue;
     } finally {
-      lock.releaseLock();
+      lock?.releaseLock();
     }
   }
 }
 
 export class ScriptStore extends CommonStore implements IStore {
+  protected lockService = LockService;
+
   get(key: string): any {
     const value = PropertiesService.getScriptProperties().getProperty(key);
     return value ? JSON.parse(value) : null;
@@ -74,6 +82,8 @@ export class ScriptStore extends CommonStore implements IStore {
 }
 
 export class FirebaseStore extends CommonStore implements IStore {
+  protected lockService = LockService;
+
   #source: object | null = null;
 
   static get url(): string {
@@ -161,6 +171,8 @@ export class FirebaseStore extends CommonStore implements IStore {
 }
 
 export class CachedStore extends CommonStore implements IStore {
+  protected lockService = LockService;
+
   #store: FirebaseStore | ScriptStore;
   #cache: DefaultCacheProxy;
   #syncIntervalSec = 5 * 60; // 5 minutes
