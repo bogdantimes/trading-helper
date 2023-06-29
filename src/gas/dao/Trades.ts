@@ -43,7 +43,8 @@ export class TradesDao {
     }
 
     try {
-      this.store.update<Record<string, TradeMemo>>(`Trades`, (trades = {}) => {
+      this.store.update<Record<string, TradeMemo>>(`Trades`, (trades) => {
+        trades = trades || {};
         const tm = trades[coinName];
         // if trade exists - get result from mutateFn, otherwise call notFoundFn if it was provided
         // otherwise changedTrade is null.
