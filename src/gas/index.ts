@@ -303,58 +303,54 @@ global.upgrade = () => {
   });
 };
 global.info = (coin: CoinName) => {
-  return catchError(() => {
-    coin = coin?.toUpperCase();
+  coin = coin?.toUpperCase();
 
-    if (!coin) return `Please, enter a coin name.`;
+  if (!coin) return `Please, enter a coin name.`;
 
-    let result = ``;
-    const candidatesDao = new CandidatesDao(DefaultStore);
+  let result = ``;
+  const candidatesDao = new CandidatesDao(DefaultStore);
 
-    candidatesDao.update((all) => {
-      const ci = all[coin];
-      if (!ci) {
-        result = `${coin} is not tracked as a candidate; either it does not exist or it lacks historical price data yet.`;
-      }
+  candidatesDao.update((all) => {
+    const ci = all[coin];
+    if (!ci) {
+      result = `${coin} is not tracked as a candidate; either it does not exist or it lacks historical price data yet.`;
+    }
 
-      const imbalance = plugin.getImbalance(coin, ci);
-      ci[Key.IMBALANCE] = imbalance;
+    const imbalance = plugin.getImbalance(coin, ci);
+    ci[Key.IMBALANCE] = imbalance;
 
-      const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
-        ci?.[Key.MAX_PERCENTILE] * 100
-      )}`;
-      result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
+    const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
+      ci?.[Key.MAX_PERCENTILE] * 100
+    )}`;
+    result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
 Demand (-100..100): ${f2(imbalance) * 100}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
 Current price zone (-|0..100|+): ${curRange}%`;
 
-      return all;
-    });
-    return result;
+    return all;
   });
+  return result;
 };
 global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
-  return catchError(() => {
-    const candidatesDao = new CandidatesDao(DefaultStore);
-    const imbalance = plugin.getImbalance(coin, ci || candidatesDao.get(coin));
+  const candidatesDao = new CandidatesDao(DefaultStore);
+  const imbalance = plugin.getImbalance(coin, ci || candidatesDao.get(coin));
 
-    if (ci) {
-      if (imbalance) {
-        candidatesDao.update((all) => {
-          all[coin][Key.IMBALANCE] = imbalance;
-          return all;
-        });
-      }
-    } else {
-      new TradesDao(DefaultStore).update(coin, (tm) => {
-        tm.supplyDemandImbalance = imbalance;
-        return tm;
+  if (ci) {
+    if (imbalance) {
+      candidatesDao.update((all) => {
+        all[coin][Key.IMBALANCE] = imbalance;
+        return all;
       });
     }
+  } else {
+    new TradesDao(DefaultStore).update(coin, (tm) => {
+      tm.supplyDemandImbalance = imbalance;
+      return tm;
+    });
+  }
 
-    return imbalance;
-  });
+  return imbalance;
 };
 
 const helpDescriptions = {
