@@ -1,3 +1,7 @@
+# v4.1.5
+
+* Fix: Cannot read properties of null (reading 'BTC')
+
 # v4.1.4
 
 * More frequent demand re-scan for TH+ (every 4 hours - reset).

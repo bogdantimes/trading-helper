@@ -339,16 +339,15 @@ global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
     const candidatesDao = new CandidatesDao(DefaultStore);
     const imbalance = plugin.getImbalance(coin, ci || candidatesDao.get(coin));
 
-    if (imbalance) {
-      candidatesDao.update((all) => {
-        if (all[coin]) {
+    if (ci) {
+      if (imbalance) {
+        candidatesDao.update((all) => {
           all[coin][Key.IMBALANCE] = imbalance;
-        }
-        return all;
-      });
-
-      const tradesDao = new TradesDao(DefaultStore);
-      tradesDao.update(coin, (tm) => {
+          return all;
+        });
+      }
+    } else {
+      new TradesDao(DefaultStore).update(coin, (tm) => {
         tm.supplyDemandImbalance = imbalance;
         return tm;
       });
