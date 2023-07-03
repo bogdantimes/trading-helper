@@ -305,10 +305,14 @@ global.upgrade = () => {
 global.info = (coin: CoinName) => {
   coin = coin?.toUpperCase();
 
-  if (!coin) return `Please, enter a coin name.`;
+  const candidatesDao = new CandidatesDao(DefaultStore);
+  if (!coin) {
+    const avgImb = candidatesDao.getAverageImbalance();
+    return `The current market is ${avgImb > 0 ? `BULLISH` : `BEARISH`}.
+Average demand (-100..100): ${f0(avgImb * 100)}%`;
+  }
 
   let result = ``;
-  const candidatesDao = new CandidatesDao(DefaultStore);
 
   candidatesDao.update((all) => {
     const ci = all[coin];
@@ -323,7 +327,7 @@ global.info = (coin: CoinName) => {
       ci?.[Key.MAX_PERCENTILE] * 100
     )}`;
     result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
-Demand (-100..100): ${f2(imbalance) * 100}%
+Demand (-100..100): ${f0(imbalance * 100)}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
 Current price zone (-|0..100|+): ${curRange}%`;
