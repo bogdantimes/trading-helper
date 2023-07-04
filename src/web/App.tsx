@@ -55,7 +55,6 @@ export default function App(): JSX.Element {
   const [initialSetup, setInitialSetup] = React.useState(true);
   const [fetchingData, setFetchingData] = React.useState(true);
   const [fetchDataError, setFetchDataError] = React.useState(``);
-  const [deletingAsset, setDeletingAsset] = React.useState(false);
 
   useEffect(initialFetch, []);
   useEffect(() => {
@@ -96,36 +95,19 @@ export default function App(): JSX.Element {
     setState(state);
   }
 
-  function reFetchState(): void {
+  function reFetchState(cb?: () => void): void {
     if (tab === TabId.Settings) {
       // do not re-fetch state when on Settings tab
       return;
     }
-    ScriptApp?.withSuccessHandler(handleState)
+    ScriptApp?.withSuccessHandler((state: AppState) => {
+      handleState(state);
+      cb?.();
+    })
       .withFailureHandler((resp) => {
         setFetchDataError(resp.message);
       })
       .getState();
-  }
-
-  function onAssetDelete(coinName: string, noConfirm = false): void {
-    if (noConfirm || confirm(`Are you sure you want to remove ${coinName}?`)) {
-      setDeletingAsset(true);
-      ScriptApp?.withSuccessHandler(() => {
-        setState({
-          ...state,
-          assets: state.assets.filter(
-            (a) => a.tradeResult.symbol.quantityAsset !== coinName
-          ),
-        });
-        setDeletingAsset(false);
-      })
-        .withFailureHandler((err) => {
-          setDeletingAsset(false);
-          alert(err);
-        })
-        .dropCoin(coinName);
-    }
   }
 
   const [terminalOpen, setTerminalOpen] = React.useState(false);
@@ -181,10 +163,7 @@ export default function App(): JSX.Element {
               </Tabs>
             </Box>
             <TabPanel value={tab} index={TabId.Home} onChange={changeTab}>
-              <Home
-                state={state}
-                onAssetDelete={deletingAsset ? undefined : onAssetDelete}
-              />
+              <Home state={state} />
             </TabPanel>
             <TabPanel value={tab} index={TabId.Info} onChange={changeTab}>
               <BalanceHistory stats={state.info} />

@@ -141,6 +141,8 @@ export enum Key {
   MID,
   TREND,
   DAY_PRICE_MOVE,
+  REFRESH,
+  PINNED,
 }
 
 export enum Bit {
@@ -175,6 +177,8 @@ export interface CandidateInfo {
   [Key.ATH]: number;
   [Key.ATHTime]: number;
   [Key.DAY_PRICE_MOVE]: number;
+  [Key.REFRESH]: Bit;
+  [Key.PINNED]: Bit;
 }
 
 export interface Candidates {

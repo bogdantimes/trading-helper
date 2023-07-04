@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import BasicCard from "./BasicCard";
 import Box from "@mui/material/Box";
-import { Tooltip, Typography } from "@mui/material";
+import { IconButton, Tooltip, Typography } from "@mui/material";
 import SemiCircleProgressBar from "react-progressbar-semicircle";
 import {
   growthIconMap,
   MarketDemandInfo,
   percentileToColorMap,
+  ScriptApp,
 } from "../Common";
 import { type CandidateInfo, f0, Key, PriceMove } from "../../../lib/index";
 import ImbalanceChecker from "../small/ImbalanceChecker";
+import { PushPin, PushPinOutlined } from "@mui/icons-material";
 
 interface CandidateCardProps {
   coin: string;
@@ -27,6 +29,27 @@ export default function CandidateCard({
 
   const imbalance = ci[Key.IMBALANCE];
   const imbalanceInit = imbalance && imbalance !== -1 ? imbalance : 0;
+  const [stateChanging, setStateChanging] = useState(false);
+  const [pinned, setPinned] = useState(!!ci[Key.PINNED]);
+
+  useEffect(() => {
+    setPinned(!!ci[Key.PINNED]);
+  }, [ci[Key.PINNED]]);
+
+  const handlePinClick = () => {
+    const newState = !pinned;
+    setPinned(newState);
+    ScriptApp && setStateChanging(true);
+    ScriptApp?.withSuccessHandler(() => {
+      setStateChanging(false);
+    })
+      .withFailureHandler(() => {
+        setPinned(!newState); // reverted
+        setStateChanging(false);
+      })
+      .pin(coin, !pinned);
+  };
+
   return (
     <BasicCard>
       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -39,6 +62,17 @@ export default function CandidateCard({
           >
             {coin}
             {growthIconMap.get(priceMove)}
+            <IconButton
+              disabled={stateChanging}
+              sx={{ position: `absolute`, top: `6px`, right: `4px` }}
+              onClick={handlePinClick}
+            >
+              {pinned ? (
+                <PushPin fontSize={`small`} color={`info`} />
+              ) : (
+                <PushPinOutlined fontSize={`small`} color={`info`} />
+              )}
+            </IconButton>
           </Typography>
           <Typography variant="body2" color="text.secondary">
             <Box

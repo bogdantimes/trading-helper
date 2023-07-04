@@ -219,16 +219,21 @@ function getConfig(): Config {
 const plugin: TraderPlugin = global.TradingHelperLibrary;
 
 function getState(): AppState {
-  return catchError<AppState>(() => {
-    const candidatesDao = new CandidatesDao(DefaultStore);
-    return {
-      config: getConfig(),
-      firebaseURL: FirebaseStore.url,
-      info: new Statistics(DefaultStore).getAll(),
-      candidates: plugin.getCandidates(candidatesDao).selected,
-      assets: new TradesDao(DefaultStore).getList(),
-    };
+  const candidatesDao = new CandidatesDao(DefaultStore);
+  const { all, selected } = plugin.getCandidates(candidatesDao);
+  // Add pinned candidates
+  Object.keys(all).forEach((coin) => {
+    if (all[coin][Key.PINNED]) {
+      selected[coin] = all[coin];
+    }
   });
+  return {
+    config: getConfig(),
+    firebaseURL: FirebaseStore.url,
+    info: new Statistics(DefaultStore).getAll(),
+    candidates: selected,
+    assets: new TradesDao(DefaultStore).getList(),
+  };
 }
 
 function buy(coin: CoinName): string {
@@ -307,9 +312,14 @@ global.info = (coin: CoinName) => {
 
   const candidatesDao = new CandidatesDao(DefaultStore);
   if (!coin) {
-    const avgImb = candidatesDao.getAverageImbalance();
-    return `The current market is ${avgImb > 0 ? `BULLISH` : `BEARISH`}.
-Average demand (-100..100): ${f0(avgImb * 100)}%`;
+    const { average, accuracy } = candidatesDao.getAverageImbalance();
+    return `The current market is ${average > 0 ? `BULLISH` : `BEARISH`}.
+Average demand (-100..100): ${f0(average * 100)}%
+Accuracy (0..100): ${f0(accuracy * 100)}%${
+      accuracy < 0.5
+        ? ` (automatically improved over time for TH+ subscribers)`
+        : ``
+    }`;
   }
 
   let result = ``;
@@ -356,11 +366,17 @@ global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
 
   return imbalance;
 };
+global.pin = (coin: CoinName, value = true) => {
+  coin = coin.toUpperCase();
+  new CandidatesDao(DefaultStore).pin(coin, value);
+  return Log.printInfos();
+};
 
 const helpDescriptions = {
   start: `Starts all background processes.`,
   stop: `Stops the trading process.`,
   info: `Returns system information about a coin. Example: $ info BTC`,
+  pin: `Pins a candidate. Example: $ pin BTC`,
   buy: `Buys a coin. Example: $ buy BTC`,
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
   sellAll: `Sells all coins.`,
