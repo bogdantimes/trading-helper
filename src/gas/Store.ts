@@ -11,6 +11,8 @@ import {
   StoreNoOp,
 } from "../lib/index";
 
+export const LOCK_TIMEOUT = `Lock timeout`;
+
 export abstract class CommonStore {
   protected abstract get(key: string): any;
   protected abstract set(key: string, value: any): any;
@@ -24,7 +26,13 @@ export abstract class CommonStore {
 
   update<T>(key, mutateFn): T | undefined {
     const lock = this.lockService?.getScriptLock();
-    lock?.waitLock(DEFAULT_WAIT_LOCK);
+    try {
+      lock?.waitLock(DEFAULT_WAIT_LOCK);
+    } catch (e) {
+      throw new Error(
+        `${LOCK_TIMEOUT}: Could not update the storage property 'key' as another process is holding the access. Please, try again.`
+      );
+    }
     try {
       const curValue = this.get(key);
       const newValue = mutateFn(curValue);

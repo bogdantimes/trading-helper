@@ -1,6 +1,6 @@
 import { Log } from "./Common";
 import { TradeManager } from "./TradeManager";
-import { DefaultStore } from "./Store";
+import { DefaultStore, LOCK_TIMEOUT } from "./Store";
 import { CacheProxy } from "./CacheProxy";
 import { TradesDao } from "./dao/Trades";
 import { TradeState, waitTillCurrentSecond } from "../lib/index";
@@ -31,7 +31,10 @@ export class Process {
         CacheProxy.put(`OutageCounter`, outageCounter.toString());
       }
     } catch (e) {
-      const suppressedMsg = /ConcurrentInvocationLimitExceeded|Lock timeout/gi;
+      const suppressedMsg = new RegExp(
+        `ConcurrentInvocationLimitExceeded|${LOCK_TIMEOUT}`,
+        `gi`
+      );
       const logFn = e.message.match(suppressedMsg) ? `info` : `alert`;
       Log[logFn](`⚠️ Process tick failed: ${e.message}`);
       Log.debug(e.stack);
