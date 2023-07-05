@@ -1,3 +1,10 @@
+# v4.1.6
+
+* UI: Added ability to pin candidates.
+* Updated `info` API command, to return an average market demand.
+* Updated `importCoin` API command to optionally include quantity when importing a coin.
+* Improved demand scanning for TH+.
+
 # v4.1.5
 
 * Fix: Cannot read properties of null (reading 'BTC')

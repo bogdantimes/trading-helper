@@ -6,6 +6,7 @@ import {
   TradeState,
 } from "../../lib";
 import { Log } from "../Common";
+import { LOCK_TIMEOUT } from "../Store";
 
 export class TradesDao {
   constructor(private readonly store: IStore) {}
@@ -67,7 +68,7 @@ export class TradesDao {
         return Object.keys(trades).length ? trades : StoreDeleteProp;
       });
     } catch (e) {
-      const suppressedMsg = /Lock timeout/gi;
+      const suppressedMsg = new RegExp(LOCK_TIMEOUT, `gi`);
       const logFn = e.message.match(suppressedMsg) ? `info` : `alert`;
       Log[logFn](`⚠️ ${coinName}: Failed to process. Error: ${e.message}`);
       Log.debug(e.stack);

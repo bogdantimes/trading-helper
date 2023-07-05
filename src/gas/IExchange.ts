@@ -7,7 +7,7 @@ export interface IExchange {
 
   marketSell: (symbol: ExchangeSymbol, quantity: number) => TradeResult;
 
-  importTrade: (symbol: ExchangeSymbol) => TradeResult;
+  importTrade: (symbol: ExchangeSymbol, qty?: number) => TradeResult;
 
   getLatestKlineOpenPrices: (
     symbol: ExchangeSymbol,

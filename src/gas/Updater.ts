@@ -19,8 +19,10 @@ export class Updater {
       global.TradingHelperLibrary.getUpgrades(curVer);
 
     if (!newVersion || compare(curVer, newVersion, `>=`) || !files?.length) {
-      Log.info(`ℹ️ Trading Helper is up to date.`);
-      return `ℹ️ Trading Helper is up to date.`;
+      // @ts-expect-error VERSION is injected by esbuild
+      const msg = `ℹ️ Trading Helper is up to date (v${VERSION}).`;
+      Log.info(msg);
+      return msg;
     }
 
     Log.alert(`ℹ️ Upgrading to version ${newVersion}`);

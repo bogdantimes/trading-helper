@@ -219,16 +219,21 @@ function getConfig(): Config {
 const plugin: TraderPlugin = global.TradingHelperLibrary;
 
 function getState(): AppState {
-  return catchError<AppState>(() => {
-    const candidatesDao = new CandidatesDao(DefaultStore);
-    return {
-      config: getConfig(),
-      firebaseURL: FirebaseStore.url,
-      info: new Statistics(DefaultStore).getAll(),
-      candidates: plugin.getCandidates(candidatesDao).selected,
-      assets: new TradesDao(DefaultStore).getList(),
-    };
+  const candidatesDao = new CandidatesDao(DefaultStore);
+  const { all, selected } = plugin.getCandidates(candidatesDao);
+  // Add pinned candidates
+  Object.keys(all).forEach((coin) => {
+    if (all[coin][Key.PINNED]) {
+      selected[coin] = all[coin];
+    }
   });
+  return {
+    config: getConfig(),
+    firebaseURL: FirebaseStore.url,
+    info: new Statistics(DefaultStore).getAll(),
+    candidates: selected,
+    assets: new TradesDao(DefaultStore).getList(),
+  };
 }
 
 function buy(coin: CoinName): string {
@@ -248,14 +253,9 @@ function sell(...coins: CoinName[]): string {
   });
 }
 
-function importCoin(...coins: CoinName[]): any {
-  return catchError(() => {
-    Log.alert(
-      `\`importCoin\` is experimental feature. If imported incorrectly, use \`remove\` command to revert.`
-    );
-    TradeManager.default().import(coins);
-    return Log.printInfos();
-  });
+function importCoin(coin: CoinName, qty?: number): any {
+  TradeManager.default().import(coin, qty);
+  return Log.printInfos();
 }
 
 function addWithdrawal(amount: number): string {
@@ -303,69 +303,80 @@ global.upgrade = () => {
   });
 };
 global.info = (coin: CoinName) => {
-  return catchError(() => {
-    coin = coin?.toUpperCase();
+  coin = coin?.toUpperCase();
 
-    if (!coin) return `Please, enter a coin name.`;
+  const candidatesDao = new CandidatesDao(DefaultStore);
+  if (!coin) {
+    const { average, accuracy } = candidatesDao.getAverageImbalance();
+    return `The current market is ${average > 0 ? `BULLISH` : `BEARISH`}.
+Average demand (-100..100): ${f0(average * 100)}%
+Accuracy (0..100): ${f0(accuracy * 100)}%${
+      accuracy < 0.5
+        ? ` (automatically improved over time for TH+ subscribers)`
+        : ``
+    }`;
+  }
 
-    let result = ``;
-    const candidatesDao = new CandidatesDao(DefaultStore);
+  let result = ``;
 
-    candidatesDao.update((all) => {
-      const ci = all[coin];
-      if (!ci) {
-        result = `${coin} is not tracked as a candidate; either it does not exist or it lacks historical price data yet.`;
-      }
+  candidatesDao.update((all) => {
+    const ci = all[coin];
+    if (!ci) {
+      result = `${coin} is not tracked as a candidate; either it does not exist or it lacks historical price data yet.`;
+    }
 
-      const imbalance = plugin.getImbalance(coin, ci);
-      ci[Key.IMBALANCE] = imbalance;
+    const imbalance = plugin.getImbalance(coin, ci);
+    ci[Key.IMBALANCE] = imbalance;
 
-      const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
-        ci?.[Key.MAX_PERCENTILE] * 100
-      )}`;
-      result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
-Demand (-100..100): ${f2(imbalance) * 100}%
+    const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
+      ci?.[Key.MAX_PERCENTILE] * 100
+    )}`;
+    result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
+Demand (-100..100): ${f0(imbalance * 100)}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
 Current price zone (-|0..100|+): ${curRange}%`;
 
-      return all;
-    });
-    return result;
+    return all;
   });
+  return result;
 };
 global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
-  return catchError(() => {
-    const candidatesDao = new CandidatesDao(DefaultStore);
-    const imbalance = plugin.getImbalance(coin, ci || candidatesDao.get(coin));
+  const candidatesDao = new CandidatesDao(DefaultStore);
+  const imbalance = plugin.getImbalance(coin, ci || candidatesDao.get(coin));
 
-    if (ci) {
-      if (imbalance) {
-        candidatesDao.update((all) => {
-          all[coin][Key.IMBALANCE] = imbalance;
-          return all;
-        });
-      }
-    } else {
-      new TradesDao(DefaultStore).update(coin, (tm) => {
-        tm.supplyDemandImbalance = imbalance;
-        return tm;
+  if (ci) {
+    if (imbalance) {
+      candidatesDao.update((all) => {
+        all[coin][Key.IMBALANCE] = imbalance;
+        return all;
       });
     }
+  } else {
+    new TradesDao(DefaultStore).update(coin, (tm) => {
+      tm.supplyDemandImbalance = imbalance;
+      return tm;
+    });
+  }
 
-    return imbalance;
-  });
+  return imbalance;
+};
+global.pin = (coin: CoinName, value = true) => {
+  coin = coin.toUpperCase();
+  new CandidatesDao(DefaultStore).pin(coin, value);
+  return Log.printInfos();
 };
 
 const helpDescriptions = {
   start: `Starts all background processes.`,
   stop: `Stops the trading process.`,
-  info: `Returns system information about a coin. Example: $ info BTC`,
+  info: `Returns information about the market or a coin. Examples: 1) $ info 2) $ info BTC`,
+  pin: `Pins a candidate. Example: $ pin BTC`,
   buy: `Buys a coin. Example: $ buy BTC`,
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
-  importCoin: `Imports a list of coins from Binance Spot portfolio. Example: $ importCoin BTC ETH`,
+  importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,
 };

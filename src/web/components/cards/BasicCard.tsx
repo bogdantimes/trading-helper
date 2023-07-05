@@ -7,6 +7,7 @@ export default function BasicCard({ children, ...props }) {
     <Card
       {...props}
       sx={{
+        position: `relative`,
         boxShadow: 2,
         minWidth: cardMinWidth,
         maxWidth: cardMaxWidth,

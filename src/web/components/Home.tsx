@@ -15,13 +15,7 @@ import AssetCard from "./cards/AssetCard";
 import BalanceCard from "./cards/BalanceCard";
 import CandidateCard from "./cards/CandidateCard";
 
-export function Home({
-  state,
-  onAssetDelete,
-}: {
-  state: AppState;
-  onAssetDelete?: (coinName: string, noConfirm?: boolean) => void;
-}): JSX.Element {
+export function Home({ state }: { state: AppState }): JSX.Element {
   const config = state.config;
   const assets = state.assets.map(TradeMemo.fromObject);
   const assetsValue = assets.reduce((sum, tm) => sum + tm.currentValue, 0);
@@ -167,7 +161,8 @@ function candidates(
   title: string,
   data: Record<CoinName, CandidateInfo>
 ): JSX.Element {
-  const candidateCoins = Object.keys(data).sort((a, b) =>
+  const coins = Object.keys(data);
+  const sorted = coins.sort((a, b) =>
     data[a][Key.STRENGTH] > data[b][Key.STRENGTH] ? -1 : 1
   );
 
@@ -175,7 +170,14 @@ function candidates(
 
   const defaultShow = 10;
   const [itemsToShow, setItemsToShow] = useState(defaultShow);
-  const displayCoins = hide ? [] : candidateCoins.slice(0, itemsToShow);
+  // Add pinned candidates first
+  const pinned = coins.filter((coin) => data[coin][Key.PINNED]);
+  const displayCoins = hide
+    ? []
+    : [
+        ...pinned,
+        ...sorted.slice(0, itemsToShow).filter((c) => !pinned.includes(c)),
+      ];
 
   return (
     <Stack spacing={1} alignItems={`center`}>
@@ -185,11 +187,11 @@ function candidates(
         }}
         label={
           <Typography variant={`h6`}>
-            {title} ({candidateCoins.length})
+            {title} ({sorted.length})
           </Typography>
         }
       />
-      {!hide && !candidateCoins.length && (
+      {!hide && !sorted.length && (
         <Typography alignSelf={`center`} variant={`body2`}>
           Nothing to show yet. Investment candidates will appear after some
           {` `}
@@ -217,7 +219,7 @@ function candidates(
         <Button
           variant="outlined"
           onClick={() => {
-            setItemsToShow(candidateCoins.length);
+            setItemsToShow(sorted.length);
           }}
         >
           Show more
