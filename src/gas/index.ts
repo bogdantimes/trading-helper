@@ -370,7 +370,7 @@ global.pin = (coin: CoinName, value = true) => {
 const helpDescriptions = {
   start: `Starts all background processes.`,
   stop: `Stops the trading process.`,
-  info: `Returns system information about a coin. Example: $ info BTC`,
+  info: `Returns information about the market or a coin. Examples: 1) $ info 2) $ info BTC`,
   pin: `Pins a candidate. Example: $ pin BTC`,
   buy: `Buys a coin. Example: $ buy BTC`,
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
