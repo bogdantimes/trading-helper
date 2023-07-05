@@ -144,7 +144,7 @@ export class TradeManager {
     this.#updateBalances();
   }
 
-  import(coins: CoinName[]): void {
+  import(coin: CoinName, qty?: number): void {
     const stableCoin = this.configDao.get().StableCoin;
 
     const importTrade = (coinName: CoinName) => {
@@ -152,10 +152,10 @@ export class TradeManager {
         throw new Error(`Import is not supported by the exchange`);
       }
       const symbol = new ExchangeSymbol(coinName, stableCoin);
-      return this.exchange.importTrade(symbol);
+      return this.exchange.importTrade(symbol, qty);
     };
 
-    const importedTradeResults = coins.map(importTrade);
+    const importedTradeResults = [coin].map(importTrade);
 
     this.#prepare();
 

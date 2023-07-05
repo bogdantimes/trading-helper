@@ -188,13 +188,22 @@ export class Binance implements IExchange {
     }
   }
 
-  importTrade(symbol: ExchangeSymbol): TradeResult {
-    const qty = this.getBalance(symbol.quantityAsset);
+  importTrade(symbol: ExchangeSymbol, qty?: number): TradeResult {
+    const actualQty = this.getBalance(symbol.quantityAsset);
 
-    if (!qty) {
+    if (!actualQty) {
       return new TradeResult(
         symbol,
         `Binance Sport portfolio does not have ${symbol.quantityAsset}`
+      );
+    }
+
+    qty = qty || actualQty;
+
+    if (qty > actualQty) {
+      return new TradeResult(
+        symbol,
+        `Binance Sport portfolio has only ${actualQty} of ${symbol.quantityAsset}`
       );
     }
 

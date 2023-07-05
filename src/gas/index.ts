@@ -253,14 +253,9 @@ function sell(...coins: CoinName[]): string {
   });
 }
 
-function importCoin(...coins: CoinName[]): any {
-  return catchError(() => {
-    Log.alert(
-      `\`importCoin\` is experimental feature. If imported incorrectly, use \`remove\` command to revert.`
-    );
-    TradeManager.default().import(coins);
-    return Log.printInfos();
-  });
+function importCoin(coin: CoinName, qty?: number): any {
+  TradeManager.default().import(coin, qty);
+  return Log.printInfos();
 }
 
 function addWithdrawal(amount: number): string {
@@ -381,7 +376,7 @@ const helpDescriptions = {
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
-  importCoin: `Imports a list of coins from Binance Spot portfolio. Example: $ importCoin BTC ETH`,
+  importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,
 };
