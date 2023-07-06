@@ -161,32 +161,39 @@ export class TradeManager {
 
     importedTradeResults.forEach((importedTrade) => {
       const coin = importedTrade.symbol.quantityAsset;
+
+      const produceNewTm = (): TradeMemo => {
+        const tm = new TradeMemo(importedTrade);
+        const ph = this.#getPrices(tm.tradeResult.symbol);
+        tm.currentPrice = ph?.currentPrice;
+        tm.setState(TradeState.BOUGHT);
+
+        Log.alert(`➕ Imported ${coin}`);
+        Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
+        Log.info(`${coin} asset quantity: ${tm.tradeResult.quantity}`);
+        Log.info(
+          `${coin} asset avg. price: $${floor(
+            tm.tradeResult.avgPrice,
+            ph.precision
+          )}`
+        );
+
+        return tm;
+      };
+
       if (importedTrade.fromExchange) {
         this.tradesDao.update(
           coin,
           (t) => {
-            // existing coin
-            Log.alert(
-              `Import cancelled: ${t.getCoinName()} already exists in the portfolio.`
-            );
-            return null;
+            if (t.currentValue) {
+              Log.alert(
+                `Import cancelled: ${t.getCoinName()} is already present.`
+              );
+              return null;
+            }
+            return produceNewTm();
           },
-          () => {
-            const tm = new TradeMemo(importedTrade);
-            const ph = this.#getPrices(tm.tradeResult.symbol);
-            tm.currentPrice = ph?.currentPrice;
-            tm.setState(TradeState.BOUGHT);
-            Log.alert(`➕ Imported ${coin}`);
-            Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
-            Log.info(`${coin} asset quantity: ${tm.tradeResult.quantity}`);
-            Log.info(
-              `${coin} asset avg. price: $${floor(
-                tm.tradeResult.avgPrice,
-                ph.precision
-              )}`
-            );
-            return tm;
-          }
+          produceNewTm
         );
       } else {
         Log.alert(`${coin} could not be imported: ${importedTrade.msg}`);

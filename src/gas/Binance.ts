@@ -11,6 +11,11 @@ import {
 import { type IExchange } from "./IExchange";
 import { type APIKeysProvider } from "./dao/Config";
 
+interface FeeRec {
+  commission: number;
+  commissionAsset: string;
+}
+
 export class Binance implements IExchange {
   private readonly serverIds: number[];
   readonly #balances: Record<string, number> = {};
@@ -229,7 +234,7 @@ export class Binance implements IExchange {
     const resource = `myTrades`;
     const query = `symbol=${symbol}&recvWindow=60000&limit=1000`;
 
-    const trades: any[] = this.fetch(
+    let trades: any[] = this.fetch(
       () => `${resource}?${this.#addSignature(query, secret)}`,
       {
         headers: { "X-MBX-APIKEY": key },
@@ -237,28 +242,36 @@ export class Binance implements IExchange {
       }
     );
 
-    trades.reverse();
+    trades = trades.filter((t) => t.isBuyer).reverse();
 
     Log.debug(trades);
 
     let remainingQuantity = currentQuantity;
     let totalCost = 0;
 
-    for (const trade of trades) {
-      if (!trade.isBuyer) continue;
+    const feeRecs: FeeRec[] = [];
 
+    for (const trade of trades) {
       if (remainingQuantity <= 0) break;
 
       const tradeQuantity = parseFloat(trade.qty);
-      const tradePrice = parseFloat(trade.price);
+      const cost = parseFloat(trade.quoteQty);
+      const feeRec: FeeRec = {
+        commission: parseFloat(trade.commission),
+        commissionAsset: trade.commissionAsset,
+      };
 
-      if (tradeQuantity >= remainingQuantity) {
-        totalCost += remainingQuantity * tradePrice;
+      if (tradeQuantity > remainingQuantity) {
+        const fraction = remainingQuantity / tradeQuantity;
+        feeRec.commission *= fraction;
+        totalCost += fraction * cost;
         remainingQuantity = 0;
       } else {
-        totalCost += tradeQuantity * tradePrice;
+        totalCost += cost;
         remainingQuantity -= tradeQuantity;
       }
+
+      feeRecs.push(feeRec);
     }
 
     if (remainingQuantity > 0) {
@@ -267,8 +280,9 @@ export class Binance implements IExchange {
       );
     }
 
-    const fees = this.#getFees(symbol, trades);
+    Log.debug(feeRecs);
 
+    const fees = this.#getFees(symbol, feeRecs);
     return { cost: totalCost, fees };
   }
 
