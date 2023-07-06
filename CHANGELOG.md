@@ -1,3 +1,8 @@
+# v4.1.7
+
+* Re-enabled "buy" notifications by email.
+* Fixed `importCoin` incorrectly importing fees.
+
 # v4.1.6
 
 * UI: Added ability to pin candidates.

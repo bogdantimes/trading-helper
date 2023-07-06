@@ -124,6 +124,9 @@ export const APIConsole: React.FC<Props> = ({
         height={`${terminalDimensions.height - 110}px`}
         colorMode={themeMode === `dark` ? ColorMode.Dark : ColorMode.Light}
         onInput={onCommand}
+        redBtnCallback={() => {
+          setTerminalOpen(false);
+        }}
       >
         <>
           {terminalOutput.map((o, i) => (

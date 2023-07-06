@@ -254,8 +254,10 @@ function sell(...coins: CoinName[]): string {
 }
 
 function importCoin(coin: CoinName, qty?: number): any {
-  TradeManager.default().import(coin, qty);
-  return Log.printInfos();
+  return catchError(() => {
+    TradeManager.default().import(coin, qty);
+    return Log.printInfos();
+  });
 }
 
 function addWithdrawal(amount: number): string {
