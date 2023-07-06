@@ -59,7 +59,7 @@
         "react-dom": "18.2.0",
         "react-error-boundary": "4.0.3",
         "react-progressbar-semicircle": "1.2.1",
-        "react-terminal-ui": "1.0.3"
+        "react-terminal-ui": "1.0.5"
     },
     "overrides": {
         "react-currency-format": {

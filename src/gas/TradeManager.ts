@@ -551,9 +551,9 @@ export class TradeManager {
         tm.joinWithNewTrade(tradeResult);
         this.#processBuyFee(tradeResult);
         Log.info(
-          `${tm.getCoinName()} asset avg. price: $${f8(
-            tm.tradeResult.avgPrice
-          )}`
+          `${tm.getCoinName()} quantity: ${
+            tradeResult.quantity
+          }, average price: $${f8(tm.tradeResult.avgPrice)}`
         );
         Log.debug(tm);
       } catch (e) {
