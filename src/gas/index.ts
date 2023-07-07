@@ -4,6 +4,7 @@ import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   type AppState,
   type CandidateInfo,
+  type CandidatesData,
   type CoinName,
   type Config,
   f0,
@@ -212,26 +213,32 @@ function getConfig(): Config {
   return config;
 }
 
+const plugin: TraderPlugin = global.TradingHelperLibrary;
+
+function getCandidates(): CandidatesData {
+  const candidatesDao = new CandidatesDao(DefaultStore);
+  const { all, selected } = plugin.getCandidates(candidatesDao);
+  // Add pinned candidates
+  const other = {};
+  Object.keys(all).forEach((coin) => {
+    const ci = all[coin];
+    if (ci[Key.PINNED] || (ci[Key.IMBALANCE] && ci[Key.IMBALANCE] > 0.3)) {
+      other[coin] = ci;
+    }
+  });
+  return { selected, other };
+}
+
 /**
  * Returns the aggregated state for the UI:
  * trades, config, statistics, candidates
  */
-const plugin: TraderPlugin = global.TradingHelperLibrary;
-
 function getState(): AppState {
-  const candidatesDao = new CandidatesDao(DefaultStore);
-  const { all, selected } = plugin.getCandidates(candidatesDao);
-  // Add pinned candidates
-  Object.keys(all).forEach((coin) => {
-    if (all[coin][Key.PINNED]) {
-      selected[coin] = all[coin];
-    }
-  });
   return {
     config: getConfig(),
     firebaseURL: FirebaseStore.url,
     info: new Statistics(DefaultStore).getAll(),
-    candidates: selected,
+    candidates: getCandidates(),
     assets: new TradesDao(DefaultStore).getList(),
   };
 }

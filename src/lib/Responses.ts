@@ -6,7 +6,12 @@ import { type Config } from "./Config";
 export interface AppState {
   config: Config;
   assets: TradeMemo[];
-  candidates: Record<CoinName, CandidateInfo>;
+  candidates: CandidatesData;
   info: Stats;
   firebaseURL: string;
+}
+
+export interface CandidatesData {
+  selected: Record<CoinName, CandidateInfo>;
+  other: Record<CoinName, CandidateInfo>;
 }

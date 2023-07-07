@@ -4,8 +4,7 @@ import { Button, Chip, Grid, Stack, Typography } from "@mui/material";
 import { featureDisabledInfo } from "./Common";
 import {
   type AppState,
-  type CandidateInfo,
-  type CoinName,
+  type CandidatesData,
   type Config,
   Key,
   TradeMemo,
@@ -159,24 +158,25 @@ function assetsCards(
 
 function candidates(
   title: string,
-  data: Record<CoinName, CandidateInfo>
+  { selected, other }: CandidatesData
 ): JSX.Element {
-  const coins = Object.keys(data);
+  const all = Object.assign({}, selected, other);
+  const coins = Object.keys(all);
   const sorted = coins.sort((a, b) =>
-    data[a][Key.STRENGTH] > data[b][Key.STRENGTH] ? -1 : 1
+    all[a][Key.STRENGTH] > all[b][Key.STRENGTH] ? -1 : 1
   );
 
   const [hide, setHide] = useState(false);
 
-  const defaultShow = 10;
+  const defaultShow = Object.keys(selected).length;
   const [itemsToShow, setItemsToShow] = useState(defaultShow);
   // Add pinned candidates first
-  const pinned = coins.filter((coin) => data[coin][Key.PINNED]);
+  const pinned = coins.filter((coin) => all[coin][Key.PINNED]);
   const displayCoins = hide
     ? []
     : [
         ...pinned,
-        ...sorted.slice(0, itemsToShow).filter((c) => !pinned.includes(c)),
+        ...sorted.filter((c) => !pinned.includes(c)).slice(0, itemsToShow),
       ];
 
   return (
@@ -187,11 +187,11 @@ function candidates(
         }}
         label={
           <Typography variant={`h6`}>
-            {title} ({sorted.length})
+            {title} ({Object.keys(selected).length})
           </Typography>
         }
       />
-      {!hide && !sorted.length && (
+      {!hide && !displayCoins.length && (
         <Typography alignSelf={`center`} variant={`body2`}>
           Nothing to show yet. Investment candidates will appear after some
           {` `}
@@ -209,7 +209,7 @@ function candidates(
           {displayCoins.map((coin, i) => {
             return (
               <Grid item key={coin}>
-                <CandidateCard coin={coin} ci={data[coin]} />
+                <CandidateCard coin={coin} ci={all[coin]} />
               </Grid>
             );
           })}
@@ -222,7 +222,7 @@ function candidates(
             setItemsToShow(sorted.length);
           }}
         >
-          Show more
+          Show others
         </Button>
       )}
       {!hide && itemsToShow !== defaultShow && (
@@ -232,7 +232,7 @@ function candidates(
             setItemsToShow(defaultShow);
           }}
         >
-          Show less
+          Hide others
         </Button>
       )}
     </Stack>
