@@ -94,7 +94,11 @@ export class TradeManager {
     const { advancedAccess, signals } = this.plugin.trade({
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
-      provideSignals: this.#getMoneyToInvest() > 0 ? this.#canInvest : 0,
+      provideSignals: this.#config.ViewOnly
+        ? Number.MAX_SAFE_INTEGER // for view only - provide all signals
+        : this.#getMoneyToInvest() > 0
+        ? this.#canInvest // or provide as many as can be bought for available $
+        : 0,
       candidatesDao: this.candidatesDao,
       I: step,
     });
