@@ -1,3 +1,8 @@
+# v4.1.8
+
+* Enable buy signals for TH+ in View-only mode when balance is 0.
+* Fix Candidates view counter.
+
 # v4.1.7
 
 * Re-enabled "buy" notifications by email.
