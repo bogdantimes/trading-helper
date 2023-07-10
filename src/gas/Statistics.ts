@@ -1,4 +1,4 @@
-import { f2, type IStore, type Stats } from "../lib";
+import { f2, formatUSDCurrency, type IStore, type Stats } from "../lib";
 import { Log } from "./Common";
 
 export class Statistics {
@@ -15,6 +15,14 @@ export class Statistics {
     const dailyProfit = (stats.DailyProfit[date] || 0) + profit;
     stats.DailyProfit[date] = f2(dailyProfit);
     stats.TotalProfit = stats.TotalProfit + profit;
+
+    Log.info(
+      `${formatUSDCurrency(
+        profit
+      )} added to statistics. Today: ${formatUSDCurrency(
+        stats.DailyProfit[date]
+      )}. Total: ${formatUSDCurrency(stats.TotalProfit)}.`
+    );
 
     this.saveAll(stats);
     return stats.TotalProfit;
