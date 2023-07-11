@@ -30,7 +30,7 @@ export abstract class CommonStore {
       lock?.waitLock(DEFAULT_WAIT_LOCK);
     } catch (e) {
       throw new Error(
-        `${LOCK_TIMEOUT}: Could not update the storage property 'key' as another process is holding the access. Please, try again.`
+        `${LOCK_TIMEOUT}: Could not update the storage property '${key}' as another process is holding the access. Please, try again.`
       );
     }
     try {
