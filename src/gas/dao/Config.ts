@@ -20,7 +20,7 @@ export const DefaultConfig: () => Config = () => ({
   StableCoin: StableUSDCoin.USDT,
   StableBalance: AUTO_DETECT,
   FeesBudget: AUTO_DETECT,
-  AutoReplenishFees: false,
+  AutoReplenishFees: true,
   AdvancedAccess: false,
   ViewOnly: false,
   HideBalances: false,
