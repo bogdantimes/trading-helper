@@ -737,7 +737,7 @@ export class TradeManager {
     const { imbalance, precision } = this.#getImbalance(tm);
 
     // Set new lowest price little lower than the current
-    const nextLowPrice = tm.currentPrice * 0.99;
+    const nextLowPrice = tm.currentPrice * 0.995;
     tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
 
     const downMultiplier = 6;
@@ -755,7 +755,7 @@ export class TradeManager {
   #handleHigherHigh(tm: TradeMemo): void {
     const { imbalance, precision } = this.#getImbalance(tm);
 
-    const nextHighPrice = tm.currentPrice * 1.01;
+    const nextHighPrice = tm.currentPrice * 1.005;
     // Set new highest price little higher than the current
     tm.highestPrice = floorToOptimalGrid(nextHighPrice, precision).result;
 
