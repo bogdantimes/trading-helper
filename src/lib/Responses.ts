@@ -14,4 +14,5 @@ export interface AppState {
 export interface CandidatesData {
   selected: Record<CoinName, CandidateInfo>;
   other: Record<CoinName, CandidateInfo>;
+  mktDemand: { average: number; accuracy: number };
 }

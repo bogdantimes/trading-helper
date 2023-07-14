@@ -13,6 +13,7 @@ import {
 import AssetCard from "./cards/AssetCard";
 import BalanceCard from "./cards/BalanceCard";
 import CandidateCard from "./cards/CandidateCard";
+import MarketCard from "./cards/MarketCard";
 
 export function Home({ state }: { state: AppState }): JSX.Element {
   const config = state.config;
@@ -158,7 +159,7 @@ function assetsCards(
 
 function candidates(
   title: string,
-  { selected, other }: CandidatesData
+  { selected, other, mktDemand }: CandidatesData
 ): JSX.Element {
   const all = Object.assign({}, selected, other);
   const coins = Object.keys(all);
@@ -178,7 +179,6 @@ function candidates(
         ...pinned,
         ...sorted.filter((c) => !pinned.includes(c)).slice(0, itemsToShow),
       ];
-
   return (
     <Stack spacing={1} alignItems={`center`}>
       <Chip
@@ -191,13 +191,6 @@ function candidates(
           </Typography>
         }
       />
-      {!hide && !displayCoins.length && (
-        <Typography alignSelf={`center`} variant={`body2`}>
-          Nothing to show yet. Investment candidates will appear after some
-          {` `}
-          period of observation.
-        </Typography>
-      )}
       {!hide && (
         <Grid
           container
@@ -206,14 +199,26 @@ function candidates(
           spacing={2}
           ml={`-16px !important`}
         >
-          {displayCoins.map((coin, i) => {
-            return (
-              <Grid item key={coin}>
-                <CandidateCard coin={coin} ci={all[coin]} />
-              </Grid>
-            );
-          })}
+          <>
+            <Grid item>
+              <MarketCard demand={mktDemand}></MarketCard>
+            </Grid>
+            {displayCoins.map((coin, i) => {
+              return (
+                <Grid item key={coin}>
+                  <CandidateCard coin={coin} ci={all[coin]} />
+                </Grid>
+              );
+            })}
+          </>
         </Grid>
+      )}
+      {!hide && !displayCoins.length && (
+        <Typography alignSelf={`center`} variant={`body2`}>
+          Nothing to show yet. Investment candidates will appear after some
+          {` `}
+          period of observation.
+        </Typography>
       )}
       {!hide && itemsToShow === defaultShow && (
         <Button

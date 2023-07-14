@@ -226,7 +226,7 @@ function getCandidates(): CandidatesData {
       other[coin] = ci;
     }
   });
-  return { selected, other };
+  return { selected, other, mktDemand: candidatesDao.getAverageImbalance(all) };
 }
 
 /**

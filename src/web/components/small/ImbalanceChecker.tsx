@@ -5,16 +5,16 @@ import { type CandidateInfo, type CoinName, f0 } from "../../../lib/index";
 import { percentileToColorMap, ScriptApp } from "../Common";
 
 interface Props {
-  coinName: CoinName;
   initialValue: number;
+  coinName?: CoinName;
   ci?: CandidateInfo;
   valueFormatter?: (v: number) => number;
   displayFormatter?: (v: number) => number;
 }
 
 const ImbalanceChecker = ({
-  coinName,
   initialValue,
+  coinName,
   ci,
   valueFormatter,
   displayFormatter,
@@ -53,10 +53,12 @@ const ImbalanceChecker = ({
       color={theme.palette.mode === `light` ? darken(color, 0.5) : color}
     >
       {!!imbalance && `${displayValue}%`}
-      <RefreshButton
-        isSpinning={imbalanceFetching}
-        onClick={refreshImbalance}
-      />
+      {!!coinName && (
+        <RefreshButton
+          isSpinning={imbalanceFetching}
+          onClick={refreshImbalance}
+        />
+      )}
     </Typography>
   );
 };
