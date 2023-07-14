@@ -41,9 +41,20 @@ export default function MarketCard({
           <ImbalanceChecker initialValue={demand.average} />
         </Box>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
-            Accuracy:
-          </Typography>
+          <Tooltip
+            title={`For TH+ subscribers, accuracy is automatically improved over-time with more and more candidates scanned in the background.`}
+          >
+            <Typography
+              variant="inherit"
+              sx={{
+                fontWeight: `bold`,
+                mr: `5px`,
+                textDecoration: `underline dashed`,
+              }}
+            >
+              Accuracy:
+            </Typography>
+          </Tooltip>
           <Typography variant="inherit">
             {f0(demand.accuracy * 100)}%
           </Typography>
