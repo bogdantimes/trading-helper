@@ -23,9 +23,12 @@ export class CandidatesDao implements ICandidatesDao {
     return this.getAll()[coin];
   }
 
-  getAverageImbalance(): { average: number; accuracy: number } {
+  getAverageImbalance(recs?: Record<string, CandidateInfo>): {
+    average: number;
+    accuracy: number;
+  } {
     const imbs: number[] = [];
-    const all = Object.values(this.getAll());
+    const all = Object.values(recs || this.getAll());
     all.forEach((c) => {
       const imb = c[Key.IMBALANCE];
       if (imb && imb !== -1) {

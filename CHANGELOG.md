@@ -1,3 +1,8 @@
+# v4.1.9
+
+* Added MarketDemand card.
+* Check asset demand with 0.5% step.
+
 # v4.1.8
 
 * Enable buy signals for TH+ in View-only mode when balance is 0.

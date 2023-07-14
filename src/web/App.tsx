@@ -47,7 +47,11 @@ export default function App(): JSX.Element {
 
   const [state, setState] = React.useState<AppState>({
     assets: [],
-    candidates: { selected: {}, other: {} },
+    candidates: {
+      selected: {},
+      other: {},
+      mktDemand: { average: 0, accuracy: 0 },
+    },
     config: DefaultConfig(),
     firebaseURL: ``,
     info: { TotalProfit: 0, TotalWithdrawals: 0, DailyProfit: {} },

@@ -67,7 +67,7 @@ export const featureDisabledInfo = (
       </Link>
       {` `}(free trial available) with the following features:
       <ul>
-        <li>Continuous demand scanning for more candidates</li>
+        <li>Continuous market demand scanning for more candidates</li>
         <li>"Buy" signals for fully-autonomous trading</li>
       </ul>
     </Typography>
