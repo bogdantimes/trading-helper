@@ -1,3 +1,7 @@
+# v4.1.10
+
+* Switch from `quoteOrderQty` to `quantity` type of market order (Binance issue).
+
 # v4.1.9
 
 * Added MarketDemand card.

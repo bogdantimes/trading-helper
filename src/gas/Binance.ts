@@ -45,7 +45,6 @@ export class Binance implements IExchange {
         () => `${resource}?${this.#addSignature(query, secret)}`,
         {
           headers: { "X-MBX-APIKEY": key },
-          muteHttpExceptions: true,
         }
       );
       accountData.balances.forEach((balance: any) => {
@@ -55,6 +54,15 @@ export class Binance implements IExchange {
       throw new Error(`Failed to get available ${coinName}: ${e.message}`);
     }
     return +(this.#balances[coinName] || 0);
+  }
+
+  getTickerPrice(symbol: ExchangeSymbol): number {
+    try {
+      const tickerData = this.fetch(() => `ticker/price?symbol=${symbol}`, {});
+      return +(tickerData.price || 0);
+    } catch (e: any) {
+      throw new Error(`Failed to get ticker price for ${symbol}: ${e.message}`);
+    }
   }
 
   getLatestKlineOpenPrices(
@@ -91,10 +99,12 @@ export class Binance implements IExchange {
         `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`
       );
     }
+    const currentPrice = this.getTickerPrice(symbol);
+    const quantity = this.quantityForLotStepSize(symbol, cost / currentPrice);
     Log.alert(
       `➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`
     );
-    const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
+    const query = `symbol=${symbol}&type=MARKET&side=BUY&quantity=${quantity}`;
     try {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.paid = tradeResult.cost;
@@ -177,7 +187,6 @@ export class Binance implements IExchange {
         {
           method: `post`,
           headers: { "X-MBX-APIKEY": key },
-          muteHttpExceptions: true,
         }
       );
       Log.debug(order);
@@ -238,7 +247,6 @@ export class Binance implements IExchange {
       () => `${resource}?${this.#addSignature(query, secret)}`,
       {
         headers: { "X-MBX-APIKEY": key },
-        muteHttpExceptions: true,
       }
     );
 
@@ -329,6 +337,7 @@ export class Binance implements IExchange {
     options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
   ): any {
     const cloudURL = this.#cloudURL;
+    options.muteHttpExceptions = true;
     return execute({
       interval: 200,
       attempts: cloudURL ? 2 : this.serverIds.length * 4,
