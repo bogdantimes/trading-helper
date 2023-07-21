@@ -1,3 +1,7 @@
+# v4.1.11
+
+* Take standard fee into account in previous fix.
+
 # v4.1.10
 
 * Switch from `quoteOrderQty` to `quantity` type of market order (Binance issue).
