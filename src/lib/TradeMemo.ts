@@ -1,7 +1,7 @@
 import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, PriceMove, TradeState } from "./Types";
 import { type Signal } from "../gas/traders/plugin/api";
-import { StandardCommission } from "./Config";
+import { StandardFee } from "./Config";
 
 export class TradeMemo {
   tradeResult: TradeResult;
@@ -160,8 +160,7 @@ export class TradeMemo {
       const qty = this.tradeResult.lotSizeQty || this.tradeResult.quantity;
       // anticipated sell commission percentage
       return (
-        (1 - StandardCommission) * (this.currentPrice * qty) -
-        this.tradeResult.paid
+        (1 - StandardFee) * (this.currentPrice * qty) - this.tradeResult.paid
       );
     };
     return this.tradeResult.realisedProfit || unrealizedProfit();

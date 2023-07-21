@@ -5,6 +5,7 @@ import {
   floor,
   getPrecision,
   INTERRUPT,
+  StandardFee,
   type SymbolInfo,
   TradeResult,
 } from "../lib";
@@ -100,7 +101,11 @@ export class Binance implements IExchange {
       );
     }
     const currentPrice = this.getTickerPrice(symbol);
-    const quantity = this.quantityForLotStepSize(symbol, cost / currentPrice);
+    const costWithoutFee = cost * (1 - StandardFee);
+    const quantity = this.quantityForLotStepSize(
+      symbol,
+      costWithoutFee / currentPrice
+    );
     Log.alert(
       `➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`
     );
