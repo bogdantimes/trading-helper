@@ -5,7 +5,6 @@ import {
   floor,
   getPrecision,
   INTERRUPT,
-  StandardFee,
   type SymbolInfo,
   TradeResult,
 } from "../lib";
@@ -101,7 +100,7 @@ export class Binance implements IExchange {
       );
     }
     const currentPrice = this.getTickerPrice(symbol);
-    const costWithoutFee = cost * (1 - StandardFee);
+    const costWithoutFee = cost * 0.995; // reserve 0.5% for fees and price fluctuations
     const quantity = this.quantityForLotStepSize(
       symbol,
       costWithoutFee / currentPrice
