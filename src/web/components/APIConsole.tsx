@@ -45,6 +45,33 @@ export const APIConsole: React.FC<Props> = ({
     height: number;
   }>({ width: 0, height: 0 });
 
+  async function askClarityBot(question: string) {
+    const response = await fetch(
+      `https://pz2rejeiwkin2clgrq3qp6nawq0glnne.lambda-url.eu-west-3.on.aws`,
+      {
+        method: `post`,
+        headers: {
+          "Content-Type": `application/json`,
+          Authorization: `Bearer TODO`,
+        },
+        body: JSON.stringify({
+          messages: [{ role: `user`, text: question }],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const respText = await response.text();
+      console.error(response.status, respText);
+      throw new Error(
+        `ClarityBot service is unavailable. Please try again later.`
+      );
+    }
+
+    const r = await response.json();
+    return `${r.result}\nCost: $${r.cost} | Money left: $${r.moneyLeft}`;
+  }
+
   const onCommand = (command) => {
     if (command.toLocaleLowerCase().trim() === `clear`) {
       setTerminalOutput([]);
@@ -53,13 +80,7 @@ export const APIConsole: React.FC<Props> = ({
     terminalOutput.push(`$ ${command}`);
     setTerminalOutput(terminalOutput);
 
-    const [cmd, ...args] = command.split(` `);
-
-    if (!ScriptApp?.withSuccessHandler(() => {})[cmd]) {
-      terminalOutput.push(`Unrecognized command`);
-      setTerminalOutput(terminalOutput);
-      return;
-    }
+    const [cmd, ...args] = command.trim().split(` `);
 
     setPrompt(`⏳`);
     const spinner = setInterval(() => {
@@ -67,7 +88,7 @@ export const APIConsole: React.FC<Props> = ({
     }, 1000);
 
     try {
-      ScriptApp?.withSuccessHandler((resp) => {
+      const onSuccess = (resp: string | any) => {
         setPrompt(`$`);
         clearInterval(spinner);
         if (resp.trim) {
@@ -77,13 +98,28 @@ export const APIConsole: React.FC<Props> = ({
         }
         setTerminalOutput(terminalOutput);
         reFetchState();
-      })
-        .withFailureHandler((resp) => {
-          setPrompt(`$`);
-          clearInterval(spinner);
-          terminalOutput.push(resp.message);
-          setTerminalOutput(terminalOutput);
-        })
+      };
+
+      const onError = (resp: Error) => {
+        setPrompt(`$`);
+        clearInterval(spinner);
+        terminalOutput.push(resp.message);
+        setTerminalOutput(terminalOutput);
+      };
+
+      if (cmd.match(/cbs/gi)) {
+        askClarityBot(args.join(` `)).then(onSuccess).catch(onError);
+        return;
+      }
+
+      if (!ScriptApp?.withSuccessHandler(() => {})[cmd]) {
+        terminalOutput.push(`Unrecognized command`);
+        setTerminalOutput(terminalOutput);
+        return;
+      }
+
+      ScriptApp?.withSuccessHandler(onSuccess)
+        .withFailureHandler(onError)
         [cmd](...args);
     } catch (e) {
       clearInterval(spinner);
