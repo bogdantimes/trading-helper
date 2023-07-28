@@ -572,7 +572,9 @@ export class TradeManager {
       Log.debug(tradeResult);
       Log.debug(tm);
       tm.resetState();
-      Log.alert(`⚠️ An issue happened while buying ${symbol}`);
+      Log.alert(
+        `⚠️ An issue happened while buying ${symbol}: ${tm.tradeResult.msg}`
+      );
     }
     return tm;
   }
