@@ -28,6 +28,7 @@ export interface Config {
   ViewOnly: boolean;
   HideBalances: boolean;
   BudgetSplitMin: number;
+  MarketDemandTargets: { min: number; max: number };
 }
 
 export const MASK = `********`;

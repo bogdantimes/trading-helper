@@ -20,6 +20,7 @@ import {
   TextField,
   Typography,
   Slider,
+  Chip,
 } from "@mui/material";
 import { circularProgress, ScriptApp } from "./Common";
 import {
@@ -204,6 +205,54 @@ export function Settings(params: {
               Sell automatically when conditions are no longer in favor and it
               is better to take the profit/loss. Recommended to always keep
               enabled. Disable only if you need to hold the assets.
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <Typography id="range-slider" gutterBottom>
+              <Chip
+                label="New"
+                color={`primary`}
+                size="small"
+                variant={`outlined`}
+                style={{ marginRight: 10 }}
+              />
+              Market Demand Trading Range
+            </Typography>
+            <Slider
+              sx={{ ml: 1, width: `96%` }}
+              value={[cfg.MarketDemandTargets.min, cfg.MarketDemandTargets.max]}
+              step={5}
+              min={-10}
+              max={110}
+              disableSwap={true}
+              marks={[
+                { value: -10, label: `-10%` },
+                { value: 10, label: `10%` },
+                { value: 30, label: `30%` },
+                { value: 50, label: `50%` },
+                { value: 70, label: `70%` },
+                { value: 90, label: `90%` },
+                { value: 110, label: `110%` },
+              ]}
+              valueLabelDisplay="auto"
+              onChange={(e, [min, max]: number[]) => {
+                setCfg({
+                  ...cfg,
+                  MarketDemandTargets: { min, max },
+                });
+              }}
+              aria-labelledby="range-slider"
+            />
+            <FormHelperText>
+              This setting controls when to start and stop trading based on the
+              current <b>position</b> of the market demand. Market demand
+              fluctuates within its own range, and this setting controls the
+              percentiles within that range, not the actual demand values. If
+              you set the trading range to 20-60%, trading will start when
+              demand climbs above the 60th percentile of the current range and
+              will stop when demand drops below the 20th percentile of the
+              current range. Once trading has stopped, it will not resume until
+              market demand climbs back above the 60th percentile of its range.
             </FormHelperText>
           </FormControl>
           <FormControl>
