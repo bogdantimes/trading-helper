@@ -29,6 +29,7 @@ export interface Config {
   HideBalances: boolean;
   BudgetSplitMin: number;
   MarketDemandTargets: { min: number; max: number };
+  TradingAutoStopped?: boolean;
 }
 
 export const MASK = `********`;

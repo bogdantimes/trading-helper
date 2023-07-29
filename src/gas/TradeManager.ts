@@ -97,12 +97,14 @@ export class TradeManager {
     // Interim balances update after previous operations
     this.#updateBalances();
 
-    // Run plugin to update candidates and also get buy candidates if we can invest
+    const getMaxSignals =
+      this.#config.ViewOnly || this.#config.TradingAutoStopped;
+    // Run plugin to update candidates and also get buy signals
     const { advancedAccess, signals } = this.plugin.trade({
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
-      provideSignals: this.#config.ViewOnly
-        ? Number.MAX_SAFE_INTEGER // for view only - provide all signals
+      provideSignals: getMaxSignals
+        ? Number.MAX_SAFE_INTEGER // when no trading enabled - provide all signals
         : this.#getMoneyToInvest() > 0
         ? this.#canInvest // or provide as many as can be bought for available $
         : 0,
@@ -364,13 +366,18 @@ export class TradeManager {
   }
 
   #handleBuySignals(signals: Signal[]) {
-    if (this.#config.ViewOnly) {
+    if (this.#config.ViewOnly || this.#config.TradingAutoStopped) {
       signals
         .filter((s) => s.type === SignalType.Buy)
         .forEach(({ coin, support }) => {
-          Log.alert(
-            `${coin} - BUY signal. Support price: ${support}. Disable View-Only mode to buy automatically.`
-          );
+          const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
+          const ph = this.#getPrices(symbol);
+          // Send signal email only if trading is not auto-stopped.
+          if (!this.#config.TradingAutoStopped) {
+            Log.alert(
+              `${coin} - BUY signal. Current price: ${ph.currentPrice} | Support price: ${support}. Disable View-Only mode to buy automatically.`
+            );
+          }
         });
       return;
     }

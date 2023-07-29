@@ -31,14 +31,15 @@ export function Home({ state }: { state: AppState }): JSX.Element {
   );
   const sold = sorted.filter((t) => t.stateIs(TradeState.SOLD));
 
-  const currentInfoMessage =
-    config.AdvancedAccess && !current.length ? (
-      <Typography variant="body1" textAlign={`center`}>
-        {config.ViewOnly
-          ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
-          : `⌚ Waiting for specific conditions to buy a candidate.`}
-      </Typography>
-    ) : undefined;
+  const currentInfoMessage = config.AdvancedAccess ? (
+    <Typography variant="body1" textAlign={`center`}>
+      {config.ViewOnly
+        ? `🔕 Automatic buying is disabled. Toggle off "View-only" in Settings to activate.`
+        : config.TradingAutoStopped
+        ? `⏸️ Automatic buying is paused. Market demand "Range position" should reach ${config.MarketDemandTargets.max}%.`
+        : `▶️ Automatic buying is active. Waiting for specific conditions to buy a candidate.`}
+    </Typography>
+  ) : undefined;
 
   return (
     <>
