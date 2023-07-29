@@ -2,17 +2,14 @@ import BasicCard from "./BasicCard";
 import { Tooltip, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import ImbalanceChecker from "../small/ImbalanceChecker";
-import { f0 } from "../../../lib/index";
+import { type NumberData, f0 } from "../../../lib/index";
 import * as React from "react";
 import { MarketDemandInfo } from "../Common";
 
 export default function MarketCard({
   demand,
 }: {
-  demand: {
-    average: number;
-    accuracy: number;
-  };
+  demand: NumberData;
 }): JSX.Element {
   return (
     <BasicCard>
@@ -57,6 +54,22 @@ export default function MarketCard({
           </Tooltip>
           <Typography variant="inherit">
             {f0(demand.accuracy * 100)}%
+          </Typography>
+        </Box>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography
+            variant="inherit"
+            sx={{
+              fontWeight: `bold`,
+              mr: `5px`,
+            }}
+          >
+            Range position:
+          </Typography>
+          <Typography variant="inherit">
+            {demand.percentile === -1
+              ? `Not ready yet`
+              : `${demand.percentile}%`}
           </Typography>
         </Box>
       </Typography>

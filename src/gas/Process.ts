@@ -13,9 +13,9 @@ export class Process {
       // first wait to make sure the tick is executed at the beginning of the minute (5s) is good
       // this ensures that the price data is fresh
       console.log(`tick waited ${waitTillCurrentSecond(5)} ms`);
-      // Updating prices every tick
-      // This should be the only place to call `updatePrices`.
-      if (manager.updatePrices()) {
+      // Updating different tickers every tick
+      // This should be the only place to call `updateTickers`.
+      if (manager.updateTickers()) {
         CacheProxy.remove(`OutageCounter`);
         manager.trade(-1);
       } else {

@@ -1,6 +1,6 @@
 import { Statistics } from "./Statistics";
 import { type IExchange } from "./IExchange";
-import { tmSorter, Log, signalSorter } from "./Common";
+import { Log, signalSorter, tmSorter } from "./Common";
 import {
   AUTO_DETECT,
   BNB,
@@ -36,6 +36,7 @@ import {
 import { DefaultStore } from "./Store";
 import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
+import { MarketDataDao } from "./dao/MarketData";
 
 export class TradeManager {
   #config: Config;
@@ -50,6 +51,7 @@ export class TradeManager {
     const tradesDao = new TradesDao(DefaultStore);
     const candidatesDao = new CandidatesDao(DefaultStore);
     const priceProvider = PriceProvider.default();
+    const marketDataDao = new MarketDataDao(DefaultStore);
     return new TradeManager(
       priceProvider,
       tradesDao,
@@ -57,7 +59,8 @@ export class TradeManager {
       configDao,
       exchange,
       statistics,
-      global.TradingHelperLibrary
+      global.TradingHelperLibrary,
+      marketDataDao
     );
   }
 
@@ -68,10 +71,14 @@ export class TradeManager {
     private readonly configDao: ConfigDao,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
-    private readonly plugin: TraderPlugin
+    private readonly plugin: TraderPlugin,
+    private readonly marketData: MarketDataDao
   ) {}
 
-  updatePrices(): boolean {
+  updateTickers(): boolean {
+    this.marketData.updateDemandHistory(() =>
+      this.candidatesDao.getAverageImbalance()
+    );
     return this.priceProvider.update();
   }
 

@@ -160,3 +160,35 @@ export function formatUSDCurrency(value) {
     maximumFractionDigits: 2,
   }).format(value);
 }
+
+export function calculateBollingerBands(
+  prices: number[],
+  period: number,
+  multiplier: number
+): { middle: number; upper: number; lower: number } {
+  if (prices.length < period) {
+    return { middle: -1, upper: -1, lower: -1 };
+  }
+
+  // Calculate the Simple Moving Average (SMA)
+  let sum = 0.0;
+  for (let i = 0; i < period; i++) {
+    sum += prices[i];
+  }
+  const middle = sum / period;
+
+  // Calculate the standard deviation
+  let variance = 0.0;
+  for (let i = 0; i < period; i++) {
+    const diff = prices[i] - middle;
+    variance += diff * diff;
+  }
+  variance /= period;
+  const stdDev = Math.sqrt(variance);
+
+  // Calculate the upper and lower Bollinger Bands
+  const upper = middle + multiplier * stdDev;
+  const lower = middle - multiplier * stdDev;
+
+  return { middle, upper, lower };
+}
