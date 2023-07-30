@@ -88,6 +88,8 @@ export function Settings(params: {
   };
 
   const tickIntervalMsg = `The tool internal update interval is 1 minute, so it may take up to 1 minute ⏳ for some changes to take effect.`;
+  const strengthMin = Math.max(0, cfg.MarketDemandTargets.min);
+  const strengthMax = Math.min(100, cfg.MarketDemandTargets.max);
   return (
     <BasicCard>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -135,17 +137,22 @@ export function Settings(params: {
           </Stack>
           <FormControl>
             <Typography id="budget-split-slider" gutterBottom>
-              Minimum budget split
+              Budget split
             </Typography>
             <Slider
-              sx={{ ml: 1, width: `96%` }}
+              sx={{ ml: 1, width: `95%` }}
               defaultValue={1}
               value={cfg.BudgetSplitMin}
+              valueLabelDisplay="auto"
               step={1}
-              marks={Array.from({ length: 10 }, (_, i) => ({
-                value: i + 1,
-                label: i + 1,
-              }))}
+              marks={[
+                { value: 1, label: `Auto` },
+                { value: 2, label: `2` },
+                { value: 4, label: `4` },
+                { value: 6, label: `6` },
+                { value: 8, label: `8` },
+                { value: 10, label: `10` },
+              ]}
               min={1}
               max={10}
               onChange={(e, newValue) => {
@@ -154,12 +161,76 @@ export function Settings(params: {
               aria-labelledby="budget-split-slider"
             />
             <FormHelperText>
-              This setting limits the budget fraction per trade. A lower value
-              (1) removes the limit and allows to use the entire budget for a
-              single trade, while a higher value (10) allows to allocate only
-              1/10th per trade, reducing the total profit/loss fluctuations.
-              Recommended to increase the limit during unstable markets and
-              reduce during widespread bullish markets.
+              This setting limits the budget fraction per trade. "Auto"
+              dynamically splits the budget into 1-3 parts and can invest the
+              entire budget into a single trade, while a higher value, like 10
+              allows to allocate only 1/10th per trade, allowing to buy more
+              coins. Investing all budget is <b>more risky</b>, but potentially
+              more efficient.
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <Typography id="market-zone-slider" gutterBottom>
+              <Chip
+                label="New"
+                color={`primary`}
+                size="small"
+                variant={`outlined`}
+                style={{ marginRight: 10 }}
+              />
+              Auto-stop (Market strength)
+            </Typography>
+            <Slider
+              sx={{ ml: 1, width: `95%` }}
+              value={[strengthMin, strengthMax]}
+              step={5}
+              min={0}
+              max={100}
+              disableSwap={true}
+              marks={[
+                { value: 0, label: `0` },
+                { value: 20, label: `20` },
+                { value: 40, label: `40` },
+                { value: 60, label: `60` },
+                { value: 80, label: `80` },
+                { value: 100, label: `100` },
+              ]}
+              valueLabelDisplay="auto"
+              onChange={(e, [min, max]: number[]) => {
+                setCfg({
+                  ...cfg,
+                  MarketDemandTargets: { min, max },
+                });
+              }}
+              aria-labelledby="market-zone-slider"
+            />
+            <FormHelperText>
+              This setting controls when to pause trading based on the market
+              {` `}
+              <b>strength</b>. For example, if the range is 10-60, trading
+              starts when the strength reaches 60 or more and stops when it
+              drops below 10. It resumes only after the strength reaches 60
+              again.
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <FormControlLabel
+              control={
+                <Switch
+                  color={cfg.SmartExit ? `default` : `error`}
+                  checked={cfg.SmartExit}
+                  onChange={(e) => {
+                    setCfg({ ...cfg, SmartExit: e.target.checked });
+                  }}
+                />
+              }
+              label="Smart exit"
+              aria-describedby={`smart-exit-helper-text`}
+            />
+            <FormHelperText id={`smart-exit-helper-text`}>
+              Sell automatically when conditions are no longer in favor and it
+              is better to take the profit/loss. Recommended to always keep
+              enabled. Disable only if you need to hold the assets.
             </FormHelperText>
           </FormControl>
           <FormControl>
@@ -186,73 +257,6 @@ export function Settings(params: {
               >
                 https://binance.com/en/fee
               </Link>
-            </FormHelperText>
-          </FormControl>
-          <FormControl>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={cfg.SmartExit}
-                  onChange={(e) => {
-                    setCfg({ ...cfg, SmartExit: e.target.checked });
-                  }}
-                />
-              }
-              label="Smart exit"
-              aria-describedby={`smart-exit-helper-text`}
-            />
-            <FormHelperText id={`smart-exit-helper-text`}>
-              Sell automatically when conditions are no longer in favor and it
-              is better to take the profit/loss. Recommended to always keep
-              enabled. Disable only if you need to hold the assets.
-            </FormHelperText>
-          </FormControl>
-          <FormControl>
-            <Typography id="range-slider" gutterBottom>
-              <Chip
-                label="New"
-                color={`primary`}
-                size="small"
-                variant={`outlined`}
-                style={{ marginRight: 10 }}
-              />
-              Market Demand Trading Range
-            </Typography>
-            <Slider
-              sx={{ ml: 1, width: `96%` }}
-              value={[cfg.MarketDemandTargets.min, cfg.MarketDemandTargets.max]}
-              step={5}
-              min={-10}
-              max={110}
-              disableSwap={true}
-              marks={[
-                { value: -10, label: `-10%` },
-                { value: 10, label: `10%` },
-                { value: 30, label: `30%` },
-                { value: 50, label: `50%` },
-                { value: 70, label: `70%` },
-                { value: 90, label: `90%` },
-                { value: 110, label: `110%` },
-              ]}
-              valueLabelDisplay="auto"
-              onChange={(e, [min, max]: number[]) => {
-                setCfg({
-                  ...cfg,
-                  MarketDemandTargets: { min, max },
-                });
-              }}
-              aria-labelledby="range-slider"
-            />
-            <FormHelperText>
-              This setting controls when to start and stop trading based on the
-              current <b>position</b> of the market demand. Market demand
-              fluctuates within its own range, and this setting controls the
-              percentiles within that range, not the actual demand values. If
-              you set the trading range to 20-60%, trading will start when
-              demand climbs above the 60th percentile of the current range and
-              will stop when demand drops below the 20th percentile of the
-              current range. Once trading has stopped, it will not resume until
-              market demand climbs back above the 60th percentile of its range.
             </FormHelperText>
           </FormControl>
           <FormControl>

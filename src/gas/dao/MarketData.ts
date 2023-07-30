@@ -1,4 +1,10 @@
-import { calculateBollingerBands, f0, f2, type IStore } from "../../lib/index";
+import {
+  calculateBollingerBands,
+  f0,
+  f2,
+  type IStore,
+  StoreNoOp,
+} from "../../lib/index";
 
 export interface MarketData {
   demandHistory: number[];
@@ -10,33 +16,30 @@ const key = `MarketData`;
 export class MarketDataDao {
   constructor(
     private readonly store: IStore,
-    private readonly historyLength = 5
+    private readonly historyMin = 5,
+    private readonly historyMax = 20
   ) {}
 
   get(): MarketData {
-    return (
-      this.store.get<MarketData>(key) || {
+    return this.store.update<MarketData>(key, (v) => {
+      const defaultValue = {
         demandHistory: [],
-        lastHistoryUpdate: Date.now(),
+        lastHistoryUpdate: 0,
+      };
+      if (!v.demandHistory.length) {
+        v.lastHistoryUpdate = 0;
       }
-    );
+      return v ? StoreNoOp : defaultValue;
+    })!;
   }
 
   getRange(): { min: number; max: number; ready: boolean } {
     const md = this.get();
-    if (md.demandHistory.length >= this.historyLength) {
-      const bb = calculateBollingerBands(
-        md.demandHistory,
-        this.historyLength,
-        2
-      );
-      return { min: f2(bb.lower), max: f2(bb.upper), ready: true };
+    if (md.demandHistory.length < this.historyMin) {
+      return { min: 0, max: 0, ready: false };
     }
-    return {
-      min: 0,
-      max: 0,
-      ready: false,
-    };
+    const bb = calculateBollingerBands(md.demandHistory, this.historyMin, 2);
+    return { min: f2(bb.lower), max: f2(bb.upper), ready: true };
   }
 
   getPercentile(currentDemand: number): number {
@@ -61,7 +64,7 @@ export class MarketDataDao {
       const { accuracy, average } = getDemand();
       if (accuracy > 0.8) {
         md.demandHistory.push(f2(average));
-        md.demandHistory = md.demandHistory.slice(-this.historyLength);
+        md.demandHistory = md.demandHistory.slice(-this.historyMax);
         md.lastHistoryUpdate = Date.now();
         this.set(md);
         return true;

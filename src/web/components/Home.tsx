@@ -34,10 +34,10 @@ export function Home({ state }: { state: AppState }): JSX.Element {
   const currentInfoMessage = config.AdvancedAccess ? (
     <Typography variant="body1" textAlign={`center`}>
       {config.ViewOnly
-        ? `🔕 Automatic buying is disabled. Toggle off "View-only" in Settings to activate.`
+        ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
         : config.TradingAutoStopped
-        ? `⏸️ Automatic buying is paused. Market demand "Range position" should reach ${config.MarketDemandTargets.max}%.`
-        : `▶️ Automatic buying is active. Waiting for specific conditions to buy a candidate.`}
+        ? `⏸️ Auto-trading is paused. Market demand "Range position" should reach ${config.MarketDemandTargets.max}%.`
+        : `▶️ Auto-trading is active. Waiting for specific conditions to buy a candidate.`}
     </Typography>
   ) : undefined;
 
