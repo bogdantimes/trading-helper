@@ -84,6 +84,7 @@ export class TradeManager {
 
   trade(step: number): void {
     this.#prepare();
+    this.#checkAutoStop();
 
     // First process !BUY state assets (some might get sold and free up $)
     this.tradesDao
@@ -225,6 +226,23 @@ export class TradeManager {
     const trades = this.tradesDao.getList();
     const invested = trades.filter((t) => t.tradeResult.quantity).length;
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
+  }
+
+  #checkAutoStop() {
+    const { average } = this.candidatesDao.getAverageImbalance();
+    const strength = this.marketData.getStrength(average);
+    if (
+      this.#config.TradingAutoStopped &&
+      strength > this.#config.MarketStrengthTargets.max
+    ) {
+      this.#config.TradingAutoStopped = false;
+    }
+    if (
+      !this.#config.TradingAutoStopped &&
+      strength < this.#config.MarketStrengthTargets.min
+    ) {
+      this.#config.TradingAutoStopped = true;
+    }
   }
 
   #initStableBalance(): void {

@@ -42,7 +42,7 @@ export class MarketDataDao {
     return { min: f2(bb.lower), max: f2(bb.upper), ready: true };
   }
 
-  getPercentile(currentDemand: number): number {
+  getStrength(currentDemand: number): number {
     const { min, max, ready } = this.getRange();
     return ready ? f0(((currentDemand - min) / (max - min)) * 100) : -1;
   }
