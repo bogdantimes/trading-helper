@@ -28,7 +28,7 @@ export interface Config {
   ViewOnly: boolean;
   HideBalances: boolean;
   BudgetSplitMin: number;
-  MarketDemandTargets: { min: number; max: number };
+  MarketStrengthTargets: { min: number; max: number };
   TradingAutoStopped?: boolean;
 }
 

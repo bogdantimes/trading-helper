@@ -26,7 +26,7 @@ export const DefaultConfig: () => Config = () => ({
   HideBalances: false,
   SmartExit: true,
   BudgetSplitMin: 1,
-  MarketDemandTargets: { min: 10, max: 60 },
+  MarketStrengthTargets: { min: 20, max: 90 },
 });
 
 export class ConfigDao implements APIKeysProvider {

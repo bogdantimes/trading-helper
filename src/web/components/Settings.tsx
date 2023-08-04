@@ -88,8 +88,9 @@ export function Settings(params: {
   };
 
   const tickIntervalMsg = `The tool internal update interval is 1 minute, so it may take up to 1 minute ⏳ for some changes to take effect.`;
-  const strengthMin = Math.max(0, cfg.MarketDemandTargets.min);
-  const strengthMax = Math.min(100, cfg.MarketDemandTargets.max);
+  const strengthMin = Math.max(0, cfg.MarketStrengthTargets.min);
+  const strengthMax = Math.min(100, cfg.MarketStrengthTargets.max);
+  const showMarketSlider = false; // TODO: enable on v4.2.0
   return (
     <BasicCard>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -147,11 +148,10 @@ export function Settings(params: {
               step={1}
               marks={[
                 { value: 1, label: `Auto` },
-                { value: 2, label: `2` },
-                { value: 4, label: `4` },
-                { value: 6, label: `6` },
-                { value: 8, label: `8` },
-                { value: 10, label: `10` },
+                ...Array.from({ length: 9 }, (_, i) => ({
+                  value: i + 2,
+                  label: i + 2,
+                })),
               ]}
               min={1}
               max={10}
@@ -169,55 +169,56 @@ export function Settings(params: {
               more efficient.
             </FormHelperText>
           </FormControl>
-          <FormControl>
-            <Typography id="market-zone-slider" gutterBottom>
-              <Chip
-                label="New"
-                color={`primary`}
-                size="small"
-                variant={`outlined`}
-                style={{ marginRight: 10 }}
+          {showMarketSlider && (
+            <FormControl>
+              <Typography id="market-strength-slider" gutterBottom>
+                <Chip
+                  label="New"
+                  color={`primary`}
+                  size="small"
+                  variant={`outlined`}
+                  style={{ marginRight: 10 }}
+                />
+                Auto-stop (Market strength)
+              </Typography>
+              <Slider
+                sx={{ ml: 1, width: `95%` }}
+                value={[strengthMin, strengthMax]}
+                step={5}
+                min={0}
+                max={100}
+                disableSwap={true}
+                marks={[
+                  { value: 0, label: `0` },
+                  { value: 20, label: `20` },
+                  { value: 40, label: `40` },
+                  { value: 60, label: `60` },
+                  { value: 80, label: `80` },
+                  { value: 100, label: `100` },
+                ]}
+                valueLabelDisplay="auto"
+                onChange={(e, [min, max]: number[]) => {
+                  setCfg({
+                    ...cfg,
+                    MarketStrengthTargets: { min, max },
+                  });
+                }}
+                aria-labelledby="market-strength-slider"
               />
-              Auto-stop (Market strength)
-            </Typography>
-            <Slider
-              sx={{ ml: 1, width: `95%` }}
-              value={[strengthMin, strengthMax]}
-              step={5}
-              min={0}
-              max={100}
-              disableSwap={true}
-              marks={[
-                { value: 0, label: `0` },
-                { value: 20, label: `20` },
-                { value: 40, label: `40` },
-                { value: 60, label: `60` },
-                { value: 80, label: `80` },
-                { value: 100, label: `100` },
-              ]}
-              valueLabelDisplay="auto"
-              onChange={(e, [min, max]: number[]) => {
-                setCfg({
-                  ...cfg,
-                  MarketDemandTargets: { min, max },
-                });
-              }}
-              aria-labelledby="market-zone-slider"
-            />
-            <FormHelperText>
-              This setting controls when to pause trading based on the market
-              {` `}
-              <b>strength</b>. For example, if the range is 10-60, trading
-              starts when the strength reaches 60 or more and stops when it
-              drops below 10. It resumes only after the strength reaches 60
-              again.
-            </FormHelperText>
-          </FormControl>
+              <FormHelperText>
+                This setting controls when to pause trading based on the market
+                {` `}
+                <b>strength</b>. For example, if the range is 10-60, trading
+                starts when the strength reaches 60 or more and stops when it
+                drops below 10. It resumes only after the strength reaches 60
+                again.
+              </FormHelperText>
+            </FormControl>
+          )}
           <FormControl>
             <FormControlLabel
               control={
                 <Switch
-                  color={cfg.SmartExit ? `default` : `error`}
                   checked={cfg.SmartExit}
                   onChange={(e) => {
                     setCfg({ ...cfg, SmartExit: e.target.checked });
