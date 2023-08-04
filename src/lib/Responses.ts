@@ -11,8 +11,14 @@ export interface AppState {
   firebaseURL: string;
 }
 
+export interface NumberData {
+  average: number;
+  accuracy: number;
+  percentile: number;
+}
+
 export interface CandidatesData {
   selected: Record<CoinName, CandidateInfo>;
   other: Record<CoinName, CandidateInfo>;
-  mktDemand: { average: number; accuracy: number };
+  mktDemand: NumberData;
 }

@@ -3,8 +3,6 @@ import { type ExchangeSymbol, type TradeResult } from "../lib";
 export interface IExchange {
   getBalance: (assetName: string) => number;
 
-  getTickerPrice: (symbol: ExchangeSymbol) => number;
-
   marketBuy: (symbol: ExchangeSymbol, cost: number) => TradeResult;
 
   marketSell: (symbol: ExchangeSymbol, quantity: number) => TradeResult;

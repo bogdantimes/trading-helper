@@ -56,15 +56,6 @@ export class Binance implements IExchange {
     return +(this.#balances[coinName] || 0);
   }
 
-  getTickerPrice(symbol: ExchangeSymbol): number {
-    try {
-      const tickerData = this.fetch(() => `ticker/price?symbol=${symbol}`, {});
-      return +(tickerData.price || 0);
-    } catch (e: any) {
-      throw new Error(`Failed to get ticker price for ${symbol}: ${e.message}`);
-    }
-  }
-
   getLatestKlineOpenPrices(
     symbol: ExchangeSymbol,
     interval: string,
@@ -99,16 +90,10 @@ export class Binance implements IExchange {
         `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`
       );
     }
-    const currentPrice = this.getTickerPrice(symbol);
-    const costWithoutFee = cost * 0.995; // reserve 0.5% for fees and price fluctuations
-    const quantity = this.quantityForLotStepSize(
-      symbol,
-      costWithoutFee / currentPrice
-    );
     Log.alert(
       `➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`
     );
-    const query = `symbol=${symbol}&type=MARKET&side=BUY&quantity=${quantity}`;
+    const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     try {
       const tradeResult = this.marketTrade(symbol, query);
       tradeResult.paid = tradeResult.cost;

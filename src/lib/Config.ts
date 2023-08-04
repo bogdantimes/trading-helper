@@ -28,6 +28,8 @@ export interface Config {
   ViewOnly: boolean;
   HideBalances: boolean;
   BudgetSplitMin: number;
+  MarketStrengthTargets: { min: number; max: number };
+  TradingAutoStopped?: boolean;
 }
 
 export const MASK = `********`;

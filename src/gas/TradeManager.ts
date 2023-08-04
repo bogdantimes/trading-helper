@@ -1,6 +1,6 @@
 import { Statistics } from "./Statistics";
 import { type IExchange } from "./IExchange";
-import { tmSorter, Log, signalSorter } from "./Common";
+import { Log, signalSorter, tmSorter } from "./Common";
 import {
   AUTO_DETECT,
   BNB,
@@ -36,6 +36,7 @@ import {
 import { DefaultStore } from "./Store";
 import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
+import { MarketDataDao } from "./dao/MarketData";
 
 export class TradeManager {
   #config: Config;
@@ -50,6 +51,7 @@ export class TradeManager {
     const tradesDao = new TradesDao(DefaultStore);
     const candidatesDao = new CandidatesDao(DefaultStore);
     const priceProvider = PriceProvider.default();
+    const marketDataDao = new MarketDataDao(DefaultStore);
     return new TradeManager(
       priceProvider,
       tradesDao,
@@ -57,7 +59,8 @@ export class TradeManager {
       configDao,
       exchange,
       statistics,
-      global.TradingHelperLibrary
+      global.TradingHelperLibrary,
+      marketDataDao
     );
   }
 
@@ -68,10 +71,14 @@ export class TradeManager {
     private readonly configDao: ConfigDao,
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
-    private readonly plugin: TraderPlugin
+    private readonly plugin: TraderPlugin,
+    private readonly marketData: MarketDataDao
   ) {}
 
-  updatePrices(): boolean {
+  updateTickers(): boolean {
+    this.marketData.updateDemandHistory(() =>
+      this.candidatesDao.getAverageImbalance()
+    );
     return this.priceProvider.update();
   }
 
@@ -90,12 +97,14 @@ export class TradeManager {
     // Interim balances update after previous operations
     this.#updateBalances();
 
-    // Run plugin to update candidates and also get buy candidates if we can invest
+    const getMaxSignals =
+      this.#config.ViewOnly || this.#config.TradingAutoStopped;
+    // Run plugin to update candidates and also get buy signals
     const { advancedAccess, signals } = this.plugin.trade({
       prices: this.priceProvider.get(this.#config.StableCoin),
       stableCoin: this.#config.StableCoin,
-      provideSignals: this.#config.ViewOnly
-        ? Number.MAX_SAFE_INTEGER // for view only - provide all signals
+      provideSignals: getMaxSignals
+        ? Number.MAX_SAFE_INTEGER // when no trading enabled - provide all signals
         : this.#getMoneyToInvest() > 0
         ? this.#canInvest // or provide as many as can be bought for available $
         : 0,
@@ -357,13 +366,18 @@ export class TradeManager {
   }
 
   #handleBuySignals(signals: Signal[]) {
-    if (this.#config.ViewOnly) {
+    if (this.#config.ViewOnly || this.#config.TradingAutoStopped) {
       signals
         .filter((s) => s.type === SignalType.Buy)
         .forEach(({ coin, support }) => {
-          Log.alert(
-            `${coin} - BUY signal. Support price: ${support}. Disable View-Only mode to buy automatically.`
-          );
+          const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
+          const ph = this.#getPrices(symbol);
+          // Send signal email only if trading is not auto-stopped.
+          if (!this.#config.TradingAutoStopped) {
+            Log.alert(
+              `${coin} - BUY signal. Current price: ${ph.currentPrice} | Support price: ${support}. Disable View-Only mode to buy automatically.`
+            );
+          }
         });
       return;
     }
@@ -572,7 +586,9 @@ export class TradeManager {
       Log.debug(tradeResult);
       Log.debug(tm);
       tm.resetState();
-      Log.alert(`⚠️ An issue happened while buying ${symbol}`);
+      Log.alert(
+        `⚠️ An issue happened while buying ${symbol}: ${tm.tradeResult.msg}`
+      );
     }
     return tm;
   }

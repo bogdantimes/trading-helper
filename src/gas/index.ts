@@ -25,6 +25,7 @@ import { WithdrawalsManager } from "./WithdrawalsManager";
 import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+import { MarketDataDao } from "./dao/MarketData";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -216,6 +217,7 @@ function getConfig(): Config {
 const plugin: TraderPlugin = global.TradingHelperLibrary;
 
 function getCandidates(): CandidatesData {
+  const mktData = new MarketDataDao(DefaultStore);
   const candidatesDao = new CandidatesDao(DefaultStore);
   const { all, selected } = plugin.getCandidates(candidatesDao);
   // Add pinned candidates
@@ -226,7 +228,9 @@ function getCandidates(): CandidatesData {
       other[coin] = ci;
     }
   });
-  return { selected, other, mktDemand: candidatesDao.getAverageImbalance(all) };
+  const { average, accuracy } = candidatesDao.getAverageImbalance(all);
+  const percentile = mktData.getPercentile(average);
+  return { selected, other, mktDemand: { average, accuracy, percentile } };
 }
 
 /**

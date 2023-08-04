@@ -1,3 +1,8 @@
+# v4.1.13
+
+* Market Strength indicator (to start collecting data for v4.2.0 "Auto-stop" feature).
+* Reverted "Switch from `quoteOrderQty` to `quantity` type of market order (Binance issue)."
+
 # v4.1.12
 
 * Take price fluctuations into account in previous fix.

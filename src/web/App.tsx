@@ -50,7 +50,7 @@ export default function App(): JSX.Element {
     candidates: {
       selected: {},
       other: {},
-      mktDemand: { average: 0, accuracy: 0 },
+      mktDemand: { average: 0, accuracy: 0, percentile: 0 },
     },
     config: DefaultConfig(),
     firebaseURL: ``,

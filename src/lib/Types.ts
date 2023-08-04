@@ -223,6 +223,10 @@ export interface ICandidatesDao {
       data: Record<string, CandidateInfo>
     ) => Record<string, CandidateInfo>
   ) => void;
+  getAverageImbalance: (recs?: Record<string, CandidateInfo>) => {
+    average: number;
+    accuracy: number;
+  };
 }
 
 export class StableCoinMatcher {
