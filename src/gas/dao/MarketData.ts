@@ -26,7 +26,7 @@ export class MarketDataDao {
         demandHistory: [],
         lastHistoryUpdate: 0,
       };
-      if (!v.demandHistory.length) {
+      if (v && !v.demandHistory.length) {
         v.lastHistoryUpdate = 0;
       }
       return v ? StoreNoOp : defaultValue;
