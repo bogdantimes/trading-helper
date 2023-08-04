@@ -1,6 +1,6 @@
 {
     "name": "trading-helper",
-    "version": "4.1.12",
+    "version": "4.1.13",
     "description": "",
     "scripts": {
         "glogin": "clasp login",
