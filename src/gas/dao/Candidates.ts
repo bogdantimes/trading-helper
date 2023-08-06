@@ -37,7 +37,7 @@ export class CandidatesDao implements ICandidatesDao {
     });
     const accuracy = f2(imbs.length / all.length);
     const average = imbs.reduce((sum, imb) => sum + imb, 0) / imbs.length;
-    return { average, accuracy };
+    return { average: f2(average), accuracy };
   }
 
   update(
