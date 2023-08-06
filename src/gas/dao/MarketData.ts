@@ -1,7 +1,8 @@
 import {
   calculateBollingerBands,
   f0,
-  f4,
+  f2,
+  f3,
   type IStore,
   StoreNoOp,
 } from "../../lib/index";
@@ -39,7 +40,7 @@ export class MarketDataDao {
       return { min: 0, max: 0, ready: false };
     }
     const bb = calculateBollingerBands(md.demandHistory, this.historyMin, 2);
-    return { min: f4(bb.lower), max: f4(bb.upper), ready: true };
+    return { min: f3(bb.lower), max: f3(bb.upper), ready: true };
   }
 
   getStrength(currentDemand: number): number {
@@ -63,7 +64,7 @@ export class MarketDataDao {
     if (Date.now() - md.lastHistoryUpdate >= oneDayInMilliseconds) {
       const { accuracy, average } = getDemand();
       if (accuracy > 0.8) {
-        md.demandHistory.push(f4(average));
+        md.demandHistory.push(f2(average));
         md.demandHistory = md.demandHistory.slice(-this.historyMax);
         md.lastHistoryUpdate = Date.now();
         this.set(md);
