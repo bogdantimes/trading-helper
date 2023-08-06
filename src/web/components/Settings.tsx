@@ -182,23 +182,22 @@ export function Settings(params: {
             <Slider
               sx={{ ml: 1, width: `95%` }}
               value={[strengthMin, strengthMax]}
-              step={5}
+              step={10}
               min={0}
               max={100}
               disableSwap={true}
-              marks={[
-                { value: 0, label: `0` },
-                { value: 20, label: `20` },
-                { value: 40, label: `40` },
-                { value: 60, label: `60` },
-                { value: 80, label: `80` },
-                { value: 100, label: `100` },
-              ]}
+              marks={Array.from({ length: 11 }, (e, i) => ({
+                value: 10 * i,
+                label: 10 * i,
+              }))}
               valueLabelDisplay="auto"
               onChange={(e, [min, max]: number[]) => {
                 setCfg({
                   ...cfg,
-                  MarketStrengthTargets: { min, max },
+                  MarketStrengthTargets: {
+                    min: Math.min(40, max - 10, min),
+                    max: Math.max(60, min + 10, max),
+                  },
                 });
               }}
               aria-labelledby="market-strength-slider"
