@@ -64,6 +64,10 @@ export function f2(n: number): number {
   return +n.toFixed(2);
 }
 
+export function f3(n: number): number {
+  return +n.toFixed(3);
+}
+
 export function f8(n: number): number {
   return +n.toFixed(8);
 }

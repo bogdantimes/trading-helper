@@ -1,7 +1,7 @@
 import {
   calculateBollingerBands,
   f0,
-  f2,
+  f3,
   type IStore,
   StoreNoOp,
 } from "../../lib/index";
@@ -23,11 +23,14 @@ export class MarketDataDao {
   get(): MarketData {
     return this.store.update<MarketData>(key, (v) => {
       const defaultValue = {
-        demandHistory: [],
+        demandHistory: new Array(this.historyMax).fill(0),
         lastHistoryUpdate: 0,
       };
-      if (!v.demandHistory.length) {
+      if (v && !v.demandHistory.length) {
         v.lastHistoryUpdate = 0;
+      }
+      while (v.demandHistory.length < this.historyMax) {
+        v.demandHistory = [0, ...v.demandHistory];
       }
       return v ? StoreNoOp : defaultValue;
     })!;
@@ -35,16 +38,16 @@ export class MarketDataDao {
 
   getRange(): { min: number; max: number; ready: boolean } {
     const md = this.get();
-    if (md.demandHistory.length < this.historyMin) {
+    if (md.demandHistory.filter(Boolean).length < this.historyMin) {
       return { min: 0, max: 0, ready: false };
     }
-    const bb = calculateBollingerBands(md.demandHistory, this.historyMin, 2);
-    return { min: f2(bb.lower), max: f2(bb.upper), ready: true };
+    const bb = calculateBollingerBands(md.demandHistory, this.historyMax, 2);
+    return { min: f3(bb.lower), max: f3(bb.upper), ready: true };
   }
 
-  getPercentile(currentDemand: number): number {
+  getStrength(currentDemand: number): number {
     const { min, max, ready } = this.getRange();
-    return ready ? f0(((currentDemand - min) / (max - min)) * 100) : -1;
+    return ready ? f0(((currentDemand - min) / (max - min)) * 100) : 50;
   }
 
   set(md: MarketData) {
@@ -54,16 +57,17 @@ export class MarketDataDao {
   }
 
   updateDemandHistory(
-    getDemand: () => { accuracy: number; average: number }
+    getDemand: () => { accuracy: number; average: number },
+    step: number
   ): boolean {
     const md = this.get();
-
     // update once a day
-    const oneDayInMilliseconds = 24 * 60 * 60 * 1000; // Hours*Minutes*Seconds*Milliseconds
-    if (Date.now() - md.lastHistoryUpdate >= oneDayInMilliseconds) {
-      const { accuracy, average } = getDemand();
-      if (accuracy > 0.8) {
-        md.demandHistory.push(f2(average));
+    const oneDayInMs = 24 * 60 * 60 * 1000; // Hours*Minutes*Seconds*Milliseconds
+    const lastUpdatedDayAgo = Date.now() - md.lastHistoryUpdate >= oneDayInMs;
+    if (step < 0 ? lastUpdatedDayAgo : step % 1440 === 0) {
+      const { average, accuracy } = getDemand();
+      if (accuracy > 0.5) {
+        md.demandHistory.push(f3(average));
         md.demandHistory = md.demandHistory.slice(-this.historyMax);
         md.lastHistoryUpdate = Date.now();
         this.set(md);

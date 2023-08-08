@@ -15,7 +15,7 @@ export class Process {
       console.log(`tick waited ${waitTillCurrentSecond(5)} ms`);
       // Updating different tickers every tick
       // This should be the only place to call `updateTickers`.
-      if (manager.updateTickers()) {
+      if (manager.updateTickers(-1)) {
         CacheProxy.remove(`OutageCounter`);
         manager.trade(-1);
       } else {

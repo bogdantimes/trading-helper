@@ -160,7 +160,7 @@ function assetsCards(
 
 function candidates(
   title: string,
-  { selected, other, mktDemand }: CandidatesData
+  { selected, other, marketInfo }: CandidatesData
 ): JSX.Element {
   const all = Object.assign({}, selected, other);
   const coins = Object.keys(all);
@@ -202,7 +202,7 @@ function candidates(
         >
           <>
             <Grid item>
-              <MarketCard demand={mktDemand}></MarketCard>
+              <MarketCard marketInfo={marketInfo}></MarketCard>
             </Grid>
             {displayCoins.map((coin, i) => {
               return (

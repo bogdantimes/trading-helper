@@ -75,9 +75,10 @@ export class TradeManager {
     private readonly marketData: MarketDataDao
   ) {}
 
-  updateTickers(): boolean {
-    this.marketData.updateDemandHistory(() =>
-      this.candidatesDao.getAverageImbalance()
+  updateTickers(step: number): boolean {
+    this.marketData.updateDemandHistory(
+      () => this.candidatesDao.getAverageImbalance(),
+      step
     );
     return this.priceProvider.update();
   }
@@ -119,6 +120,7 @@ export class TradeManager {
       });
     }
 
+    this.#checkAutoStop();
     this.#handleBuySignals(signals);
   }
 
@@ -129,7 +131,7 @@ export class TradeManager {
     if (price) {
       this.#buyNow({
         coin,
-        type: SignalType.Buy,
+        type: SignalType.Manual,
         support: price * 0.9,
       });
     } else {
@@ -225,6 +227,29 @@ export class TradeManager {
     const trades = this.tradesDao.getList();
     const invested = trades.filter((t) => t.tradeResult.quantity).length;
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
+  }
+
+  #checkAutoStop() {
+    const { average } = this.candidatesDao.getAverageImbalance();
+    const strength = this.marketData.getStrength(average);
+    if (
+      this.#config.TradingAutoStopped &&
+      strength > this.#config.MarketStrengthTargets.max
+    ) {
+      this.#config = this.configDao.update((c) => {
+        c.TradingAutoStopped = false;
+        return c;
+      });
+    }
+    if (
+      !this.#config.TradingAutoStopped &&
+      strength < this.#config.MarketStrengthTargets.min
+    ) {
+      this.#config = this.configDao.update((c) => {
+        c.TradingAutoStopped = true;
+        return c;
+      });
+    }
   }
 
   #initStableBalance(): void {
@@ -452,6 +477,12 @@ export class TradeManager {
       Log.info(
         `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}}`
       );
+      tm.setState(TradeState.SELL);
+      return;
+    }
+
+    if (tm.isAutoTrade() && this.#config.TradingAutoStopped) {
+      Log.info(`Selling as trading auto-stop activated.`);
       tm.setState(TradeState.SELL);
       return;
     }

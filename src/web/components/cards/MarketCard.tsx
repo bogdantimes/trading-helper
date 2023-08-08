@@ -2,20 +2,20 @@ import BasicCard from "./BasicCard";
 import { Tooltip, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import ImbalanceChecker from "../small/ImbalanceChecker";
-import { f0, type NumberData } from "../../../lib/index";
+import { f0, type MarketInfo } from "../../../lib/index";
 import * as React from "react";
 import { MarketDemandInfo, percentileToColorMap } from "../Common";
 import SemiCircleProgressBar from "react-progressbar-semicircle";
 
 export default function MarketCard({
-  demand,
+  marketInfo,
 }: {
-  demand: NumberData;
+  marketInfo: MarketInfo;
 }): JSX.Element {
   const strength =
-    demand.percentile === -1
+    marketInfo.strength === -1
       ? 0
-      : Math.min(1, Math.max(0, demand.percentile / 100));
+      : Math.min(1, Math.max(0, marketInfo.strength / 100));
 
   return (
     <BasicCard>
@@ -47,7 +47,7 @@ export default function MarketCard({
                   Demand:
                 </Typography>
               </Tooltip>
-              <ImbalanceChecker initialValue={demand.average} />
+              <ImbalanceChecker initialValue={marketInfo.averageDemand} />
             </Box>
             <Box
               display="flex"
@@ -69,7 +69,7 @@ export default function MarketCard({
                 </Typography>
               </Tooltip>
               <Typography variant="inherit">
-                {f0(demand.accuracy * 100)}%
+                {f0(marketInfo.accuracy * 100)}%
               </Typography>
             </Box>
           </Typography>
@@ -77,14 +77,14 @@ export default function MarketCard({
         <Box textAlign="center">
           <SemiCircleProgressBar
             diameter={80}
-            percentage={demand.percentile}
+            percentage={marketInfo.strength}
             stroke={percentileToColorMap[strength.toFixed(1)]}
             strokeWidth={10}
           />
           <Typography mt={`-7px`} color="text.secondary" variant="body2">
-            {demand.percentile === -1
-              ? `Observing... min. 5 days`
-              : `Strength: ${demand.percentile}`}
+            {marketInfo.strength === -1
+              ? `Strength: N/A`
+              : `Strength: ${marketInfo.strength}`}
           </Typography>
         </Box>
       </Box>

@@ -228,9 +228,14 @@ function getCandidates(): CandidatesData {
       other[coin] = ci;
     }
   });
-  const { average, accuracy } = candidatesDao.getAverageImbalance(all);
-  const percentile = mktData.getPercentile(average);
-  return { selected, other, mktDemand: { average, accuracy, percentile } };
+  const { average: averageDemand, accuracy } =
+    candidatesDao.getAverageImbalance(all);
+  const strength = mktData.getStrength(averageDemand);
+  return {
+    selected,
+    other,
+    marketInfo: { averageDemand, accuracy, strength },
+  };
 }
 
 /**

@@ -6,6 +6,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   Divider,
   FormControl,
   FormControlLabel,
@@ -15,12 +16,11 @@ import {
   Link,
   MenuItem,
   Select,
+  Slider,
   Stack,
   Switch,
   TextField,
   Typography,
-  Slider,
-  Chip,
 } from "@mui/material";
 import { circularProgress, ScriptApp } from "./Common";
 import {
@@ -90,7 +90,6 @@ export function Settings(params: {
   const tickIntervalMsg = `The tool internal update interval is 1 minute, so it may take up to 1 minute ⏳ for some changes to take effect.`;
   const strengthMin = Math.max(0, cfg.MarketStrengthTargets.min);
   const strengthMax = Math.min(100, cfg.MarketStrengthTargets.max);
-  const showMarketSlider = false; // TODO: enable on v4.2.0
   return (
     <BasicCard>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -169,52 +168,60 @@ export function Settings(params: {
               more efficient.
             </FormHelperText>
           </FormControl>
-          {showMarketSlider && (
-            <FormControl>
-              <Typography id="market-strength-slider" gutterBottom>
-                <Chip
-                  label="New"
-                  color={`primary`}
-                  size="small"
-                  variant={`outlined`}
-                  style={{ marginRight: 10 }}
-                />
-                Auto-stop (Market strength)
-              </Typography>
-              <Slider
-                sx={{ ml: 1, width: `95%` }}
-                value={[strengthMin, strengthMax]}
-                step={5}
-                min={0}
-                max={100}
-                disableSwap={true}
-                marks={[
-                  { value: 0, label: `0` },
-                  { value: 20, label: `20` },
-                  { value: 40, label: `40` },
-                  { value: 60, label: `60` },
-                  { value: 80, label: `80` },
-                  { value: 100, label: `100` },
-                ]}
-                valueLabelDisplay="auto"
-                onChange={(e, [min, max]: number[]) => {
-                  setCfg({
-                    ...cfg,
-                    MarketStrengthTargets: { min, max },
-                  });
-                }}
-                aria-labelledby="market-strength-slider"
+          <FormControl>
+            <Typography id="market-strength-slider" gutterBottom>
+              <Chip
+                label="New"
+                color={`primary`}
+                size="small"
+                variant={`outlined`}
+                style={{ marginRight: 10 }}
               />
-              <FormHelperText>
-                This setting controls when to pause trading based on the market
-                {` `}
-                <b>strength</b>. For example, if the range is 10-60, trading
-                starts when the strength reaches 60 or more and stops when it
-                drops below 10. It resumes only after the strength reaches 60
-                again.
-              </FormHelperText>
-            </FormControl>
-          )}
+              Auto-stop (Market strength)
+              {cfg.TradingAutoStopped && ` (Now: Paused)`}
+            </Typography>
+            <Slider
+              sx={{ ml: 1, width: `95%` }}
+              value={[strengthMin, strengthMax]}
+              step={10}
+              min={0}
+              max={100}
+              disableSwap={true}
+              marks={Array.from({ length: 11 }, (e, i) => ({
+                value: 10 * i,
+                label: 10 * i,
+              }))}
+              valueLabelDisplay="auto"
+              onChangeCommitted={(e, [min, max]: number[]) => {
+                setCfg({
+                  ...cfg,
+                  TradingAutoStopped:
+                    // inverse the auto stop value when edge values selected
+                    min === 0 && max === 100
+                      ? !cfg.TradingAutoStopped
+                      : cfg.TradingAutoStopped,
+                });
+              }}
+              onChange={(e, [min, max]: number[]) => {
+                setCfg({
+                  ...cfg,
+                  MarketStrengthTargets: {
+                    min: Math.min(40, max - 10, min),
+                    max: Math.max(60, min + 10, max),
+                  },
+                });
+              }}
+              aria-labelledby="market-strength-slider"
+            />
+            <FormHelperText>
+              This setting controls when to pause trading based on the market
+              {` `}
+              <b>strength</b>. For example, if the range is 30-60, trading
+              starts when the strength reaches 60 or more and stops when it
+              drops below 30. It resumes only after the strength reaches 60
+              again.
+            </FormHelperText>
+          </FormControl>
           <FormControl>
             <FormControlLabel
               control={

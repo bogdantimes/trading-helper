@@ -26,7 +26,7 @@ export const DefaultConfig: () => Config = () => ({
   HideBalances: false,
   SmartExit: true,
   BudgetSplitMin: 1,
-  MarketStrengthTargets: { min: 20, max: 90 },
+  MarketStrengthTargets: { min: 30, max: 60 },
 });
 
 export class ConfigDao implements APIKeysProvider {
@@ -54,11 +54,13 @@ export class ConfigDao implements APIKeysProvider {
   }
 
   update(mutateFn: (curCfg: Config) => Config | undefined): Config {
-    return this.store.update<Config>(`Config`, (curCfg) => {
-      curCfg = this.#mergeDefault(curCfg);
-      const mutCfg = mutateFn(curCfg);
+    let cfg: Config;
+    this.store.update<Config>(`Config`, (curCfg) => {
+      // return cfg with default values assigned
+      cfg = this.#mergeDefault(curCfg);
+      const mutCfg = mutateFn(cfg);
       if (mutCfg) {
-        const cfg = Object.assign({}, mutCfg);
+        cfg = Object.assign({}, mutCfg);
         if (cfg.KEY === MASK || cfg.SECRET === MASK) {
           cfg.KEY = cfg.KEY === MASK ? curCfg.KEY : cfg.KEY;
           cfg.SECRET = cfg.SECRET === MASK ? curCfg.SECRET : cfg.SECRET;
@@ -67,9 +69,10 @@ export class ConfigDao implements APIKeysProvider {
       } else if (curCfg) {
         return StoreNoOp;
       } else {
-        return curCfg;
+        return cfg;
       }
-    })!;
+    });
+    return cfg!;
   }
 
   updateWithRetry(
