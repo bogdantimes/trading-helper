@@ -139,6 +139,9 @@ export enum Key {
    */
   IS_READY,
   MID,
+  /**
+   * @deprecated
+   */
   TREND,
   DAY_PRICE_MOVE,
   REFRESH,
@@ -173,7 +176,6 @@ export interface CandidateInfo {
   [Key.PRICE_MOVE]: PriceMove;
   [Key.STRENGTH]: number;
   [Key.IMBALANCE]?: number;
-  [Key.TREND]?: string;
   [Key.ATH]: number;
   [Key.ATHTime]: number;
   [Key.DAY_PRICE_MOVE]: number;

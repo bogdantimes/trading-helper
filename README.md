@@ -18,18 +18,16 @@ No one, except you, have access to the WEB-application and the data. If you trus
 * Gmail notifications.
 * Optional external database (Firebase).
 * Info page with balance changes since Day 1.
-* GPT-4 (takes part in filtering the investment candidates).
 
 ## Back-testing
 
 Running on the historical data (using Binance Spot prices and order book history).
 
 * **Stable coin**: USDT
-* **Dates:** January 2023 -> May 2023
-* **Best Result:** `$1,000 -> $1,612 (+61% profit, +15% per month average)`
+* **Dates:** January 2023 -> August 2023
 
-![1-1-2023_5-9-2023.png](img/1-1-2023_5-9-2023.png)
-![1-1-2023_5-9-2023_candidates.png](img/1-1-2023_5-9-2023_candidates.png)
+![1-1-2023_8-3-2023.png](img/1-1-2023_8-3-2023.png)
+![1-1-2023_8-3-2023_candidates.png](img/1-1-2023_8-3-2023_candidates.png)
 
 ## Screenshots
 

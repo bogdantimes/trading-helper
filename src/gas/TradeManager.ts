@@ -75,16 +75,16 @@ export class TradeManager {
     private readonly marketData: MarketDataDao
   ) {}
 
-  updateTickers(): boolean {
-    this.marketData.updateDemandHistory(() =>
-      this.candidatesDao.getAverageImbalance()
+  updateTickers(step: number): boolean {
+    this.marketData.updateDemandHistory(
+      () => this.candidatesDao.getAverageImbalance(),
+      step
     );
     return this.priceProvider.update();
   }
 
   trade(step: number): void {
     this.#prepare();
-    this.#checkAutoStop();
 
     // First process !BUY state assets (some might get sold and free up $)
     this.tradesDao
@@ -120,6 +120,7 @@ export class TradeManager {
       });
     }
 
+    this.#checkAutoStop();
     this.#handleBuySignals(signals);
   }
 
@@ -130,7 +131,7 @@ export class TradeManager {
     if (price) {
       this.#buyNow({
         coin,
-        type: SignalType.Buy,
+        type: SignalType.Manual,
         support: price * 0.9,
       });
     } else {
@@ -235,13 +236,19 @@ export class TradeManager {
       this.#config.TradingAutoStopped &&
       strength > this.#config.MarketStrengthTargets.max
     ) {
-      this.#config.TradingAutoStopped = false;
+      this.#config = this.configDao.update((c) => {
+        c.TradingAutoStopped = false;
+        return c;
+      });
     }
     if (
       !this.#config.TradingAutoStopped &&
       strength < this.#config.MarketStrengthTargets.min
     ) {
-      this.#config.TradingAutoStopped = true;
+      this.#config = this.configDao.update((c) => {
+        c.TradingAutoStopped = true;
+        return c;
+      });
     }
   }
 
@@ -470,6 +477,12 @@ export class TradeManager {
       Log.info(
         `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}}`
       );
+      tm.setState(TradeState.SELL);
+      return;
+    }
+
+    if (tm.isAutoTrade() && this.#config.TradingAutoStopped) {
+      Log.info(`Selling as trading auto-stop activated.`);
       tm.setState(TradeState.SELL);
       return;
     }

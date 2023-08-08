@@ -1,6 +1,6 @@
 import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, PriceMove, TradeState } from "./Types";
-import { type Signal } from "../gas/traders/plugin/api";
+import { SignalType, type Signal } from "../gas/traders/plugin/api";
 import { StandardFee } from "./Config";
 
 export class TradeMemo {
@@ -31,6 +31,7 @@ export class TradeMemo {
   priceMove: PriceMove = PriceMove.NEUTRAL;
 
   private curPrice = 0;
+
   /**
    * The current state of the asset.
    */
@@ -41,6 +42,11 @@ export class TradeMemo {
    * @private
    */
   private imb = 0;
+
+  /**
+   * Signal type to differentiate old/manual and auto trades.
+   */
+  private _sType: SignalType;
 
   constructor(tradeResult: TradeResult) {
     this.tradeResult = tradeResult;
@@ -102,8 +108,17 @@ export class TradeMemo {
     this._support = value;
   }
 
+  /**
+   * Starting v4.2.0 - all automatic trades have the signal type.
+   * If type is not set - considering it is either manual or old.
+   */
+  isAutoTrade(): boolean {
+    return this._sType === SignalType.Buy;
+  }
+
   setSignalMetadata(r: Signal): void {
     this._support = r.support;
+    this._sType = r.type;
   }
 
   getCoinName(): string {

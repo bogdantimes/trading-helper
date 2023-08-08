@@ -1,3 +1,8 @@
+# v4.2.0
+
+* Auto-stop (Market Strength) feature.
+* Trading algorithm adjustments to pick coins that have confidence 60%+.
+
 # v4.1.13
 
 * Market Strength indicator (to start collecting data for v4.2.0 "Auto-stop" feature).

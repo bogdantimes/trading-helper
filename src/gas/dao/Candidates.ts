@@ -6,6 +6,7 @@ import {
   type ICandidatesDao,
   type IStore,
   Key,
+  f3,
 } from "../../lib";
 import { Log } from "../Common";
 
@@ -35,9 +36,9 @@ export class CandidatesDao implements ICandidatesDao {
         imbs.push(imb);
       }
     });
-    const accuracy = f2(imbs.length / all.length);
+    const accuracy = f2(imbs.length / all.length) || 0;
     const average = imbs.reduce((sum, imb) => sum + imb, 0) / imbs.length;
-    return { average: f2(average), accuracy };
+    return { average: f3(average || 0), accuracy };
   }
 
   update(

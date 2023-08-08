@@ -83,7 +83,7 @@ export default function MarketCard({
           />
           <Typography mt={`-7px`} color="text.secondary" variant="body2">
             {marketInfo.strength === -1
-              ? `Observing... min. 5 days`
+              ? `Strength: N/A`
               : `Strength: ${marketInfo.strength}`}
           </Typography>
         </Box>

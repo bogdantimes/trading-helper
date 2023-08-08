@@ -53,4 +53,5 @@ export interface Signal {
 export enum SignalType {
   None,
   Buy,
+  Manual,
 }
