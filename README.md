@@ -24,7 +24,7 @@ No one, except you, have access to the WEB-application and the data. If you trus
 Running on the historical data (using Binance Spot prices and order book history).
 
 * **Stable coin**: USDT
-* **Dates:** January 2023 -> August 2023
+* **Dates:** January 2023 -> August 2023 (roughly +5-10%/mo over 1-year average)
 
 ![1-1-2023_8-3-2023.png](img/1-1-2023_8-3-2023.png)
 ![1-1-2023_8-3-2023_candidates.png](img/1-1-2023_8-3-2023_candidates.png)
