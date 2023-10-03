@@ -6,17 +6,22 @@ import {
 import { isNode } from "browser-or-node";
 import {
   DEFAULT_WAIT_LOCK,
+  execute,
   type IStore,
   StoreDeleteProp,
   StoreNoOp,
 } from "../lib/index";
+import { Log } from "./Common";
 
 export const LOCK_TIMEOUT = `Lock timeout`;
 
 export abstract class CommonStore {
   protected abstract get(key: string): any;
+
   protected abstract set(key: string, value: any): any;
+
   protected abstract delete(key: string): void;
+
   protected abstract lockService: {
     getScriptLock: () => {
       waitLock: (n: number) => void;
@@ -47,7 +52,21 @@ export abstract class CommonStore {
       this.set(key, newValue);
       return newValue;
     } finally {
-      lock?.releaseLock();
+      try {
+        execute({
+          attempts: 2,
+          interval: 100,
+          runnable: () => {
+            lock?.releaseLock();
+          },
+        });
+      } catch (e) {
+        Log.error(
+          new Error(
+            `Warning: Could not release the lock on the storage property '${key}'.`
+          )
+        );
+      }
     }
   }
 }

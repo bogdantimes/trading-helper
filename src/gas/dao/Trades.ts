@@ -109,7 +109,10 @@ export class TradesDao {
           return Object.keys(trades).length ? trades : StoreDeleteProp;
         });
       } catch (e) {
-        Log.alert(`${coinName}: Failed to process. Error: ${e.message}`);
+        const suppressedMsg = new RegExp(LOCK_TIMEOUT, `gi`);
+        const logFn = e.message.match(suppressedMsg) ? `info` : `alert`;
+        Log[logFn](`⚠️ ${coinName}: Failed to process. Error: ${e.message}`);
+        Log.debug(e.stack);
       }
     });
   }
