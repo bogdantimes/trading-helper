@@ -63,7 +63,7 @@ export abstract class CommonStore {
       } catch (e) {
         Log.error(
           new Error(
-            `Warning: Could not release the lock on the storage property '${key}'.`
+            `Warning: Could not release the storage lock after processing the property '${key}'.`
           )
         );
       }
