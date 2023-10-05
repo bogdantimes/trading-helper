@@ -29,8 +29,10 @@ export class MarketDataDao {
       if (v && !v.demandHistory.length) {
         v.lastHistoryUpdate = 0;
       }
-      while (v.demandHistory.length < this.historyMax) {
-        v.demandHistory = [0, ...v.demandHistory];
+      if (v) {
+        while (v.demandHistory.length < this.historyMax) {
+          v.demandHistory = [0, ...v.demandHistory];
+        }
       }
       return v ? StoreNoOp : defaultValue;
     })!;
