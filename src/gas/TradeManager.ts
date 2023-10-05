@@ -465,7 +465,7 @@ export class TradeManager {
 
     // This will init fields, or just use current values
     // Also, reset levels periodically
-    if (!tm.highestPrice || !tm.lowestPrice || tm.ttl % 360 === 0) {
+    if (!tm.highestPrice || !tm.lowestPrice || tm.ttl % 60 === 0) {
       tm.highestPrice = tm.currentPrice;
       tm.lowestPrice = floorToOptimalGrid(
         tm.currentPrice,
