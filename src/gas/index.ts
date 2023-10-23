@@ -334,7 +334,7 @@ global.info = (coin: CoinName) => {
         : strength < 10
         ? `overbought. It's good time to SELL.`
         : `unclear. Trade with CAUTION.`
-    }.
+    }
 Average demand (-100..100): ${f0(average * 100)}%
 Accuracy (0..100): ${f0(accuracy * 100)}%${
       accuracy < 0.5
