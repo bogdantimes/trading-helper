@@ -234,12 +234,15 @@ export class TradeManager {
     const strength = this.marketData.getStrength(average);
     if (
       this.#config.TradingAutoStopped &&
-      strength > this.#config.MarketStrengthTargets.max
+      strength >= this.#config.MarketStrengthTargets.max
     ) {
       this.#config = this.configDao.update((c) => {
         c.TradingAutoStopped = false;
         return c;
       });
+      Log.alert(
+        `Market Strength has reached ${this.#config.MarketStrengthTargets.max}`
+      );
     }
     if (
       !this.#config.TradingAutoStopped &&
@@ -249,6 +252,11 @@ export class TradeManager {
         c.TradingAutoStopped = true;
         return c;
       });
+      Log.alert(
+        `Market Strength has dropped below ${
+          this.#config.MarketStrengthTargets.min
+        }`
+      );
     }
   }
 
