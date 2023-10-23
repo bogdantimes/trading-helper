@@ -33,11 +33,11 @@ function doGet(): HtmlOutput {
       HtmlService.createTemplateFromFile(`index`)
         .evaluate()
         .setFaviconUrl(
-          `https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png`
+          `https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png`,
         )
         .addMetaTag(
           `viewport`,
-          `width=device-width, initial-scale=1, maximum-scale=1`
+          `width=device-width, initial-scale=1, maximum-scale=1`,
         )
         // @ts-expect-error VERSION is injected by esbuild
         .setTitle(`TradingHelper v${VERSION}`)
@@ -80,7 +80,7 @@ function startAllProcesses(): string {
     .everyHours(3)
     .create();
   Log.alert(
-    `ℹ️ Background processes started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
+    `ℹ️ Background processes started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
   );
   return `OK`;
 }
@@ -179,7 +179,7 @@ function setConfig(config: Config): { msg: string; config: Config } {
         const balance = new Binance(dao).getBalance(config.StableCoin);
         if (balance < config.StableBalance) {
           msg = `\nActual balance on your Binance Spot account is $${f2(
-            balance
+            balance,
           )}, which is less than $${
             config.StableBalance
           } you are trying to set. You might need to transfer money from the Funding account. Check the balances and try again.`;
@@ -284,7 +284,7 @@ function addWithdrawal(amount: number): string {
     const mgr = new WithdrawalsManager(
       configDao,
       new Binance(configDao),
-      new Statistics(DefaultStore)
+      new Statistics(DefaultStore),
     );
     const { balance } = mgr.addWithdrawal(amount);
     const msg = `💳 Withdrawal of $${amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
@@ -355,7 +355,7 @@ Accuracy (0..100): ${f0(accuracy * 100)}%${
     ci[Key.IMBALANCE] = imbalance;
 
     const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
-      ci?.[Key.MAX_PERCENTILE] * 100
+      ci?.[Key.MAX_PERCENTILE] * 100,
     )}`;
     result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
 Demand (-100..100): ${f0(imbalance * 100)}%

@@ -43,7 +43,7 @@ const ImbalanceChecker = ({
   const colorVal = Math.max(0, Math.min(1, value + 0.5));
   const color = percentileToColorMap[+colorVal.toFixed(1)];
   const displayValue = f0(
-    (displayFormatter ? displayFormatter(value) : value) * 100
+    (displayFormatter ? displayFormatter(value) : value) * 100,
   );
   return (
     <Typography

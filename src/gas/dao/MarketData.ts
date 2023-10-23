@@ -11,7 +11,7 @@ export class MarketDataDao {
   constructor(
     private readonly store: IStore,
     private readonly historyMin = 5,
-    private readonly historyMax = 20
+    private readonly historyMax = 20,
   ) {}
 
   get(): MarketData {
@@ -61,7 +61,7 @@ export class MarketDataDao {
 
   updateDemandHistory(
     getDemand: () => { accuracy: number; average: number },
-    step: number
+    step: number,
   ): boolean {
     const md = this.get();
     // update once a day

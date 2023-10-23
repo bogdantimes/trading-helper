@@ -12,7 +12,7 @@ export interface IExchange {
   getLatestKlineOpenPrices: (
     symbol: ExchangeSymbol,
     interval: string,
-    limit: number
+    limit: number,
   ) => number[];
 
   quantityForLotStepSize: (symbol: ExchangeSymbol, quantity: number) => number;

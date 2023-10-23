@@ -26,7 +26,7 @@ export class PriceProvider implements IPriceProvider {
 
   static default(
     plugin = global.TradingHelperLibrary,
-    cache = CacheProxy
+    cache = CacheProxy,
   ): PriceProvider {
     PriceProvider.#instance =
       PriceProvider.#instance || new PriceProvider(plugin, cache);
@@ -37,7 +37,7 @@ export class PriceProvider implements IPriceProvider {
     private readonly plugin: TraderPlugin,
     private readonly cache: ICacheProxy,
     maxCap?: number,
-    fillIn?: boolean
+    fillIn?: boolean,
   ) {
     this.#priceMaps = this.#getPriceMapsFromCache();
     this.#maxCap = maxCap;
@@ -74,7 +74,7 @@ export class PriceProvider implements IPriceProvider {
 
     const updatedPriceMaps: PriceMaps = {};
     enumKeys<StableCoinKeys>(StableUSDCoin).forEach(
-      (k) => (updatedPriceMaps[k] = {})
+      (k) => (updatedPriceMaps[k] = {}),
     );
 
     Object.keys(prices).forEach((symbol) => {

@@ -26,7 +26,7 @@ export function InitialSetup({
   firebaseURL: string;
 }): JSX.Element {
   const [step, setStep] = useState(
-    firebaseURL ? Step.BinanceConnect : Step.DbConnect
+    firebaseURL ? Step.BinanceConnect : Step.DbConnect,
   );
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(``);

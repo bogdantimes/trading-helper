@@ -35,7 +35,7 @@ export abstract class CommonStore {
       lock?.waitLock(DEFAULT_WAIT_LOCK);
     } catch (e) {
       throw new Error(
-        `${LOCK_TIMEOUT}: Could not update the storage property '${key}' as another process is holding the access. Please, try again.`
+        `${LOCK_TIMEOUT}: Could not update the storage property '${key}' as another process is holding the access. Please, try again.`,
       );
     }
     try {
@@ -63,8 +63,8 @@ export abstract class CommonStore {
       } catch (e) {
         Log.error(
           new Error(
-            `Warning: Could not release the storage lock after processing the property '${key}'.`
-          )
+            `Warning: Could not release the storage lock after processing the property '${key}'.`,
+          ),
         );
       }
     }
@@ -82,7 +82,7 @@ export class ScriptStore extends CommonStore implements IStore {
   set(key: string, value: any): any {
     PropertiesService.getScriptProperties().setProperty(
       key,
-      JSON.stringify(value)
+      JSON.stringify(value),
     );
     return value;
   }
@@ -132,7 +132,7 @@ export class FirebaseStore extends CommonStore implements IStore {
         // @ts-expect-error FirebaseApp is available in GAS runtime only
         this.#source = FirebaseApp.getDatabaseByUrl(
           url,
-          ScriptApp.getOAuthToken()
+          ScriptApp.getOAuthToken(),
         );
       }
     }
@@ -147,7 +147,7 @@ export class FirebaseStore extends CommonStore implements IStore {
     // @ts-expect-error FirebaseApp is available in GAS runtime only
     this.source = FirebaseApp.getDatabaseByUrl(
       dbURL,
-      ScriptApp.getOAuthToken()
+      ScriptApp.getOAuthToken(),
     );
     FirebaseStore.url = dbURL;
   }

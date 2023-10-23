@@ -65,7 +65,7 @@ export function Settings(params: {
       cfg.StableBalance = balance === `` ? AUTO_DETECT : +balance;
     } else if (balance !== ``) {
       setError(
-        `Balance must be a positive number or empty to auto-detect it from Binance.`
+        `Balance must be a positive number or empty to auto-detect it from Binance.`,
       );
       return;
     }

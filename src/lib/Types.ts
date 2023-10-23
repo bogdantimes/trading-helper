@@ -222,8 +222,8 @@ export interface ICandidatesDao {
   get: (coin: CoinName) => CandidateInfo;
   update: (
     mutateFn: (
-      data: Record<string, CandidateInfo>
-    ) => Record<string, CandidateInfo>
+      data: Record<string, CandidateInfo>,
+    ) => Record<string, CandidateInfo>,
   ) => void;
   getAverageImbalance: (recs?: Record<string, CandidateInfo>) => {
     average: number;
@@ -238,7 +238,7 @@ export class StableCoinMatcher {
   constructor(symbol: string) {
     this.symbol = symbol.toUpperCase();
     this.match = this.symbol.match(
-      new RegExp(`^(\\w+)(${enumKeys(StableUSDCoin).join(`|`)})$`)
+      new RegExp(`^(\\w+)(${enumKeys(StableUSDCoin).join(`|`)})$`),
     );
   }
 

@@ -18,10 +18,10 @@ export class Statistics {
 
     Log.info(
       `${formatUSDCurrency(
-        profit
+        profit,
       )} added to statistics. Today: ${formatUSDCurrency(
-        stats.DailyProfit[date]
-      )}. Total: ${formatUSDCurrency(stats.TotalProfit)}.`
+        stats.DailyProfit[date],
+      )}. Total: ${formatUSDCurrency(stats.TotalProfit)}.`,
     );
 
     this.saveAll(stats);
@@ -79,7 +79,7 @@ export class Statistics {
     const recsToZip = allRecs.filter(
       (d) =>
         new Date(d).getMonth() === oldestRec?.getMonth() &&
-        new Date(d).getFullYear() === oldestRec?.getFullYear()
+        new Date(d).getFullYear() === oldestRec?.getFullYear(),
     );
 
     // Calculate the total profit for these records
@@ -94,7 +94,7 @@ export class Statistics {
       const date = `${monthShort} ${oldestRec.getFullYear()}`;
       stats.DailyProfit[date] = f2(r);
       Log.alert(
-        `Oldest month records (${date}) were compressed into a single record to free up space.`
+        `Oldest month records (${date}) were compressed into a single record to free up space.`,
       );
     }
   }

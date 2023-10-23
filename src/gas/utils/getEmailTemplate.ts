@@ -21,11 +21,11 @@ export default function getEmailTemplate({
     .join(`<br/>`)}<br/><br/></code>`;
 
   const infos = ` <p style="${style}">Info:<br/>${infoLog.join(
-    `<br/>`
+    `<br/>`,
   )}<br/><br/></p>`;
 
   const debugs = `<p style="${style}">Debug:<br/></p><code style="${codeStyle}">${debugLog.join(
-    `<br/><br/>`
+    `<br/><br/>`,
   )}</code>`;
 
   return `<!DOCTYPE htmlPUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

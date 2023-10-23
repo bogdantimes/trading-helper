@@ -34,7 +34,7 @@ export class TradesDao {
   update(
     coinName: string,
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    notFoundFn?: () => TradeMemo | undefined | null
+    notFoundFn?: () => TradeMemo | undefined | null,
   ): void {
     coinName = coinName.trim().toUpperCase();
 
@@ -77,7 +77,7 @@ export class TradesDao {
 
   iterate(
     mutateFn: (tm: TradeMemo) => TradeMemo | undefined | null,
-    state?: TradeState
+    state?: TradeState,
   ): void {
     const tradesRaw = this.store.get<object>(`Trades`) || {};
 
@@ -124,7 +124,7 @@ export class TradesDao {
       Object.entries(trades).map(([coinName, tm]) => [
         coinName,
         TradeMemo.fromObject(tm),
-      ])
+      ]),
     );
   }
 

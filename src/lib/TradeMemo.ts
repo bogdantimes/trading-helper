@@ -55,7 +55,7 @@ export class TradeMemo {
   static copy(obj: TradeMemo): TradeMemo {
     return Object.assign(
       Object.create(TradeMemo.prototype),
-      JSON.parse(JSON.stringify(obj))
+      JSON.parse(JSON.stringify(obj)),
     );
   }
 
@@ -72,14 +72,14 @@ export class TradeMemo {
   static fromObject(obj: object): TradeMemo {
     const tradeMemo: TradeMemo = Object.assign(
       Object.create(TradeMemo.prototype),
-      obj
+      obj,
     );
     tradeMemo.tradeResult = Object.assign(
       Object.create(TradeResult.prototype),
-      tradeMemo.tradeResult
+      tradeMemo.tradeResult,
     );
     tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(
-      tradeMemo.tradeResult.symbol
+      tradeMemo.tradeResult.symbol,
     );
     return tradeMemo;
   }

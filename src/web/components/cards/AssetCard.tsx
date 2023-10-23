@@ -63,7 +63,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
               profitPercent >= 0
                 ? theme.palette.success.light
                 : theme.palette.error.light,
-              0.6
+              0.6,
             ),
           }}
         >
@@ -84,7 +84,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
             <Typography variant="inherit">
               {floor(
                 tm.tradeResult.soldPrice || tm.tradeResult.entryPrice,
-                getPrecision(tm.currentPrice)
+                getPrecision(tm.currentPrice),
               )}
             </Typography>
           </Box>

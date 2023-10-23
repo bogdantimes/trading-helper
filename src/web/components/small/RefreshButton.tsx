@@ -23,7 +23,7 @@ const StyledRefresh = styled(Refresh)<StyledRefreshProps>(
         transform: `rotate(360deg)`,
       },
     },
-  })
+  }),
 );
 
 const RefreshButton = ({
