@@ -325,8 +325,16 @@ global.info = (coin: CoinName) => {
 
   const candidatesDao = new CandidatesDao(DefaultStore);
   if (!coin) {
+    const marketData = new MarketDataDao(DefaultStore);
     const { average, accuracy } = candidatesDao.getAverageImbalance();
-    return `The current market is ${average > 0 ? `BULLISH` : `BEARISH`}.
+    const strength = marketData.getStrength(average);
+    return `The current market is ${
+      strength > 90
+        ? `oversold. It's good time to BUY.`
+        : strength < 10
+        ? `overbought. It's good time to SELL.`
+        : `unclear. Trade with CAUTION.`
+    }.
 Average demand (-100..100): ${f0(average * 100)}%
 Accuracy (0..100): ${f0(accuracy * 100)}%${
       accuracy < 0.5
