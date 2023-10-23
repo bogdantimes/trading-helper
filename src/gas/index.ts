@@ -330,9 +330,9 @@ global.info = (coin: CoinName) => {
     const strength = marketData.getStrength(average);
     return `The current market is ${
       strength > 90
-        ? `oversold. It's good time to BUY.`
+        ? `OVERSOLD. It's good time to BUY.`
         : strength < 10
-        ? `overbought. It's good time to SELL.`
+        ? `OVERBOUGHT. It's good time to SELL.`
         : `unclear. Trade with CAUTION.`
     }
 Average demand (-100..100): ${f0(average * 100)}%
