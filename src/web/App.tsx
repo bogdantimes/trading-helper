@@ -42,7 +42,7 @@ export default function App(): JSX.Element {
   const mode = useMediaQuery(`(prefers-color-scheme: dark)`);
   const theme = React.useMemo(
     () => createTheme({ palette: { mode: mode ? `dark` : `light` } }),
-    [mode]
+    [mode],
   );
 
   const [state, setState] = React.useState<AppState>({

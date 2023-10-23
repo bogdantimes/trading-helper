@@ -85,6 +85,16 @@ export default function MarketCard({
             {marketInfo.strength === -1
               ? `Strength: N/A`
               : `Strength: ${marketInfo.strength}`}
+            <br />
+            <b>
+              {marketInfo.strength === -1
+                ? ``
+                : marketInfo.strength > 90
+                ? `(oversold)`
+                : marketInfo.strength < 10
+                ? `(overbought)`
+                : ``}
+            </b>
           </Typography>
         </Box>
       </Box>
