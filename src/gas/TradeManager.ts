@@ -163,8 +163,16 @@ export class TradeManager {
     const stableCoin = this.configDao.get().StableCoin;
     const symbol = new ExchangeSymbol(coin, stableCoin);
 
-    const ph = this.#getPrices(symbol);
-    if (!ph.currentPrice) {
+    const tr = new TradeResult(symbol);
+    tr.paid = paid;
+    tr.cost = paid;
+    tr.commission = 0;
+    tr.fromExchange = true;
+    tr.setQuantity(qty);
+
+    const tm = this.#produceNewTradeMemo(tr);
+
+    if (!tm.currentPrice) {
       Log.info(
         `The current price of ${symbol} is unknown. Cannot edit/create this coin.`,
       );
@@ -174,14 +182,6 @@ export class TradeManager {
     const validQuantity = this.exchange.quantityForLotStepSize(symbol, qty);
     Log.info(`Be aware that the sellable quantity is ${validQuantity}`);
 
-    const tr = new TradeResult(symbol);
-    tr.paid = paid;
-    tr.cost = paid;
-    tr.commission = 0;
-    tr.fromExchange = true;
-    tr.setQuantity(qty);
-
-    const tm = this.#produceNewTradeMemo(tr);
     this.tradesDao.update(
       coin,
       () => tm,
@@ -192,44 +192,34 @@ export class TradeManager {
   }
 
   import(coin: CoinName, qty?: number): void {
+    if (!this.exchange.importTrade) {
+      throw new Error(`Import is not supported by the exchange`);
+    }
+
     const stableCoin = this.configDao.get().StableCoin;
+    const symbol = new ExchangeSymbol(coin, stableCoin);
+    const importedTrade = this.exchange.importTrade(symbol, qty);
 
-    const importTrade = (coinName: CoinName) => {
-      if (!this.exchange.importTrade) {
-        throw new Error(`Import is not supported by the exchange`);
-      }
-      const symbol = new ExchangeSymbol(coinName, stableCoin);
-      return this.exchange.importTrade(symbol, qty);
-    };
-
-    const importedTradeResults = [coin].map(importTrade);
-
-    this.#prepare();
-
-    importedTradeResults.forEach((importedTrade) => {
-      const coin = importedTrade.symbol.quantityAsset;
-
-      if (importedTrade.fromExchange) {
-        this.tradesDao.update(
-          coin,
-          (t) => {
-            if (t.currentValue) {
-              Log.alert(
-                `Import cancelled: ${t.getCoinName()} is already present.`,
-              );
-              return null;
-            }
-            return this.#produceNewTradeMemo(importedTrade);
-          },
-          () => this.#produceNewTradeMemo(importedTrade),
-        );
-        Log.alert(`➕ Imported ${coin}`);
-      } else {
-        Log.alert(`${coin} could not be imported: ${importedTrade.msg}`);
-      }
-    });
-
-    this.#updateBalances();
+    if (importedTrade.fromExchange) {
+      this.tradesDao.update(
+        symbol.quantityAsset,
+        (t) => {
+          if (t.currentValue) {
+            Log.alert(
+              `Import cancelled: ${t.getCoinName()} is already present.`,
+            );
+            return null;
+          }
+          return this.#produceNewTradeMemo(importedTrade);
+        },
+        () => this.#produceNewTradeMemo(importedTrade),
+      );
+      Log.alert(`➕ Imported ${symbol.quantityAsset}`);
+    } else {
+      Log.alert(
+        `${symbol.quantityAsset} could not be imported: ${importedTrade.msg}`,
+      );
+    }
   }
 
   #produceNewTradeMemo(trade: TradeResult): TradeMemo {
