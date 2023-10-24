@@ -159,6 +159,38 @@ export class TradeManager {
     this.#updateBalances();
   }
 
+  edit(coin: CoinName, qty: number, paid: number): void {
+    const stableCoin = this.configDao.get().StableCoin;
+    const symbol = new ExchangeSymbol(coin, stableCoin);
+
+    const ph = this.#getPrices(symbol);
+    if (!ph.currentPrice) {
+      Log.info(
+        `The current price of ${symbol} is unknown. Cannot edit/create this coin.`,
+      );
+      return;
+    }
+
+    const validQuantity = this.exchange.quantityForLotStepSize(symbol, qty);
+    Log.info(`Be aware that the sellable quantity is ${validQuantity}`);
+
+    const tr = new TradeResult(symbol);
+    tr.paid = paid;
+    tr.cost = paid;
+    tr.commission = 0;
+    tr.fromExchange = true;
+    tr.setQuantity(qty);
+
+    const tm = this.#produceNewTradeMemo(tr);
+    this.tradesDao.update(
+      coin,
+      () => tm,
+      () => tm,
+    );
+
+    Log.alert(`➕ Edited ${coin}`);
+  }
+
   import(coin: CoinName, qty?: number): void {
     const stableCoin = this.configDao.get().StableCoin;
 
@@ -177,25 +209,6 @@ export class TradeManager {
     importedTradeResults.forEach((importedTrade) => {
       const coin = importedTrade.symbol.quantityAsset;
 
-      const produceNewTm = (): TradeMemo => {
-        const tm = new TradeMemo(importedTrade);
-        const ph = this.#getPrices(tm.tradeResult.symbol);
-        tm.currentPrice = ph?.currentPrice;
-        tm.setState(TradeState.BOUGHT);
-
-        Log.alert(`➕ Imported ${coin}`);
-        Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
-        Log.info(`${coin} asset quantity: ${tm.tradeResult.quantity}`);
-        Log.info(
-          `${coin} asset avg. price: $${floor(
-            tm.tradeResult.avgPrice,
-            ph.precision,
-          )}`,
-        );
-
-        return tm;
-      };
-
       if (importedTrade.fromExchange) {
         this.tradesDao.update(
           coin,
@@ -206,16 +219,37 @@ export class TradeManager {
               );
               return null;
             }
-            return produceNewTm();
+            return this.#produceNewTradeMemo(importedTrade);
           },
-          produceNewTm,
+          () => this.#produceNewTradeMemo(importedTrade),
         );
+        Log.alert(`➕ Imported ${coin}`);
       } else {
         Log.alert(`${coin} could not be imported: ${importedTrade.msg}`);
       }
     });
 
     this.#updateBalances();
+  }
+
+  #produceNewTradeMemo(trade: TradeResult): TradeMemo {
+    const tm = new TradeMemo(trade);
+    const ph = this.#getPrices(tm.tradeResult.symbol);
+
+    tm.currentPrice = ph?.currentPrice;
+    tm.setState(TradeState.BOUGHT);
+
+    const coin = tm.getCoinName();
+    Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
+    Log.info(`${coin} asset quantity: ${tm.tradeResult.quantity}`);
+    Log.info(
+      `${coin} asset avg. price: $${floor(
+        tm.tradeResult.avgPrice,
+        ph.precision,
+      )}`,
+    );
+
+    return tm;
   }
 
   #prepare(): void {

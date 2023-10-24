@@ -24,8 +24,8 @@ import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
 import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
-import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 import { MarketDataDao } from "./dao/MarketData";
+import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -269,9 +269,32 @@ function sell(...coins: CoinName[]): string {
   });
 }
 
+function edit(coin: CoinName, qty: number, paid: number): any {
+  return catchError(() => {
+    qty = +qty;
+    paid = +paid;
+    if (!coin) {
+      Log.info(`Specify a coin name, e.g. BTC`);
+    } else if (!isFinite(qty)) {
+      Log.info(`Specify a proper amount of coins, e.g. 1.251`);
+    } else if (!isFinite(paid)) {
+      Log.info(`Specify how much you paid for the coin (in USD)`);
+    } else {
+      TradeManager.default().edit(coin, qty, paid);
+    }
+    return Log.printInfos();
+  });
+}
+
 function importCoin(coin: CoinName, qty?: number): any {
   return catchError(() => {
-    TradeManager.default().import(coin, qty);
+    if (!coin) {
+      Log.info(`Specify a coin name, e.g. BTC`);
+    } else if (qty && !isFinite(qty)) {
+      Log.info(`Specify a proper amount of coins, e.g. 1.251`);
+    } else {
+      TradeManager.default().import(coin, qty ? +qty : 0);
+    }
     return Log.printInfos();
   });
 }
@@ -305,6 +328,7 @@ global.buy = buy;
 global.sell = sell;
 global.sellAll = sellAll;
 global.remove = remove;
+global.edit = edit;
 global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
@@ -402,6 +426,7 @@ const helpDescriptions = {
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
+  edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,
   importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,
