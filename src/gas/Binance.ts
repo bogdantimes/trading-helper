@@ -213,8 +213,8 @@ export class Binance implements IExchange {
     const { cost, fees } = this.#getTotalCostForQuantity(symbol, qty);
     const tradeResult = new TradeResult(symbol);
     tradeResult.fromExchange = true;
-    tradeResult.quantity = qty - fees.origQty;
-    tradeResult.cost = cost - fees.quoteQty;
+    tradeResult.quantity = qty;
+    tradeResult.cost = cost;
     tradeResult.commission = fees.BNB;
     tradeResult.paid = cost;
 
@@ -225,7 +225,7 @@ export class Binance implements IExchange {
     symbol: ExchangeSymbol,
     currentQuantity: number,
   ): {
-    fees: { BNB: number; origQty: number; quoteQty: number };
+    fees: { BNB: number };
     cost: number;
   } {
     const { key, secret } = this.#getAPIKeysOrDie();
@@ -280,7 +280,7 @@ export class Binance implements IExchange {
     Log.debug(feeRecs);
 
     const fees = this.#getFees(symbol, feeRecs);
-    return { cost: totalCost, fees };
+    return { cost: totalCost, fees: { BNB: fees.BNB } };
   }
 
   #getFees(
