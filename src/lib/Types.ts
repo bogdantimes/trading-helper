@@ -4,16 +4,18 @@ import { type CoinName } from "./IPriceProvider";
 
 export enum StableUSDCoin {
   USDT = `USDT`,
-  BUSD = `BUSD`, // TODO: remove once it dies out
 }
 
 export enum OtherStableCoins {
-  TUSD = `TUSD`,
-  AUD = `AUD`,
-  GBP = `GBP`,
-  USDP = `USDP`,
-  EUR = `EUR`,
   USDC = `USDC`,
+  DAI = `DAI`,
+  TUSD = `TUSD`,
+  BUSD = `BUSD`,
+  USDD = `USDD`,
+  FRAX = `FRAX`,
+  USDP = `USDP`,
+  FDUSD = `FDUSD`,
+  USDJ = `USDJ`,
 }
 
 export type PriceMap = Record<string, number>;

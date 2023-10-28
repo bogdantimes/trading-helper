@@ -105,7 +105,7 @@ export function Settings(params: {
                 labelId="stable-coin"
                 value={cfg.StableCoin}
                 label={`Stable Coin`}
-                defaultValue={StableUSDCoin.BUSD}
+                defaultValue={StableUSDCoin.USDT}
                 onChange={(e) => {
                   setCfg({
                     ...cfg,
