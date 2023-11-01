@@ -19,6 +19,10 @@ export const INVOKE_LIMIT = `Service invoked too many times`;
 export const AWS_LIMIT = `ConcurrentInvocationLimitExceeded`;
 
 export const LIMIT_ERROR = new RegExp(`${PLEASE_WAIT}|${INVOKE_LIMIT}`, `gi`);
+export const TEMPORARY_ERROR = new RegExp(
+  `${LOCK_TIMEOUT}|${PLEASE_WAIT}|${INVOKE_LIMIT}|${AWS_LIMIT}`,
+  `gi`,
+);
 
 export abstract class CommonStore {
   protected abstract get(key: string): any;

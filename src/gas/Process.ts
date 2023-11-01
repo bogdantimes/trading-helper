@@ -1,6 +1,6 @@
 import { Log } from "./Common";
 import { TradeManager } from "./TradeManager";
-import { DefaultStore, LIMIT_ERROR } from "./Store";
+import { DefaultStore, TEMPORARY_ERROR } from "./Store";
 import { CacheProxy } from "./CacheProxy";
 import { TradesDao } from "./dao/Trades";
 import { TradeState, waitTillCurrentSecond } from "../lib/index";
@@ -38,7 +38,7 @@ export class Process {
       manager.trade(-1);
       CacheProxy.remove(`OutageCounter`);
     } catch (e) {
-      const logFn = e.message.match(LIMIT_ERROR) ? `info` : `alert`;
+      const logFn = e.message.match(TEMPORARY_ERROR) ? `info` : `alert`;
       Log[logFn](`⚠️ Process tick failed: ${e.message}`);
       Log.debug(e.stack);
       if (checkOutage()) throw e;
