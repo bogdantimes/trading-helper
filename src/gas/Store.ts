@@ -14,6 +14,11 @@ import {
 import { Log } from "./Common";
 
 export const LOCK_TIMEOUT = `Lock timeout`;
+export const PLEASE_WAIT = `Please wait a bit and try again`;
+export const INVOKE_LIMIT = `Service invoked too many times`;
+export const AWS_LIMIT = `ConcurrentInvocationLimitExceeded`;
+
+export const LIMIT_ERROR = new RegExp(`${PLEASE_WAIT}|${INVOKE_LIMIT}`, `gi`);
 
 export abstract class CommonStore {
   protected abstract get(key: string): any;

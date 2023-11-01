@@ -32,6 +32,7 @@ import {
   type Signal,
   SignalType,
   type TraderPlugin,
+  type PluginResult,
 } from "./traders/plugin/api";
 import { DefaultStore } from "./Store";
 import { CandidatesDao } from "./dao/Candidates";
@@ -101,17 +102,26 @@ export class TradeManager {
     const getMaxSignals =
       this.#config.ViewOnly || this.#config.TradingAutoStopped;
     // Run plugin to update candidates and also get buy signals
-    const { advancedAccess, signals } = this.plugin.trade({
-      prices: this.priceProvider.get(this.#config.StableCoin),
-      stableCoin: this.#config.StableCoin,
-      provideSignals: getMaxSignals
-        ? Number.MAX_SAFE_INTEGER // when no trading enabled - provide all signals
-        : this.#getMoneyToInvest() > 0
-        ? this.#canInvest // or provide as many as can be bought for available $
-        : 0,
-      candidatesDao: this.candidatesDao,
-      I: step,
-    });
+
+    let libResult: PluginResult = { advancedAccess: false, signals: [] };
+    try {
+      libResult = this.plugin.trade({
+        prices: this.priceProvider.get(this.#config.StableCoin),
+        stableCoin: this.#config.StableCoin,
+        provideSignals: getMaxSignals
+          ? Number.MAX_SAFE_INTEGER // when no trading enabled - provide all signals
+          : this.#getMoneyToInvest() > 0
+          ? this.#canInvest // or provide as many as can be bought for available $
+          : 0,
+        candidatesDao: this.candidatesDao,
+        I: step,
+      });
+    } catch (e) {
+      Log.info(`Failed to update candidates: ${e.message}`);
+      throw e;
+    }
+
+    const { advancedAccess, signals } = libResult;
 
     if (advancedAccess !== this.#config.AdvancedAccess) {
       this.configDao.update((cfg) => {
