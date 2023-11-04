@@ -16,17 +16,24 @@ export default function getEmailTemplate({
 
   const alerts = `<p style="${style}">${alertsLog.join(`<br/>`)}<br/><br/></p>`;
 
-  const errors = `<p style="${style}">Errors:</p><br/><code style="${codeStyle}">${errLog
-    .map((e) => `Stack: ${e.stack}`)
-    .join(`<br/>`)}<br/><br/></code>`;
-
   const infos = ` <p style="${style}">Info:<br/>${infoLog.join(
     `<br/>`,
   )}<br/><br/></p>`;
 
+  const errors = `<p style="${style}">Errors:</p><br/><code style="${codeStyle}">${errLog
+    .map((e) => `Stack: ${e.stack}`)
+    .join(`<br/>`)}<br/><br/></code>`;
+
   const debugs = `<p style="${style}">Debug:<br/></p><code style="${codeStyle}">${debugLog.join(
     `<br/><br/>`,
   )}</code>`;
+
+  const footer = `
+    <div style="padding:20px;text-align:center;">
+      <p><a href="https://script.google.com/home/projects/${ScriptApp.getScriptId()}" style="text-decoration:none;color:#1a82e2;">Your project on Google Apps Script</a></p>
+      <p><a href="https://t.me/tradinghelperblog" style="text-decoration:none;color:#1a82e2;">Trading Helper Telegram</a></p>
+    </div>
+  `;
 
   return `<!DOCTYPE htmlPUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
   <html lang="en">
@@ -58,8 +65,8 @@ export default function getEmailTemplate({
                 <tr>
                   <td>
                     ${alertsLog.length > 0 ? alerts : ``}</p>
-                    ${errLog.length > 0 ? errors : ``}
                     ${infoLog.length > 0 ? infos : ``}
+                    ${errLog.length > 0 ? errors : ``}
                     ${debugLog.length > 0 ? debugs : ``}
                   </td>
                 </tr>
@@ -69,6 +76,8 @@ export default function getEmailTemplate({
           <div><!--[if mso | IE]>
                 </td><td></td></tr></table>
                 <![endif]--></div>
+          <!-- Footer content -->
+          ${footer}
         </td>
       </tr>
     </tbody>

@@ -233,6 +233,20 @@ export interface ICandidatesDao {
   };
 }
 
+export interface MarketData {
+  demandHistory: number[];
+  lastHistoryUpdate: number;
+}
+
+export interface IMarketDataDao {
+  get: () => MarketData;
+  getStrength: (currentDemand: number) => number;
+  updateDemandHistory: (
+    getDemand: () => { accuracy: number; average: number },
+    step: number,
+  ) => boolean;
+}
+
 export class StableCoinMatcher {
   private readonly symbol: string;
   private readonly match: RegExpMatchArray | null;

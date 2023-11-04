@@ -24,7 +24,7 @@ import {
   TradeResult,
   TradeState,
 } from "../lib/index";
-import { PriceProvider } from "./priceprovider/PriceProvider";
+import { PriceProvider } from "./providers/PriceProvider";
 import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
@@ -38,6 +38,7 @@ import { DefaultStore } from "./Store";
 import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
 import { MarketDataDao } from "./dao/MarketData";
+import { MarketInfoProvider } from "./providers/MarketInfoProvider";
 
 export class TradeManager {
   #config: Config;
@@ -52,7 +53,11 @@ export class TradeManager {
     const tradesDao = new TradesDao(DefaultStore);
     const candidatesDao = new CandidatesDao(DefaultStore);
     const priceProvider = PriceProvider.default();
-    const marketDataDao = new MarketDataDao(DefaultStore);
+    const marketInfoProvider = new MarketInfoProvider(
+      new MarketDataDao(DefaultStore),
+      candidatesDao,
+      global.TradingHelperLibrary,
+    );
     return new TradeManager(
       priceProvider,
       tradesDao,
@@ -61,7 +66,7 @@ export class TradeManager {
       exchange,
       statistics,
       global.TradingHelperLibrary,
-      marketDataDao,
+      marketInfoProvider,
     );
   }
 
@@ -73,14 +78,11 @@ export class TradeManager {
     private readonly exchange: IExchange,
     private readonly stats: Statistics,
     private readonly plugin: TraderPlugin,
-    private readonly marketData: MarketDataDao,
+    private readonly mktInfoProvider: MarketInfoProvider,
   ) {}
 
   updateTickers(step: number): boolean {
-    this.marketData.updateDemandHistory(
-      () => this.candidatesDao.getAverageImbalance(),
-      step,
-    );
+    this.mktInfoProvider.update(step);
     return this.priceProvider.update();
   }
 
@@ -264,8 +266,7 @@ export class TradeManager {
   }
 
   #checkAutoStop() {
-    const { average } = this.candidatesDao.getAverageImbalance();
-    const strength = this.marketData.getStrength(average);
+    const { strength } = this.mktInfoProvider.get();
     if (
       this.#config.TradingAutoStopped &&
       strength >= this.#config.MarketStrengthTargets.max

@@ -32,6 +32,7 @@ import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
 import { MarketDataDao } from "./dao/MarketData";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+import { MarketInfoProvider } from "./providers/MarketInfoProvider";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -220,8 +221,12 @@ function getConfig(): Config {
 const plugin: TraderPlugin = global.TradingHelperLibrary;
 
 function getCandidates(): CandidatesData {
-  const mktData = new MarketDataDao(DefaultStore);
   const candidatesDao = new CandidatesDao(DefaultStore);
+  const mktInfoProvider = new MarketInfoProvider(
+    new MarketDataDao(DefaultStore),
+    candidatesDao,
+    plugin,
+  );
   const { all, selected } = plugin.getCandidates(candidatesDao);
   // Add pinned candidates
   const other = {};
@@ -231,13 +236,10 @@ function getCandidates(): CandidatesData {
       other[coin] = ci;
     }
   });
-  const { average: averageDemand, accuracy } =
-    candidatesDao.getAverageImbalance(all);
-  const strength = mktData.getStrength(averageDemand);
   return {
     selected,
     other,
-    marketInfo: { averageDemand, accuracy, strength },
+    marketInfo: mktInfoProvider.get(),
   };
 }
 
@@ -352,17 +354,24 @@ global.info = (coin: CoinName) => {
 
   const candidatesDao = new CandidatesDao(DefaultStore);
   if (!coin) {
-    const marketData = new MarketDataDao(DefaultStore);
-    const { average, accuracy } = candidatesDao.getAverageImbalance();
-    const strength = marketData.getStrength(average);
+    const marketInfoProvider = new MarketInfoProvider(
+      new MarketDataDao(DefaultStore),
+      candidatesDao,
+      plugin,
+    );
+    const { strength, averageDemand, accuracy } = marketInfoProvider.get();
+
+    Log.ifUsefulDumpAsEmail();
+
     return `The current market is ${
-      strength > 90
-        ? `OVERSOLD. It's good time to BUY.`
-        : strength < 10
-        ? `OVERBOUGHT. It's good time to SELL.`
-        : `unclear. Trade with CAUTION.`
+      strength > 0.9
+        ? `strong. It's good time to buy.`
+        : strength < 0.1
+        ? `weak. It's good time to sell.`
+        : `unclear. Trade with caution.`
     }
-Average demand (-100..100): ${f0(average * 100)}%
+Strength (0..100): ${f0(strength * 100)}
+Average demand (-100..100): ${f0(averageDemand * 100)}%
 Accuracy (0..100): ${f0(accuracy * 100)}%${
       accuracy < 0.5
         ? ` (automatically improved over time for TH+ subscribers)`
