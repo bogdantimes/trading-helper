@@ -6,7 +6,6 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
   Divider,
   FormControl,
   FormControlLabel,
@@ -170,13 +169,6 @@ export function Settings(params: {
           </FormControl>
           <FormControl>
             <Typography id="market-strength-slider" gutterBottom>
-              <Chip
-                label="New"
-                color={`primary`}
-                size="small"
-                variant={`outlined`}
-                style={{ marginRight: 10 }}
-              />
               Auto-stop (Market strength)
               {cfg.TradingAutoStopped && ` (Now: Paused)`}
             </Typography>
