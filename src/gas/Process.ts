@@ -30,7 +30,7 @@ export class Process {
 
       // Updating different tickers every tick
       // This should be the only place to call `updateTickers`.
-      if (!manager.updateTickers(-1)) {
+      if (!manager.syncPrices()) {
         checkOutage();
         return;
       }

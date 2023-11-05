@@ -239,7 +239,7 @@ function getCandidates(): CandidatesData {
   return {
     selected,
     other,
-    marketInfo: mktInfoProvider.get(),
+    marketInfo: mktInfoProvider.get(-1),
   };
 }
 
@@ -359,7 +359,7 @@ global.info = (coin: CoinName) => {
       candidatesDao,
       plugin,
     );
-    const { strength, averageDemand, accuracy } = marketInfoProvider.get();
+    const { strength, averageDemand, accuracy } = marketInfoProvider.get(-1);
 
     Log.ifUsefulDumpAsEmail();
 

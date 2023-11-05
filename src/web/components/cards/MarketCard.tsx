@@ -22,7 +22,7 @@ export default function MarketCard({
             display="flex"
             alignItems="center"
           >
-            Market
+            Spot Market
           </Typography>
           <Typography variant="body2" color="text.secondary">
             <Box

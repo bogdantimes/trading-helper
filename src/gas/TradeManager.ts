@@ -81,8 +81,7 @@ export class TradeManager {
     private readonly mktInfoProvider: MarketInfoProvider,
   ) {}
 
-  updateTickers(step: number): boolean {
-    this.mktInfoProvider.update(step);
+  syncPrices(): boolean {
     return this.priceProvider.update();
   }
 
@@ -101,8 +100,7 @@ export class TradeManager {
     // Interim balances update after previous operations
     this.#updateBalances();
 
-    const getMaxSignals =
-      this.#config.ViewOnly || this.#config.TradingAutoStopped;
+    const getMaxSignals = this.#config.ViewOnly;
     // Run plugin to update candidates and also get buy signals
 
     let libResult: PluginResult = { advancedAccess: false, signals: [] };
@@ -132,7 +130,7 @@ export class TradeManager {
       });
     }
 
-    this.#checkAutoStop();
+    this.#checkAutoStop(step);
     this.#handleBuySignals(signals);
   }
 
@@ -265,11 +263,12 @@ export class TradeManager {
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
   }
 
-  #checkAutoStop() {
-    const { strength } = this.mktInfoProvider.get();
+  #checkAutoStop(step: number) {
+    const { strength } = this.mktInfoProvider.get(step);
+    const strengthAdjusted = f0(strength * 100);
     if (
       this.#config.TradingAutoStopped &&
-      strength >= this.#config.MarketStrengthTargets.max
+      strengthAdjusted >= this.#config.MarketStrengthTargets.max
     ) {
       this.#config = this.configDao.update((c) => {
         c.TradingAutoStopped = false;
@@ -281,7 +280,7 @@ export class TradeManager {
     }
     if (
       !this.#config.TradingAutoStopped &&
-      strength < this.#config.MarketStrengthTargets.min
+      strengthAdjusted < this.#config.MarketStrengthTargets.min
     ) {
       this.#config = this.configDao.update((c) => {
         c.TradingAutoStopped = true;
@@ -508,7 +507,7 @@ export class TradeManager {
 
     // This will init fields, or just use current values
     // Also, reset levels periodically
-    if (!tm.highestPrice || !tm.lowestPrice || tm.ttl % 60 === 0) {
+    if (!tm.highestPrice || !tm.lowestPrice || tm.ttl % 360 === 0) {
       tm.highestPrice = tm.currentPrice;
       tm.lowestPrice = floorToOptimalGrid(
         tm.currentPrice,

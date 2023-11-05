@@ -16,10 +16,6 @@ export function floor(value: number, decimals: number): number {
   return Math.floor(value * ratio) / ratio;
 }
 
-export function floorLastDigit(value: number, precision: number): number {
-  return floor(value, precision - 1);
-}
-
 interface FloorResult {
   result: number;
   precision: number;

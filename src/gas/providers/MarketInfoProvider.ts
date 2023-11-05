@@ -17,13 +17,15 @@ export class MarketInfoProvider {
     private readonly plugin: TraderPlugin,
   ) {}
 
-  get(): MarketInfo {
+  get(step: number): MarketInfo {
     const imbalance = this.candidatesDao.getAverageImbalance();
+    this.mktDataDao.updateDemandHistory(() => imbalance, step);
+
     const mktPercentile = this.mktDataDao.getStrength(imbalance.average);
     const btcCur = this.plugin.getPrices()[`BTC${StableUSDCoin.USDT}`];
     const btcDaily = this.plugin.getDailyPrices().BTC;
 
-    if (!btcCur || !btcDaily) {
+    if (!btcCur || !btcDaily?.prices[0]) {
       return {
         strength: mktPercentile,
         averageDemand: imbalance.average,
@@ -46,12 +48,5 @@ export class MarketInfoProvider {
       averageDemand: imbalance.average,
       accuracy: imbalance.accuracy,
     };
-  }
-
-  update(step: number) {
-    this.mktDataDao.updateDemandHistory(
-      () => this.candidatesDao.getAverageImbalance(),
-      step,
-    );
   }
 }
