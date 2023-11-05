@@ -1,3 +1,15 @@
+# v4.2.1
+
+* Trading Algorithm:
+  * Market Strength updated to work better for the bull market cycle.
+* Other:
+  * Add current price indicator on assets cards.
+  * Notify by email when Auto-stop switched.
+  * Improved temporary errors handling.
+  * Added `edit` API command.
+  * Improved `importCoin` API command.
+  * Removed UI swipe effect to switch tabs.
+
 # v4.2.0
 
 * Auto-stop (Market Strength) feature.

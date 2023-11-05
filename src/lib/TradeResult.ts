@@ -43,7 +43,7 @@ export class TradeResult {
 
   toString(): string {
     return `${this.symbol} => Qty: ${this.quantity}, Entry Price: ${f8(
-      this.entryPrice
+      this.entryPrice,
     )}, Paid: ${this.paid}, Sold price: ${this.soldPrice}, Gained: ${
       this.gained
     }, Commission BNB: ${this.commission}, Profit: ${
@@ -54,12 +54,12 @@ export class TradeResult {
   join(next: TradeResult): TradeResult {
     if (this.fromExchange !== next.fromExchange) {
       throw Error(
-        `Cannot join trades where 'fromExchange' is not equal: ${next}`
+        `Cannot join trades where 'fromExchange' is not equal: ${next}`,
       );
     }
     if (this.symbol.quantityAsset !== next.symbol.quantityAsset) {
       throw Error(
-        `Cannot join trades where 'quantityAsset' is not equal: current=${this.symbol.quantityAsset} next=${next.symbol.quantityAsset}`
+        `Cannot join trades where 'quantityAsset' is not equal: current=${this.symbol.quantityAsset} next=${next.symbol.quantityAsset}`,
       );
     }
     const result = new TradeResult(next.symbol, next.msg);

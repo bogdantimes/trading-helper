@@ -33,7 +33,7 @@ map.set(
   <KeyboardArrowUp
     htmlColor={`lightblue`}
     sx={{ transform: `rotate(90deg)` }}
-  />
+  />,
 );
 map.set(PriceMove.UP, <KeyboardArrowUp htmlColor={`green`} />);
 map.set(PriceMove.STRONG_UP, <KeyboardDoubleArrowUp htmlColor={`green`} />);

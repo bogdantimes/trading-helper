@@ -27,7 +27,7 @@ export function Home({ state }: { state: AppState }): JSX.Element {
 
   const sorted = assets.sort((t1, t2) => (t1.ttl > t2.ttl ? 1 : -1));
   const current = sorted.filter(
-    (t) => t.currentValue || t.stateIs(TradeState.BUY)
+    (t) => t.currentValue || t.stateIs(TradeState.BUY),
   );
   const sold = sorted.filter((t) => t.stateIs(TradeState.SOLD));
 
@@ -68,7 +68,7 @@ export function Home({ state }: { state: AppState }): JSX.Element {
                 current,
                 hideBalances,
                 config,
-                currentInfoMessage
+                currentInfoMessage,
               )}
             </Grid>
             <Grid item xs={12} md={4} order={{ xs: 1, md: 3 }}>
@@ -85,7 +85,7 @@ function balanceCard(
   config: Config,
   hideBalances: boolean,
   assetsValue: number,
-  toggleHideBalances: () => void
+  toggleHideBalances: () => void,
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
@@ -120,7 +120,7 @@ function assetsCards(
   elems: TradeMemo[],
   hideBalances: boolean,
   config: Config,
-  topItem?: JSX.Element
+  topItem?: JSX.Element,
 ): JSX.Element {
   const [hide, setHide] = useState(false);
 
@@ -160,12 +160,12 @@ function assetsCards(
 
 function candidates(
   title: string,
-  { selected, other, marketInfo }: CandidatesData
+  { selected, other, marketInfo }: CandidatesData,
 ): JSX.Element {
   const all = Object.assign({}, selected, other);
   const coins = Object.keys(all);
   const sorted = coins.sort((a, b) =>
-    all[a][Key.STRENGTH] > all[b][Key.STRENGTH] ? -1 : 1
+    all[a][Key.STRENGTH] > all[b][Key.STRENGTH] ? -1 : 1,
   );
 
   const [hide, setHide] = useState(false);

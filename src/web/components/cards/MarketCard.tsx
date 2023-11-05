@@ -12,11 +12,6 @@ export default function MarketCard({
 }: {
   marketInfo: MarketInfo;
 }): JSX.Element {
-  const strength =
-    marketInfo.strength === -1
-      ? 0
-      : Math.min(1, Math.max(0, marketInfo.strength / 100));
-
   return (
     <BasicCard>
       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -27,7 +22,7 @@ export default function MarketCard({
             display="flex"
             alignItems="center"
           >
-            Market
+            Spot Market
           </Typography>
           <Typography variant="body2" color="text.secondary">
             <Box
@@ -77,14 +72,20 @@ export default function MarketCard({
         <Box textAlign="center">
           <SemiCircleProgressBar
             diameter={80}
-            percentage={marketInfo.strength}
-            stroke={percentileToColorMap[strength.toFixed(1)]}
+            percentage={f0(marketInfo.strength * 100)}
+            stroke={percentileToColorMap[marketInfo.strength.toFixed(1)]}
             strokeWidth={10}
           />
           <Typography mt={`-7px`} color="text.secondary" variant="body2">
-            {marketInfo.strength === -1
-              ? `Strength: N/A`
-              : `Strength: ${marketInfo.strength}`}
+            {`Strength: ${f0(marketInfo.strength * 100)}`}
+            <br />
+            <b>
+              {marketInfo.strength > 0.9
+                ? `(oversold)`
+                : marketInfo.strength < 0.1
+                ? `(overbought)`
+                : ``}
+            </b>
           </Typography>
         </Box>
       </Box>

@@ -16,10 +16,6 @@ export function floor(value: number, decimals: number): number {
   return Math.floor(value * ratio) / ratio;
 }
 
-export function floorLastDigit(value: number, precision: number): number {
-  return floor(value, precision - 1);
-}
-
 interface FloorResult {
   result: number;
   precision: number;
@@ -42,7 +38,7 @@ export function sumWithMaxPrecision(a: number, b: number): number {
   const bSplit = `${b}`.split(`.`);
   const precision = Math.max(
     (aSplit[1] || aSplit[0]).length,
-    (bSplit[1] || bSplit[0]).length
+    (bSplit[1] || bSplit[0]).length,
   );
   return +(a + b).toFixed(precision);
 }
@@ -106,7 +102,7 @@ export function getPriceMove(maxCapacity: number, prices: number[]): PriceMove {
 
 export function enumKeys<T>(enumType: any): T[] {
   return Object.keys(enumType).filter((k) =>
-    isNaN(Number(k))
+    isNaN(Number(k)),
   ) as unknown as T[];
 }
 
@@ -168,7 +164,7 @@ export function formatUSDCurrency(value) {
 export function calculateBollingerBands(
   prices: number[],
   period: number,
-  multiplier: number
+  multiplier: number,
 ): { middle: number; upper: number; lower: number } {
   if (prices.length < period) {
     return { middle: -1, upper: -1, lower: -1 };

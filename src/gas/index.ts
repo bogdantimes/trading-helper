@@ -1,4 +1,10 @@
-import { CachedStore, DefaultStore, FirebaseStore } from "./Store";
+import {
+  AWS_LIMIT,
+  CachedStore,
+  DefaultStore,
+  FirebaseStore,
+  LIMIT_ERROR,
+} from "./Store";
 import { Statistics } from "./Statistics";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
@@ -24,8 +30,9 @@ import { type TraderPlugin } from "./traders/plugin/api";
 import { WithdrawalsManager } from "./WithdrawalsManager";
 import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
-import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 import { MarketDataDao } from "./dao/MarketData";
+import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+import { MarketInfoProvider } from "./providers/MarketInfoProvider";
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -33,11 +40,11 @@ function doGet(): HtmlOutput {
       HtmlService.createTemplateFromFile(`index`)
         .evaluate()
         .setFaviconUrl(
-          `https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png`
+          `https://user-images.githubusercontent.com/7527778/167810306-0b882d1b-64b0-4fab-b647-9c3ef01e46b4.png`,
         )
         .addMetaTag(
           `viewport`,
-          `width=device-width, initial-scale=1, maximum-scale=1`
+          `width=device-width, initial-scale=1, maximum-scale=1`,
         )
         // @ts-expect-error VERSION is injected by esbuild
         .setTitle(`TradingHelper v${VERSION}`)
@@ -80,7 +87,7 @@ function startAllProcesses(): string {
     .everyHours(3)
     .create();
   Log.alert(
-    `ℹ️ Background processes started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`
+    `ℹ️ Background processes started. State synchronization interval is ${TICK_INTERVAL_MIN} minute.`,
   );
   return `OK`;
 }
@@ -103,15 +110,12 @@ function catchError<T>(fn: () => T): T {
     Log.ifUsefulDumpAsEmail();
     return res;
   } catch (e) {
-    const awsLimit = `ConcurrentInvocationLimitExceeded`;
-    if (e.message.includes(awsLimit)) {
+    if (e.message.includes(AWS_LIMIT)) {
       // try again after small delay
       Utilities.sleep(500 + new Date().getMilliseconds());
       return catchError(fn);
     }
-    const limitMsg1 = `Service invoked too many times`;
-    const limitMsg2 = `Please wait a bit and try again`;
-    if (e.message.includes(limitMsg1) || e.message.includes(limitMsg2)) {
+    if (e.message.match(LIMIT_ERROR)) {
       // If limit already handled, just throw the error without logging
       if (CacheProxy.get(skipNextTick)) throw e;
       // Handle limit gracefully
@@ -179,7 +183,7 @@ function setConfig(config: Config): { msg: string; config: Config } {
         const balance = new Binance(dao).getBalance(config.StableCoin);
         if (balance < config.StableBalance) {
           msg = `\nActual balance on your Binance Spot account is $${f2(
-            balance
+            balance,
           )}, which is less than $${
             config.StableBalance
           } you are trying to set. You might need to transfer money from the Funding account. Check the balances and try again.`;
@@ -217,8 +221,12 @@ function getConfig(): Config {
 const plugin: TraderPlugin = global.TradingHelperLibrary;
 
 function getCandidates(): CandidatesData {
-  const mktData = new MarketDataDao(DefaultStore);
   const candidatesDao = new CandidatesDao(DefaultStore);
+  const mktInfoProvider = new MarketInfoProvider(
+    new MarketDataDao(DefaultStore),
+    candidatesDao,
+    plugin,
+  );
   const { all, selected } = plugin.getCandidates(candidatesDao);
   // Add pinned candidates
   const other = {};
@@ -228,13 +236,10 @@ function getCandidates(): CandidatesData {
       other[coin] = ci;
     }
   });
-  const { average: averageDemand, accuracy } =
-    candidatesDao.getAverageImbalance(all);
-  const strength = mktData.getStrength(averageDemand);
   return {
     selected,
     other,
-    marketInfo: { averageDemand, accuracy, strength },
+    marketInfo: mktInfoProvider.get(-1),
   };
 }
 
@@ -269,9 +274,32 @@ function sell(...coins: CoinName[]): string {
   });
 }
 
+function edit(coin: CoinName, qty: number, paid: number): any {
+  return catchError(() => {
+    qty = +qty;
+    paid = +paid;
+    if (!coin) {
+      Log.info(`Specify a coin name, e.g. BTC`);
+    } else if (!isFinite(qty)) {
+      Log.info(`Specify a proper amount of coins, e.g. 1.251`);
+    } else if (!isFinite(paid)) {
+      Log.info(`Specify how much you paid for the coin (in USD)`);
+    } else {
+      TradeManager.default().edit(coin, qty, paid);
+    }
+    return Log.printInfos();
+  });
+}
+
 function importCoin(coin: CoinName, qty?: number): any {
   return catchError(() => {
-    TradeManager.default().import(coin, qty);
+    if (!coin) {
+      Log.info(`Specify a coin name, e.g. BTC`);
+    } else if (qty && !isFinite(qty)) {
+      Log.info(`Specify a proper amount of coins, e.g. 1.251`);
+    } else {
+      TradeManager.default().import(coin, qty ? +qty : 0);
+    }
     return Log.printInfos();
   });
 }
@@ -284,7 +312,7 @@ function addWithdrawal(amount: number): string {
     const mgr = new WithdrawalsManager(
       configDao,
       new Binance(configDao),
-      new Statistics(DefaultStore)
+      new Statistics(DefaultStore),
     );
     const { balance } = mgr.addWithdrawal(amount);
     const msg = `💳 Withdrawal of $${amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
@@ -305,6 +333,7 @@ global.buy = buy;
 global.sell = sell;
 global.sellAll = sellAll;
 global.remove = remove;
+global.edit = edit;
 global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
@@ -325,9 +354,24 @@ global.info = (coin: CoinName) => {
 
   const candidatesDao = new CandidatesDao(DefaultStore);
   if (!coin) {
-    const { average, accuracy } = candidatesDao.getAverageImbalance();
-    return `The current market is ${average > 0 ? `BULLISH` : `BEARISH`}.
-Average demand (-100..100): ${f0(average * 100)}%
+    const marketInfoProvider = new MarketInfoProvider(
+      new MarketDataDao(DefaultStore),
+      candidatesDao,
+      plugin,
+    );
+    const { strength, averageDemand, accuracy } = marketInfoProvider.get(-1);
+
+    Log.ifUsefulDumpAsEmail();
+
+    return `The current market is ${
+      strength > 0.9
+        ? `strong. It's good time to buy.`
+        : strength < 0.1
+        ? `weak. It's good time to sell.`
+        : `unclear. Trade with caution.`
+    }
+Strength (0..100): ${f0(strength * 100)}
+Average demand (-100..100): ${f0(averageDemand * 100)}%
 Accuracy (0..100): ${f0(accuracy * 100)}%${
       accuracy < 0.5
         ? ` (automatically improved over time for TH+ subscribers)`
@@ -347,7 +391,7 @@ Accuracy (0..100): ${f0(accuracy * 100)}%${
     ci[Key.IMBALANCE] = imbalance;
 
     const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
-      ci?.[Key.MAX_PERCENTILE] * 100
+      ci?.[Key.MAX_PERCENTILE] * 100,
     )}`;
     result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
 Demand (-100..100): ${f0(imbalance * 100)}%
@@ -394,6 +438,7 @@ const helpDescriptions = {
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
+  edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,
   importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,

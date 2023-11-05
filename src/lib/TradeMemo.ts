@@ -55,7 +55,7 @@ export class TradeMemo {
   static copy(obj: TradeMemo): TradeMemo {
     return Object.assign(
       Object.create(TradeMemo.prototype),
-      JSON.parse(JSON.stringify(obj))
+      JSON.parse(JSON.stringify(obj)),
     );
   }
 
@@ -72,14 +72,14 @@ export class TradeMemo {
   static fromObject(obj: object): TradeMemo {
     const tradeMemo: TradeMemo = Object.assign(
       Object.create(TradeMemo.prototype),
-      obj
+      obj,
     );
     tradeMemo.tradeResult = Object.assign(
       Object.create(TradeResult.prototype),
-      tradeMemo.tradeResult
+      tradeMemo.tradeResult,
     );
     tradeMemo.tradeResult.symbol = ExchangeSymbol.fromObject(
-      tradeMemo.tradeResult.symbol
+      tradeMemo.tradeResult.symbol,
     );
     return tradeMemo;
   }
@@ -199,6 +199,9 @@ export class TradeMemo {
     if (this.ttl >= 2000) {
       t *= this.ttl / 2000;
     }
+    // TODO: if the current price is near a strong level
+    //  for example: 0.6980 (near 0.7) - the threshold should be higher
+    //  as usually such levels have strong resistances
     return t;
   }
 }

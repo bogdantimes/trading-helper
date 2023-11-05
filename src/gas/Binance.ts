@@ -45,7 +45,7 @@ export class Binance implements IExchange {
         () => `${resource}?${this.#addSignature(query, secret)}`,
         {
           headers: { "X-MBX-APIKEY": key },
-        }
+        },
       );
       accountData.balances.forEach((balance: any) => {
         this.#balances[balance.asset] = +(balance.free || 0);
@@ -59,20 +59,20 @@ export class Binance implements IExchange {
   getLatestKlineOpenPrices(
     symbol: ExchangeSymbol,
     interval: string,
-    limit: number
+    limit: number,
   ): number[] {
     Log.debug(
-      `Fetching latest kline open prices for ${symbol}, interval: ${interval}, limit: ${limit}`
+      `Fetching latest kline open prices for ${symbol}, interval: ${interval}, limit: ${limit}`,
     );
     const resource = `klines`;
     const query = `symbol=${symbol}&interval=${interval}&limit=${limit}`;
     try {
       return this.fetch(() => `${resource}?${query}`, {}).map(
-        (kline: any) => +kline[1]
+        (kline: any) => +kline[1],
       );
     } catch (e: any) {
       throw new Error(
-        `Failed to get latest kline open prices for ${symbol}: ${e.message}`
+        `Failed to get latest kline open prices for ${symbol}: ${e.message}`,
       );
     }
   }
@@ -87,11 +87,11 @@ export class Binance implements IExchange {
     if (moneyAvailable < cost) {
       return new TradeResult(
         symbol,
-        `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`
+        `Not enough money to buy: ${symbol.priceAsset}=${moneyAvailable}`,
       );
     }
     Log.alert(
-      `➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`
+      `➕ Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`,
     );
     const query = `symbol=${symbol}&type=MARKET&side=BUY&quoteOrderQty=${cost}`;
     try {
@@ -115,7 +115,7 @@ export class Binance implements IExchange {
     const qty = this.quantityForLotStepSize(symbol, quantity);
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${qty}`;
     Log.alert(
-      `➖ Selling ${qty} ${symbol.quantityAsset} for ${symbol.priceAsset}`
+      `➖ Selling ${qty} ${symbol.quantityAsset} for ${symbol.priceAsset}`,
     );
     try {
       const tradeResult = this.marketTrade(symbol, query);
@@ -127,7 +127,7 @@ export class Binance implements IExchange {
       if (e.message.includes(`Account has insufficient balance`)) {
         return new TradeResult(
           symbol,
-          `Account has no ${qty} of ${symbol.quantityAsset}`
+          `Account has no ${qty} of ${symbol.quantityAsset}`,
         );
       }
       if (e.message.includes(`Market is closed`)) {
@@ -136,7 +136,7 @@ export class Binance implements IExchange {
       if (e.message.includes(`MIN_NOTIONAL`)) {
         return new TradeResult(
           symbol,
-          `The cost of ${symbol.quantityAsset} is less than minimal needed to sell it.`
+          `The cost of ${symbol.quantityAsset} is less than minimal needed to sell it.`,
         );
       }
       throw e;
@@ -150,7 +150,7 @@ export class Binance implements IExchange {
 
   getLotSizePrecision(symbol: ExchangeSymbol): number {
     const lotSize = this.#getSymbolInfo(symbol)?.filters.find(
-      (f) => f.filterType === `LOT_SIZE`
+      (f) => f.filterType === `LOT_SIZE`,
     );
     if (!lotSize?.stepSize) {
       throw new Error(`Failed to get LOT_SIZE for ${symbol}`);
@@ -160,7 +160,7 @@ export class Binance implements IExchange {
 
   getPricePrecision(symbol: ExchangeSymbol): number {
     const priceFilter = this.#getSymbolInfo(symbol)?.filters.find(
-      (f) => f.filterType === `PRICE_FILTER`
+      (f) => f.filterType === `PRICE_FILTER`,
     );
     if (!priceFilter?.tickSize) {
       throw new Error(`Failed to get PRICE_FILTER for ${symbol}`);
@@ -176,7 +176,7 @@ export class Binance implements IExchange {
         {
           method: `post`,
           headers: { "X-MBX-APIKEY": key },
-        }
+        },
       );
       Log.debug(order);
       const tradeResult = new TradeResult(symbol);
@@ -197,7 +197,7 @@ export class Binance implements IExchange {
     if (!actualQty) {
       return new TradeResult(
         symbol,
-        `Binance Sport portfolio does not have ${symbol.quantityAsset}`
+        `Binance Sport portfolio does not have ${symbol.quantityAsset}`,
       );
     }
 
@@ -206,15 +206,15 @@ export class Binance implements IExchange {
     if (qty > actualQty) {
       return new TradeResult(
         symbol,
-        `Binance Sport portfolio has only ${actualQty} of ${symbol.quantityAsset}`
+        `Binance Sport portfolio has only ${actualQty} of ${symbol.quantityAsset}`,
       );
     }
 
     const { cost, fees } = this.#getTotalCostForQuantity(symbol, qty);
     const tradeResult = new TradeResult(symbol);
     tradeResult.fromExchange = true;
-    tradeResult.quantity = qty - fees.origQty;
-    tradeResult.cost = cost - fees.quoteQty;
+    tradeResult.quantity = qty;
+    tradeResult.cost = cost;
     tradeResult.commission = fees.BNB;
     tradeResult.paid = cost;
 
@@ -223,9 +223,9 @@ export class Binance implements IExchange {
 
   #getTotalCostForQuantity(
     symbol: ExchangeSymbol,
-    currentQuantity: number
+    currentQuantity: number,
   ): {
-    fees: { BNB: number; origQty: number; quoteQty: number };
+    fees: { BNB: number };
     cost: number;
   } {
     const { key, secret } = this.#getAPIKeysOrDie();
@@ -236,7 +236,7 @@ export class Binance implements IExchange {
       () => `${resource}?${this.#addSignature(query, secret)}`,
       {
         headers: { "X-MBX-APIKEY": key },
-      }
+      },
     );
 
     trades = trades.filter((t) => t.isBuyer).reverse();
@@ -273,19 +273,19 @@ export class Binance implements IExchange {
 
     if (remainingQuantity > 0) {
       throw new Error(
-        `Trade history is insufficient to cover the requested quantity for ${symbol}`
+        `Trade history is insufficient to cover the requested quantity for ${symbol}`,
       );
     }
 
     Log.debug(feeRecs);
 
     const fees = this.#getFees(symbol, feeRecs);
-    return { cost: totalCost, fees };
+    return { cost: totalCost, fees: { BNB: fees.BNB } };
   }
 
   #getFees(
     symbol: ExchangeSymbol,
-    fills: any[] = []
+    fills: any[] = [],
   ): { BNB: number; origQty: number; quoteQty: number } {
     const fees = { BNB: 0, origQty: 0, quoteQty: 0 };
     fills.forEach((f) => {
@@ -323,7 +323,7 @@ export class Binance implements IExchange {
 
   fetch(
     resource: () => string,
-    options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions
+    options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions,
   ): any {
     const cloudURL = this.#cloudURL;
     options.muteHttpExceptions = true;
@@ -335,7 +335,7 @@ export class Binance implements IExchange {
           cloudURL || `https://api${this.#curServerId}.binance.com/api/v3/`;
         const resp = UrlFetchApp.fetch(
           `${server}${encodeURI(resource())}`,
-          options
+          options,
         );
 
         if (resp.getResponseCode() === 200) {
@@ -354,10 +354,10 @@ export class Binance implements IExchange {
 
         if (resp.getResponseCode() === 451) {
           Log.alert(
-            `⛔ Binance blocked the request because it originates from a restricted location (most likely US-based Google Apps Script server). TradingHelper has EU-based service which is automatically enabled for Patrons that unlocked the autonomous trading.`
+            `⛔ Binance blocked the request because it originates from a restricted location (most likely US-based Google Apps Script server). TradingHelper has EU-based service which is automatically enabled for Patrons that unlocked the autonomous trading.`,
           );
           throw new Error(
-            `${INTERRUPT} ${resp.getResponseCode()} ${resp.getContentText()}`
+            `${INTERRUPT} ${resp.getResponseCode()} ${resp.getContentText()}`,
           );
         }
 

@@ -6,7 +6,7 @@ export class WithdrawalsManager {
   constructor(
     private readonly configDao: ConfigDao,
     private readonly exchange: IExchange,
-    private readonly statistics: Statistics
+    private readonly statistics: Statistics,
   ) {}
 
   addWithdrawal(amount: number): { amount: number; balance: number } {
@@ -14,7 +14,7 @@ export class WithdrawalsManager {
       // Check internal balance
       if (amount > config.StableBalance) {
         throw new Error(
-          `Withdrawal amount is greater than the current balance.`
+          `Withdrawal amount is greater than the current balance.`,
         );
       }
 
@@ -23,7 +23,7 @@ export class WithdrawalsManager {
       // Check external balance
       if (amount > balance) {
         throw new Error(
-          `Withdrawal amount is greater than the factual ${config.StableCoin} balance on the exchange: $${balance}.`
+          `Withdrawal amount is greater than the factual ${config.StableCoin} balance on the exchange: $${balance}.`,
         );
       }
 

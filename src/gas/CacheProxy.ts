@@ -50,17 +50,17 @@ export class DefaultCacheProxy implements ICacheProxy {
   put(
     key: string,
     value: string,
-    expirationInSeconds: Integer = MAX_EXPIRATION
+    expirationInSeconds: Integer = MAX_EXPIRATION,
   ): void {
     const size = byteCount(value);
     if (size > 0.9 * MAX_CACHE_VAL_SIZE_BYTES) {
       Log.info(
-        `Cache value for key ${key} is more than 90% of the maximum size of ${MAX_CACHE_VAL_SIZE_BYTES} bytes.`
+        `Cache value for key ${key} is more than 90% of the maximum size of ${MAX_CACHE_VAL_SIZE_BYTES} bytes.`,
       );
     }
     if (size > MAX_CACHE_VAL_SIZE_BYTES) {
       const error = new Error(
-        `Cache value for ${key} is too large: ${size} bytes. Max size is ${MAX_CACHE_VAL_SIZE_BYTES} bytes.`
+        `Cache value for ${key} is too large: ${size} bytes. Max size is ${MAX_CACHE_VAL_SIZE_BYTES} bytes.`,
       );
       Log.error(error);
       throw error;

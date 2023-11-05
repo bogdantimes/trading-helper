@@ -43,11 +43,11 @@ export class CandidatesDao implements ICandidatesDao {
 
   update(
     mutateFn: (
-      data: Record<string, CandidateInfo>
-    ) => Record<string, CandidateInfo>
+      data: Record<string, CandidateInfo>,
+    ) => Record<string, CandidateInfo>,
   ): void {
     this.store.update<Record<string, CandidateInfo>>(CandidatesDataKey, (v) =>
-      mutateFn(v || {})
+      mutateFn(v || {}),
     );
   }
 

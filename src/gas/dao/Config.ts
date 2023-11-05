@@ -78,7 +78,7 @@ export class ConfigDao implements APIKeysProvider {
   updateWithRetry(
     mutateFn: (curCfg: Config) => Config | undefined,
     maxRetries: number,
-    retryIntervalMs: number
+    retryIntervalMs: number,
   ): Config {
     let retries = 0;
     while (retries < maxRetries) {

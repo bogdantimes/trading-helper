@@ -1,4 +1,5 @@
 import React from "react";
+import CurrencyFormat from "react-currency-format";
 import {
   Box,
   darken,
@@ -49,7 +50,15 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           display="flex"
           alignItems="center"
         >
-          {coinName} {!!tm.currentValue && growthIconMap.get(tm.getPriceMove())}
+          {coinName}
+          <Typography variant="body2" fontWeight="bold" ml={1} mr={1}>
+            <CurrencyFormat
+              value={tm.currentPrice}
+              displayType={`text`}
+              thousandSeparator={true}
+            />
+          </Typography>
+          {!!tm.currentValue && growthIconMap.get(tm.getPriceMove())}
         </Typography>
         <Typography
           variant="body2"
@@ -63,7 +72,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
               profitPercent >= 0
                 ? theme.palette.success.light
                 : theme.palette.error.light,
-              0.6
+              0.6,
             ),
           }}
         >
@@ -84,7 +93,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
             <Typography variant="inherit">
               {floor(
                 tm.tradeResult.soldPrice || tm.tradeResult.entryPrice,
-                getPrecision(tm.currentPrice)
+                getPrecision(tm.currentPrice),
               )}
             </Typography>
           </Box>

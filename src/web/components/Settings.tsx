@@ -6,7 +6,6 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
   Divider,
   FormControl,
   FormControlLabel,
@@ -65,7 +64,7 @@ export function Settings(params: {
       cfg.StableBalance = balance === `` ? AUTO_DETECT : +balance;
     } else if (balance !== ``) {
       setError(
-        `Balance must be a positive number or empty to auto-detect it from Binance.`
+        `Balance must be a positive number or empty to auto-detect it from Binance.`,
       );
       return;
     }
@@ -105,7 +104,7 @@ export function Settings(params: {
                 labelId="stable-coin"
                 value={cfg.StableCoin}
                 label={`Stable Coin`}
-                defaultValue={StableUSDCoin.BUSD}
+                defaultValue={StableUSDCoin.USDT}
                 onChange={(e) => {
                   setCfg({
                     ...cfg,
@@ -170,13 +169,6 @@ export function Settings(params: {
           </FormControl>
           <FormControl>
             <Typography id="market-strength-slider" gutterBottom>
-              <Chip
-                label="New"
-                color={`primary`}
-                size="small"
-                variant={`outlined`}
-                style={{ marginRight: 10 }}
-              />
               Auto-stop (Market strength)
               {cfg.TradingAutoStopped && ` (Now: Paused)`}
             </Typography>
