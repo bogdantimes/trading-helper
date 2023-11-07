@@ -15,10 +15,13 @@ import {
   type Config,
   f0,
   f2,
+  floor,
+  getPrecision,
   type InitialSetupParams,
   type IStore,
   Key,
   MASK,
+  TradeState,
 } from "../lib";
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
@@ -31,8 +34,8 @@ import { WithdrawalsManager } from "./WithdrawalsManager";
 import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
 import { MarketDataDao } from "./dao/MarketData";
-import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 import { MarketInfoProvider } from "./providers/MarketInfoProvider";
+import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -156,6 +159,13 @@ function initialSetup(params: InitialSetupParams): string {
 function sellAll(): string {
   return catchError(() => {
     TradeManager.default().sellAll();
+    return Log.printInfos();
+  });
+}
+
+function sellChunk(coin: CoinName, chunkSize: number): string {
+  return catchError(() => {
+    TradeManager.default().sellChunk(coin, chunkSize);
     return Log.printInfos();
   });
 }
@@ -332,6 +342,7 @@ global.setFirebaseURL = setFirebaseURL;
 global.buy = buy;
 global.sell = sell;
 global.sellAll = sellAll;
+global.sellChunk = sellChunk;
 global.remove = remove;
 global.edit = edit;
 global.importCoin = importCoin;
@@ -437,6 +448,7 @@ const helpDescriptions = {
   buy: `Buys a coin. Example: $ buy BTC`,
   sell: `Sells a list of coins. Example: $ sell BTC ETH`,
   sellAll: `Sells all coins.`,
+  sellChunk: `Sells a chunk of the asset. Example (selling a half of BTC): $ sellChunk 0.5 BTC`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
   edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,
   importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,

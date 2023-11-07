@@ -29,10 +29,10 @@ import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
 import {
+  type PluginResult,
   type Signal,
   SignalType,
   type TraderPlugin,
-  type PluginResult,
 } from "./traders/plugin/api";
 import { DefaultStore } from "./Store";
 import { CandidatesDao } from "./dao/Candidates";
@@ -166,6 +166,41 @@ export class TradeManager {
   sellAll(): void {
     this.#prepare();
     this.tradesDao.iterate((t) => this.#sell(t), TradeState.BOUGHT);
+    this.#updateBalances();
+  }
+
+  sellChunk(coin: CoinName, chunkSize: number): void {
+    this.#prepare();
+
+    this.tradesDao.update(
+      coin,
+      (tm) => {
+        const origTr = tm.tradeResult;
+        const trChunk = tm.tradeResult.getChunk(chunkSize);
+        tm.tradeResult = trChunk;
+
+        const r = this.#sell(tm);
+
+        if (!r.stateIs(TradeState.SOLD)) {
+          Log.info(
+            `Couldn't sell ${coin}, attempted chunk: ${trChunk.toString()}`,
+          );
+          return;
+        }
+
+        // Calculate actual remaining chunk size based on the actually sold chunk
+        const remainingSize = 1 - r.tradeResult.soldQty / origTr.quantity;
+        tm.tradeResult = origTr.getChunk(remainingSize);
+        tm.setState(TradeState.BOUGHT);
+        tm.deleted = false;
+        return tm;
+      },
+      () => {
+        Log.info(`${coin} not found in portfolio.`);
+        return null;
+      },
+    );
+
     this.#updateBalances();
   }
 
@@ -453,7 +488,7 @@ export class TradeManager {
       .filter((s) => {
         const isBuy = s.type === SignalType.Buy;
         const isNotFeeCoin = s.coin !== BNB;
-        const isNew = !this.tradesDao.get()[s.coin]?.currentValue;
+        const isNew = !this.tradesDao.getAll()[s.coin]?.currentValue;
         return isBuy && isNotFeeCoin && isNew;
       })
       // For back-testing, sort by name to ensure tests consistency
@@ -470,7 +505,7 @@ export class TradeManager {
 
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
 
-    if (tm.stateIs(TradeState.BOUGHT) && this.#config.SmartExit) {
+    if (tm.stateIs(TradeState.BOUGHT)) {
       this.#processBoughtState(tm);
     }
 
@@ -502,6 +537,18 @@ export class TradeManager {
       Log.alert(
         `⚠️ ${tm.tradeResult.symbol}: current price is unknown. If problem persists - please, trade the asset manually on the exchange.`,
       );
+      return;
+    }
+
+    tm.tradeResult.lotSizeQty =
+      tm.tradeResult.lotSizeQty ||
+      this.exchange.quantityForLotStepSize(
+        tm.tradeResult.symbol,
+        tm.tradeResult.quantity,
+      );
+
+    if (!this.#config.SmartExit) {
+      // If smart exit is disabled, we should return here
       return;
     }
 

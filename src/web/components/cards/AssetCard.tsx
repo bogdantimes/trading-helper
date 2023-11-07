@@ -15,6 +15,7 @@ import {
   SHORT_MASK,
   type TradeMemo,
   TradeState,
+  f2,
 } from "../../../lib/index";
 import { growthIconMap } from "../Common";
 import BasicCard from "./BasicCard";
@@ -32,12 +33,12 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
   const paid = tm.tradeResult.paid;
   const currentValue = tm.currentValue || tm.tradeResult.gained;
   const profitPercent = tm.profitPercent();
-  const displayPaid = hideBalances ? SHORT_MASK : paid.toFixed(2);
+  const displayPaid = hideBalances ? SHORT_MASK : f2(paid);
   const profitAbs = Math.abs(tm.profit());
   const profitSign = profitPercent >= 0 ? `+` : `-`;
   const displayCurrentValue = hideBalances
     ? SHORT_MASK
-    : `${currentValue.toFixed(2)} (${profitSign}${profitAbs.toFixed(2)})`;
+    : `${f2(currentValue)} (${profitSign}${f2(profitAbs)})`;
   const tradeState = tm.getState();
   const isSold = tradeState === TradeState.SOLD;
 

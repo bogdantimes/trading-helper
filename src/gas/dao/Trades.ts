@@ -1,4 +1,5 @@
 import {
+  type CoinName,
   type IStore,
   StoreDeleteProp,
   StoreNoOp,
@@ -11,8 +12,8 @@ import { LOCK_TIMEOUT } from "../Store";
 export class TradesDao {
   constructor(private readonly store: IStore) {}
 
-  has(coinName: string): boolean {
-    return !!this.get()[coinName];
+  has(coinName: CoinName): boolean {
+    return !!this.getAll()[coinName.trim().toUpperCase()];
   }
 
   /**
@@ -117,7 +118,7 @@ export class TradesDao {
     });
   }
 
-  get(): Record<string, TradeMemo> {
+  getAll(): Record<string, TradeMemo> {
     // Convert raw trades to TradeMemo objects
     const trades = this.store.get<object>(`Trades`) || {};
     return Object.fromEntries<TradeMemo>(
@@ -128,8 +129,13 @@ export class TradesDao {
     );
   }
 
+  get(coinName: CoinName): TradeMemo | undefined {
+    coinName = coinName.trim().toUpperCase();
+    return this.getAll()[coinName];
+  }
+
   getList(state?: TradeState): TradeMemo[] {
-    const values = Object.values(this.get());
+    const values = Object.values(this.getAll());
     return state ? values.filter((trade) => trade.stateIs(state)) : values;
   }
 
