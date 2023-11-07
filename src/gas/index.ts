@@ -361,7 +361,7 @@ global.upgrade = () => {
   });
 };
 global.info = (coin: CoinName) => {
-  coin = coin?.toUpperCase();
+  coin = coin?.trim().toUpperCase();
 
   const candidatesDao = new CandidatesDao(DefaultStore);
   if (!coin) {
@@ -404,7 +404,9 @@ Accuracy (0..100): ${f0(accuracy * 100)}%${
     const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
       ci?.[Key.MAX_PERCENTILE] * 100,
     )}`;
-    result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
+    result = `== CANDIDATE ==\nStrength (0..100): ${f0(
+      ci?.[Key.STRENGTH] * 100,
+    )}
 Demand (-100..100): ${f0(imbalance * 100)}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
@@ -412,6 +414,23 @@ Current price zone (-|0..100|+): ${curRange}%`;
 
     return all;
   });
+
+  const tm = new TradesDao(DefaultStore).get(coin);
+  if (tm?.stateIs(TradeState.BOUGHT)) {
+    const stableCoin = tm.tradeResult.symbol.priceAsset;
+    const entryPrice = floor(
+      tm.tradeResult.entryPrice,
+      getPrecision(tm.currentPrice),
+    );
+    result += `\n\n== ASSET ==
+${tm.getCoinName()} | ${tm.currentPrice} | P/L ${f2(tm.profitPercent())}%
+Entry Price: ${entryPrice} ${stableCoin}
+Qty total/sellable: ${tm.tradeResult.quantity} / ${tm.tradeResult.lotSizeQty}
+Paid: ${f2(tm.tradeResult.paid)} ${stableCoin}
+Current: ${f2(tm.currentValue)} (${f2(tm.profit())}) ${stableCoin}
+BNB fee: ${tm.tradeResult.commission}
+`;
+  }
   return result;
 };
 global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
