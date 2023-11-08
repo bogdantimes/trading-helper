@@ -272,9 +272,13 @@ export class Binance implements IExchange {
       feeRecs.push(feeRec);
     }
 
-    if (remainingQuantity > 0) {
+    const tolerance = 1e-10; // Tolerance helps ignore javascript float number errors
+    if (remainingQuantity > tolerance) {
+      Log.info(
+        `Couldn't find records for ${remainingQuantity} ${symbol.quantityAsset}`,
+      );
       throw new Error(
-        `Trade history is insufficient to cover the requested quantity for ${symbol}`,
+        `Trade history is insufficient to cover the requested quantity for ${symbol}.`,
       );
     }
 

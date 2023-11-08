@@ -15,12 +15,11 @@ import {
   type Config,
   f0,
   f2,
-  floor,
-  getPrecision,
   type InitialSetupParams,
   type IStore,
   Key,
   MASK,
+  prettyPrintTradeMemo,
   TradeState,
 } from "../lib";
 import { Process } from "./Process";
@@ -417,19 +416,7 @@ Current price zone (-|0..100|+): ${curRange}%`;
 
   const tm = new TradesDao(DefaultStore).get(coin);
   if (tm?.stateIs(TradeState.BOUGHT)) {
-    const stableCoin = tm.tradeResult.symbol.priceAsset;
-    const entryPrice = floor(
-      tm.tradeResult.entryPrice,
-      getPrecision(tm.currentPrice),
-    );
-    result += `\n\n== ASSET ==
-${tm.getCoinName()} | ${tm.currentPrice} | P/L ${f2(tm.profitPercent())}%
-Entry Price: ${entryPrice} ${stableCoin}
-Qty total/sellable: ${tm.tradeResult.quantity} / ${tm.tradeResult.lotSizeQty}
-Paid: ${f2(tm.tradeResult.paid)} ${stableCoin}
-Current: ${f2(tm.currentValue)} (${f2(tm.profit())}) ${stableCoin}
-BNB fee: ${tm.tradeResult.commission}
-`;
+    result += `\n\n== ASSET ==\n${prettyPrintTradeMemo(tm)}`;
   }
   return result;
 };

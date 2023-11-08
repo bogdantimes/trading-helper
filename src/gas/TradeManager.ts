@@ -16,6 +16,7 @@ import {
   type ICandidatesDao,
   MIN_BUY,
   MINIMUM_FEE_COVERAGE,
+  prettyPrintTradeMemo,
   type PricesHolder,
   StableUSDCoin,
   SymbolStatus,
@@ -246,6 +247,12 @@ export class TradeManager {
     const importedTrade = this.exchange.importTrade(symbol, qty);
 
     if (importedTrade.fromExchange) {
+      const returnImportedTm = () => {
+        const tm = this.#produceNewTradeMemo(importedTrade);
+        Log.alert(`➕ Imported ${symbol.quantityAsset}`);
+        Log.info(prettyPrintTradeMemo(tm));
+        return tm;
+      };
       this.tradesDao.update(
         symbol.quantityAsset,
         (t) => {
@@ -255,11 +262,10 @@ export class TradeManager {
             );
             return null;
           }
-          return this.#produceNewTradeMemo(importedTrade);
+          return returnImportedTm();
         },
-        () => this.#produceNewTradeMemo(importedTrade),
+        returnImportedTm,
       );
-      Log.alert(`➕ Imported ${symbol.quantityAsset}`);
     } else {
       Log.alert(
         `${symbol.quantityAsset} could not be imported: ${importedTrade.msg}`,
@@ -273,17 +279,6 @@ export class TradeManager {
 
     tm.currentPrice = ph?.currentPrice;
     tm.setState(TradeState.BOUGHT);
-
-    const coin = tm.getCoinName();
-    Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
-    Log.info(`${coin} asset quantity: ${tm.tradeResult.quantity}`);
-    Log.info(
-      `${coin} asset avg. price: $${floor(
-        tm.tradeResult.avgPrice,
-        ph.precision,
-      )}`,
-    );
-
     return tm;
   }
 
