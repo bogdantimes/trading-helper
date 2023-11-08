@@ -225,9 +225,6 @@ export class TradeManager {
       return;
     }
 
-    const validQuantity = this.exchange.quantityForLotStepSize(symbol, qty);
-    Log.info(`Be aware that the sellable quantity is ${validQuantity}`);
-
     this.tradesDao.update(
       coin,
       () => tm,
@@ -235,6 +232,7 @@ export class TradeManager {
     );
 
     Log.alert(`➕ Edited ${coin}`);
+    Log.info(prettyPrintTradeMemo(tm));
   }
 
   import(coin: CoinName, qty?: number): void {
@@ -273,10 +271,13 @@ export class TradeManager {
     }
   }
 
-  #produceNewTradeMemo(trade: TradeResult): TradeMemo {
-    const tm = new TradeMemo(trade);
-    const ph = this.#getPrices(tm.tradeResult.symbol);
-
+  #produceNewTradeMemo(tr: TradeResult): TradeMemo {
+    tr.lotSizeQty = this.exchange.quantityForLotStepSize(
+      tr.symbol,
+      tr.quantity,
+    );
+    const tm = new TradeMemo(tr);
+    const ph = this.#getPrices(tr.symbol);
     tm.currentPrice = ph?.currentPrice;
     tm.setState(TradeState.BOUGHT);
     return tm;
