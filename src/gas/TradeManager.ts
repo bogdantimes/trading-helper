@@ -10,7 +10,6 @@ import {
   ExchangeSymbol,
   f0,
   f2,
-  f8,
   floor,
   floorToOptimalGrid,
   type ICandidatesDao,
@@ -648,7 +647,7 @@ export class TradeManager {
     ];
   }
 
-  #buyNow(signal: Signal, cost?: number, join = false): TradeMemo | undefined {
+  #buyNow(signal: Signal, cost?: number, join = false): void {
     const money = this.#getMoneyToInvest(cost);
     if (money <= 0) {
       Log.info(`ℹ️ Can't buy ${signal.coin} - not enough balance`);
@@ -659,15 +658,20 @@ export class TradeManager {
     const newTm = new TradeMemo(new TradeResult(symbol));
     newTm.setSignalMetadata(signal);
 
-    this.tradesDao.update(signal.coin, (curTm) => {
-      if (!join && curTm.currentValue) {
-        Log.info(`ℹ️ Can't buy ${signal.coin} - already in portfolio`);
-      } else {
-        return this.#buy(curTm.stateIs(TradeState.SOLD) ? newTm : curTm, money);
-      }
-    });
-
-    return newTm;
+    this.tradesDao.update(
+      signal.coin,
+      (curTm) => {
+        if (!join && curTm.currentValue) {
+          Log.info(`ℹ️ Can't buy ${signal.coin} - already in portfolio`);
+        } else {
+          return this.#buy(
+            curTm.stateIs(TradeState.SOLD) ? newTm : curTm,
+            money,
+          );
+        }
+      },
+      () => this.#buy(newTm, money),
+    );
   }
 
   #buy(tm: TradeMemo, cost: number): TradeMemo {
@@ -681,11 +685,7 @@ export class TradeManager {
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
         this.#processBuyFee(tradeResult);
-        Log.info(
-          `${tm.getCoinName()} quantity: ${
-            tradeResult.quantity
-          }, average price: $${f8(tm.tradeResult.avgPrice)}`,
-        );
+        Log.info(prettyPrintTradeMemo(tm));
         Log.debug(tm);
       } catch (e) {
         Log.error(e);
