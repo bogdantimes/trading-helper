@@ -78,7 +78,7 @@ export class TradeResult {
     const chunkQty = this.quantity * size;
     if (chunkQty <= 0) {
       throw new Error(
-        `The calculated chunk quantity for ${this.symbol.quantityAsset} is too small.`,
+        `The calculated quantity for ${this.symbol.quantityAsset} is too small.`,
       );
     }
     const chunk = new TradeResult(this.symbol);

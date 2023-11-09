@@ -162,13 +162,6 @@ function sellAll(): string {
   });
 }
 
-function sellChunk(coin: CoinName, chunkSize: number): string {
-  return catchError(() => {
-    TradeManager.default().sellChunk(coin, chunkSize);
-    return Log.printInfos();
-  });
-}
-
 function remove(...coins: CoinName[]): string {
   return catchError(() => {
     const dao = new TradesDao(DefaultStore);
@@ -266,19 +259,29 @@ function getState(): AppState {
   };
 }
 
-function buy(coin: CoinName): string {
+function buy(coin: CoinName, cost?: number): string {
   return catchError(() => {
-    TradeManager.default().buy(coin.toUpperCase());
+    if (!coin) {
+      Log.info(`Specify a coin name, e.g. BTC`);
+    } else if (cost && !isFinite(+cost)) {
+      Log.info(
+        `Specify the amount (available on the balance) you're willing to invest, e.g. 150`,
+      );
+    }
+    TradeManager.default().buy(coin.toUpperCase(), cost);
     return Log.printInfos() || `In progress!`;
   });
 }
 
-function sell(...coins: CoinName[]): string {
+function sell(coin: CoinName, chunkSize = 1): string {
   return catchError(() => {
-    const mgr = TradeManager.default();
-    coins?.forEach((c) => {
-      mgr.sell(c.toUpperCase());
-    });
+    if (isFinite(+chunkSize)) {
+      TradeManager.default().sell(coin, +chunkSize);
+    } else {
+      Log.info(
+        `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
+      );
+    }
     return Log.printInfos();
   });
 }
@@ -341,7 +344,6 @@ global.setFirebaseURL = setFirebaseURL;
 global.buy = buy;
 global.sell = sell;
 global.sellAll = sellAll;
-global.sellChunk = sellChunk;
 global.remove = remove;
 global.edit = edit;
 global.importCoin = importCoin;
@@ -451,10 +453,9 @@ const helpDescriptions = {
   stop: `Stops the trading process.`,
   info: `Returns information about the market or a coin. Examples: 1) $ info 2) $ info BTC`,
   pin: `Pins a candidate. Example: $ pin BTC`,
-  buy: `Buys a coin. Example: $ buy BTC`,
-  sell: `Sells a list of coins. Example: $ sell BTC ETH`,
+  buy: `Buys a coin. Format: $ buy [COIN] [amount (USDT)]. Example: $ buy BTC 150`,
+  sell: `Sells a whole or a chunk of the asset. Example (whole): $ sell BTC. Example (half): $ sell BTC 0.5`,
   sellAll: `Sells all coins.`,
-  sellChunk: `Sells a chunk of the asset. Example (selling a half of BTC): $ sellChunk 0.5 BTC`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
   edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,
   importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,

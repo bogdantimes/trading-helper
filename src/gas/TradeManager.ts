@@ -135,32 +135,30 @@ export class TradeManager {
     this.#handleBuySignals(signals);
   }
 
-  buy(coin: CoinName): void {
+  /**
+   * Buy a coin. If cost is specified and the available balance is enough -
+   * it will spend stable coins according to the desired cost.
+   * @param coin coin name, like BTC
+   * @param cost amount of stable coins to pay for the coin
+   * @param join whether to allow adding more to the existing coin in the portfolio
+   */
+  buy(coin: CoinName, cost?: number, join = true): void {
     this.#prepare();
     const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
     const price = this.#getPrices(symbol)?.currentPrice;
     if (price) {
-      this.#buyNow({
-        coin,
-        type: SignalType.Manual,
-        support: price * 0.9,
-      });
+      this.#buyNow(
+        {
+          coin,
+          type: SignalType.Manual,
+          support: price * 0.9,
+        },
+        cost,
+        join,
+      );
     } else {
       throw new Error(`Unknown coin ${coin}: no price information found`);
     }
-    this.#updateBalances();
-  }
-
-  sell(coin: CoinName): void {
-    this.#prepare();
-    this.tradesDao.update(
-      coin,
-      (t) => this.#sell(t),
-      () => {
-        Log.info(`${coin} not found`);
-        return null;
-      },
-    );
     this.#updateBalances();
   }
 
@@ -170,7 +168,7 @@ export class TradeManager {
     this.#updateBalances();
   }
 
-  sellChunk(coin: CoinName, chunkSize: number): void {
+  sell(coin: CoinName, chunkSize = 1): void {
     this.#prepare();
 
     this.tradesDao.update(
@@ -517,13 +515,16 @@ export class TradeManager {
     return tm;
   }
 
-  #getMoneyToInvest(): number {
+  #getMoneyToInvest(cost?: number): number {
     if (
       this.#canInvest <= 0 ||
       this.#balance === AUTO_DETECT ||
       this.#balance < MIN_BUY
     ) {
       return 0; // Return 0 if we can not invest
+    }
+    if (cost && +cost < this.#balance) {
+      return Math.max(MIN_BUY, Math.floor(+cost));
     }
     return Math.max(MIN_BUY, Math.floor(this.#balance / this.#canInvest));
   }
@@ -646,8 +647,8 @@ export class TradeManager {
     ];
   }
 
-  #buyNow(signal: Signal): TradeMemo | undefined {
-    const money = this.#getMoneyToInvest();
+  #buyNow(signal: Signal, cost?: number, join = false): TradeMemo | undefined {
+    const money = this.#getMoneyToInvest(cost);
     if (money <= 0) {
       Log.info(`ℹ️ Can't buy ${signal.coin} - not enough balance`);
       return;
@@ -656,19 +657,14 @@ export class TradeManager {
     const symbol = new ExchangeSymbol(signal.coin, this.#config.StableCoin);
     const newTm = new TradeMemo(new TradeResult(symbol));
     newTm.setSignalMetadata(signal);
-    newTm.setState(TradeState.BUY);
 
-    this.tradesDao.update(
-      signal.coin,
-      (curTm) => {
-        if (curTm.currentValue) {
-          Log.info(`ℹ️ Can't buy ${signal.coin} - already in portfolio`);
-        } else {
-          return this.#buy(newTm, money);
-        }
-      },
-      () => this.#buy(newTm, money),
-    );
+    this.tradesDao.update(signal.coin, (curTm) => {
+      if (!join && curTm.currentValue) {
+        Log.info(`ℹ️ Can't buy ${signal.coin} - already in portfolio`);
+      } else {
+        return this.#buy(curTm.stateIs(TradeState.SOLD) ? newTm : curTm, money);
+      }
+    });
 
     return newTm;
   }
