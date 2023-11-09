@@ -1,6 +1,10 @@
+# v4.2.4
+
+* Bug fix: coin buy skipped.
+
 # v4.2.3
 
-* Bug fix: coin is not removed after it was sold.
+* Bug fix: coin is not removed.
 
 # v4.2.2
 
