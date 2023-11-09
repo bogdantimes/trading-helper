@@ -1,7 +1,8 @@
 import { TradeResult } from "./TradeResult";
 import { ExchangeSymbol, PriceMove, TradeState } from "./Types";
-import { SignalType, type Signal } from "../gas/traders/plugin/api";
+import { type Signal, SignalType } from "../gas/traders/plugin/api";
 import { StandardFee } from "./Config";
+import { f2, floor, getPrecision } from "./Functions";
 
 export class TradeMemo {
   tradeResult: TradeResult;
@@ -204,4 +205,20 @@ export class TradeMemo {
     //  as usually such levels have strong resistances
     return t;
   }
+}
+
+export function prettyPrintTradeMemo(tm: TradeMemo): string {
+  const stableCoin = tm.tradeResult.symbol.priceAsset;
+  const entryPrice = floor(
+    tm.tradeResult.entryPrice,
+    getPrecision(tm.currentPrice),
+  );
+  return `${tm.getCoinName()} | ${tm.currentPrice} | P/L ${f2(
+    tm.profitPercent(),
+  )}%
+Entry Price: ${entryPrice} ${stableCoin}
+Qty total/sellable: ${tm.tradeResult.quantity} / ${tm.tradeResult.lotSizeQty}
+Paid: ${f2(tm.tradeResult.paid)} ${stableCoin}
+Current: ${f2(tm.currentValue)} (${f2(tm.profit())}) ${stableCoin}
+BNB fee: ${tm.tradeResult.commission}`;
 }

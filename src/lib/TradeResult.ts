@@ -14,6 +14,7 @@ export class TradeResult {
   paid = 0;
   gained = 0;
   soldPrice = 0;
+  soldQty = 0;
   commission = 0;
   msg = ``;
   fromExchange = false;
@@ -68,6 +69,25 @@ export class TradeResult {
     result.addQuantity(this.quantity, this.cost);
     result.addQuantity(next.quantity, next.cost);
     return result;
+  }
+
+  getChunk(size: number): TradeResult {
+    if (size <= 0 || size > 1) {
+      throw new Error(`Chunk size must be a value between 0 and 1.`);
+    }
+    const chunkQty = this.quantity * size;
+    if (chunkQty <= 0) {
+      throw new Error(
+        `The calculated quantity for ${this.symbol.quantityAsset} is too small.`,
+      );
+    }
+    const chunk = new TradeResult(this.symbol);
+    chunk.quantity = chunkQty;
+    chunk.cost = this.cost * size;
+    chunk.gained = this.gained * size;
+    chunk.paid = this.paid * size;
+    chunk.commission = this.commission * size;
+    return chunk;
   }
 
   addQuantity(quantity: number, cost: number): void {

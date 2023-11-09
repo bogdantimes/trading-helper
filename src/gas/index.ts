@@ -19,6 +19,8 @@ import {
   type IStore,
   Key,
   MASK,
+  prettyPrintTradeMemo,
+  TradeState,
 } from "../lib";
 import { Process } from "./Process";
 import { CacheProxy } from "./CacheProxy";
@@ -31,8 +33,8 @@ import { WithdrawalsManager } from "./WithdrawalsManager";
 import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
 import { MarketDataDao } from "./dao/MarketData";
-import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 import { MarketInfoProvider } from "./providers/MarketInfoProvider";
+import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
   return catchError(() => {
@@ -257,19 +259,29 @@ function getState(): AppState {
   };
 }
 
-function buy(coin: CoinName): string {
+function buy(coin: CoinName, cost?: number): string {
   return catchError(() => {
-    TradeManager.default().buy(coin.toUpperCase());
+    if (!coin) {
+      Log.info(`Specify a coin name, e.g. BTC`);
+    } else if (cost && !isFinite(+cost)) {
+      Log.info(
+        `Specify the amount (available on the balance) you're willing to invest, e.g. 150`,
+      );
+    }
+    TradeManager.default().buy(coin.toUpperCase(), cost);
     return Log.printInfos() || `In progress!`;
   });
 }
 
-function sell(...coins: CoinName[]): string {
+function sell(coin: CoinName, chunkSize = 1): string {
   return catchError(() => {
-    const mgr = TradeManager.default();
-    coins?.forEach((c) => {
-      mgr.sell(c.toUpperCase());
-    });
+    if (isFinite(+chunkSize)) {
+      TradeManager.default().sell(coin, +chunkSize);
+    } else {
+      Log.info(
+        `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
+      );
+    }
     return Log.printInfos();
   });
 }
@@ -350,7 +362,7 @@ global.upgrade = () => {
   });
 };
 global.info = (coin: CoinName) => {
-  coin = coin?.toUpperCase();
+  coin = coin?.trim().toUpperCase();
 
   const candidatesDao = new CandidatesDao(DefaultStore);
   if (!coin) {
@@ -393,7 +405,9 @@ Accuracy (0..100): ${f0(accuracy * 100)}%${
     const curRange = `${f0(ci?.[Key.MIN_PERCENTILE] * 100)}-${f0(
       ci?.[Key.MAX_PERCENTILE] * 100,
     )}`;
-    result = `Strength (0..100): ${f0(ci?.[Key.STRENGTH] * 100)}
+    result = `== CANDIDATE ==\nStrength (0..100): ${f0(
+      ci?.[Key.STRENGTH] * 100,
+    )}
 Demand (-100..100): ${f0(imbalance * 100)}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
@@ -401,6 +415,11 @@ Current price zone (-|0..100|+): ${curRange}%`;
 
     return all;
   });
+
+  const tm = new TradesDao(DefaultStore).get(coin);
+  if (tm?.stateIs(TradeState.BOUGHT)) {
+    result += `\n\n== ASSET ==\n${prettyPrintTradeMemo(tm)}`;
+  }
   return result;
 };
 global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
@@ -434,8 +453,8 @@ const helpDescriptions = {
   stop: `Stops the trading process.`,
   info: `Returns information about the market or a coin. Examples: 1) $ info 2) $ info BTC`,
   pin: `Pins a candidate. Example: $ pin BTC`,
-  buy: `Buys a coin. Example: $ buy BTC`,
-  sell: `Sells a list of coins. Example: $ sell BTC ETH`,
+  buy: `Buys a coin. Format: $ buy [COIN] [amount (USDT)]. Example: $ buy BTC 150`,
+  sell: `Sells a whole or a chunk of the asset. Example (whole): $ sell BTC. Example (half): $ sell BTC 0.5`,
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
   edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,

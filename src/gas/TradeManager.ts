@@ -16,6 +16,7 @@ import {
   type ICandidatesDao,
   MIN_BUY,
   MINIMUM_FEE_COVERAGE,
+  prettyPrintTradeMemo,
   type PricesHolder,
   StableUSDCoin,
   SymbolStatus,
@@ -29,10 +30,10 @@ import { TradesDao } from "./dao/Trades";
 import { ConfigDao } from "./dao/Config";
 import { isNode } from "browser-or-node";
 import {
+  type PluginResult,
   type Signal,
   SignalType,
   type TraderPlugin,
-  type PluginResult,
 } from "./traders/plugin/api";
 import { DefaultStore } from "./Store";
 import { CandidatesDao } from "./dao/Candidates";
@@ -134,38 +135,71 @@ export class TradeManager {
     this.#handleBuySignals(signals);
   }
 
-  buy(coin: CoinName): void {
+  /**
+   * Buy a coin. If cost is specified and the available balance is enough -
+   * it will spend stable coins according to the desired cost.
+   * @param coin coin name, like BTC
+   * @param cost amount of stable coins to pay for the coin
+   * @param join whether to allow adding more to the existing coin in the portfolio
+   */
+  buy(coin: CoinName, cost?: number, join = true): void {
     this.#prepare();
     const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
     const price = this.#getPrices(symbol)?.currentPrice;
     if (price) {
-      this.#buyNow({
-        coin,
-        type: SignalType.Manual,
-        support: price * 0.9,
-      });
+      this.#buyNow(
+        {
+          coin,
+          type: SignalType.Manual,
+          support: price * 0.9,
+        },
+        cost,
+        join,
+      );
     } else {
       throw new Error(`Unknown coin ${coin}: no price information found`);
     }
     this.#updateBalances();
   }
 
-  sell(coin: CoinName): void {
-    this.#prepare();
-    this.tradesDao.update(
-      coin,
-      (t) => this.#sell(t),
-      () => {
-        Log.info(`${coin} not found`);
-        return null;
-      },
-    );
-    this.#updateBalances();
-  }
-
   sellAll(): void {
     this.#prepare();
     this.tradesDao.iterate((t) => this.#sell(t), TradeState.BOUGHT);
+    this.#updateBalances();
+  }
+
+  sell(coin: CoinName, chunkSize = 1): void {
+    this.#prepare();
+
+    this.tradesDao.update(
+      coin,
+      (tm) => {
+        const origTr = tm.tradeResult;
+        const trChunk = tm.tradeResult.getChunk(chunkSize);
+        tm.tradeResult = trChunk;
+
+        const r = this.#sell(tm);
+
+        if (!r.stateIs(TradeState.SOLD)) {
+          Log.info(
+            `Couldn't sell ${coin}, attempted chunk: ${trChunk.toString()}`,
+          );
+          return;
+        }
+
+        // Calculate actual remaining chunk size based on the actually sold chunk
+        const remainingSize = 1 - r.tradeResult.soldQty / origTr.quantity;
+        tm.tradeResult = origTr.getChunk(remainingSize);
+        tm.setState(TradeState.BOUGHT);
+        tm.deleted = false;
+        return tm;
+      },
+      () => {
+        Log.info(`${coin} not found in portfolio.`);
+        return null;
+      },
+    );
+
     this.#updateBalances();
   }
 
@@ -189,9 +223,6 @@ export class TradeManager {
       return;
     }
 
-    const validQuantity = this.exchange.quantityForLotStepSize(symbol, qty);
-    Log.info(`Be aware that the sellable quantity is ${validQuantity}`);
-
     this.tradesDao.update(
       coin,
       () => tm,
@@ -199,6 +230,7 @@ export class TradeManager {
     );
 
     Log.alert(`➕ Edited ${coin}`);
+    Log.info(prettyPrintTradeMemo(tm));
   }
 
   import(coin: CoinName, qty?: number): void {
@@ -211,6 +243,12 @@ export class TradeManager {
     const importedTrade = this.exchange.importTrade(symbol, qty);
 
     if (importedTrade.fromExchange) {
+      const returnImportedTm = () => {
+        const tm = this.#produceNewTradeMemo(importedTrade);
+        Log.alert(`➕ Imported ${symbol.quantityAsset}`);
+        Log.info(prettyPrintTradeMemo(tm));
+        return tm;
+      };
       this.tradesDao.update(
         symbol.quantityAsset,
         (t) => {
@@ -220,11 +258,10 @@ export class TradeManager {
             );
             return null;
           }
-          return this.#produceNewTradeMemo(importedTrade);
+          return returnImportedTm();
         },
-        () => this.#produceNewTradeMemo(importedTrade),
+        returnImportedTm,
       );
-      Log.alert(`➕ Imported ${symbol.quantityAsset}`);
     } else {
       Log.alert(
         `${symbol.quantityAsset} could not be imported: ${importedTrade.msg}`,
@@ -232,23 +269,15 @@ export class TradeManager {
     }
   }
 
-  #produceNewTradeMemo(trade: TradeResult): TradeMemo {
-    const tm = new TradeMemo(trade);
-    const ph = this.#getPrices(tm.tradeResult.symbol);
-
+  #produceNewTradeMemo(tr: TradeResult): TradeMemo {
+    tr.lotSizeQty = this.exchange.quantityForLotStepSize(
+      tr.symbol,
+      tr.quantity,
+    );
+    const tm = new TradeMemo(tr);
+    const ph = this.#getPrices(tr.symbol);
     tm.currentPrice = ph?.currentPrice;
     tm.setState(TradeState.BOUGHT);
-
-    const coin = tm.getCoinName();
-    Log.info(`${coin} asset cost: $${tm.tradeResult.paid}`);
-    Log.info(`${coin} asset quantity: ${tm.tradeResult.quantity}`);
-    Log.info(
-      `${coin} asset avg. price: $${floor(
-        tm.tradeResult.avgPrice,
-        ph.precision,
-      )}`,
-    );
-
     return tm;
   }
 
@@ -453,7 +482,7 @@ export class TradeManager {
       .filter((s) => {
         const isBuy = s.type === SignalType.Buy;
         const isNotFeeCoin = s.coin !== BNB;
-        const isNew = !this.tradesDao.get()[s.coin]?.currentValue;
+        const isNew = !this.tradesDao.getAll()[s.coin]?.currentValue;
         return isBuy && isNotFeeCoin && isNew;
       })
       // For back-testing, sort by name to ensure tests consistency
@@ -470,7 +499,7 @@ export class TradeManager {
 
     tm.ttl = isFinite(tm.ttl) ? tm.ttl + 1 : 0;
 
-    if (tm.stateIs(TradeState.BOUGHT) && this.#config.SmartExit) {
+    if (tm.stateIs(TradeState.BOUGHT)) {
       this.#processBoughtState(tm);
     }
 
@@ -486,13 +515,16 @@ export class TradeManager {
     return tm;
   }
 
-  #getMoneyToInvest(): number {
+  #getMoneyToInvest(cost?: number): number {
     if (
       this.#canInvest <= 0 ||
       this.#balance === AUTO_DETECT ||
       this.#balance < MIN_BUY
     ) {
       return 0; // Return 0 if we can not invest
+    }
+    if (cost && +cost < this.#balance) {
+      return Math.max(MIN_BUY, Math.floor(+cost));
     }
     return Math.max(MIN_BUY, Math.floor(this.#balance / this.#canInvest));
   }
@@ -502,6 +534,18 @@ export class TradeManager {
       Log.alert(
         `⚠️ ${tm.tradeResult.symbol}: current price is unknown. If problem persists - please, trade the asset manually on the exchange.`,
       );
+      return;
+    }
+
+    tm.tradeResult.lotSizeQty =
+      tm.tradeResult.lotSizeQty ||
+      this.exchange.quantityForLotStepSize(
+        tm.tradeResult.symbol,
+        tm.tradeResult.quantity,
+      );
+
+    if (!this.#config.SmartExit) {
+      // If smart exit is disabled, we should return here
       return;
     }
 
@@ -603,8 +647,8 @@ export class TradeManager {
     ];
   }
 
-  #buyNow(signal: Signal): TradeMemo | undefined {
-    const money = this.#getMoneyToInvest();
+  #buyNow(signal: Signal, cost?: number, join = false): TradeMemo | undefined {
+    const money = this.#getMoneyToInvest(cost);
     if (money <= 0) {
       Log.info(`ℹ️ Can't buy ${signal.coin} - not enough balance`);
       return;
@@ -613,19 +657,14 @@ export class TradeManager {
     const symbol = new ExchangeSymbol(signal.coin, this.#config.StableCoin);
     const newTm = new TradeMemo(new TradeResult(symbol));
     newTm.setSignalMetadata(signal);
-    newTm.setState(TradeState.BUY);
 
-    this.tradesDao.update(
-      signal.coin,
-      (curTm) => {
-        if (curTm.currentValue) {
-          Log.info(`ℹ️ Can't buy ${signal.coin} - already in portfolio`);
-        } else {
-          return this.#buy(newTm, money);
-        }
-      },
-      () => this.#buy(newTm, money),
-    );
+    this.tradesDao.update(signal.coin, (curTm) => {
+      if (!join && curTm.currentValue) {
+        Log.info(`ℹ️ Can't buy ${signal.coin} - already in portfolio`);
+      } else {
+        return this.#buy(curTm.stateIs(TradeState.SOLD) ? newTm : curTm, money);
+      }
+    });
 
     return newTm;
   }
