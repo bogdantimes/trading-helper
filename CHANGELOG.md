@@ -1,3 +1,10 @@
+# v4.2.2
+
+* Trading Algorithm:
+  * Removed a condition that prevented buying coins that pumped for more than +7%
+* Other:
+  * Various console API improvements
+
 # v4.2.1
 
 * Trading Algorithm:
