@@ -1,3 +1,7 @@
+# v4.2.3
+
+* Bug fix: coin is not removed after it was sold.
+
 # v4.2.2
 
 * Trading Algorithm:

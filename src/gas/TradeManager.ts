@@ -186,12 +186,13 @@ export class TradeManager {
           );
           return;
         }
-
-        // Calculate actual remaining chunk size based on the actually sold chunk
-        const remainingSize = 1 - r.tradeResult.soldQty / origTr.quantity;
-        tm.tradeResult = origTr.getChunk(remainingSize);
-        tm.setState(TradeState.BOUGHT);
-        tm.deleted = false;
+        if (chunkSize !== 1) {
+          // Calculate actual remaining chunk size based on the actually sold chunk
+          const remainingSize = 1 - r.tradeResult.soldQty / origTr.quantity;
+          tm.tradeResult = origTr.getChunk(remainingSize);
+          tm.setState(TradeState.BOUGHT);
+          tm.deleted = false;
+        }
         return tm;
       },
       () => {
