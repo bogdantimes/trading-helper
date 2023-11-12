@@ -25,7 +25,7 @@ import { BalanceHistory } from "./components/BalanceHistory";
 import { Home } from "./components/Home";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
-import { type AppState } from "../lib";
+import { type AppState, TradeMemo } from "../lib";
 import { DefaultConfig } from "../gas/dao/Config";
 import { ScriptApp } from "./components/Common";
 import useWebSocket from "./useWebSocket";
@@ -96,6 +96,7 @@ export default function App(): JSX.Element {
     setFetchingData(false);
     setFetchDataError(``);
     setInitialSetup(!ViewOnly && !(KEY && SECRET));
+    state.assets = state.assets.map(TradeMemo.fromObject);
     setState(state);
   }
 
@@ -127,6 +128,10 @@ export default function App(): JSX.Element {
       return v;
     });
   };
+
+  const currentPnL = state.assets.reduce((s, tm) => {
+    return tm.currentValue ? s + tm.profit() : s;
+  }, 0);
 
   return (
     <ThemeProvider theme={theme}>
@@ -170,7 +175,7 @@ export default function App(): JSX.Element {
               <Home state={state} />
             </TabPanel>
             <TabPanel value={tab} index={TabId.Info} onChange={changeTab}>
-              <BalanceHistory stats={state.info} />
+              <BalanceHistory stats={state.info} currentPnL={currentPnL} />
             </TabPanel>
             <TabPanel value={tab} index={TabId.Settings} onChange={changeTab}>
               <Settings

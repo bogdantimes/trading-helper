@@ -16,7 +16,7 @@ import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 import BasicCard from "./cards/BasicCard";
 import { cardMaxWidth, cardMinWidth } from "./Common";
 
-export function BalanceHistory({ stats }) {
+export function BalanceHistory({ stats, currentPnL }) {
   const rows = buildRows(stats);
 
   return (
@@ -32,8 +32,9 @@ export function BalanceHistory({ stats }) {
         </Alert>
         <List sx={{ minWidth: cardMinWidth, maxWidth: cardMaxWidth }}>
           {rows.map((r, i) => {
+            const value = i === 0 ? r.profit + currentPnL : r.profit;
             const icon =
-              r.profit >= 0 ? (
+              value >= 0 ? (
                 <ArrowDropUp color={`success`} />
               ) : (
                 <ArrowDropDown color={`error`} />
@@ -42,7 +43,7 @@ export function BalanceHistory({ stats }) {
               <ListItem key={i} sx={{ padding: `0 16px` }}>
                 <ListItemAvatar>{icon}</ListItemAvatar>
                 <ListItemText
-                  primary={formatUSDCurrency(r.profit)}
+                  primary={formatUSDCurrency(value)}
                   secondary={r.timeFrame}
                 />
               </ListItem>
@@ -59,8 +60,8 @@ function buildRows(stats) {
 
   if (stats) {
     const { TotalProfit: tp, TotalWithdrawals: tw, DailyProfit } = stats;
-    const totalTimeFrame = getTotalLabelComponent(tw);
-    rows.push({ id: 1, timeFrame: totalTimeFrame, profit: f2(tp) });
+    const totalLabel = getTotalLabel(tw);
+    rows.push({ id: 1, timeFrame: totalLabel, profit: f2(tp) });
 
     const dailyRows = Object.keys(DailyProfit)
       .sort((a, b) => (new Date(a) < new Date(b) ? 1 : -1))
@@ -76,10 +77,11 @@ function buildRows(stats) {
   return rows;
 }
 
-function getTotalLabelComponent(tw) {
+function getTotalLabel(tw) {
   return (
     <>
-      Total (
+      Total (incl. cur. assets)
+      <br />
       <Tooltip
         title={
           <>
@@ -92,16 +94,17 @@ function getTotalLabelComponent(tw) {
       >
         <Typography
           component="span"
+          variant={`inherit`}
           sx={{
             textDecoration: `underline`,
             textDecorationStyle: `dashed`,
           }}
           aria-label="withdrawals-tooltip"
         >
-          withdrawals
+          Withdrawals
         </Typography>
       </Tooltip>
-      : ${f2(tw)})
+      {`: $${f2(tw)}`}
     </>
   );
 }

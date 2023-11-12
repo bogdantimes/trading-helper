@@ -78,14 +78,6 @@ export default function MarketCard({
           />
           <Typography mt={`-7px`} color="text.secondary" variant="body2">
             {`Strength: ${f0(marketInfo.strength * 100)}`}
-            <br />
-            <b>
-              {marketInfo.strength > 0.9
-                ? `(oversold)`
-                : marketInfo.strength < 0.1
-                ? `(overbought)`
-                : ``}
-            </b>
           </Typography>
         </Box>
       </Box>
