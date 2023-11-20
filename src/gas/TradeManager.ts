@@ -730,7 +730,6 @@ export class TradeManager {
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
         this.#processBuyFee(tradeResult);
-        Log.info(prettyPrintTradeMemo(tm));
         Log.debug(tm);
       } catch (e) {
         Log.error(e);
@@ -739,6 +738,7 @@ export class TradeManager {
         tm.currentPrice = this.#getPrices(symbol).currentPrice;
         tm.setState(TradeState.BOUGHT);
         this.#processBoughtState(tm);
+        Log.info(prettyPrintTradeMemo(tm));
       }
     } else {
       Log.debug(tradeResult);
