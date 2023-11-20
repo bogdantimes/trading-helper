@@ -371,21 +371,21 @@ global.info = (coin: CoinName) => {
       candidatesDao,
       plugin,
     );
-    const { strength, averageDemand, accuracy } = marketInfoProvider.get(-1);
+    const info = marketInfoProvider.get(-1);
 
     Log.ifUsefulDumpAsEmail();
 
     return `The current market is ${
-      strength > 0.9
+      info.strength > 0.9
         ? `strong. It's good time to buy.`
-        : strength < 0.1
+        : info.strength < 0.1
         ? `weak. It's good time to sell.`
         : `unclear. Trade with caution.`
     }
-Strength (0..100): ${f0(strength * 100)}
-Average demand (-100..100): ${f0(averageDemand * 100)}%
-Accuracy (0..100): ${f0(accuracy * 100)}%${
-      accuracy < 0.5
+Strength (0..100): ${f0(info.strength * 100)}
+Average demand (-100..100): ${f0(info.averageDemand * 100)}%
+Accuracy (0..100): ${f0(info.accuracy * 100)}%${
+      info.accuracy < 0.5
         ? ` (automatically improved over time for TH+ subscribers)`
         : ``
     }`;

@@ -4,6 +4,7 @@ import {
   StableUSDCoin,
 } from "../../lib/Types";
 import {
+  BullRun,
   calculateBollingerBands,
   floor,
   type MarketInfo,
@@ -30,6 +31,7 @@ export class MarketInfoProvider {
         strength: mktPercentile,
         averageDemand: imbalance.average,
         accuracy: imbalance.accuracy,
+        bullRun: BullRun.No,
       };
     }
 
@@ -41,12 +43,20 @@ export class MarketInfoProvider {
 
     const btcPercentile = floor((btcCur - lower) / (upper - lower), 4);
     const strength = floor(mktPercentile + (btcPercentile - 0.5), 4);
+    const btcVMktGap = btcPercentile - mktPercentile;
+    const bullRun =
+      btcVMktGap > 2
+        ? BullRun.Yes
+        : btcVMktGap < 0.5
+        ? BullRun.No
+        : BullRun.Unknown;
 
     return {
       // limit to 0..1
       strength: Math.max(0, Math.min(1, strength)),
       averageDemand: imbalance.average,
       accuracy: imbalance.accuracy,
+      bullRun,
     };
   }
 }

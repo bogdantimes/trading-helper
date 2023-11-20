@@ -17,7 +17,7 @@ import BasicCard from "./cards/BasicCard";
 import { cardMaxWidth, cardMinWidth } from "./Common";
 
 export function BalanceHistory({ stats, currentPnL }) {
-  const rows = buildRows(stats);
+  const rows = buildRows(stats, currentPnL);
 
   return (
     <BasicCard>
@@ -32,9 +32,8 @@ export function BalanceHistory({ stats, currentPnL }) {
         </Alert>
         <List sx={{ minWidth: cardMinWidth, maxWidth: cardMaxWidth }}>
           {rows.map((r, i) => {
-            const value = i === 0 ? r.profit + currentPnL : r.profit;
             const icon =
-              value >= 0 ? (
+              r.profit >= 0 ? (
                 <ArrowDropUp color={`success`} />
               ) : (
                 <ArrowDropDown color={`error`} />
@@ -43,7 +42,7 @@ export function BalanceHistory({ stats, currentPnL }) {
               <ListItem key={i} sx={{ padding: `0 16px` }}>
                 <ListItemAvatar>{icon}</ListItemAvatar>
                 <ListItemText
-                  primary={formatUSDCurrency(value)}
+                  primary={formatUSDCurrency(r.profit)}
                   secondary={r.timeFrame}
                 />
               </ListItem>
@@ -55,12 +54,12 @@ export function BalanceHistory({ stats, currentPnL }) {
   );
 }
 
-function buildRows(stats) {
+function buildRows(stats, currentPnL: number) {
   const rows: any[] = [];
 
   if (stats) {
     const { TotalProfit: tp, TotalWithdrawals: tw, DailyProfit } = stats;
-    const totalLabel = getTotalLabel(tw);
+    const totalLabel = getTotalLabel(tw, tp + currentPnL);
     rows.push({ id: 1, timeFrame: totalLabel, profit: f2(tp) });
 
     const dailyRows = Object.keys(DailyProfit)
@@ -77,10 +76,10 @@ function buildRows(stats) {
   return rows;
 }
 
-function getTotalLabel(tw) {
+function getTotalLabel(withdrawalsTotal, currentTotal: number) {
   return (
     <>
-      Total (incl. cur. assets)
+      Total (with current assets: {formatUSDCurrency(currentTotal)})
       <br />
       <Tooltip
         title={
@@ -104,7 +103,8 @@ function getTotalLabel(tw) {
           Withdrawals
         </Typography>
       </Tooltip>
-      {`: $${f2(tw)}`}
+      {`: $`}
+      {f2(withdrawalsTotal)}
     </>
   );
 }

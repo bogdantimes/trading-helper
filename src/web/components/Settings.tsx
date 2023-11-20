@@ -6,6 +6,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   Divider,
   FormControl,
   FormControlLabel,
@@ -69,6 +70,16 @@ export function Settings(params: {
       return;
     }
 
+    if (
+      isBullRunActive &&
+      isValidDate(bullRunEnd) &&
+      new Date(bullRunEnd) > new Date()
+    ) {
+      cfg.BullRunEndTime = convertDateToTimestamp(bullRunEnd);
+    } else {
+      cfg.BullRunEndTime = undefined; // Reset if bull-run is off or date is invalid
+    }
+
     setSaveMsg(``);
     setIsSaving(true);
     ScriptApp?.withFailureHandler((r) => {
@@ -89,6 +100,42 @@ export function Settings(params: {
   const tickIntervalMsg = `The tool internal update interval is 1 minute, so it may take up to 1 minute ⏳ for some changes to take effect.`;
   const strengthMin = Math.max(0, cfg.MarketStrengthTargets.min);
   const strengthMax = Math.min(100, cfg.MarketStrengthTargets.max);
+
+  const [bullRunEnd, setBullRunEnd] = useState(
+    cfg.BullRunEndTime ? new Date(cfg.BullRunEndTime).toLocaleString() : ``,
+  );
+  const isBullRunCurrentlyActive =
+    !!cfg.BullRunEndTime && new Date(cfg.BullRunEndTime) > new Date();
+  const [isBullRunActive, setIsBullRunActive] = useState(
+    isBullRunCurrentlyActive,
+  );
+  const convertDateToTimestamp = (dateStr) => {
+    if (!dateStr) return undefined;
+    return new Date(dateStr).getTime();
+  };
+  const isValidDate = (dateStr) => {
+    if (!dateStr) return true; // Consider empty input as valid (undefined)
+    const date = new Date(dateStr);
+    return !isNaN(+date);
+  };
+  const handleBullRunEndChange = (e) => {
+    setBullRunEnd(e.target.value);
+    if (!e.target.value) {
+      setIsBullRunActive(false);
+    }
+  };
+  const handleBullRunToggle = (event) => {
+    const toggledOn = event.target.checked;
+    setIsBullRunActive(toggledOn);
+    if (toggledOn) {
+      const threeWeeksFromNow = new Date();
+      threeWeeksFromNow.setDate(threeWeeksFromNow.getDate() + 21);
+      setBullRunEnd(threeWeeksFromNow.toLocaleString());
+    } else {
+      setBullRunEnd(``);
+    }
+  };
+
   return (
     <BasicCard>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -168,8 +215,53 @@ export function Settings(params: {
             </FormHelperText>
           </FormControl>
           <FormControl>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={cfg.SmartExit}
+                  onChange={(e) => {
+                    setCfg({ ...cfg, SmartExit: e.target.checked });
+                  }}
+                />
+              }
+              label="Smart exit"
+              aria-describedby={`smart-exit-helper-text`}
+            />
+            <FormHelperText id={`smart-exit-helper-text`}>
+              Sell automatically when conditions are no longer in favor and it
+              is better to take the profit/loss. Recommended to always keep
+              enabled. Disable only if you need to hold the assets.
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={cfg.AutoReplenishFees}
+                  onChange={(e) => {
+                    setCfg({ ...cfg, AutoReplenishFees: e.target.checked });
+                  }}
+                />
+              }
+              label={`Replenish fees budget`}
+              aria-describedby={`auto-replenish-fees-helper-text`}
+            />
+            <FormHelperText id={`auto-replenish-fees-helper-text`}>
+              Automatically replenishes fees budget when it's low using
+              available balance. Disable if you prefer to manage fees budget
+              manually. For more information on BNB fees, visit:{` `}
+              <Link
+                target={`_blank`}
+                rel="noreferrer"
+                href={`https://binance.com/en/fee`}
+              >
+                https://binance.com/en/fee
+              </Link>
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
             <Typography id="market-strength-slider" gutterBottom>
-              Auto-stop (Market strength)
+              Auto-stop
               {cfg.TradingAutoStopped && ` (Now: Paused)`}
             </Typography>
             <Slider
@@ -218,45 +310,36 @@ export function Settings(params: {
             <FormControlLabel
               control={
                 <Switch
-                  checked={cfg.SmartExit}
-                  onChange={(e) => {
-                    setCfg({ ...cfg, SmartExit: e.target.checked });
-                  }}
+                  checked={isBullRunActive}
+                  onChange={handleBullRunToggle}
                 />
               }
-              label="Smart exit"
-              aria-describedby={`smart-exit-helper-text`}
-            />
-            <FormHelperText id={`smart-exit-helper-text`}>
-              Sell automatically when conditions are no longer in favor and it
-              is better to take the profit/loss. Recommended to always keep
-              enabled. Disable only if you need to hold the assets.
-            </FormHelperText>
-          </FormControl>
-          <FormControl>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={cfg.AutoReplenishFees}
-                  onChange={(e) => {
-                    setCfg({ ...cfg, AutoReplenishFees: e.target.checked });
-                  }}
-                />
+              label={
+                <>
+                  <Chip
+                    label="New"
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                    sx={{ mr: `8px` }}
+                  />
+                  Bull Run Mode
+                </>
               }
-              label={`Replenish fees budget`}
-              aria-describedby={`auto-replenish-fees-helper-text`}
             />
-            <FormHelperText id={`auto-replenish-fees-helper-text`}>
-              Automatically replenishes fees budget when it's low using
-              available balance. Disable if you prefer to manage fees budget
-              manually. For more information on BNB fees, visit:{` `}
-              <Link
-                target={`_blank`}
-                rel="noreferrer"
-                href={`https://binance.com/en/fee`}
-              >
-                https://binance.com/en/fee
-              </Link>
+            <TextField
+              label="Bull Run End Time"
+              type="text"
+              value={bullRunEnd || ``}
+              onChange={handleBullRunEndChange}
+              disabled={!isBullRunActive}
+            />
+            <FormHelperText>
+              When Bull Run Mode is active, Trading Helper adopts a{` `}
+              <b>more aggressive</b> approach, opting to purchase candidates
+              even when market conditions lean heavily towards sellers.{` `}
+              <b>This setting is automatic</b>, but can be changed manually if
+              the market is favorable.
             </FormHelperText>
           </FormControl>
           <FormControl>

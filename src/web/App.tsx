@@ -25,7 +25,7 @@ import { BalanceHistory } from "./components/BalanceHistory";
 import { Home } from "./components/Home";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
-import { type AppState, TradeMemo } from "../lib";
+import { type AppState, BullRun, TradeMemo } from "../lib";
 import { DefaultConfig } from "../gas/dao/Config";
 import { ScriptApp } from "./components/Common";
 import useWebSocket from "./useWebSocket";
@@ -50,7 +50,12 @@ export default function App(): JSX.Element {
     candidates: {
       selected: {},
       other: {},
-      marketInfo: { averageDemand: 0, accuracy: 0, strength: 0 },
+      marketInfo: {
+        averageDemand: 0,
+        accuracy: 0,
+        strength: 0,
+        bullRun: BullRun.Unknown,
+      },
     },
     config: DefaultConfig(),
     firebaseURL: ``,

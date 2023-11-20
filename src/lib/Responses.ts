@@ -11,10 +11,17 @@ export interface AppState {
   firebaseURL: string;
 }
 
+export enum BullRun {
+  No,
+  Yes,
+  Unknown,
+}
+
 export interface MarketInfo {
   averageDemand: number;
   accuracy: number;
   strength: number;
+  bullRun: BullRun;
 }
 
 export interface CandidatesData {

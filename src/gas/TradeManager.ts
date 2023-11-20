@@ -5,6 +5,8 @@ import {
   AUTO_DETECT,
   BNB,
   BNBFee,
+  BULL_RUN_THRESHOLD_REDUCE,
+  BullRun,
   type CoinName,
   type Config,
   ExchangeSymbol,
@@ -45,6 +47,7 @@ export class TradeManager {
   #canInvest = 0;
   #balance = 0;
   #optimalInvestRatio = 0;
+  #step = -1;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -87,6 +90,7 @@ export class TradeManager {
 
   trade(step: number): void {
     this.#prepare();
+    this.#step = step;
 
     // First process !BUY state assets (some might get sold and free up $)
     this.tradesDao
@@ -114,6 +118,7 @@ export class TradeManager {
           ? this.#canInvest // or provide as many as can be bought for available $
           : 0,
         candidatesDao: this.candidatesDao,
+        reduceThreshold: this.#isBullRun(step) ? BULL_RUN_THRESHOLD_REDUCE : 0,
         I: step,
       });
     } catch (e) {
@@ -130,7 +135,7 @@ export class TradeManager {
       });
     }
 
-    this.#checkAutoStop(step);
+    this.#handleMarketChanges();
     this.#handleBuySignals(signals);
   }
 
@@ -173,6 +178,10 @@ export class TradeManager {
     this.tradesDao.update(
       coin,
       (tm) => {
+        if (chunkSize === 1) {
+          return this.#sell(tm);
+        }
+
         const origTr = tm.tradeResult;
         const trChunk = tm.tradeResult.getChunk(chunkSize);
         tm.tradeResult = trChunk;
@@ -185,13 +194,11 @@ export class TradeManager {
           );
           return;
         }
-        if (chunkSize !== 1) {
-          // Calculate actual remaining chunk size based on the actually sold chunk
-          const remainingSize = 1 - r.tradeResult.soldQty / origTr.quantity;
-          tm.tradeResult = origTr.getChunk(remainingSize);
-          tm.setState(TradeState.BOUGHT);
-          tm.deleted = false;
-        }
+        // Calculate actual remaining chunk size based on the actually sold chunk
+        const remainingSize = 1 - r.tradeResult.soldQty / origTr.quantity;
+        tm.tradeResult = origTr.getChunk(remainingSize);
+        tm.setState(TradeState.BOUGHT);
+        tm.deleted = false;
         return tm;
       },
       () => {
@@ -292,9 +299,14 @@ export class TradeManager {
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
   }
 
-  #checkAutoStop(step: number) {
-    const { strength } = this.mktInfoProvider.get(step);
-    const strengthAdjusted = f0(strength * 100);
+  #handleMarketChanges() {
+    const { strength, bullRun } = this.mktInfoProvider.get(this.#step);
+    this.#checkAutoStop(strength);
+    this.#checkBullRun(bullRun);
+  }
+
+  #checkAutoStop(mktStrength: number): void {
+    const strengthAdjusted = f0(mktStrength * 100);
     if (
       this.#config.TradingAutoStopped &&
       strengthAdjusted >= this.#config.MarketStrengthTargets.max
@@ -321,6 +333,39 @@ export class TradeManager {
         }`,
       );
     }
+  }
+
+  #checkBullRun(bullRun: BullRun) {
+    const bullRunActive = this.#isBullRun(this.#step);
+    if (bullRun === BullRun.Yes && !bullRunActive) {
+      const threeWeeksDays = 21;
+      this.#config = this.configDao.update((c) => {
+        const inThreeWeeks = new Date();
+        inThreeWeeks.setDate(inThreeWeeks.getDate() + threeWeeksDays); // add three weeks from now by default
+        const threeWeeksInBackTestSteps = this.#step + threeWeeksDays * 24 * 60;
+        c.BullRunEndTime = isNode ? threeWeeksInBackTestSteps : +inThreeWeeks;
+        return c;
+      });
+      Log.alert(`"Bull-run" mode auto-enabled.`);
+      Log.info(
+        `Trading Helper will become more greedy for the next ${threeWeeksDays} day(s). You can change manually in the Settings.`,
+      );
+    }
+    if (bullRun === BullRun.No && bullRunActive) {
+      this.#config = this.configDao.update((c) => {
+        c.BullRunEndTime = isNode ? this.#step : Date.now();
+        return c;
+      });
+      Log.alert(`"Bull-run" mode auto-disabled.`);
+      Log.info(
+        `The current market situation is not favorable for the bull-run mode to be enabled.`,
+      );
+    }
+  }
+
+  #isBullRun(step: number): boolean {
+    const endTime = this.#config.BullRunEndTime;
+    return !!endTime && endTime > (isNode ? step : Date.now());
   }
 
   #initStableBalance(): void {
@@ -870,7 +915,10 @@ export class TradeManager {
     tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
 
     const downMultiplier = 6;
-    const threshold = tm.imbalanceThreshold(downMultiplier);
+    const thresholdReduce = this.#isBullRun(this.#step)
+      ? BULL_RUN_THRESHOLD_REDUCE
+      : 0;
+    const threshold = tm.imbalanceThreshold(downMultiplier) - thresholdReduce;
     if (imbalance < threshold) {
       Log.info(
         `Selling at price going down, as the current demand ${f0(
@@ -889,7 +937,10 @@ export class TradeManager {
     tm.highestPrice = floorToOptimalGrid(nextHighPrice, precision).result;
 
     const upMultiplier = 4;
-    const threshold = tm.imbalanceThreshold(upMultiplier);
+    const thresholdReduce = this.#isBullRun(this.#step)
+      ? BULL_RUN_THRESHOLD_REDUCE
+      : 0;
+    const threshold = tm.imbalanceThreshold(upMultiplier) - thresholdReduce;
     const reqThreshold = Math.min(0.6, threshold);
     if (imbalance < reqThreshold) {
       Log.info(
