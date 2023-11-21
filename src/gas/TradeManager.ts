@@ -199,6 +199,8 @@ export class TradeManager {
         tm.tradeResult = origTr.getChunk(remainingSize);
         tm.setState(TradeState.BOUGHT);
         tm.deleted = false;
+        Log.info(`Remaining ${coin}`);
+        Log.info(prettyPrintTradeMemo(tm));
         return tm;
       },
       () => {
