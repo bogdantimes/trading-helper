@@ -1,3 +1,8 @@
+# v4.2.5
+
+* Trading Algorithm:
+  * Removed a condition that prevented trading high-volatility (on a 10 minutes timescale) candidates
+
 # v4.2.4
 
 * Bug fix: coin buy skipped.
