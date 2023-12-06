@@ -326,8 +326,8 @@ function addWithdrawal(amount: number): string {
       new Binance(configDao),
       new Statistics(DefaultStore),
     );
-    const { balance } = mgr.addWithdrawal(amount);
-    const msg = `💳 Withdrawal of $${amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
+    const { balance } = mgr.addWithdrawal(+amount);
+    const msg = `Withdrawal of $${+amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
     Log.alert(msg);
     return Log.printInfos();
   });
