@@ -242,6 +242,92 @@ export class TradeManager {
     Log.info(prettyPrintTradeMemo(tm));
   }
 
+  swap(sourceCoin: CoinName, targetCoin: CoinName, chunkSize = 1): void {
+    this.#prepare();
+
+    // Step 1: Check Prices
+    const sourceSymbol = new ExchangeSymbol(
+      sourceCoin,
+      this.#config.StableCoin,
+    );
+    const targetSymbol = new ExchangeSymbol(
+      targetCoin,
+      this.#config.StableCoin,
+    );
+    const sourcePrice = this.#getPrices(sourceSymbol)?.currentPrice;
+    const targetPrice = this.#getPrices(targetSymbol)?.currentPrice;
+    if (!sourcePrice || !targetPrice) {
+      throw new Error(`Price information not found for one or both coins.`);
+    }
+
+    if (this.tradesDao.has(targetCoin)) {
+      throw new Error(
+        `Cannot proceed with swap. ${targetCoin} already in the portfolio.`,
+      );
+    }
+
+    // Step 2: Sell Source Coin
+    let gainedBudget = 0;
+    let prevCommission = 0;
+    let realChunkCost = 0;
+
+    this.tradesDao.update(sourceCoin, (tm) => {
+      const origTr = tm.tradeResult;
+      const trChunk = origTr.getChunk(chunkSize);
+      const sellResult = this.exchange.marketSell(
+        sourceSymbol,
+        trChunk.quantity,
+      );
+      if (!sellResult.fromExchange) {
+        throw new Error(`Failed to sell ${sourceCoin}: ${sellResult.msg}`);
+      }
+
+      gainedBudget = sellResult.gained;
+      prevCommission += sellResult.commission + origTr.commission;
+      realChunkCost = origTr.paid * (sellResult.quantity / origTr.quantity);
+
+      if (chunkSize === 1) {
+        tm.deleted = true;
+      } else {
+        // Calculate actual remaining chunk size based on the actually sold chunk
+        const remainingSize = 1 - sellResult.quantity / origTr.quantity;
+        tm.tradeResult = origTr.getChunk(remainingSize);
+        tm.setState(TradeState.BOUGHT);
+        Log.info(`Remaining ${sourceCoin}`);
+        Log.info(prettyPrintTradeMemo(tm));
+      }
+      return tm;
+    });
+
+    if (!gainedBudget) {
+      Log.info(`No budget to buy the ${targetCoin}`);
+      return;
+    }
+
+    // Step 3: Buy Target Coin
+    // Calculate the cost to buy the target coin using the gains from selling the source coin
+    this.#canInvest = 1;
+    this.#balance += gainedBudget;
+    this.#buyNow(
+      {
+        coin: targetCoin,
+        type: SignalType.Manual,
+        support: targetPrice * 0.9,
+      },
+      gainedBudget,
+    );
+
+    // apply previous fees and the real chunk cost
+    this.tradesDao.update(targetCoin, (tm) => {
+      tm.tradeResult.paid = realChunkCost;
+      tm.tradeResult.cost = realChunkCost;
+      tm.tradeResult.commission += prevCommission;
+      return tm;
+    });
+
+    this.#updateBalances();
+  }
+
   import(coin: CoinName, qty?: number): void {
     if (!this.exchange.importTrade) {
       throw new Error(`Import is not supported by the exchange`);

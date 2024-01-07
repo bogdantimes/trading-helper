@@ -303,6 +303,25 @@ function edit(coin: CoinName, qty: number, paid: number): any {
   });
 }
 
+function swap(sourceCoin: CoinName, targetCoin: CoinName, chunkSize = 1): any {
+  return catchError(() => {
+    if (!sourceCoin) {
+      Log.info(`Specify a source asset, e.g. BTC`);
+    } else if (!targetCoin) {
+      Log.info(`Specify a target coin, e.g. ETH`);
+    }
+
+    if (isFinite(+chunkSize)) {
+      TradeManager.default().swap(sourceCoin, targetCoin, +chunkSize);
+    } else {
+      Log.info(
+        `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
+      );
+    }
+    return Log.printInfos();
+  });
+}
+
 function importCoin(coin: CoinName, qty?: number): any {
   return catchError(() => {
     if (!coin) {
@@ -346,6 +365,7 @@ global.sell = sell;
 global.sellAll = sellAll;
 global.remove = remove;
 global.edit = edit;
+global.swap = swap;
 global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
@@ -458,6 +478,7 @@ const helpDescriptions = {
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
   edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,
+  swap: `Swaps an existing asset into a new coin. Example (whole): $ swap INJ BTC. Example (half): $ swap INJ BTC 0.5`,
   importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,
