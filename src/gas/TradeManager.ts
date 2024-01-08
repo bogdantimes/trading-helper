@@ -327,6 +327,7 @@ export class TradeManager {
             chunkSellDiff,
           );
           tm.ttl = 0;
+          tm.tradeResult.commission += prevFee;
           tm.currentPrice = targetPrice;
           tm.setState(TradeState.BOUGHT);
           this.#processBoughtState(tm);
