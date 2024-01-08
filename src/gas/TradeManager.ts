@@ -262,10 +262,83 @@ export class TradeManager {
       throw new Error(`Price information not found for one or both coins.`);
     }
 
+    const dirSwapSymbol = new ExchangeSymbol(sourceCoin, targetCoin);
+    // check if there's a direct swap available, like LINK -> BTC
+    const prices = this.plugin.getPrices();
+    const price =
+      prices[dirSwapSymbol.toString()] ||
+      prices[dirSwapSymbol.reverseThis().toString()];
+
     // Step 2: Sell Source Coin
     let gainedBudget = 0;
+    let gainedQty = 0;
     let prevFee = 0;
     let chunkSellDiff = 0;
+
+    if (price && chunkSize === 1) {
+      // we can do direct swap 1:1
+      this.tradesDao.update(sourceCoin, (tm) => {
+        const sellResult = this.exchange.marketSell(
+          dirSwapSymbol,
+          tm.tradeResult.quantity,
+        );
+
+        if (!sellResult.fromExchange) {
+          throw new Error(
+            `Failed to sell ${sourceCoin} into ${targetCoin}: ${sellResult.msg}`,
+          );
+        }
+
+        gainedQty += sellResult.gained; // gained in this case qty of the another coin
+        prevFee += sellResult.commission + tm.tradeResult.commission;
+        chunkSellDiff = tm.tradeResult.paid;
+
+        tm.deleted = true;
+
+        return tm;
+      });
+      // create a new asset or add to existing
+      this.tradesDao.update(
+        targetCoin,
+        (tm) => {
+          if (!tm.currentValue) {
+            tm = TradeMemo.newManual(
+              tm.tradeResult.symbol,
+              gainedQty,
+              chunkSellDiff,
+            );
+          } else {
+            tm.tradeResult.quantity += gainedQty;
+            tm.tradeResult.paid += chunkSellDiff;
+            tm.tradeResult.cost += chunkSellDiff;
+            tm.tradeResult.commission += prevFee;
+          }
+          tm.ttl = 0;
+          tm.currentPrice = targetPrice;
+          tm.setState(TradeState.BOUGHT);
+          this.#processBoughtState(tm);
+          Log.info(prettyPrintTradeMemo(tm));
+          return tm;
+        },
+        () => {
+          const tm = TradeMemo.newManual(
+            targetSymbol,
+            gainedQty,
+            chunkSellDiff,
+          );
+          tm.ttl = 0;
+          tm.currentPrice = targetPrice;
+          tm.setState(TradeState.BOUGHT);
+          this.#processBoughtState(tm);
+          Log.info(prettyPrintTradeMemo(tm));
+          return tm;
+        },
+      );
+
+      // direct swap done
+      this.#updateBalances();
+      return;
+    }
 
     this.tradesDao.update(sourceCoin, (tm) => {
       const origTr = tm.tradeResult;
@@ -275,7 +348,9 @@ export class TradeManager {
         trChunk.quantity,
       );
       if (!sellResult.fromExchange) {
-        throw new Error(`Failed to sell ${sourceCoin}: ${sellResult.msg}`);
+        throw new Error(
+          `Failed to sell ${sourceCoin} into ${targetCoin}: ${sellResult.msg}`,
+        );
       }
 
       const actualChunkSize = sellResult.quantity / origTr.quantity;

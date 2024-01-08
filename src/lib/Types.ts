@@ -30,8 +30,8 @@ export interface Stats {
 }
 
 export class ExchangeSymbol {
-  readonly quantityAsset: string;
-  readonly priceAsset: string;
+  quantityAsset: string;
+  priceAsset: string;
 
   constructor(coinName: string, priceAsset: string) {
     if (!coinName) {
@@ -53,6 +53,13 @@ export class ExchangeSymbol {
 
   toString(): string {
     return this.quantityAsset + this.priceAsset;
+  }
+
+  reverseThis(): ExchangeSymbol {
+    const pa = this.priceAsset;
+    this.priceAsset = this.quantityAsset;
+    this.quantityAsset = pa;
+    return this;
   }
 }
 
