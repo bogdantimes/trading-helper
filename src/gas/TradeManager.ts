@@ -254,22 +254,18 @@ export class TradeManager {
       targetCoin,
       this.#config.StableCoin,
     );
+
     const sourcePrice = this.#getPrices(sourceSymbol)?.currentPrice;
     const targetPrice = this.#getPrices(targetSymbol)?.currentPrice;
+
     if (!sourcePrice || !targetPrice) {
       throw new Error(`Price information not found for one or both coins.`);
     }
 
-    if (this.tradesDao.has(targetCoin)) {
-      throw new Error(
-        `Cannot proceed with swap. ${targetCoin} already in the portfolio.`,
-      );
-    }
-
     // Step 2: Sell Source Coin
     let gainedBudget = 0;
-    let prevCommission = 0;
-    let realChunkCost = 0;
+    let prevFee = 0;
+    let chunkSellDiff = 0;
 
     this.tradesDao.update(sourceCoin, (tm) => {
       const origTr = tm.tradeResult;
@@ -282,15 +278,17 @@ export class TradeManager {
         throw new Error(`Failed to sell ${sourceCoin}: ${sellResult.msg}`);
       }
 
+      const actualChunkSize = sellResult.quantity / origTr.quantity;
+
       gainedBudget = sellResult.gained;
-      prevCommission += sellResult.commission + origTr.commission;
-      realChunkCost = origTr.paid * (sellResult.quantity / origTr.quantity);
+      prevFee += sellResult.commission + origTr.commission * actualChunkSize;
+      chunkSellDiff = origTr.paid * actualChunkSize - sellResult.gained;
 
       if (chunkSize === 1) {
         tm.deleted = true;
       } else {
         // Calculate actual remaining chunk size based on the actually sold chunk
-        const remainingSize = 1 - sellResult.quantity / origTr.quantity;
+        const remainingSize = 1 - actualChunkSize;
         tm.tradeResult = origTr.getChunk(remainingSize);
         tm.setState(TradeState.BOUGHT);
         Log.info(`Remaining ${sourceCoin}`);
@@ -315,13 +313,14 @@ export class TradeManager {
         support: targetPrice * 0.9,
       },
       gainedBudget,
+      true, // join with whatever exists
     );
 
     // apply previous fees and the real chunk cost
     this.tradesDao.update(targetCoin, (tm) => {
-      tm.tradeResult.paid = realChunkCost;
-      tm.tradeResult.cost = realChunkCost;
-      tm.tradeResult.commission += prevCommission;
+      tm.tradeResult.paid += chunkSellDiff;
+      tm.tradeResult.cost += chunkSellDiff;
+      tm.tradeResult.commission += prevFee;
       return tm;
     });
 
