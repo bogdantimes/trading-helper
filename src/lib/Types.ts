@@ -29,9 +29,12 @@ export interface Stats {
   DailyProfit: Record<DateString, ProfitValue>;
 }
 
+const reversed = Symbol(`reversed`);
+
 export class ExchangeSymbol {
   quantityAsset: string;
   priceAsset: string;
+  private [reversed] = false;
 
   constructor(coinName: string, priceAsset: string) {
     if (!coinName) {
@@ -59,7 +62,12 @@ export class ExchangeSymbol {
     const pa = this.priceAsset;
     this.priceAsset = this.quantityAsset;
     this.quantityAsset = pa;
+    this[reversed] = !this[reversed];
     return this;
+  }
+
+  isReversed(): boolean {
+    return this[reversed];
   }
 }
 

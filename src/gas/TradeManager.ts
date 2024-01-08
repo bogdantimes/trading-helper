@@ -273,25 +273,35 @@ export class TradeManager {
     let gainedBudget = 0;
     let gainedQty = 0;
     let prevFee = 0;
-    let chunkSellDiff = 0;
+    let chunkCostDiff = 0;
 
     if (price && chunkSize === 1) {
       // we can do direct swap 1:1
+      let swapResult: TradeResult;
       this.tradesDao.update(sourceCoin, (tm) => {
-        const sellResult = this.exchange.marketSell(
-          dirSwapSymbol,
-          tm.tradeResult.quantity,
-        );
-
-        if (!sellResult.fromExchange) {
-          throw new Error(
-            `Failed to sell ${sourceCoin} into ${targetCoin}: ${sellResult.msg}`,
+        if (dirSwapSymbol.isReversed()) {
+          swapResult = this.exchange.marketBuy(
+            dirSwapSymbol,
+            tm.tradeResult.quantity,
+          );
+        } else {
+          swapResult = this.exchange.marketSell(
+            dirSwapSymbol,
+            tm.tradeResult.quantity,
           );
         }
 
-        gainedQty += sellResult.gained; // gained in this case qty of the another coin
-        prevFee += sellResult.commission + tm.tradeResult.commission;
-        chunkSellDiff = tm.tradeResult.paid;
+        if (!swapResult.fromExchange) {
+          throw new Error(
+            `Failed to sell ${sourceCoin} into ${targetCoin}: ${swapResult.msg}`,
+          );
+        }
+
+        gainedQty += dirSwapSymbol.isReversed()
+          ? swapResult.quantity
+          : swapResult.cost;
+        prevFee += swapResult.commission + tm.tradeResult.commission;
+        chunkCostDiff = tm.tradeResult.paid;
 
         tm.deleted = true;
 
@@ -305,12 +315,12 @@ export class TradeManager {
             tm = TradeMemo.newManual(
               tm.tradeResult.symbol,
               gainedQty,
-              chunkSellDiff,
+              chunkCostDiff,
             );
           } else {
             tm.tradeResult.quantity += gainedQty;
-            tm.tradeResult.paid += chunkSellDiff;
-            tm.tradeResult.cost += chunkSellDiff;
+            tm.tradeResult.paid += chunkCostDiff;
+            tm.tradeResult.cost += chunkCostDiff;
             tm.tradeResult.commission += prevFee;
           }
           tm.ttl = 0;
@@ -324,7 +334,7 @@ export class TradeManager {
           const tm = TradeMemo.newManual(
             targetSymbol,
             gainedQty,
-            chunkSellDiff,
+            chunkCostDiff,
           );
           tm.ttl = 0;
           tm.tradeResult.commission += prevFee;
@@ -358,7 +368,7 @@ export class TradeManager {
 
       gainedBudget = sellResult.gained;
       prevFee += sellResult.commission + origTr.commission * actualChunkSize;
-      chunkSellDiff = origTr.paid * actualChunkSize - sellResult.gained;
+      chunkCostDiff = origTr.paid * actualChunkSize - sellResult.gained;
 
       if (chunkSize === 1) {
         tm.deleted = true;
@@ -394,8 +404,8 @@ export class TradeManager {
 
     // apply previous fees and the real chunk cost
     this.tradesDao.update(targetCoin, (tm) => {
-      tm.tradeResult.paid += chunkSellDiff;
-      tm.tradeResult.cost += chunkSellDiff;
+      tm.tradeResult.paid += chunkCostDiff;
+      tm.tradeResult.cost += chunkCostDiff;
       tm.tradeResult.commission += prevFee;
       return tm;
     });
