@@ -407,6 +407,7 @@ export class TradeManager {
       tm.tradeResult.paid += chunkCostDiff;
       tm.tradeResult.cost += chunkCostDiff;
       tm.tradeResult.commission += prevFee;
+      this.#processBoughtState(tm);
       return tm;
     });
 
@@ -755,12 +756,13 @@ export class TradeManager {
       return;
     }
 
-    tm.tradeResult.lotSizeQty =
-      tm.tradeResult.lotSizeQty ||
-      this.exchange.quantityForLotStepSize(
+    const { lotSizeQty: lotQty, quantity } = tm.tradeResult;
+    if (lotQty < quantity * 0.9 || lotQty > quantity) {
+      tm.tradeResult.lotSizeQty = this.exchange.quantityForLotStepSize(
         tm.tradeResult.symbol,
-        tm.tradeResult.quantity,
+        quantity,
       );
+    }
 
     if (!this.#config.SmartExit) {
       // If smart exit is disabled, we should return here
