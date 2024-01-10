@@ -242,18 +242,13 @@ export class TradeManager {
     Log.info(prettyPrintTradeMemo(tm));
   }
 
-  swap(sourceCoin: CoinName, targetCoin: CoinName, chunkSize = 1): void {
+  // TODO: move to SwapService of some kind
+  swap(src: CoinName, tgt: CoinName, chunkSize = 1): void {
     this.#prepare();
 
     // Step 1: Check Prices
-    const sourceSymbol = new ExchangeSymbol(
-      sourceCoin,
-      this.#config.StableCoin,
-    );
-    const targetSymbol = new ExchangeSymbol(
-      targetCoin,
-      this.#config.StableCoin,
-    );
+    const sourceSymbol = new ExchangeSymbol(src, this.#config.StableCoin);
+    const targetSymbol = new ExchangeSymbol(tgt, this.#config.StableCoin);
 
     const sourcePrice = this.#getPrices(sourceSymbol)?.currentPrice;
     const targetPrice = this.#getPrices(targetSymbol)?.currentPrice;
@@ -262,96 +257,26 @@ export class TradeManager {
       throw new Error(`Price information not found for one or both coins.`);
     }
 
-    const dirSwapSymbol = new ExchangeSymbol(sourceCoin, targetCoin);
+    const dirSwapSymbol = new ExchangeSymbol(src, tgt);
     // check if there's a direct swap available, like LINK -> BTC
     const prices = this.plugin.getPrices();
-    const price =
+    const directSwapPrice =
       prices[dirSwapSymbol.toString()] ||
       prices[dirSwapSymbol.reverseThis().toString()];
 
-    // Step 2: Sell Source Coin
-    let gainedBudget = 0;
-    let gainedQty = 0;
-    let prevFee = 0;
-    let chunkCostDiff = 0;
-
-    if (price && chunkSize === 1) {
-      // we can do direct swap 1:1
-      let swapResult: TradeResult;
-      this.tradesDao.update(sourceCoin, (tm) => {
-        if (dirSwapSymbol.isReversed()) {
-          swapResult = this.exchange.marketBuy(
-            dirSwapSymbol,
-            tm.tradeResult.quantity,
-          );
-        } else {
-          swapResult = this.exchange.marketSell(
-            dirSwapSymbol,
-            tm.tradeResult.quantity,
-          );
-        }
-
-        if (!swapResult.fromExchange) {
-          throw new Error(
-            `Failed to sell ${sourceCoin} into ${targetCoin}: ${swapResult.msg}`,
-          );
-        }
-
-        gainedQty += dirSwapSymbol.isReversed()
-          ? swapResult.quantity
-          : swapResult.cost;
-        prevFee += swapResult.commission + tm.tradeResult.commission;
-        chunkCostDiff = tm.tradeResult.paid;
-
-        tm.deleted = true;
-
-        return tm;
-      });
-      // create a new asset or add to existing
-      this.tradesDao.update(
-        targetCoin,
-        (tm) => {
-          if (!tm.currentValue) {
-            tm = TradeMemo.newManual(
-              tm.tradeResult.symbol,
-              gainedQty,
-              chunkCostDiff,
-            );
-          } else {
-            tm.tradeResult.quantity += gainedQty;
-            tm.tradeResult.paid += chunkCostDiff;
-            tm.tradeResult.cost += chunkCostDiff;
-            tm.tradeResult.commission += prevFee;
-          }
-          tm.ttl = 0;
-          tm.currentPrice = targetPrice;
-          tm.setState(TradeState.BOUGHT);
-          this.#processBoughtState(tm);
-          Log.info(prettyPrintTradeMemo(tm));
-          return tm;
-        },
-        () => {
-          const tm = TradeMemo.newManual(
-            targetSymbol,
-            gainedQty,
-            chunkCostDiff,
-          );
-          tm.ttl = 0;
-          tm.tradeResult.commission += prevFee;
-          tm.currentPrice = targetPrice;
-          tm.setState(TradeState.BOUGHT);
-          this.#processBoughtState(tm);
-          Log.info(prettyPrintTradeMemo(tm));
-          return tm;
-        },
-      );
-
-      // direct swap done
-      this.#updateBalances();
+    if (directSwapPrice) {
+      this.#directSwap(src, tgt, chunkSize);
       return;
     }
 
-    this.tradesDao.update(sourceCoin, (tm) => {
+    // TODO: else direct swap to stable coin, then to target coin
+
+    // Step 2: Sell Source Coin
+    let gainedBudget = 0;
+    let prevFee = 0;
+    let chunkCostDiff = 0;
+
+    this.tradesDao.update(src, (tm) => {
       const origTr = tm.tradeResult;
       const trChunk = origTr.getChunk(chunkSize);
       const sellResult = this.exchange.marketSell(
@@ -359,9 +284,7 @@ export class TradeManager {
         trChunk.quantity,
       );
       if (!sellResult.fromExchange) {
-        throw new Error(
-          `Failed to sell ${sourceCoin} into ${targetCoin}: ${sellResult.msg}`,
-        );
+        throw new Error(`Failed to sell ${src} into ${tgt}: ${sellResult.msg}`);
       }
 
       const actualChunkSize = sellResult.quantity / origTr.quantity;
@@ -377,14 +300,14 @@ export class TradeManager {
         const remainingSize = 1 - actualChunkSize;
         tm.tradeResult = origTr.getChunk(remainingSize);
         tm.setState(TradeState.BOUGHT);
-        Log.info(`Remaining ${sourceCoin}`);
+        Log.info(`Remaining ${src}`);
         Log.info(prettyPrintTradeMemo(tm));
       }
       return tm;
     });
 
     if (!gainedBudget) {
-      Log.info(`No budget to buy the ${targetCoin}`);
+      Log.info(`No budget to buy the ${tgt}`);
       return;
     }
 
@@ -394,7 +317,7 @@ export class TradeManager {
     this.#balance += gainedBudget;
     this.#buyNow(
       {
-        coin: targetCoin,
+        coin: tgt,
         type: SignalType.Manual,
         support: targetPrice * 0.9,
       },
@@ -403,7 +326,7 @@ export class TradeManager {
     );
 
     // apply previous fees and the real chunk cost
-    this.tradesDao.update(targetCoin, (tm) => {
+    this.tradesDao.update(tgt, (tm) => {
       tm.tradeResult.paid += chunkCostDiff;
       tm.tradeResult.cost += chunkCostDiff;
       tm.tradeResult.commission += prevFee;
@@ -448,6 +371,92 @@ export class TradeManager {
         `${symbol.quantityAsset} could not be imported: ${importedTrade.msg}`,
       );
     }
+  }
+
+  #directSwap(src: CoinName, tgt: CoinName, chunkSize = 1): void {
+    const dirSwapSymbol = new ExchangeSymbol(src, tgt);
+    const targetSymbol = new ExchangeSymbol(tgt, this.#config.StableCoin);
+    const targetPrice = this.#getPrices(targetSymbol)?.currentPrice;
+
+    let gainedQty = 0;
+    let prevFee = 0;
+    let chunkCostDiff = 0;
+    let swapResult: TradeResult;
+
+    this.tradesDao.update(src, (tm) => {
+      const origTr = tm.tradeResult;
+      const trChunk = origTr.getChunk(chunkSize);
+
+      if (dirSwapSymbol.isReversed()) {
+        swapResult = this.exchange.marketBuy(dirSwapSymbol, trChunk.quantity);
+      } else {
+        swapResult = this.exchange.marketSell(dirSwapSymbol, trChunk.quantity);
+      }
+
+      if (!swapResult.fromExchange) {
+        throw new Error(`Failed to sell ${src} into ${tgt}: ${swapResult.msg}`);
+      }
+
+      gainedQty += dirSwapSymbol.isReversed()
+        ? swapResult.quantity
+        : swapResult.cost;
+      const paidQty = dirSwapSymbol.isReversed()
+        ? swapResult.cost
+        : swapResult.quantity;
+      const actualChunkSize = paidQty / origTr.quantity;
+      prevFee += swapResult.commission + origTr.commission * actualChunkSize;
+      chunkCostDiff = tm.tradeResult.paid * actualChunkSize;
+
+      if (chunkSize === 1) {
+        tm.deleted = true;
+      } else {
+        // Calculate actual remaining chunk size based on the actually sold chunk
+        const remainingSize = 1 - actualChunkSize;
+        tm.tradeResult = origTr.getChunk(remainingSize);
+        tm.setState(TradeState.BOUGHT);
+        Log.info(`Remaining ${src}`);
+        Log.info(prettyPrintTradeMemo(tm));
+      }
+
+      return tm;
+    });
+    // create a new asset or add to existing
+    this.tradesDao.update(
+      tgt,
+      (tm) => {
+        if (!tm.currentValue) {
+          tm = TradeMemo.newManual(
+            tm.tradeResult.symbol,
+            gainedQty,
+            chunkCostDiff,
+          );
+        } else {
+          tm.tradeResult.quantity += gainedQty;
+          tm.tradeResult.paid += chunkCostDiff;
+          tm.tradeResult.cost += chunkCostDiff;
+          tm.tradeResult.commission += prevFee;
+        }
+        tm.ttl = 0;
+        tm.currentPrice = targetPrice;
+        tm.setState(TradeState.BOUGHT);
+        this.#processBoughtState(tm);
+        Log.info(prettyPrintTradeMemo(tm));
+        return tm;
+      },
+      () => {
+        const tm = TradeMemo.newManual(targetSymbol, gainedQty, chunkCostDiff);
+        tm.ttl = 0;
+        tm.tradeResult.commission += prevFee;
+        tm.currentPrice = targetPrice;
+        tm.setState(TradeState.BOUGHT);
+        this.#processBoughtState(tm);
+        Log.info(prettyPrintTradeMemo(tm));
+        return tm;
+      },
+    );
+
+    // direct swap done
+    this.#updateBalances();
   }
 
   #produceNewTradeMemo(tr: TradeResult): TradeMemo {
