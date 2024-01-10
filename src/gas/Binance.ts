@@ -84,7 +84,7 @@ export class Binance implements IExchange {
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
     const moneyAvailable = this.getBalance(symbol.priceAsset);
-    cost = +cost.toFixed(10); // removing any insignificant numbers
+    cost = +cost.toFixed(8); // removing any insignificant numbers
     if (moneyAvailable < cost) {
       return new TradeResult(
         symbol,
