@@ -58,7 +58,7 @@ export class ExchangeSymbol {
     return this.quantityAsset + this.priceAsset;
   }
 
-  reverseThis(): ExchangeSymbol {
+  reverseThis(): this {
     const pa = this.priceAsset;
     this.priceAsset = this.quantityAsset;
     this.quantityAsset = pa;

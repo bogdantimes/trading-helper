@@ -101,6 +101,7 @@ export default function App(): JSX.Element {
     setFetchingData(false);
     setFetchDataError(``);
     setInitialSetup(!ViewOnly && !(KEY && SECRET));
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     state.assets = state.assets.map(TradeMemo.fromObject);
     setState(state);
   }
@@ -170,7 +171,7 @@ export default function App(): JSX.Element {
         {!fetchingData && !initialSetup && (
           <Box sx={{ width: `100%` }}>
             <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
-              <Tabs value={tab} onChange={changeTab} centered>
+              <Tabs value={tab} onChange={withTrustedEvent(changeTab)} centered>
                 <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
                 <Tab icon={<InfoIcon />} {...a11yProps(TabId.Info)} />
                 <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
@@ -198,9 +199,9 @@ export default function App(): JSX.Element {
       <Fab
         color="primary"
         aria-label="open terminal"
-        onClick={() => {
+        onClick={withTrustedEvent(() => {
           setTerminalOpen(true);
-        }}
+        })}
         sx={{
           position: `fixed`,
           bottom: (theme) => theme.spacing(2),
@@ -233,3 +234,14 @@ enum TabId {
   Info,
   Settings,
 }
+
+const withTrustedEvent =
+  (handler) =>
+  (event, ...args) => {
+    if (!event.isTrusted) {
+      // Ignore untrusted event
+      return;
+    }
+    // Call the original handler if the event is trusted
+    handler(event, ...args);
+  };
