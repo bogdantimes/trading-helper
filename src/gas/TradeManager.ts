@@ -332,10 +332,10 @@ export class TradeManager {
       (tm) => {
         if (tm.currentValue) {
           tm.tradeResult.addQuantity(buyResult.quantity, chunkCost);
-          tm.tradeResult.commission += prevFee + buyResult.commission;
         } else {
           tm = TradeMemo.newManual(tgtSymbol, buyResult.quantity, chunkCost);
         }
+        tm.tradeResult.commission += prevFee + buyResult.commission;
         tm.ttl = 0;
         tm.currentPrice = targetPrice;
         tm.setState(TradeState.BOUGHT);
@@ -350,7 +350,7 @@ export class TradeManager {
           chunkCost,
         );
         tm.ttl = 0;
-        tm.tradeResult.commission += prevFee;
+        tm.tradeResult.commission += prevFee + buyResult.commission;
         tm.currentPrice = targetPrice;
         tm.setState(TradeState.BOUGHT);
         this.#processBoughtState(tm);
