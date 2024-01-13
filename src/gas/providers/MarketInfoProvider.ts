@@ -48,8 +48,8 @@ export class MarketInfoProvider {
       btcVMktGap > 2
         ? BullRun.Yes
         : btcVMktGap < 0.5
-        ? BullRun.No
-        : BullRun.Unknown;
+          ? BullRun.No
+          : BullRun.Unknown;
 
     return {
       // limit to 0..1

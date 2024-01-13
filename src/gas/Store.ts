@@ -209,9 +209,9 @@ export class FirebaseStore extends CommonStore implements IStore {
 export class CachedStore extends CommonStore implements IStore {
   protected lockService = LockService;
 
-  #store: FirebaseStore | ScriptStore;
-  #cache: DefaultCacheProxy;
-  #syncIntervalSec = 5 * 60; // 5 minutes
+  readonly #store: FirebaseStore | ScriptStore;
+  readonly #cache: DefaultCacheProxy;
+  readonly #syncIntervalSec = 5 * 60; // 5 minutes
 
   constructor(store: FirebaseStore | ScriptStore, cache: DefaultCacheProxy) {
     super();

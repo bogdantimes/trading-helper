@@ -35,8 +35,8 @@ export function Home({ state }: { state: AppState }): JSX.Element {
       {config.ViewOnly
         ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
         : config.TradingAutoStopped
-        ? `⏸️ Auto-trading is paused. Market strength should reach ${config.MarketStrengthTargets.max}.`
-        : `▶️ Auto-trading is active. Waiting for specific conditions to buy a candidate.`}
+          ? `⏸️ Auto-trading is paused. Market strength should reach ${config.MarketStrengthTargets.max}.`
+          : `▶️ Auto-trading is active. Waiting for specific conditions to buy a candidate.`}
     </Typography>
   ) : undefined;
 

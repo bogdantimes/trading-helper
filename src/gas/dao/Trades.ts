@@ -55,8 +55,8 @@ export class TradesDao {
         const changedTrade = tm
           ? mutateFn(TradeMemo.fromObject(tm))
           : notFoundFn
-          ? notFoundFn()
-          : null;
+            ? notFoundFn()
+            : null;
 
         if (!changedTrade) {
           return StoreNoOp;

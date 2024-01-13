@@ -115,8 +115,8 @@ export class TradeManager {
         provideSignals: getMaxSignals
           ? Number.MAX_SAFE_INTEGER // when no trading enabled - provide all signals
           : this.#getMoneyToInvest() > 0
-          ? this.#canInvest // or provide as many as can be bought for available $
-          : 0,
+            ? this.#canInvest // or provide as many as can be bought for available $
+            : 0,
         candidatesDao: this.candidatesDao,
         reduceThreshold: this.#isBullRun(step) ? BULL_RUN_THRESHOLD_REDUCE : 0,
         I: step,
@@ -538,9 +538,7 @@ export class TradeManager {
         return c;
       });
       Log.alert(
-        `Market Strength has dropped below ${
-          this.#config.MarketStrengthTargets.min
-        }`,
+        `Market Strength has dropped below ${this.#config.MarketStrengthTargets.min}`,
       );
     }
   }

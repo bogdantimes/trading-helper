@@ -399,8 +399,8 @@ global.info = (coin: CoinName) => {
       info.strength > 0.9
         ? `strong. It's good time to buy.`
         : info.strength < 0.1
-        ? `weak. It's good time to sell.`
-        : `unclear. Trade with caution.`
+          ? `weak. It's good time to sell.`
+          : `unclear. Trade with caution.`
     }
 Strength (0..100): ${f0(info.strength * 100)}
 Average demand (-100..100): ${f0(info.averageDemand * 100)}%
