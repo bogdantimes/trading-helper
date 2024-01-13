@@ -303,6 +303,25 @@ function edit(coin: CoinName, qty: number, paid: number): any {
   });
 }
 
+function swap(sourceCoin: CoinName, targetCoin: CoinName, chunkSize = 1): any {
+  return catchError(() => {
+    if (!sourceCoin) {
+      Log.info(`Specify a source asset, e.g. BTC`);
+    } else if (!targetCoin) {
+      Log.info(`Specify a target coin, e.g. ETH`);
+    }
+
+    if (isFinite(+chunkSize)) {
+      TradeManager.default().swap(sourceCoin, targetCoin, +chunkSize);
+    } else {
+      Log.info(
+        `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
+      );
+    }
+    return Log.printInfos();
+  });
+}
+
 function importCoin(coin: CoinName, qty?: number): any {
   return catchError(() => {
     if (!coin) {
@@ -326,8 +345,8 @@ function addWithdrawal(amount: number): string {
       new Binance(configDao),
       new Statistics(DefaultStore),
     );
-    const { balance } = mgr.addWithdrawal(amount);
-    const msg = `💳 Withdrawal of $${amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
+    const { balance } = mgr.addWithdrawal(+amount);
+    const msg = `Withdrawal of $${+amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
     Log.alert(msg);
     return Log.printInfos();
   });
@@ -346,6 +365,7 @@ global.sell = sell;
 global.sellAll = sellAll;
 global.remove = remove;
 global.edit = edit;
+global.swap = swap;
 global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
@@ -371,21 +391,21 @@ global.info = (coin: CoinName) => {
       candidatesDao,
       plugin,
     );
-    const { strength, averageDemand, accuracy } = marketInfoProvider.get(-1);
+    const info = marketInfoProvider.get(-1);
 
     Log.ifUsefulDumpAsEmail();
 
     return `The current market is ${
-      strength > 0.9
+      info.strength > 0.9
         ? `strong. It's good time to buy.`
-        : strength < 0.1
-        ? `weak. It's good time to sell.`
-        : `unclear. Trade with caution.`
+        : info.strength < 0.1
+          ? `weak. It's good time to sell.`
+          : `unclear. Trade with caution.`
     }
-Strength (0..100): ${f0(strength * 100)}
-Average demand (-100..100): ${f0(averageDemand * 100)}%
-Accuracy (0..100): ${f0(accuracy * 100)}%${
-      accuracy < 0.5
+Strength (0..100): ${f0(info.strength * 100)}
+Average demand (-100..100): ${f0(info.averageDemand * 100)}%
+Accuracy (0..100): ${f0(info.accuracy * 100)}%${
+      info.accuracy < 0.5
         ? ` (automatically improved over time for TH+ subscribers)`
         : ``
     }`;
@@ -458,6 +478,7 @@ const helpDescriptions = {
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
   edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,
+  swap: `Swaps an existing asset into a new coin. Example (whole): $ swap INJ BTC. Example (half): $ swap INJ BTC 0.5`,
   importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,

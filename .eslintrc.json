@@ -17,6 +17,7 @@
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-extraneous-class": "off",
     "@typescript-eslint/no-dynamic-delete": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
     "@typescript-eslint/prefer-nullish-coalescing": "off",
     "quotes": ["error", "backtick"]
   },

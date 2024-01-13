@@ -7,7 +7,7 @@ import {
   type CandidatesData,
   type Config,
   Key,
-  TradeMemo,
+  type TradeMemo,
   TradeState,
 } from "../../lib";
 import AssetCard from "./cards/AssetCard";
@@ -17,15 +17,14 @@ import MarketCard from "./cards/MarketCard";
 
 export function Home({ state }: { state: AppState }): JSX.Element {
   const config = state.config;
-  const assets = state.assets.map(TradeMemo.fromObject);
-  const assetsValue = assets.reduce((sum, tm) => sum + tm.currentValue, 0);
+  const assetsValue = state.assets.reduce((s, tm) => s + tm.currentValue, 0);
   const [hideBalances, setHideBalances] = useState(config.HideBalances);
 
   const toggleHideBalances = (): void => {
     setHideBalances(!hideBalances);
   };
 
-  const sorted = assets.sort((t1, t2) => (t1.ttl > t2.ttl ? 1 : -1));
+  const sorted = state.assets.sort((t1, t2) => (t1.ttl > t2.ttl ? 1 : -1));
   const current = sorted.filter(
     (t) => t.currentValue || t.stateIs(TradeState.BUY),
   );
@@ -36,8 +35,8 @@ export function Home({ state }: { state: AppState }): JSX.Element {
       {config.ViewOnly
         ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
         : config.TradingAutoStopped
-        ? `⏸️ Auto-trading is paused. Market strength should reach ${config.MarketStrengthTargets.max}.`
-        : `▶️ Auto-trading is active. Waiting for specific conditions to buy a candidate.`}
+          ? `⏸️ Auto-trading is paused. Market strength should reach ${config.MarketStrengthTargets.max}.`
+          : `▶️ Auto-trading is active. Waiting for specific conditions to buy a candidate.`}
     </Typography>
   ) : undefined;
 

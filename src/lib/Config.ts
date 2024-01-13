@@ -30,6 +30,7 @@ export interface Config {
   BudgetSplitMin: number;
   MarketStrengthTargets: { min: number; max: number };
   TradingAutoStopped?: boolean;
+  BullRunEndTime?: number;
 }
 
 export const MASK = `********`;
@@ -42,3 +43,4 @@ export const AUTO_DETECT: AutoDetect = -1;
 export const MINIMUM_FEE_COVERAGE = 3;
 export const TARGET_FEE_COVERAGE = 10;
 export const DEFAULT_WAIT_LOCK = 2000;
+export const BULL_RUN_THRESHOLD_REDUCE = 0; // TODO: enable when the feature is ready

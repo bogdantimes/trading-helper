@@ -25,7 +25,7 @@ import { BalanceHistory } from "./components/BalanceHistory";
 import { Home } from "./components/Home";
 import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
-import { type AppState } from "../lib";
+import { type AppState, BullRun, TradeMemo } from "../lib";
 import { DefaultConfig } from "../gas/dao/Config";
 import { ScriptApp } from "./components/Common";
 import useWebSocket from "./useWebSocket";
@@ -50,7 +50,12 @@ export default function App(): JSX.Element {
     candidates: {
       selected: {},
       other: {},
-      marketInfo: { averageDemand: 0, accuracy: 0, strength: 0 },
+      marketInfo: {
+        averageDemand: 0,
+        accuracy: 0,
+        strength: 0,
+        bullRun: BullRun.Unknown,
+      },
     },
     config: DefaultConfig(),
     firebaseURL: ``,
@@ -96,6 +101,8 @@ export default function App(): JSX.Element {
     setFetchingData(false);
     setFetchDataError(``);
     setInitialSetup(!ViewOnly && !(KEY && SECRET));
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    state.assets = state.assets.map(TradeMemo.fromObject);
     setState(state);
   }
 
@@ -127,6 +134,10 @@ export default function App(): JSX.Element {
       return v;
     });
   };
+
+  const currentPnL = state.assets.reduce((s, tm) => {
+    return tm.currentValue ? s + tm.profit() : s;
+  }, 0);
 
   return (
     <ThemeProvider theme={theme}>
@@ -160,7 +171,7 @@ export default function App(): JSX.Element {
         {!fetchingData && !initialSetup && (
           <Box sx={{ width: `100%` }}>
             <Box sx={{ borderBottom: 1, borderColor: `divider` }}>
-              <Tabs value={tab} onChange={changeTab} centered>
+              <Tabs value={tab} onChange={withTrustedEvent(changeTab)} centered>
                 <Tab {...a11yProps(TabId.Home)} icon={<HomeIcon />} />
                 <Tab icon={<InfoIcon />} {...a11yProps(TabId.Info)} />
                 <Tab {...a11yProps(TabId.Settings)} icon={<SettingsIcon />} />
@@ -170,7 +181,7 @@ export default function App(): JSX.Element {
               <Home state={state} />
             </TabPanel>
             <TabPanel value={tab} index={TabId.Info} onChange={changeTab}>
-              <BalanceHistory stats={state.info} />
+              <BalanceHistory stats={state.info} currentPnL={currentPnL} />
             </TabPanel>
             <TabPanel value={tab} index={TabId.Settings} onChange={changeTab}>
               <Settings
@@ -188,9 +199,9 @@ export default function App(): JSX.Element {
       <Fab
         color="primary"
         aria-label="open terminal"
-        onClick={() => {
+        onClick={withTrustedEvent(() => {
           setTerminalOpen(true);
-        }}
+        })}
         sx={{
           position: `fixed`,
           bottom: (theme) => theme.spacing(2),
@@ -223,3 +234,14 @@ enum TabId {
   Info,
   Settings,
 }
+
+const withTrustedEvent =
+  (handler) =>
+  (event, ...args) => {
+    if (!event.isTrusted) {
+      // Ignore untrusted event
+      return;
+    }
+    // Call the original handler if the event is trusted
+    handler(event, ...args);
+  };

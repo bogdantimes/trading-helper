@@ -13,7 +13,9 @@ export class TradesDao {
   constructor(private readonly store: IStore) {}
 
   has(coinName: CoinName): boolean {
-    return !!this.getAll()[coinName.trim().toUpperCase()];
+    return !!this.getAll()[coinName.trim().toUpperCase()]?.stateIs(
+      TradeState.BOUGHT,
+    );
   }
 
   /**
@@ -53,8 +55,8 @@ export class TradesDao {
         const changedTrade = tm
           ? mutateFn(TradeMemo.fromObject(tm))
           : notFoundFn
-          ? notFoundFn()
-          : null;
+            ? notFoundFn()
+            : null;
 
         if (!changedTrade) {
           return StoreNoOp;

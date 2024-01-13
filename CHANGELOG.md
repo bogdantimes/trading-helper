@@ -1,3 +1,10 @@
+# v4.2.6
+
+* Trading Algorithm:
+  * Fixed mismatch with back-testing when getting the imbalance value.
+* UI: minor fixes
+* API: added `swap` function
+
 # v4.2.5
 
 * Trading Algorithm:

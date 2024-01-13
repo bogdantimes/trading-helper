@@ -17,10 +17,10 @@ type PriceMaps = { [key in StableCoinKeys]?: PriceHoldersMap };
 export class PriceProvider implements IPriceProvider {
   static #instance: PriceProvider;
 
-  #name = `default`;
+  readonly #name = `default`;
   #priceMaps: PriceMaps;
   // Prices expire in (tick_interval - 5 seconds)
-  #expiration = TICK_INTERVAL_MIN * SECONDS_IN_MIN - 5;
+  readonly #expiration = TICK_INTERVAL_MIN * SECONDS_IN_MIN - 5;
   readonly #maxCap?: number;
   readonly #fillIn?: boolean;
 

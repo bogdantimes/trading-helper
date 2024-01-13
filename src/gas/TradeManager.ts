@@ -5,6 +5,8 @@ import {
   AUTO_DETECT,
   BNB,
   BNBFee,
+  BULL_RUN_THRESHOLD_REDUCE,
+  BullRun,
   type CoinName,
   type Config,
   ExchangeSymbol,
@@ -45,6 +47,7 @@ export class TradeManager {
   #canInvest = 0;
   #balance = 0;
   #optimalInvestRatio = 0;
+  #step = -1;
 
   static default(): TradeManager {
     const configDao = new ConfigDao(DefaultStore);
@@ -87,6 +90,7 @@ export class TradeManager {
 
   trade(step: number): void {
     this.#prepare();
+    this.#step = step;
 
     // First process !BUY state assets (some might get sold and free up $)
     this.tradesDao
@@ -111,9 +115,10 @@ export class TradeManager {
         provideSignals: getMaxSignals
           ? Number.MAX_SAFE_INTEGER // when no trading enabled - provide all signals
           : this.#getMoneyToInvest() > 0
-          ? this.#canInvest // or provide as many as can be bought for available $
-          : 0,
+            ? this.#canInvest // or provide as many as can be bought for available $
+            : 0,
         candidatesDao: this.candidatesDao,
+        reduceThreshold: this.#isBullRun(step) ? BULL_RUN_THRESHOLD_REDUCE : 0,
         I: step,
       });
     } catch (e) {
@@ -130,7 +135,7 @@ export class TradeManager {
       });
     }
 
-    this.#checkAutoStop(step);
+    this.#handleMarketChanges();
     this.#handleBuySignals(signals);
   }
 
@@ -173,6 +178,10 @@ export class TradeManager {
     this.tradesDao.update(
       coin,
       (tm) => {
+        if (chunkSize === 1) {
+          return this.#sell(tm);
+        }
+
         const origTr = tm.tradeResult;
         const trChunk = tm.tradeResult.getChunk(chunkSize);
         tm.tradeResult = trChunk;
@@ -185,13 +194,13 @@ export class TradeManager {
           );
           return;
         }
-        if (chunkSize !== 1) {
-          // Calculate actual remaining chunk size based on the actually sold chunk
-          const remainingSize = 1 - r.tradeResult.soldQty / origTr.quantity;
-          tm.tradeResult = origTr.getChunk(remainingSize);
-          tm.setState(TradeState.BOUGHT);
-          tm.deleted = false;
-        }
+        // Calculate actual remaining chunk size based on the actually sold chunk
+        const remainingSize = 1 - r.tradeResult.soldQty / origTr.quantity;
+        tm.tradeResult = origTr.getChunk(remainingSize);
+        tm.setState(TradeState.BOUGHT);
+        tm.deleted = false;
+        Log.info(`Remaining ${coin}`);
+        Log.info(prettyPrintTradeMemo(tm));
         return tm;
       },
       () => {
@@ -233,6 +242,126 @@ export class TradeManager {
     Log.info(prettyPrintTradeMemo(tm));
   }
 
+  // TODO: move to SwapService of some kind
+  swap(src: CoinName, tgt: CoinName, chunkSize = 1): void {
+    this.#prepare();
+
+    // Step 1: Check Prices
+    const sourceSymbol = new ExchangeSymbol(src, this.#config.StableCoin);
+    const tgtSymbol = new ExchangeSymbol(tgt, this.#config.StableCoin);
+
+    const sourcePrice = this.#getPrices(sourceSymbol)?.currentPrice;
+    const targetPrice = this.#getPrices(tgtSymbol)?.currentPrice;
+
+    if (!sourcePrice || !targetPrice) {
+      throw new Error(`Price information not found for one or both coins.`);
+    }
+
+    const dirSwapSymbol = new ExchangeSymbol(src, tgt);
+    // check if there's a direct swap available, like LINK -> BTC
+    const prices = this.plugin.getPrices();
+    const directSwapPossible =
+      prices[dirSwapSymbol.toString()] ||
+      prices[dirSwapSymbol.reverseThis().toString()];
+
+    if (directSwapPossible) {
+      Log.info(`Direct swap possible: ${dirSwapSymbol}}`);
+      this.#directSwap(dirSwapSymbol, chunkSize);
+      this.#updateBalances();
+      return;
+    }
+
+    // TODO: else direct swap to stable coin, then to target coin
+
+    // Step 2: Sell Source Coin
+    let gainedBudget = 0;
+    let prevFee = 0;
+    let chunkCost = 0;
+
+    Log.info(
+      `No direct swap. Swapping in 2 steps through ${this.#config.StableCoin}`,
+    );
+
+    this.tradesDao.update(src, (tm) => {
+      const origTr = tm.tradeResult;
+      const trChunk = origTr.getChunk(chunkSize);
+      const sellResult = this.exchange.marketSell(
+        sourceSymbol,
+        trChunk.quantity,
+      );
+      if (!sellResult.fromExchange) {
+        throw new Error(`Failed to sell ${src} into ${tgt}: ${sellResult.msg}`);
+      }
+
+      const actualChunkSize = sellResult.quantity / origTr.quantity;
+
+      gainedBudget = sellResult.gained;
+      prevFee = sellResult.commission + origTr.commission * actualChunkSize;
+      chunkCost = origTr.paid * actualChunkSize;
+
+      if (chunkSize === 1) {
+        tm.deleted = true;
+      } else {
+        // Calculate actual remaining chunk size based on the actually sold chunk
+        const remainingSize = 1 - actualChunkSize;
+        tm.tradeResult = origTr.getChunk(remainingSize);
+        tm.setState(TradeState.BOUGHT);
+        Log.info(`Remaining ${src}`);
+        Log.info(prettyPrintTradeMemo(tm));
+      }
+      return tm;
+    });
+
+    if (!gainedBudget) {
+      Log.info(`No budget to buy the ${tgt}`);
+      return;
+    }
+
+    // Step 3: Buy Target Coin
+    // Calculate the cost to buy the target coin using the gains from selling the source coin
+    const buyResult = this.exchange.marketBuy(tgtSymbol, gainedBudget);
+    if (!buyResult.fromExchange) {
+      throw new Error(
+        `Failed to swap ${src} into ${tgt}. Couldn't buy ${tgt}: ${buyResult.msg}`,
+      );
+    }
+
+    // apply previous fees and the real chunk cost
+    this.tradesDao.update(
+      tgt,
+      (tm) => {
+        if (tm.currentValue) {
+          tm.tradeResult.addQuantity(buyResult.quantity, chunkCost);
+        } else {
+          tm = TradeMemo.newManual(tgtSymbol, buyResult.quantity, chunkCost);
+        }
+        tm.tradeResult.commission += prevFee + buyResult.commission;
+        tm.ttl = 0;
+        tm.currentPrice = targetPrice;
+        tm.setState(TradeState.BOUGHT);
+        this.#processBoughtState(tm);
+        Log.info(prettyPrintTradeMemo(tm));
+        return tm;
+      },
+      () => {
+        const tm = TradeMemo.newManual(
+          tgtSymbol,
+          buyResult.quantity,
+          chunkCost,
+        );
+        tm.ttl = 0;
+        tm.tradeResult.commission += prevFee + buyResult.commission;
+        tm.currentPrice = targetPrice;
+        tm.setState(TradeState.BOUGHT);
+        this.#processBoughtState(tm);
+        Log.info(prettyPrintTradeMemo(tm));
+        return tm;
+      },
+    );
+
+    this.#updateBalances();
+  }
+
   import(coin: CoinName, qty?: number): void {
     if (!this.exchange.importTrade) {
       throw new Error(`Import is not supported by the exchange`);
@@ -269,6 +398,94 @@ export class TradeManager {
     }
   }
 
+  #directSwap(swapSymbol: ExchangeSymbol, chunkSize = 1): void {
+    const srcCoin = swapSymbol.isReversed()
+      ? swapSymbol.priceAsset
+      : swapSymbol.quantityAsset;
+    const tgtCoin = swapSymbol.isReversed()
+      ? swapSymbol.quantityAsset
+      : swapSymbol.priceAsset;
+
+    let gainedTgtQty = 0;
+    let prevFee = 0;
+    let chunkCostDiff = 0;
+    let swapResult: TradeResult;
+
+    this.tradesDao.update(srcCoin, (tm) => {
+      const origTr = tm.tradeResult;
+      const trChunk = origTr.getChunk(chunkSize);
+
+      if (swapSymbol.isReversed()) {
+        swapResult = this.exchange.marketBuy(swapSymbol, trChunk.quantity);
+      } else {
+        swapResult = this.exchange.marketSell(swapSymbol, trChunk.quantity);
+      }
+
+      if (!swapResult.fromExchange) {
+        throw new Error(
+          `Failed to swap ${srcCoin} into ${tgtCoin}: ${swapResult.msg}`,
+        );
+      }
+
+      gainedTgtQty += swapSymbol.isReversed()
+        ? swapResult.quantity
+        : swapResult.cost;
+      const paidSrcQty = swapSymbol.isReversed()
+        ? swapResult.cost
+        : swapResult.quantity;
+      const actualChunkSize = paidSrcQty / origTr.quantity;
+      prevFee += swapResult.commission + origTr.commission * actualChunkSize;
+      chunkCostDiff = tm.tradeResult.cost * actualChunkSize;
+
+      if (chunkSize === 1) {
+        tm.deleted = true;
+      } else {
+        // Calculate actual remaining chunk size based on the actually sold chunk
+        const remainingSize = 1 - actualChunkSize;
+        tm.tradeResult = origTr.getChunk(remainingSize);
+        tm.setState(TradeState.BOUGHT);
+        Log.info(`Remaining ${srcCoin}`);
+        Log.info(prettyPrintTradeMemo(tm));
+      }
+
+      return tm;
+    });
+    // create a new asset or add to existing
+    const tgtSymbol = new ExchangeSymbol(tgtCoin, this.#config.StableCoin);
+    const curTgtPrice = this.#getPrices(tgtSymbol)?.currentPrice;
+    this.tradesDao.update(
+      tgtCoin,
+      (tm) => {
+        if (!tm.currentValue) {
+          tm = TradeMemo.newManual(
+            tm.tradeResult.symbol,
+            gainedTgtQty,
+            chunkCostDiff,
+          );
+        } else {
+          tm.tradeResult.addQuantity(gainedTgtQty, chunkCostDiff);
+          tm.tradeResult.commission += prevFee;
+        }
+        tm.ttl = 0;
+        tm.currentPrice = curTgtPrice;
+        tm.setState(TradeState.BOUGHT);
+        this.#processBoughtState(tm);
+        Log.info(prettyPrintTradeMemo(tm));
+        return tm;
+      },
+      () => {
+        const tm = TradeMemo.newManual(tgtSymbol, gainedTgtQty, chunkCostDiff);
+        tm.ttl = 0;
+        tm.tradeResult.commission += prevFee;
+        tm.currentPrice = curTgtPrice;
+        tm.setState(TradeState.BOUGHT);
+        this.#processBoughtState(tm);
+        Log.info(prettyPrintTradeMemo(tm));
+        return tm;
+      },
+    );
+  }
+
   #produceNewTradeMemo(tr: TradeResult): TradeMemo {
     tr.lotSizeQty = this.exchange.quantityForLotStepSize(
       tr.symbol,
@@ -292,9 +509,14 @@ export class TradeManager {
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
   }
 
-  #checkAutoStop(step: number) {
-    const { strength } = this.mktInfoProvider.get(step);
-    const strengthAdjusted = f0(strength * 100);
+  #handleMarketChanges() {
+    const { strength, bullRun } = this.mktInfoProvider.get(this.#step);
+    this.#checkAutoStop(strength);
+    this.#checkBullRun(bullRun);
+  }
+
+  #checkAutoStop(mktStrength: number): void {
+    const strengthAdjusted = f0(mktStrength * 100);
     if (
       this.#config.TradingAutoStopped &&
       strengthAdjusted >= this.#config.MarketStrengthTargets.max
@@ -316,11 +538,42 @@ export class TradeManager {
         return c;
       });
       Log.alert(
-        `Market Strength has dropped below ${
-          this.#config.MarketStrengthTargets.min
-        }`,
+        `Market Strength has dropped below ${this.#config.MarketStrengthTargets.min}`,
       );
     }
+  }
+
+  #checkBullRun(bullRun: BullRun) {
+    const bullRunActive = this.#isBullRun(this.#step);
+    if (bullRun === BullRun.Yes && !bullRunActive) {
+      const threeWeeksDays = 21;
+      this.#config = this.configDao.update((c) => {
+        const inThreeWeeks = new Date();
+        inThreeWeeks.setDate(inThreeWeeks.getDate() + threeWeeksDays); // add three weeks from now by default
+        const threeWeeksInBackTestSteps = this.#step + threeWeeksDays * 24 * 60;
+        c.BullRunEndTime = isNode ? threeWeeksInBackTestSteps : +inThreeWeeks;
+        return c;
+      });
+      Log.alert(`"Bull-run" mode auto-enabled.`);
+      Log.info(
+        `Trading Helper will become more greedy for the next ${threeWeeksDays} day(s). You can change manually in the Settings.`,
+      );
+    }
+    if (bullRun === BullRun.No && bullRunActive) {
+      this.#config = this.configDao.update((c) => {
+        c.BullRunEndTime = isNode ? this.#step : Date.now();
+        return c;
+      });
+      Log.alert(`"Bull-run" mode auto-disabled.`);
+      Log.info(
+        `The current market situation is not favorable for the bull-run mode to be enabled.`,
+      );
+    }
+  }
+
+  #isBullRun(step: number): boolean {
+    const endTime = this.#config.BullRunEndTime;
+    return !!endTime && endTime > (isNode ? step : Date.now());
   }
 
   #initStableBalance(): void {
@@ -537,12 +790,13 @@ export class TradeManager {
       return;
     }
 
-    tm.tradeResult.lotSizeQty =
-      tm.tradeResult.lotSizeQty ||
-      this.exchange.quantityForLotStepSize(
+    const { lotSizeQty: lotQty, quantity } = tm.tradeResult;
+    if (lotQty < quantity * 0.9 || lotQty > quantity) {
+      tm.tradeResult.lotSizeQty = this.exchange.quantityForLotStepSize(
         tm.tradeResult.symbol,
-        tm.tradeResult.quantity,
+        quantity,
       );
+    }
 
     if (!this.#config.SmartExit) {
       // If smart exit is disabled, we should return here
@@ -685,7 +939,6 @@ export class TradeManager {
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
         this.#processBuyFee(tradeResult);
-        Log.info(prettyPrintTradeMemo(tm));
         Log.debug(tm);
       } catch (e) {
         Log.error(e);
@@ -694,6 +947,7 @@ export class TradeManager {
         tm.currentPrice = this.#getPrices(symbol).currentPrice;
         tm.setState(TradeState.BOUGHT);
         this.#processBoughtState(tm);
+        Log.info(prettyPrintTradeMemo(tm));
       }
     } else {
       Log.debug(tradeResult);
@@ -870,7 +1124,10 @@ export class TradeManager {
     tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
 
     const downMultiplier = 6;
-    const threshold = tm.imbalanceThreshold(downMultiplier);
+    const thresholdReduce = this.#isBullRun(this.#step)
+      ? BULL_RUN_THRESHOLD_REDUCE
+      : 0;
+    const threshold = tm.imbalanceThreshold(downMultiplier) - thresholdReduce;
     if (imbalance < threshold) {
       Log.info(
         `Selling at price going down, as the current demand ${f0(
@@ -889,7 +1146,10 @@ export class TradeManager {
     tm.highestPrice = floorToOptimalGrid(nextHighPrice, precision).result;
 
     const upMultiplier = 4;
-    const threshold = tm.imbalanceThreshold(upMultiplier);
+    const thresholdReduce = this.#isBullRun(this.#step)
+      ? BULL_RUN_THRESHOLD_REDUCE
+      : 0;
+    const threshold = tm.imbalanceThreshold(upMultiplier) - thresholdReduce;
     const reqThreshold = Math.min(0.6, threshold);
     if (imbalance < reqThreshold) {
       Log.info(

@@ -69,6 +69,16 @@ export function Settings(params: {
       return;
     }
 
+    // if (
+    //   isBullRunActive &&
+    //   isValidDate(bullRunEnd) &&
+    //   new Date(bullRunEnd) > new Date()
+    // ) {
+    //   cfg.BullRunEndTime = convertDateToTimestamp(bullRunEnd);
+    // } else {
+    //   cfg.BullRunEndTime = undefined; // Reset if bull-run is off or date is invalid
+    // }
+
     setSaveMsg(``);
     setIsSaving(true);
     ScriptApp?.withFailureHandler((r) => {
@@ -89,6 +99,42 @@ export function Settings(params: {
   const tickIntervalMsg = `The tool internal update interval is 1 minute, so it may take up to 1 minute ⏳ for some changes to take effect.`;
   const strengthMin = Math.max(0, cfg.MarketStrengthTargets.min);
   const strengthMax = Math.min(100, cfg.MarketStrengthTargets.max);
+
+  // const [bullRunEnd, setBullRunEnd] = useState(
+  //   cfg.BullRunEndTime ? new Date(cfg.BullRunEndTime).toLocaleString() : ``,
+  // );
+  // const isBullRunCurrentlyActive =
+  //   !!cfg.BullRunEndTime && new Date(cfg.BullRunEndTime) > new Date();
+  // const [isBullRunActive, setIsBullRunActive] = useState(
+  //   isBullRunCurrentlyActive,
+  // );
+  // const convertDateToTimestamp = (dateStr) => {
+  //   if (!dateStr) return undefined;
+  //   return new Date(dateStr).getTime();
+  // };
+  // const isValidDate = (dateStr) => {
+  //   if (!dateStr) return true; // Consider empty input as valid (undefined)
+  //   const date = new Date(dateStr);
+  //   return !isNaN(+date);
+  // };
+  // const handleBullRunEndChange = (e) => {
+  //   setBullRunEnd(e.target.value);
+  //   if (!e.target.value) {
+  //     setIsBullRunActive(false);
+  //   }
+  // };
+  // const handleBullRunToggle = (event) => {
+  //   const toggledOn = event.target.checked;
+  //   setIsBullRunActive(toggledOn);
+  //   if (toggledOn) {
+  //     const threeWeeksFromNow = new Date();
+  //     threeWeeksFromNow.setDate(threeWeeksFromNow.getDate() + 21);
+  //     setBullRunEnd(threeWeeksFromNow.toLocaleString());
+  //   } else {
+  //     setBullRunEnd(``);
+  //   }
+  // };
+
   return (
     <BasicCard>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -168,53 +214,6 @@ export function Settings(params: {
             </FormHelperText>
           </FormControl>
           <FormControl>
-            <Typography id="market-strength-slider" gutterBottom>
-              Auto-stop (Market strength)
-              {cfg.TradingAutoStopped && ` (Now: Paused)`}
-            </Typography>
-            <Slider
-              sx={{ ml: 1, width: `95%` }}
-              value={[strengthMin, strengthMax]}
-              step={10}
-              min={0}
-              max={100}
-              disableSwap={true}
-              marks={Array.from({ length: 11 }, (e, i) => ({
-                value: 10 * i,
-                label: 10 * i,
-              }))}
-              valueLabelDisplay="auto"
-              onChangeCommitted={(e, [min, max]: number[]) => {
-                setCfg({
-                  ...cfg,
-                  TradingAutoStopped:
-                    // inverse the auto stop value when edge values selected
-                    min === 0 && max === 100
-                      ? !cfg.TradingAutoStopped
-                      : cfg.TradingAutoStopped,
-                });
-              }}
-              onChange={(e, [min, max]: number[]) => {
-                setCfg({
-                  ...cfg,
-                  MarketStrengthTargets: {
-                    min: Math.min(40, max - 10, min),
-                    max: Math.max(60, min + 10, max),
-                  },
-                });
-              }}
-              aria-labelledby="market-strength-slider"
-            />
-            <FormHelperText>
-              This setting controls when to pause trading based on the market
-              {` `}
-              <b>strength</b>. For example, if the range is 30-60, trading
-              starts when the strength reaches 60 or more and stops when it
-              drops below 30. It resumes only after the strength reaches 60
-              again.
-            </FormHelperText>
-          </FormControl>
-          <FormControl>
             <FormControlLabel
               control={
                 <Switch
@@ -259,6 +258,89 @@ export function Settings(params: {
               </Link>
             </FormHelperText>
           </FormControl>
+          <FormControl>
+            <Typography id="market-strength-slider" gutterBottom>
+              Auto-stop
+              {cfg.TradingAutoStopped && ` (Now: Paused)`}
+            </Typography>
+            <Slider
+              sx={{ ml: 1, width: `95%` }}
+              value={[strengthMin, strengthMax]}
+              step={10}
+              min={0}
+              max={100}
+              disableSwap={true}
+              marks={Array.from({ length: 11 }, (e, i) => ({
+                value: 10 * i,
+                label: 10 * i,
+              }))}
+              valueLabelDisplay="auto"
+              onChangeCommitted={(e, [min, max]: number[]) => {
+                setCfg({
+                  ...cfg,
+                  TradingAutoStopped:
+                    // inverse the auto stop value when edge values selected
+                    min === 0 && max === 100
+                      ? !cfg.TradingAutoStopped
+                      : cfg.TradingAutoStopped,
+                });
+              }}
+              onChange={(e, [min, max]: number[]) => {
+                setCfg({
+                  ...cfg,
+                  MarketStrengthTargets: {
+                    min: Math.min(40, max - 10, min),
+                    max: Math.max(60, min + 10, max),
+                  },
+                });
+              }}
+              aria-labelledby="market-strength-slider"
+            />
+            <FormHelperText>
+              This setting controls when to pause trading based on the market
+              {` `}
+              <b>strength</b>. For example, if the range is 30-60, trading
+              starts when the strength reaches 60 or more and stops when it
+              drops below 30. It resumes only after the strength reaches 60
+              again.
+            </FormHelperText>
+          </FormControl>
+          {/* <FormControl> */}
+          {/*   <FormControlLabel */}
+          {/*     control={ */}
+          {/*       <Switch */}
+          {/*         checked={isBullRunActive} */}
+          {/*         onChange={handleBullRunToggle} */}
+          {/*       /> */}
+          {/*     } */}
+          {/*     label={ */}
+          {/*       <> */}
+          {/*         <Chip */}
+          {/*           label="New" */}
+          {/*           size="small" */}
+          {/*           color="info" */}
+          {/*           variant="outlined" */}
+          {/*           sx={{ mr: `8px` }} */}
+          {/*         /> */}
+          {/*         Bull Run Mode */}
+          {/*       </> */}
+          {/*     } */}
+          {/*   /> */}
+          {/*   <TextField */}
+          {/*     label="Bull Run End Time" */}
+          {/*     type="text" */}
+          {/*     value={bullRunEnd || ``} */}
+          {/*     onChange={handleBullRunEndChange} */}
+          {/*     disabled={!isBullRunActive} */}
+          {/*   /> */}
+          {/*   <FormHelperText> */}
+          {/*     When Bull Run Mode is active, Trading Helper adopts a{` `} */}
+          {/*     <b>more aggressive</b> approach, opting to purchase candidates */}
+          {/*     even when market conditions lean heavily towards sellers.{` `} */}
+          {/*     <b>This setting is automatic</b>, but can be changed manually if */}
+          {/*     the market is favorable. */}
+          {/*   </FormHelperText> */}
+          {/* </FormControl> */}
           <FormControl>
             <FormControlLabel
               control={

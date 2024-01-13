@@ -33,8 +33,8 @@ export class Statistics {
       throw Error(`Invalid amount: ${amount}`);
     }
     const stats = this.getAll();
-    stats.TotalWithdrawals = stats.TotalWithdrawals + amount;
-    stats.TotalProfit = stats.TotalProfit - amount;
+    stats.TotalWithdrawals = +stats.TotalWithdrawals + amount;
+    stats.TotalProfit = +stats.TotalProfit - amount;
     this.saveAll(stats);
   }
 

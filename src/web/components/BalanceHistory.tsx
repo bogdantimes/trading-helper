@@ -16,8 +16,8 @@ import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 import BasicCard from "./cards/BasicCard";
 import { cardMaxWidth, cardMinWidth } from "./Common";
 
-export function BalanceHistory({ stats }) {
-  const rows = buildRows(stats);
+export function BalanceHistory({ stats, currentPnL }) {
+  const rows = buildRows(stats, currentPnL);
 
   return (
     <BasicCard>
@@ -54,13 +54,13 @@ export function BalanceHistory({ stats }) {
   );
 }
 
-function buildRows(stats) {
+function buildRows(stats, currentPnL: number) {
   const rows: any[] = [];
 
   if (stats) {
     const { TotalProfit: tp, TotalWithdrawals: tw, DailyProfit } = stats;
-    const totalTimeFrame = getTotalLabelComponent(tw);
-    rows.push({ id: 1, timeFrame: totalTimeFrame, profit: f2(tp) });
+    const totalLabel = getTotalLabel(tw, tp + currentPnL);
+    rows.push({ id: 1, timeFrame: totalLabel, profit: f2(tp) });
 
     const dailyRows = Object.keys(DailyProfit)
       .sort((a, b) => (new Date(a) < new Date(b) ? 1 : -1))
@@ -76,10 +76,11 @@ function buildRows(stats) {
   return rows;
 }
 
-function getTotalLabelComponent(tw) {
+function getTotalLabel(withdrawalsTotal, currentTotal: number) {
   return (
     <>
-      Total (
+      Total (with current assets: {formatUSDCurrency(currentTotal)})
+      <br />
       <Tooltip
         title={
           <>
@@ -92,16 +93,18 @@ function getTotalLabelComponent(tw) {
       >
         <Typography
           component="span"
+          variant={`inherit`}
           sx={{
             textDecoration: `underline`,
             textDecorationStyle: `dashed`,
           }}
           aria-label="withdrawals-tooltip"
         >
-          withdrawals
+          Withdrawals
         </Typography>
       </Tooltip>
-      : ${f2(tw)})
+      {`: $`}
+      {f2(withdrawalsTotal)}
     </>
   );
 }
