@@ -55,8 +55,8 @@ export class Log {
   }
 
   static ifUsefulDumpAsEmail(): void {
-    const email = Session.getEffectiveUser().getEmail();
     if (this.alertsLog.length > 0 || this.errLog.length > 0) {
+      const email = Session.getEffectiveUser().getEmail();
       const subject = `Trading Helper ${
         this.errLog.length ? `Error` : `Alert`
       }`;

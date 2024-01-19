@@ -1,3 +1,9 @@
+# v4.3.0
+
+* Bull-run detection feature:
+  * Trading-algorithm is more aggressive when "Bull Run Mode" is active.
+  * UI: Settings tab updated with a new control for "Bull Run Mode".
+
 # v4.2.6
 
 * Trading Algorithm:
