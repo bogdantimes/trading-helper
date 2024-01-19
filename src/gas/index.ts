@@ -395,7 +395,8 @@ global.info = (coin: CoinName) => {
 
     Log.ifUsefulDumpAsEmail();
 
-    return `The current market is ${
+    return `Bull-Run: ${info.bullRun ? `yes.` : `no.`}
+The current market is ${
       info.strength > 0.9
         ? `strong. It's good time to buy.`
         : info.strength < 0.1
