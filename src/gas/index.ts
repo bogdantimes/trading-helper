@@ -303,16 +303,33 @@ function edit(coin: CoinName, qty: number, paid: number): any {
   });
 }
 
-function swap(sourceCoin: CoinName, targetCoin: CoinName, chunkSize = 1): any {
+function swap(
+  src: CoinName = ``,
+  tgt: CoinName | number = ``,
+  chunkSize = 1,
+): any {
   return catchError(() => {
-    if (!sourceCoin) {
+    if (!src) {
       Log.info(`Specify a source asset, e.g. BTC`);
-    } else if (!targetCoin) {
-      Log.info(`Specify a target coin, e.g. ETH`);
+      return Log.printInfos();
+    } else if (!tgt) {
+      // if there's a single asset in a portfolio - use it as src
+      // src arguments becomes a target
+      // tgt in this case is a chunkSize
+      const tms = new TradesDao(DefaultStore).getList(TradeState.BOUGHT);
+      if (tms.length === 1) {
+        chunkSize = tgt as number;
+        tgt = src;
+        src = tms[0].getCoinName();
+        Log.info(`Using ${src} as the source coin`);
+      } else {
+        Log.info(`Specify a target coin, e.g. ETH`);
+        return Log.printInfos();
+      }
     }
 
     if (isFinite(+chunkSize)) {
-      TradeManager.default().swap(sourceCoin, targetCoin, +chunkSize);
+      TradeManager.default().swap(src, tgt as string, +chunkSize);
     } else {
       Log.info(
         `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
@@ -366,6 +383,7 @@ global.sellAll = sellAll;
 global.remove = remove;
 global.edit = edit;
 global.swap = swap;
+global.sw = swap;
 global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
