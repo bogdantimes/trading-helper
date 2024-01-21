@@ -401,7 +401,10 @@ export class TradeManager {
       this.plugin.getOptimalInvestRatio(this.candidatesDao),
     );
     const trades = this.tradesDao.getList();
-    const invested = trades.filter((t) => t.tradeResult.quantity).length;
+    // canInvest is for auto-trading, so count only auto-trades
+    const invested = trades.filter(
+      (t) => t.tradeResult.quantity && t.isAutoTrade(),
+    ).length;
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
   }
 
