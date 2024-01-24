@@ -343,7 +343,14 @@ export class TradeManager {
       },
     );
 
-    this.#updateBalances();
+    // Refetch fees budget
+    // TODO: replenish fees in between the swap
+    this.configDao.update((config: Config): Config | undefined => {
+      this.#config = config;
+      this.#reFetchFeesBudget();
+      Log.info(`Fees budget: ~$${f2(this.#config.FeesBudget)}`);
+      return config;
+    });
   }
 
   import(coin: CoinName, qty?: number): void {
@@ -714,7 +721,7 @@ export class TradeManager {
 
     if (tm.currentPrice < tm.support) {
       Log.info(
-        `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}}`,
+        `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}`,
       );
       tm.setState(TradeState.SELL);
       return;

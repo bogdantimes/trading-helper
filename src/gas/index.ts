@@ -20,6 +20,7 @@ import {
   Key,
   MASK,
   prettyPrintTradeMemo,
+  StableUSDCoin,
   TradeState,
 } from "../lib";
 import { Process } from "./Process";
@@ -34,6 +35,7 @@ import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
 import { MarketDataDao } from "./dao/MarketData";
 import { MarketInfoProvider } from "./providers/MarketInfoProvider";
+import { PriceProvider } from "./providers/PriceProvider";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -303,33 +305,16 @@ function edit(coin: CoinName, qty: number, paid: number): any {
   });
 }
 
-function swap(
-  src: CoinName = ``,
-  tgt: CoinName | number = ``,
-  chunkSize = 1,
-): any {
+function swap(src: CoinName, tgt: CoinName, chunkSize = 1): any {
   return catchError(() => {
     if (!src) {
       Log.info(`Specify a source asset, e.g. BTC`);
-      return Log.printInfos();
     } else if (!tgt) {
-      // if there's a single asset in a portfolio - use it as src
-      // src arguments becomes a target
-      // tgt in this case is a chunkSize
-      const tms = new TradesDao(DefaultStore).getList(TradeState.BOUGHT);
-      if (tms.length === 1) {
-        chunkSize = tgt as number;
-        tgt = src;
-        src = tms[0].getCoinName();
-        Log.info(`Using ${src} as the source coin`);
-      } else {
-        Log.info(`Specify a target coin, e.g. ETH`);
-        return Log.printInfos();
-      }
+      Log.info(`Specify a target coin, e.g. ETH`);
     }
 
     if (isFinite(+chunkSize)) {
-      TradeManager.default().swap(src, tgt as string, +chunkSize);
+      TradeManager.default().swap(src, tgt, +chunkSize);
     } else {
       Log.info(
         `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
@@ -372,6 +357,7 @@ function addWithdrawal(amount: number): string {
 global.doGet = doGet;
 global.doPost = doPost;
 global.tick = tick;
+global.t = tick;
 global.start = start;
 global.stop = stop;
 global.initialSetup = initialSetup;
@@ -432,6 +418,10 @@ Accuracy (0..100): ${f0(info.accuracy * 100)}%${
 
   let result = ``;
 
+  const ph = new PriceProvider(plugin, CacheProxy).get(StableUSDCoin.USDT)[
+    coin
+  ];
+
   candidatesDao.update((all) => {
     const ci = all[coin];
     if (!ci) {
@@ -450,7 +440,8 @@ Accuracy (0..100): ${f0(info.accuracy * 100)}%${
 Demand (-100..100): ${f0(imbalance * 100)}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
-Current price zone (-|0..100|+): ${curRange}%`;
+Current price zone (-|0..100|+): ${curRange}%
+Prices: ${ph?.prices.join(` `)}`;
 
     return all;
   });
@@ -507,4 +498,30 @@ global.help = (): string => {
   return Object.entries(helpDescriptions)
     .map(([funcName, description]) => `${funcName}: ${description}`)
     .join(`\n`);
+};
+
+global.topc = (): string => {
+  const allCands = new CandidatesDao(DefaultStore).getAll();
+  const sortedCands = Object.entries(allCands).sort(
+    ([, a], [, b]) => b[Key.PERCENTILE] - a[Key.PERCENTILE],
+  );
+  for (const [coin, ci] of sortedCands) {
+    if (ci[Key.PERCENTILE] > 1) {
+      Log.info(`${coin}: P=${ci[Key.PERCENTILE]}`);
+    }
+  }
+  return Log.printInfos();
+};
+
+global.bottomc = (): string => {
+  const allCands = new CandidatesDao(DefaultStore).getAll();
+  const sortedCands = Object.entries(allCands).sort(
+    ([, a], [, b]) => b[Key.PERCENTILE] - a[Key.PERCENTILE],
+  );
+  for (const [coin, ci] of sortedCands) {
+    if (ci[Key.PERCENTILE] < 0) {
+      Log.info(`${coin}: P=${ci[Key.PERCENTILE]}`);
+    }
+  }
+  return Log.printInfos();
 };
