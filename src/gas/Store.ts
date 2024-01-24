@@ -40,12 +40,19 @@ export abstract class CommonStore {
 
   update<T>(key, mutateFn): T | undefined {
     const lock = this.lockService?.getScriptLock();
+    const lockError = `${LOCK_TIMEOUT}: Could not update the storage property '${key}' as another process is holding the access. Please, try again.`;
+    const storeLock = `${key}_STORE_LOCK`;
     try {
       lock?.waitLock(DEFAULT_WAIT_LOCK);
     } catch (e) {
-      throw new Error(
-        `${LOCK_TIMEOUT}: Could not update the storage property '${key}' as another process is holding the access. Please, try again.`,
-      );
+      throw new Error(lockError);
+    }
+    if (!isNode) {
+      if (CacheProxy.get(storeLock)) {
+        throw new Error(`${storeLock}: ${lockError}`);
+      }
+      // ensure not locked for 30+ sec
+      CacheProxy.put(storeLock, `true`, 30);
     }
     try {
       const curValue = this.get(key);
@@ -62,6 +69,7 @@ export abstract class CommonStore {
       return newValue;
     } finally {
       try {
+        CacheProxy.remove(storeLock);
         execute({
           attempts: 2,
           interval: 100,
