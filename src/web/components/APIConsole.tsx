@@ -58,7 +58,7 @@ export const APIConsole: React.FC<Props> = ({
       })}
     >
       <ReactTerminal
-        prompt={prompt}
+        prompt={`$`}
         showControlButtons={false}
         welcomeMessage={`Trading Helper v${process.env.npm_package_version}
 

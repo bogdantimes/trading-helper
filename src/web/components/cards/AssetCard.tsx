@@ -81,7 +81,12 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
           {Math.abs(profitPercent).toFixed(2)}%
         </Typography>
       </Box>
-      <Typography color="text.secondary" variant="body2" mt={1}>
+      <Typography
+        component={`div`}
+        color="text.secondary"
+        variant="body2"
+        mt={1}
+      >
         {!!tm.tradeResult.entryPrice && (
           <Box
             display="flex"

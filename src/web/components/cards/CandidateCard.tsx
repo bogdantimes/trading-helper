@@ -74,7 +74,7 @@ export default function CandidateCard({
               )}
             </IconButton>
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography component={`div`} variant="body2" color="text.secondary">
             <Box
               display="flex"
               justifyContent="space-between"

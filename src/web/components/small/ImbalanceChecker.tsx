@@ -55,7 +55,7 @@ const ImbalanceChecker = ({
       {!!imbalance && `${displayValue}%`}
       {!!coinName && (
         <RefreshButton
-          isSpinning={imbalanceFetching}
+          isspinning={imbalanceFetching}
           onClick={refreshImbalance}
         />
       )}
