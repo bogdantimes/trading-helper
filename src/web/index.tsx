@@ -5,4 +5,8 @@ import { TerminalContextProvider } from "react-terminal";
 
 const app = document.getElementById(`app`);
 const root = createRoot(app);
-root.render(<TerminalContextProvider><App /></TerminalContextProvider>);
+root.render(
+  <TerminalContextProvider>
+    <App />
+  </TerminalContextProvider>,
+);

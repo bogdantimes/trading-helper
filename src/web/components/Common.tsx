@@ -102,10 +102,10 @@ export const percentileToColorMap = {
 export const withTrustedEvent =
   (handler) =>
   (event, ...args) => {
-  if (!event.isTrusted) {
-    // Ignore untrusted event
-    return;
-  }
+    if (!event.isTrusted) {
+      // Ignore untrusted event
+      return;
+    }
     // Call the original handler if the event is trusted
     handler(event, ...args);
-};
+  };

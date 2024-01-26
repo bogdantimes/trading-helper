@@ -23,21 +23,23 @@ export const APIConsole: React.FC<Props> = ({
       return `Unrecognized command`;
     }
 
-    return await new Promise((resolve) => {
+    const output = await new Promise((resolve) => {
       const argsList = args?.split(` `) || [];
       ScriptApp?.withSuccessHandler((resp) => {
-        reFetchState();
         if (resp.trim) {
           resolve(resp);
         } else {
           resolve(JSON.stringify(resp, null, 2));
         }
+        reFetchState();
       })
         .withFailureHandler((resp) => {
           resolve(resp.message);
         })
         [cmd](...argsList);
     });
+
+    return `\n${output}\n`; // add some padding
   };
 
   return (
