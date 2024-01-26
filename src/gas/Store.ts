@@ -69,7 +69,9 @@ export abstract class CommonStore {
       return newValue;
     } finally {
       try {
-        CacheProxy.remove(storeLock);
+        if (!isNode) {
+          CacheProxy.remove(storeLock);
+        }
         execute({
           attempts: 2,
           interval: 100,
