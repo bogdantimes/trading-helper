@@ -52,7 +52,7 @@ export const APIConsole: React.FC<Props> = ({
       open={terminalOpen}
       sx={{
         "#terminalEditor": {
-          maxHeight: `500px`,
+          maxHeight: `600px`,
           whiteSpace: `pre-wrap`,
         },
       }}
