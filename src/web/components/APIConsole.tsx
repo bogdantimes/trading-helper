@@ -1,8 +1,10 @@
 import * as React from "react";
-import { Dialog } from "@mui/material";
+import { Box, Dialog, IconButton, Tooltip, Typography } from "@mui/material";
 import { useTheme } from "@mui/system";
 import { ScriptApp, withTrustedEvent } from "./Common";
-import { ReactTerminal } from "react-terminal";
+import { ReactTerminal, TerminalContext } from "react-terminal";
+import { ClearAll } from "@mui/icons-material";
+import { useContext } from "react";
 
 interface Props {
   terminalOpen: boolean;
@@ -17,6 +19,7 @@ export const APIConsole: React.FC<Props> = ({
 }) => {
   const theme = useTheme();
   const themeMode = theme.palette.mode;
+  const { setBufferedContent } = useContext(TerminalContext);
 
   const onCommand = async (cmd: string, args: string) => {
     if (!ScriptApp?.withSuccessHandler(() => {})[cmd]) {
@@ -49,8 +52,7 @@ export const APIConsole: React.FC<Props> = ({
       open={terminalOpen}
       sx={{
         "#terminalEditor": {
-          maxHeight: `600px`,
-          overflowY: `hidden`,
+          maxHeight: `500px`,
           whiteSpace: `pre-wrap`,
         },
       }}
@@ -58,12 +60,26 @@ export const APIConsole: React.FC<Props> = ({
         setTerminalOpen(false);
       })}
     >
+      <Box sx={{ display: `flex`, alignItems: `center` }}>
+        <Typography sx={{ ml: `auto` }}>
+          Trading Helper v{process.env.npm_package_version}
+        </Typography>
+        <Tooltip title="Clear">
+          <IconButton
+            sx={{ ml: `auto` }}
+            onClick={() => {
+              setBufferedContent(``);
+            }}
+          >
+            <ClearAll color={`primary`} />
+          </IconButton>
+        </Tooltip>
+      </Box>
       <ReactTerminal
         prompt={`$`}
         showControlButtons={false}
-        welcomeMessage={`Trading Helper v${process.env.npm_package_version}
-
-Welcome to the API console!
+        showControlBar={false}
+        welcomeMessage={`Welcome to the API console!
 Any manual actions are at your own risk.
 Type \`help\` to see the available commands.
 
