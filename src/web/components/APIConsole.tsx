@@ -62,7 +62,7 @@ export const APIConsole: React.FC<Props> = ({
     >
       <Box sx={{ display: `flex`, alignItems: `center` }}>
         <Typography sx={{ ml: `auto` }}>
-          Trading Helper v{process.env.npm_package_version}
+          Trading Helper v{process.env.VERSION}
         </Typography>
         <Tooltip title="Clear">
           <IconButton

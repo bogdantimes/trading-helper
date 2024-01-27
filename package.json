@@ -1,6 +1,6 @@
 {
     "name": "trading-helper",
-    "version": "4.3.1",
+    "version": "4.3.2",
     "description": "",
     "scripts": {
         "glogin": "clasp login",
@@ -13,23 +13,23 @@
         "gbuild": "tsc -noEmit --project ./ && node gas-build.js",
         "start": "cross-env WEBDEV=1 parcel src/web/index.html --dist-dir ./apps-script",
         "report": "parcel build src/web/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
-        "build": "cross-env LOG=DEBUG npm run gbuild && parcel build src/web/index.html --no-optimize --dist-dir ./apps-script",
-        "prod": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
+        "build": "cross-env LOG=DEBUG VERSION=$npm_package_version npm run gbuild && parcel build src/web/index.html --no-optimize --dist-dir ./apps-script",
+        "prod": "cross-env VERSION=$npm_package_version npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
         "lint": "eslint --fix --ext .ts,.tsx ./src",
         "prepare": "husky install"
     },
     "devDependencies": {
         "@google/clasp": "2.4.2",
         "@parcel/reporter-bundle-analyzer": "2.11.0",
-        "@types/google-apps-script": "1.0.78",
+        "@types/google-apps-script": "1.0.79",
         "@types/google.script.client-side": "0.1.5",
-        "@typescript-eslint/eslint-plugin": "6.18.1",
+        "@typescript-eslint/eslint-plugin": "6.19.1",
         "cross-env": "7.0.3",
         "esbuild": "0.17.19",
         "esbuild-gas-plugin": "0.8.0",
         "eslint": "8.56.0",
         "eslint-config-prettier": "9.1.0",
-        "eslint-config-standard-with-typescript": "43.0.0",
+        "eslint-config-standard-with-typescript": "43.0.1",
         "eslint-import-resolver-typescript": "3.6.1",
         "eslint-plugin-googleappsscript": "1.0.5",
         "eslint-plugin-import": "2.29.1",
@@ -39,9 +39,9 @@
         "eslint-plugin-promise": "6.1.1",
         "eslint-plugin-react": "7.33.2",
         "eslint-plugin-react-hooks": "4.6.0",
-        "husky": "8.0.3",
+        "husky": "9.0.6",
         "parcel": "2.11.0",
-        "prettier": "3.2.1",
+        "prettier": "3.2.4",
         "process": "0.11.10",
         "typescript": "5.3.3"
     },
@@ -50,9 +50,8 @@
     "dependencies": {
         "@emotion/react": "11.11.3",
         "@emotion/styled": "11.11.0",
-        "@mui/icons-material": "5.15.4",
-        "@mui/material": "5.15.4",
-        "@parcel/transformer-js": "2.11.0",
+        "@mui/icons-material": "5.15.6",
+        "@mui/material": "5.15.6",
         "browser-or-node": "2.1.1",
         "compare-versions": "6.1.0",
         "react": "18.2.0",
@@ -71,10 +70,5 @@
             "react": "$react",
             "react-dom": "$react-dom"
         }
-    },
-    "@parcel/transformer-js": {
-        "inlineEnvironment": [
-            "npm_package_version"
-        ]
     }
 }

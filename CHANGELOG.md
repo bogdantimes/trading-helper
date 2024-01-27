@@ -1,3 +1,7 @@
+# v4.3.2
+
+* Fixed production build error
+
 # v4.3.1
 
 * Added "Dry Run" mode.
