@@ -18,6 +18,7 @@ export class TradeResult {
   commission = 0;
   msg = ``;
   fromExchange = false;
+  dryRun = false;
 
   constructor(symbol: ExchangeSymbol, msg = ``) {
     this.symbol = symbol;

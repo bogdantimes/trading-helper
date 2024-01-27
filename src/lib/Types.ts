@@ -18,7 +18,8 @@ export enum OtherStableCoins {
   USDJ = `USDJ`,
 }
 
-export type PriceMap = Record<string, number>;
+export type Price = number;
+export type PriceMap = Record<CoinName, Price>;
 
 type DateString = string;
 type ProfitValue = number;
@@ -36,7 +37,7 @@ export class ExchangeSymbol {
   priceAsset: string;
   private [reversed] = false;
 
-  constructor(coinName: string, priceAsset: string) {
+  constructor(coinName: CoinName, priceAsset: CoinName) {
     if (!coinName) {
       throw Error(`Invalid quantityAsset: "${coinName}"`);
     }
@@ -48,8 +49,8 @@ export class ExchangeSymbol {
   }
 
   static fromObject(object: {
-    quantityAsset: string;
-    priceAsset: string;
+    quantityAsset: CoinName;
+    priceAsset: CoinName;
   }): ExchangeSymbol {
     return new ExchangeSymbol(object.quantityAsset, object.priceAsset);
   }
@@ -80,10 +81,10 @@ export enum TradeState {
 }
 
 export class Coin {
-  readonly name: string;
+  readonly name: CoinName;
   readonly balance: number;
 
-  constructor(name: string, balance = 0) {
+  constructor(name: CoinName, balance = 0) {
     if (!name) throw new Error(`Invalid coin name: "${name}"`);
     this.name = name.toUpperCase();
     this.balance = Math.max(balance, 0);
@@ -193,7 +194,7 @@ export interface CandidateInfo {
   [Key.PRICE_MOVE]: PriceMove;
   [Key.STRENGTH]: number;
   [Key.IMBALANCE]?: number;
-  [Key.ATH]: number;
+  [Key.ATH]: Price;
   [Key.ATHTime]: number;
   [Key.DAY_PRICE_MOVE]: number;
   [Key.REFRESH]: Bit;

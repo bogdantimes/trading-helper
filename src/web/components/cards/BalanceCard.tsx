@@ -62,7 +62,7 @@ export default function BalanceCard({
           </IconButton>
         )}
       </Box>
-      <Typography variant="body2" color="text.secondary">
+      <Typography component={`div`} variant="body2" color="text.secondary">
         <Box>
           <b>Free:</b>
           {stableBalance === -1 && <span> Wait...</span>}

@@ -5,16 +5,16 @@ import { styled, type SxProps, useTheme } from "@mui/system";
 import { type Theme } from "@mui/material/styles";
 
 interface StyledRefreshProps extends SvgIconProps {
-  isSpinning: boolean;
+  isspinning: boolean;
 }
 
 const spinAnimation = `spinAnimation`;
 
 const StyledRefresh = styled(Refresh)<StyledRefreshProps>(
-  ({ theme, isSpinning }) => ({
+  ({ theme, isspinning }) => ({
     color: theme.palette.info.main,
     fontSize: `20px`,
-    animation: isSpinning ? `${spinAnimation} 1s linear infinite` : `none`,
+    animation: isspinning ? `${spinAnimation} 1s linear infinite` : `none`,
     [`@keyframes ${spinAnimation}`]: {
       "0%": {
         transform: `rotate(0deg)`,
@@ -27,11 +27,11 @@ const StyledRefresh = styled(Refresh)<StyledRefreshProps>(
 );
 
 const RefreshButton = ({
-  isSpinning,
+  isspinning,
   onClick,
   sx,
 }: {
-  isSpinning;
+  isspinning;
   onClick;
   sx?: SxProps<Theme>;
 }) => {
@@ -40,7 +40,7 @@ const RefreshButton = ({
   return (
     <Box sx={sx} component="span" display="flex" alignItems="center">
       <IconButton onClick={onClick} sx={{ p: 0 }}>
-        <StyledRefresh theme={theme} isSpinning={isSpinning} />
+        <StyledRefresh theme={theme} isspinning={isspinning || undefined} />
       </IconButton>
     </Box>
   );

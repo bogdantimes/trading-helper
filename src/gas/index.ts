@@ -20,6 +20,7 @@ import {
   Key,
   MASK,
   prettyPrintTradeMemo,
+  StableUSDCoin,
   TradeState,
 } from "../lib";
 import { Process } from "./Process";
@@ -34,6 +35,7 @@ import { CandidatesDao } from "./dao/Candidates";
 import { Binance } from "./Binance";
 import { MarketDataDao } from "./dao/MarketData";
 import { MarketInfoProvider } from "./providers/MarketInfoProvider";
+import { PriceProvider } from "./providers/PriceProvider";
 import HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 
 function doGet(): HtmlOutput {
@@ -175,26 +177,40 @@ function remove(...coins: CoinName[]): string {
   });
 }
 
-function setConfig(config: Config): { msg: string; config: Config } {
+function setConfig(newCfg: Config): { msg: string; config: Config } {
   return catchError(() => {
-    let msg = `Config updated`;
+    let msg = `Config updated.`;
     const dao = new ConfigDao(DefaultStore);
-    dao.update((cfg) => {
-      if (cfg.StableBalance <= 0 && config.StableBalance > 0) {
+    let dryRunToggledOff = false;
+    dao.update((curCfg) => {
+      if (curCfg.StableBalance <= 0 && newCfg.StableBalance > 0) {
         // Check the balance is actually present on Spot balance
-        const balance = new Binance(dao).getBalance(config.StableCoin);
-        if (balance < config.StableBalance) {
+        const balance = new Binance(dao).getBalance(newCfg.StableCoin);
+        if (balance < newCfg.StableBalance) {
           msg = `\nActual balance on your Binance Spot account is $${f2(
             balance,
           )}, which is less than $${
-            config.StableBalance
+            newCfg.StableBalance
           } you are trying to set. You might need to transfer money from the Funding account. Check the balances and try again.`;
-          config.StableBalance = cfg.StableBalance;
+          newCfg.StableBalance = curCfg.StableBalance;
         }
       }
-      return config;
+      if (curCfg.DryRun && !newCfg.DryRun) {
+        dryRunToggledOff = true;
+        msg += `\n"Dry Run" mode is disabled. Any dry run assets are being removed from the portfolio. Balance was reset to 0.`;
+        newCfg.StableBalance = 0;
+      }
+      return newCfg;
     });
-    return { msg, config };
+    if (dryRunToggledOff) {
+      new TradesDao(DefaultStore).iterate((tm) => {
+        if (tm.tradeResult.dryRun) {
+          tm.deleted = true;
+          return tm;
+        }
+      });
+    }
+    return { msg, config: newCfg };
   });
 }
 
@@ -303,16 +319,16 @@ function edit(coin: CoinName, qty: number, paid: number): any {
   });
 }
 
-function swap(sourceCoin: CoinName, targetCoin: CoinName, chunkSize = 1): any {
+function swap(src: CoinName, tgt: CoinName, chunkSize = 1): any {
   return catchError(() => {
-    if (!sourceCoin) {
+    if (!src) {
       Log.info(`Specify a source asset, e.g. BTC`);
-    } else if (!targetCoin) {
+    } else if (!tgt) {
       Log.info(`Specify a target coin, e.g. ETH`);
     }
 
     if (isFinite(+chunkSize)) {
-      TradeManager.default().swap(sourceCoin, targetCoin, +chunkSize);
+      TradeManager.default().swap(src, tgt, +chunkSize);
     } else {
       Log.info(
         `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
@@ -473,13 +489,14 @@ const helpDescriptions = {
   start: `Starts all background processes.`,
   stop: `Stops the trading process.`,
   info: `Returns information about the market or a coin. Examples: 1) $ info 2) $ info BTC`,
+  topc: `Shows candidates that are breaking out and/or showing strength right now.`,
   pin: `Pins a candidate. Example: $ pin BTC`,
   buy: `Buys a coin. Format: $ buy [COIN] [amount (USDT)]. Example: $ buy BTC 150`,
   sell: `Sells a whole or a chunk of the asset. Example (whole): $ sell BTC. Example (half): $ sell BTC 0.5`,
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
   edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,
-  swap: `Swaps an existing asset into a new coin. Example (whole): $ swap INJ BTC. Example (half): $ swap INJ BTC 0.5`,
+  swap: `Swaps an existing asset into another one. Example (whole): $ swap INJ BTC. Example (half): $ swap INJ BTC 0.5`,
   importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,
@@ -488,5 +505,23 @@ const helpDescriptions = {
 global.help = (): string => {
   return Object.entries(helpDescriptions)
     .map(([funcName, description]) => `${funcName}: ${description}`)
-    .join(`\n`);
+    .join(`\n\n`);
+};
+
+global.topc = (): string => {
+  const allCands = new CandidatesDao(DefaultStore).getAll();
+  const sortedCands = Object.entries(allCands).sort(
+    ([, a], [, b]) => b[Key.PERCENTILE] - a[Key.PERCENTILE],
+  );
+  const prices = new PriceProvider(plugin, CacheProxy).get(StableUSDCoin.USDT);
+  for (const [coin, ci] of sortedCands) {
+    if (ci[Key.PERCENTILE] > 1) {
+      const firstPrice = prices[coin].prices[0];
+      const currentPrice = prices[coin].currentPrice;
+      Log.info(
+        `${coin}: P=${ci[Key.PERCENTILE]} | I: ${ci[Key.IMBALANCE]} ${currentPrice > firstPrice * 1.1 ? `| +++` : ``}`,
+      );
+    }
+  }
+  return Log.printInfos() || `No breaking out coins as of now. Try later.`;
 };

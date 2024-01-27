@@ -199,8 +199,7 @@ export class TradeManager {
         tm.tradeResult = origTr.getChunk(remainingSize);
         tm.setState(TradeState.BOUGHT);
         tm.deleted = false;
-        Log.info(`Remaining ${coin}`);
-        Log.info(prettyPrintTradeMemo(tm));
+        Log.info(`\n${prettyPrintTradeMemo(tm)}\n`);
         return tm;
       },
       () => {
@@ -257,30 +256,12 @@ export class TradeManager {
       throw new Error(`Price information not found for one or both coins.`);
     }
 
-    const dirSwapSymbol = new ExchangeSymbol(src, tgt);
-    // check if there's a direct swap available, like LINK -> BTC
-    const prices = this.plugin.getPrices();
-    const directSwapPossible =
-      prices[dirSwapSymbol.toString()] ||
-      prices[dirSwapSymbol.reverseThis().toString()];
-
-    if (directSwapPossible) {
-      Log.info(`Direct swap possible: ${dirSwapSymbol}}`);
-      this.#directSwap(dirSwapSymbol, chunkSize);
-      this.#updateBalances();
-      return;
-    }
-
-    // TODO: else direct swap to stable coin, then to target coin
-
     // Step 2: Sell Source Coin
     let gainedBudget = 0;
     let prevFee = 0;
     let chunkCost = 0;
 
-    Log.info(
-      `No direct swap. Swapping in 2 steps through ${this.#config.StableCoin}`,
-    );
+    Log.info(`Swapping in 2 steps through ${this.#config.StableCoin}.\n`);
 
     this.tradesDao.update(src, (tm) => {
       const origTr = tm.tradeResult;
@@ -359,7 +340,14 @@ export class TradeManager {
       },
     );
 
-    this.#updateBalances();
+    // Refetch fees budget
+    // TODO: replenish fees in between the swap
+    this.configDao.update((config: Config): Config | undefined => {
+      this.#config = config;
+      this.#reFetchFeesBudget();
+      Log.info(`Fees budget: ~$${f2(this.#config.FeesBudget)}`);
+      return config;
+    });
   }
 
   import(coin: CoinName, qty?: number): void {
@@ -398,94 +386,6 @@ export class TradeManager {
     }
   }
 
-  #directSwap(swapSymbol: ExchangeSymbol, chunkSize = 1): void {
-    const srcCoin = swapSymbol.isReversed()
-      ? swapSymbol.priceAsset
-      : swapSymbol.quantityAsset;
-    const tgtCoin = swapSymbol.isReversed()
-      ? swapSymbol.quantityAsset
-      : swapSymbol.priceAsset;
-
-    let gainedTgtQty = 0;
-    let prevFee = 0;
-    let chunkCostDiff = 0;
-    let swapResult: TradeResult;
-
-    this.tradesDao.update(srcCoin, (tm) => {
-      const origTr = tm.tradeResult;
-      const trChunk = origTr.getChunk(chunkSize);
-
-      if (swapSymbol.isReversed()) {
-        swapResult = this.exchange.marketBuy(swapSymbol, trChunk.quantity);
-      } else {
-        swapResult = this.exchange.marketSell(swapSymbol, trChunk.quantity);
-      }
-
-      if (!swapResult.fromExchange) {
-        throw new Error(
-          `Failed to swap ${srcCoin} into ${tgtCoin}: ${swapResult.msg}`,
-        );
-      }
-
-      gainedTgtQty += swapSymbol.isReversed()
-        ? swapResult.quantity
-        : swapResult.cost;
-      const paidSrcQty = swapSymbol.isReversed()
-        ? swapResult.cost
-        : swapResult.quantity;
-      const actualChunkSize = paidSrcQty / origTr.quantity;
-      prevFee += swapResult.commission + origTr.commission * actualChunkSize;
-      chunkCostDiff = tm.tradeResult.cost * actualChunkSize;
-
-      if (chunkSize === 1) {
-        tm.deleted = true;
-      } else {
-        // Calculate actual remaining chunk size based on the actually sold chunk
-        const remainingSize = 1 - actualChunkSize;
-        tm.tradeResult = origTr.getChunk(remainingSize);
-        tm.setState(TradeState.BOUGHT);
-        Log.info(`Remaining ${srcCoin}`);
-        Log.info(prettyPrintTradeMemo(tm));
-      }
-
-      return tm;
-    });
-    // create a new asset or add to existing
-    const tgtSymbol = new ExchangeSymbol(tgtCoin, this.#config.StableCoin);
-    const curTgtPrice = this.#getPrices(tgtSymbol)?.currentPrice;
-    this.tradesDao.update(
-      tgtCoin,
-      (tm) => {
-        if (!tm.currentValue) {
-          tm = TradeMemo.newManual(
-            tm.tradeResult.symbol,
-            gainedTgtQty,
-            chunkCostDiff,
-          );
-        } else {
-          tm.tradeResult.addQuantity(gainedTgtQty, chunkCostDiff);
-          tm.tradeResult.commission += prevFee;
-        }
-        tm.ttl = 0;
-        tm.currentPrice = curTgtPrice;
-        tm.setState(TradeState.BOUGHT);
-        this.#processBoughtState(tm);
-        Log.info(prettyPrintTradeMemo(tm));
-        return tm;
-      },
-      () => {
-        const tm = TradeMemo.newManual(tgtSymbol, gainedTgtQty, chunkCostDiff);
-        tm.ttl = 0;
-        tm.tradeResult.commission += prevFee;
-        tm.currentPrice = curTgtPrice;
-        tm.setState(TradeState.BOUGHT);
-        this.#processBoughtState(tm);
-        Log.info(prettyPrintTradeMemo(tm));
-        return tm;
-      },
-    );
-  }
-
   #produceNewTradeMemo(tr: TradeResult): TradeMemo {
     tr.lotSizeQty = this.exchange.quantityForLotStepSize(
       tr.symbol,
@@ -505,7 +405,10 @@ export class TradeManager {
       this.plugin.getOptimalInvestRatio(this.candidatesDao),
     );
     const trades = this.tradesDao.getList();
-    const invested = trades.filter((t) => t.tradeResult.quantity).length;
+    // canInvest is for auto-trading, so count only auto-trades
+    const invested = trades.filter(
+      (t) => t.tradeResult.quantity && t.isAutoTrade(),
+    ).length;
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
   }
 
@@ -815,7 +718,7 @@ export class TradeManager {
 
     if (tm.currentPrice < tm.support) {
       Log.info(
-        `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}}`,
+        `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}`,
       );
       tm.setState(TradeState.SELL);
       return;
@@ -1073,6 +976,11 @@ export class TradeManager {
   }
 
   #reduceBNBBalance(reduceQty: number): boolean {
+    // TODO: tradesDao.update method cannot obtain the lock here
+    //  temporary disabling it
+    return false;
+
+    // eslint-disable-next-line no-unreachable
     if (reduceQty <= 0) return false;
 
     let updated = false;
@@ -1106,6 +1014,7 @@ export class TradeManager {
       return tm;
     });
 
+    // eslint-disable-next-line no-unreachable
     return updated;
   }
 

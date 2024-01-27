@@ -27,7 +27,7 @@ import { TabPanel } from "./components/TabPanel";
 import { InitialSetup } from "./components/InitialSetup";
 import { type AppState, BullRun, TradeMemo } from "../lib";
 import { DefaultConfig } from "../gas/dao/Config";
-import { ScriptApp } from "./components/Common";
+import { ScriptApp, withTrustedEvent } from "./components/Common";
 import useWebSocket from "./useWebSocket";
 import { APIConsole } from "./components/APIConsole";
 
@@ -234,14 +234,3 @@ enum TabId {
   Info,
   Settings,
 }
-
-const withTrustedEvent =
-  (handler) =>
-  (event, ...args) => {
-    if (!event.isTrusted) {
-      // Ignore untrusted event
-      return;
-    }
-    // Call the original handler if the event is trusted
-    handler(event, ...args);
-  };

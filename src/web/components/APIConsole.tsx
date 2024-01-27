@@ -1,9 +1,10 @@
 import * as React from "react";
-import Terminal, { ColorMode, TerminalOutput } from "react-terminal-ui";
-import { Dialog, IconButton, Tooltip } from "@mui/material";
+import { Box, Dialog, IconButton, Tooltip, Typography } from "@mui/material";
 import { useTheme } from "@mui/system";
-import { ScriptApp } from "./Common";
+import { ScriptApp, withTrustedEvent } from "./Common";
+import { ReactTerminal, TerminalContext } from "react-terminal";
 import { ClearAll } from "@mui/icons-material";
+import { useContext } from "react";
 
 interface Props {
   terminalOpen: boolean;
@@ -18,122 +19,74 @@ export const APIConsole: React.FC<Props> = ({
 }) => {
   const theme = useTheme();
   const themeMode = theme.palette.mode;
-  const [terminalOutput, setTerminalOutput] = React.useState<string[]>([
-    `Welcome to the API console!`,
-    ``,
-    `Please be aware that any manual actions are at your own risk.`,
-    `Type \`help\` to see the available commands.`,
-  ]);
-  const [prompt, setPrompt] = React.useState(`$`);
+  const { setBufferedContent } = useContext(TerminalContext);
 
-  const handleResize = () => {
-    const terminalWidth = window.innerWidth * 0.8; // Set terminal width to 80% of the window width
-    const terminalHeight = window.innerHeight * 0.8; // Set terminal height to 80% of the window height
-    setTerminalDimensions({ width: terminalWidth, height: terminalHeight });
-  };
-
-  React.useEffect(() => {
-    handleResize();
-    window.addEventListener(`resize`, handleResize);
-    return () => {
-      window.removeEventListener(`resize`, handleResize);
-    };
-  }, []);
-
-  const [terminalDimensions, setTerminalDimensions] = React.useState<{
-    width: number;
-    height: number;
-  }>({ width: 0, height: 0 });
-
-  const onCommand = (command) => {
-    if (command.toLocaleLowerCase().trim() === `clear`) {
-      setTerminalOutput([]);
-      return;
-    }
-    terminalOutput.push(`$ ${command}`);
-    setTerminalOutput(terminalOutput);
-
-    const [cmd, ...args] = command.split(` `);
-
+  const onCommand = async (cmd: string, args: string) => {
     if (!ScriptApp?.withSuccessHandler(() => {})[cmd]) {
-      terminalOutput.push(`Unrecognized command`);
-      setTerminalOutput(terminalOutput);
-      return;
+      return `Unrecognized command`;
     }
 
-    setPrompt(`⏳`);
-    const spinner = setInterval(() => {
-      setPrompt((p) => (p === `⏳` ? `⌛` : `⏳`));
-    }, 1000);
-
-    try {
+    const output = await new Promise((resolve) => {
+      const argsList = args?.split(` `) || [];
       ScriptApp?.withSuccessHandler((resp) => {
-        setPrompt(`$`);
-        clearInterval(spinner);
         if (resp.trim) {
-          terminalOutput.push(...resp.split(`\n`));
+          resolve(resp);
         } else {
-          terminalOutput.push(JSON.stringify(resp, null, 2));
+          resolve(JSON.stringify(resp, null, 2));
         }
-        setTerminalOutput(terminalOutput);
         reFetchState();
       })
         .withFailureHandler((resp) => {
-          setPrompt(`$`);
-          clearInterval(spinner);
-          terminalOutput.push(resp.message);
-          setTerminalOutput(terminalOutput);
+          resolve(resp.message);
         })
-        [cmd](...args);
-    } catch (e) {
-      clearInterval(spinner);
-    }
+        [cmd](...argsList);
+    });
+
+    return `\n${output}\n`; // add some padding
   };
+
   return (
     <Dialog
       fullWidth={true}
       maxWidth={`md`}
       open={terminalOpen}
       sx={{
-        [`.react-terminal-line`]: { whiteSpace: `pre-wrap` },
+        "#terminalEditor": {
+          maxHeight: `600px`,
+          whiteSpace: `pre-wrap`,
+        },
       }}
-      onClose={() => {
+      onClose={withTrustedEvent(() => {
         setTerminalOpen(false);
-      }}
+      })}
     >
-      <Tooltip title="Clear">
-        <IconButton
-          aria-label="clear"
-          onClick={() => {
-            setTerminalOutput([]);
-          }}
-          sx={{
-            position: `absolute`,
-            top: `8px`,
-            right: `8px`,
-            zIndex: 1,
-          }}
-        >
-          <ClearAll color={`primary`} />
-        </IconButton>
-      </Tooltip>
-      <Terminal
-        name="API"
-        prompt={prompt}
-        // Subtract some pixels to accommodate the terminal header and footer
-        height={`${terminalDimensions.height - 110}px`}
-        colorMode={themeMode === `dark` ? ColorMode.Dark : ColorMode.Light}
-        onInput={onCommand}
-        redBtnCallback={() => {
-          setTerminalOpen(false);
-        }}
-      >
-        <>
-          {terminalOutput.map((o, i) => (
-            <TerminalOutput key={i}>{o}</TerminalOutput>
-          ))}
-        </>
-      </Terminal>
+      <Box sx={{ display: `flex`, alignItems: `center` }}>
+        <Typography sx={{ ml: `auto` }}>
+          Trading Helper v{process.env.npm_package_version}
+        </Typography>
+        <Tooltip title="Clear">
+          <IconButton
+            sx={{ ml: `auto` }}
+            onClick={() => {
+              setBufferedContent(``);
+            }}
+          >
+            <ClearAll color={`primary`} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+      <ReactTerminal
+        prompt={`$`}
+        showControlButtons={false}
+        showControlBar={false}
+        welcomeMessage={`Welcome to the API console!
+Any manual actions are at your own risk.
+Type \`help\` to see the available commands.
+
+`}
+        theme={`material-${themeMode}`}
+        defaultHandler={onCommand}
+      />
     </Dialog>
   );
 };

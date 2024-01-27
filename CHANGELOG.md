@@ -1,3 +1,10 @@
+# v4.3.1
+
+* Added "Dry Run" mode.
+* UI: Terminal updated.
+* API: Added `topc` command for candidates discovery.
+* Improved storage lock, `swap` command.
+
 # v4.3.0
 
 * Bull-run detection feature:

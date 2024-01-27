@@ -1,6 +1,6 @@
 {
     "name": "trading-helper",
-    "version": "4.3.0",
+    "version": "4.3.1",
     "description": "",
     "scripts": {
         "glogin": "clasp login",
@@ -52,6 +52,7 @@
         "@emotion/styled": "11.11.0",
         "@mui/icons-material": "5.15.4",
         "@mui/material": "5.15.4",
+        "@parcel/transformer-js": "2.11.0",
         "browser-or-node": "2.1.1",
         "compare-versions": "6.1.0",
         "react": "18.2.0",
@@ -59,7 +60,7 @@
         "react-dom": "18.2.0",
         "react-error-boundary": "4.0.12",
         "react-progressbar-semicircle": "1.2.1",
-        "react-terminal-ui": "1.2.0"
+        "react-terminal": "1.4.4"
     },
     "overrides": {
         "react-currency-format": {
@@ -70,5 +71,10 @@
             "react": "$react",
             "react-dom": "$react-dom"
         }
+    },
+    "@parcel/transformer-js": {
+        "inlineEnvironment": [
+            "npm_package_version"
+        ]
     }
 }

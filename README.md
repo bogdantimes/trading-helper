@@ -16,6 +16,7 @@ No one, except you, have access to the WEB-application and the data. If you trus
   * Enabled automatically once you become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes).
   * 🤙🏻 Reach out to me if you need help (see [Contact](#contact) section).
 * Gmail notifications.
+* Dry Run mode.
 * Optional external database (Firebase).
 * Info page with balance changes since Day 1.
 
@@ -24,10 +25,9 @@ No one, except you, have access to the WEB-application and the data. If you trus
 Running on the historical data (using Binance Spot prices and order book history).
 
 * **Stable coin**: USDT
-* **Dates:** January 2023 -> August 2023 (roughly +5-10%/mo over 1-year average)
+* **Dates:** January 2023 -> December 2023
 
-![1-1-2023_8-3-2023.png](img/1-1-2023_8-3-2023.png)
-![1-1-2023_8-3-2023_candidates.png](img/1-1-2023_8-3-2023_candidates.png)
+![back-testing.png](img/back-testing.png)
 
 ## Screenshots
 
