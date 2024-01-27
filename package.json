@@ -16,8 +16,7 @@
         "build": "cross-env LOG=DEBUG npm run gbuild && parcel build src/web/index.html --no-optimize --dist-dir ./apps-script",
         "prod": "npm run gbuild && parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
         "lint": "eslint --fix --ext .ts,.tsx ./src",
-        "prepare": "husky install",
-        "gpush-all": "cross-env LOG=DEBUG npm run build && clasp push -P ./chz -f"
+        "prepare": "husky install"
     },
     "devDependencies": {
         "@google/clasp": "2.4.2",
