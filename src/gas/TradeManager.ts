@@ -199,8 +199,7 @@ export class TradeManager {
         tm.tradeResult = origTr.getChunk(remainingSize);
         tm.setState(TradeState.BOUGHT);
         tm.deleted = false;
-        Log.info(`Remaining ${coin}`);
-        Log.info(prettyPrintTradeMemo(tm));
+        Log.info(`\n${prettyPrintTradeMemo(tm)}\n`);
         return tm;
       },
       () => {
@@ -262,9 +261,7 @@ export class TradeManager {
     let prevFee = 0;
     let chunkCost = 0;
 
-    Log.info(
-      `No direct swap. Swapping in 2 steps through ${this.#config.StableCoin}`,
-    );
+    Log.info(`Swapping in 2 steps through ${this.#config.StableCoin}.\n`);
 
     this.tradesDao.update(src, (tm) => {
       const origTr = tm.tradeResult;

@@ -418,10 +418,6 @@ Accuracy (0..100): ${f0(info.accuracy * 100)}%${
 
   let result = ``;
 
-  const ph = new PriceProvider(plugin, CacheProxy).get(StableUSDCoin.USDT)[
-    coin
-  ];
-
   candidatesDao.update((all) => {
     const ci = all[coin];
     if (!ci) {
@@ -440,8 +436,7 @@ Accuracy (0..100): ${f0(info.accuracy * 100)}%${
 Demand (-100..100): ${f0(imbalance * 100)}%
 Support: ${ci?.[Key.MIN]}
 Resistance: ${ci?.[Key.MAX]}
-Current price zone (-|0..100|+): ${curRange}%
-Prices: ${ph?.prices.join(` `)}`;
+Current price zone (-|0..100|+): ${curRange}%`;
 
     return all;
   });
@@ -482,6 +477,7 @@ const helpDescriptions = {
   start: `Starts all background processes.`,
   stop: `Stops the trading process.`,
   info: `Returns information about the market or a coin. Examples: 1) $ info 2) $ info BTC`,
+  topc: `Shows candidates that are breaking out and/or showing strength right now.`,
   pin: `Pins a candidate. Example: $ pin BTC`,
   buy: `Buys a coin. Format: $ buy [COIN] [amount (USDT)]. Example: $ buy BTC 150`,
   sell: `Sells a whole or a chunk of the asset. Example (whole): $ sell BTC. Example (half): $ sell BTC 0.5`,
@@ -497,7 +493,7 @@ const helpDescriptions = {
 global.help = (): string => {
   return Object.entries(helpDescriptions)
     .map(([funcName, description]) => `${funcName}: ${description}`)
-    .join(`\n`);
+    .join(`\n\n`);
 };
 
 global.topc = (): string => {
@@ -505,23 +501,15 @@ global.topc = (): string => {
   const sortedCands = Object.entries(allCands).sort(
     ([, a], [, b]) => b[Key.PERCENTILE] - a[Key.PERCENTILE],
   );
+  const prices = new PriceProvider(plugin, CacheProxy).get(StableUSDCoin.USDT);
   for (const [coin, ci] of sortedCands) {
     if (ci[Key.PERCENTILE] > 1) {
-      Log.info(`${coin}: P=${ci[Key.PERCENTILE]}`);
+      const firstPrice = prices[coin].prices[0];
+      const currentPrice = prices[coin].currentPrice;
+      Log.info(
+        `${coin}: P=${ci[Key.PERCENTILE]} | I: ${ci[Key.IMBALANCE]} ${currentPrice > firstPrice * 1.1 ? `| +++` : ``}`,
+      );
     }
   }
-  return Log.printInfos();
-};
-
-global.bottomc = (): string => {
-  const allCands = new CandidatesDao(DefaultStore).getAll();
-  const sortedCands = Object.entries(allCands).sort(
-    ([, a], [, b]) => b[Key.PERCENTILE] - a[Key.PERCENTILE],
-  );
-  for (const [coin, ci] of sortedCands) {
-    if (ci[Key.PERCENTILE] < 0) {
-      Log.info(`${coin}: P=${ci[Key.PERCENTILE]}`);
-    }
-  }
-  return Log.printInfos();
+  return Log.printInfos() || `No breaking out coins as of now. Try later.`;
 };
