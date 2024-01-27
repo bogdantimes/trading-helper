@@ -84,7 +84,7 @@ Any manual actions are at your own risk.
 Type \`help\` to see the available commands.
 
 `}
-        colorMode={`material-${themeMode}`}
+        theme={`material-${themeMode}`}
         defaultHandler={onCommand}
       />
     </Dialog>
