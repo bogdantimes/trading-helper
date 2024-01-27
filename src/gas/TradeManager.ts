@@ -701,8 +701,8 @@ export class TradeManager {
       );
     }
 
-    if (!this.#config.SmartExit) {
-      // If smart exit is disabled, we should return here
+    if (!this.#config.SmartExit || !tm.isAutoTrade()) {
+      // If smart exit is disabled, or this is a manual trade - we should exit here
       return;
     }
 
