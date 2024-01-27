@@ -8,5 +8,5 @@ const root = createRoot(app);
 root.render(
   <TerminalContextProvider>
     <App />
-  </TerminalContextProvider>
+  </TerminalContextProvider>,
 );

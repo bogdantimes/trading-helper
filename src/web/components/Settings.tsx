@@ -268,9 +268,10 @@ export function Settings(params: {
               aria-describedby={`smart-exit-helper-text`}
             />
             <FormHelperText id={`smart-exit-helper-text`}>
-              Sell automatically when conditions are no longer in favor and it
-              is better to take the profit/loss. Recommended to always keep
-              enabled. Disable only if you need to hold the assets.
+              For auto-trades, sell automatically when conditions are no longer
+              in favor and it is better to take the profit/loss. Recommended to
+              always keep enabled. Disable only if you need to hold the
+              automatically bought assets.
             </FormHelperText>
           </FormControl>
           <FormControl>
