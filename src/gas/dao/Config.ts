@@ -9,6 +9,7 @@ import {
 
 export interface APIKeysProvider {
   getAPIKeys: () => APIKeys;
+  isDryRun: () => boolean;
 }
 
 export interface APIKeys {
@@ -99,5 +100,9 @@ export class ConfigDao implements APIKeysProvider {
   getAPIKeys(): APIKeys {
     const config = this.get();
     return { key: config.KEY, secret: config.SECRET };
+  }
+
+  isDryRun(): boolean {
+    return !!this.get().DryRun;
   }
 }

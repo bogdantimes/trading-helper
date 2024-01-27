@@ -177,26 +177,40 @@ function remove(...coins: CoinName[]): string {
   });
 }
 
-function setConfig(config: Config): { msg: string; config: Config } {
+function setConfig(newCfg: Config): { msg: string; config: Config } {
   return catchError(() => {
-    let msg = `Config updated`;
+    let msg = `Config updated.`;
     const dao = new ConfigDao(DefaultStore);
-    dao.update((cfg) => {
-      if (cfg.StableBalance <= 0 && config.StableBalance > 0) {
+    let dryRunToggledOff = false;
+    dao.update((curCfg) => {
+      if (curCfg.StableBalance <= 0 && newCfg.StableBalance > 0) {
         // Check the balance is actually present on Spot balance
-        const balance = new Binance(dao).getBalance(config.StableCoin);
-        if (balance < config.StableBalance) {
+        const balance = new Binance(dao).getBalance(newCfg.StableCoin);
+        if (balance < newCfg.StableBalance) {
           msg = `\nActual balance on your Binance Spot account is $${f2(
             balance,
           )}, which is less than $${
-            config.StableBalance
+            newCfg.StableBalance
           } you are trying to set. You might need to transfer money from the Funding account. Check the balances and try again.`;
-          config.StableBalance = cfg.StableBalance;
+          newCfg.StableBalance = curCfg.StableBalance;
         }
       }
-      return config;
+      if (curCfg.DryRun && !newCfg.DryRun) {
+        dryRunToggledOff = true;
+        msg += `\n"Dry Run" mode is disabled. Any dry run assets are being removed from the portfolio. Balance was reset to 0.`;
+        newCfg.StableBalance = 0;
+      }
+      return newCfg;
     });
-    return { msg, config };
+    if (dryRunToggledOff) {
+      new TradesDao(DefaultStore).iterate((tm) => {
+        if (tm.tradeResult.dryRun) {
+          tm.deleted = true;
+          return tm;
+        }
+      });
+    }
+    return { msg, config: newCfg };
   });
 }
 

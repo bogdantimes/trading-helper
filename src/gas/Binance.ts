@@ -5,6 +5,7 @@ import {
   floor,
   getPrecision,
   INTERRUPT,
+  StandardFee,
   type SymbolInfo,
   TradeResult,
 } from "../lib";
@@ -83,6 +84,11 @@ export class Binance implements IExchange {
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
+    if (this.provider.isDryRun()) {
+      // TODO: calculate slippage
+      return this.#dryRunBuy(symbol, cost);
+    }
+
     const moneyAvailable = this.getBalance(symbol.priceAsset);
     cost = +cost.toFixed(8); // removing any insignificant numbers
     if (moneyAvailable < cost) {
@@ -114,6 +120,12 @@ export class Binance implements IExchange {
    */
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const qty = this.quantityForLotStepSize(symbol, quantity);
+
+    if (this.provider.isDryRun()) {
+      // TODO: calculate slippage
+      return this.#dryRunSell(symbol, qty);
+    }
+
     const query = `symbol=${symbol}&type=MARKET&side=SELL&quantity=${qty}`;
     Log.alert(
       `➖ Selling ${qty} ${symbol.quantityAsset} for ${symbol.priceAsset}`,
@@ -387,5 +399,40 @@ export class Binance implements IExchange {
   #rotateServer(): void {
     this.#curServerId = this.serverIds.shift() ?? this.#curServerId;
     this.serverIds.push(this.#curServerId);
+  }
+
+  #dryRunBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
+    const curPrice = this.getLatestKlineOpenPrices(symbol, `1s`, 1).pop();
+    if (!curPrice) {
+      throw new Error(`The current price of ${symbol} is unknown`);
+    }
+    Log.alert(
+      `➕ DRY RUN: Buying ${symbol.quantityAsset} for ${cost} ${symbol.priceAsset}`,
+    );
+    const qty = (cost / curPrice) * (1 - StandardFee);
+    const tr = new TradeResult(symbol, `Created using DRY RUN`);
+    tr.fromExchange = true;
+    tr.dryRun = true;
+    tr.addQuantity(qty, cost);
+    return tr;
+  }
+
+  #dryRunSell(symbol: ExchangeSymbol, qty: number): TradeResult {
+    const curPrice = this.getLatestKlineOpenPrices(symbol, `1s`, 1).pop();
+    if (!curPrice) {
+      throw new Error(`The current price of ${symbol} is unknown`);
+    }
+    Log.alert(
+      `➕ DRY RUN: ➖ Selling ${qty} ${symbol.quantityAsset} for ${symbol.priceAsset}`,
+    );
+    const gained = qty * (1 - StandardFee) * curPrice;
+    const tr = new TradeResult(symbol, `Created using DRY RUN`);
+    tr.fromExchange = true;
+    tr.dryRun = true;
+    tr.setQuantity(qty);
+    tr.cost = gained;
+    tr.gained = gained;
+    tr.soldPrice = curPrice;
+    return tr;
   }
 }

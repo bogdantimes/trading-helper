@@ -144,6 +144,40 @@ export function Settings(params: {
       </Stack>
       <Box sx={{ mt: 2, justifyContent: `center`, display: `flex` }}>
         <Stack spacing={2} divider={<Divider />}>
+          <FormControl>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={cfg.DryRun}
+                  onChange={(e) => {
+                    setCfg({
+                      ...cfg,
+                      DryRun: e.target.checked,
+                    });
+                  }}
+                />
+              }
+              label={
+                <>
+                  <Chip
+                    label="New"
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                    sx={{ mr: `8px` }}
+                  />
+                  Dry Run
+                </>
+              }
+              aria-describedby={`dry-run-helper-text`}
+            />
+            <FormHelperText id={`dry-run-helper-text`}>
+              Simulates bying and selling, without actually doing that on the
+              exchange. When enabled - does not check if the stable coin balance
+              is real or not. Assumes no slippage (this calculation will be
+              added in next releases).
+            </FormHelperText>
+          </FormControl>
           <Stack direction={`row`} spacing={2}>
             <FormControl fullWidth>
               <InputLabel id={`stable-coin`}>Stable Coin</InputLabel>
@@ -201,7 +235,10 @@ export function Settings(params: {
               min={1}
               max={10}
               onChange={(e, newValue) => {
-                setCfg({ ...cfg, BudgetSplitMin: newValue as number });
+                setCfg({
+                  ...cfg,
+                  BudgetSplitMin: newValue as number,
+                });
               }}
               aria-labelledby="budget-split-slider"
             />
@@ -220,7 +257,10 @@ export function Settings(params: {
                 <Switch
                   checked={cfg.SmartExit}
                   onChange={(e) => {
-                    setCfg({ ...cfg, SmartExit: e.target.checked });
+                    setCfg({
+                      ...cfg,
+                      SmartExit: e.target.checked,
+                    });
                   }}
                 />
               }
@@ -239,7 +279,10 @@ export function Settings(params: {
                 <Switch
                   checked={cfg.AutoReplenishFees}
                   onChange={(e) => {
-                    setCfg({ ...cfg, AutoReplenishFees: e.target.checked });
+                    setCfg({
+                      ...cfg,
+                      AutoReplenishFees: e.target.checked,
+                    });
                   }}
                 />
               }
@@ -348,7 +391,10 @@ export function Settings(params: {
                 <Switch
                   checked={cfg.HideBalances}
                   onChange={(e) => {
-                    setCfg({ ...cfg, HideBalances: e.target.checked });
+                    setCfg({
+                      ...cfg,
+                      HideBalances: e.target.checked,
+                    });
                   }}
                 />
               }
@@ -365,7 +411,10 @@ export function Settings(params: {
                 <Switch
                   checked={cfg.ViewOnly}
                   onChange={(e) => {
-                    setCfg({ ...cfg, ViewOnly: e.target.checked });
+                    setCfg({
+                      ...cfg,
+                      ViewOnly: e.target.checked,
+                    });
                   }}
                 />
               }

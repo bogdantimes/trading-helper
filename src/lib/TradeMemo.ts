@@ -64,9 +64,7 @@ export class TradeMemo {
     const tm = new TradeMemo(new TradeResult(symbol));
     tm.setState(TradeState.BOUGHT);
     tm.tradeResult.fromExchange = true;
-    tm.tradeResult.quantity = quantity;
-    tm.tradeResult.paid = paid;
-    tm.tradeResult.cost = paid;
+    tm.tradeResult.addQuantity(quantity, paid);
     return tm;
   }
 

@@ -1,3 +1,9 @@
+# v4.3.1
+
+* Added "Dry Run" mode
+* API: Added `topc` command
+* Improved storage lock mechanism
+
 # v4.3.0
 
 * Bull-run detection feature:

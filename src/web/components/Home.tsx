@@ -30,15 +30,26 @@ export function Home({ state }: { state: AppState }): JSX.Element {
   );
   const sold = sorted.filter((t) => t.stateIs(TradeState.SOLD));
 
-  const currentInfoMessage = config.AdvancedAccess ? (
+  const dryRunMsg = config.DryRun ? (
     <Typography variant="body1" textAlign={`center`}>
-      {config.ViewOnly
-        ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
-        : config.TradingAutoStopped
-          ? `⏸️ Auto-trading is paused. Market strength should reach ${config.MarketStrengthTargets.max}.`
-          : `▶️ Auto-trading is active. Waiting for specific conditions to buy a candidate.`}
+      <b>"Dry Run" mode.</b>
+      <br />
     </Typography>
   ) : undefined;
+  const currentInfoMessage = config.AdvancedAccess ? (
+    <>
+      {dryRunMsg}
+      <Typography variant="body1" textAlign={`center`}>
+        {config.ViewOnly
+          ? `🔕 Auto-trading is disabled. Toggle off "View-only" in Settings to activate.`
+          : config.TradingAutoStopped
+            ? `⏸️ Auto-trading is paused. Market strength should reach ${config.MarketStrengthTargets.max}.`
+            : `▶️ Auto-trading is active. Waiting for specific conditions to buy a candidate.`}
+      </Typography>
+    </>
+  ) : (
+    dryRunMsg
+  );
 
   return (
     <>

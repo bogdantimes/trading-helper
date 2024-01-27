@@ -976,6 +976,11 @@ export class TradeManager {
   }
 
   #reduceBNBBalance(reduceQty: number): boolean {
+    // TODO: tradesDao.update method cannot obtain the lock here
+    //  temporary disabling it
+    return false;
+
+    // eslint-disable-next-line no-unreachable
     if (reduceQty <= 0) return false;
 
     let updated = false;
@@ -1009,6 +1014,7 @@ export class TradeManager {
       return tm;
     });
 
+    // eslint-disable-next-line no-unreachable
     return updated;
   }
 
