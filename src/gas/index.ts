@@ -357,7 +357,6 @@ function addWithdrawal(amount: number): string {
 global.doGet = doGet;
 global.doPost = doPost;
 global.tick = tick;
-global.t = tick;
 global.start = start;
 global.stop = stop;
 global.initialSetup = initialSetup;
@@ -369,7 +368,6 @@ global.sellAll = sellAll;
 global.remove = remove;
 global.edit = edit;
 global.swap = swap;
-global.sw = swap;
 global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
@@ -484,7 +482,7 @@ const helpDescriptions = {
   sellAll: `Sells all coins.`,
   remove: `Removes a list of coins from the trade list. Example: $ remove BTC ETH`,
   edit: `Creates or edits a coin in the portfolio. Format: $ edit [COIN] [amount] [paid (in USD)]. Example: $ edit BTC 0.5 15500`,
-  swap: `Swaps an existing asset into a new coin. Example (whole): $ swap INJ BTC. Example (half): $ swap INJ BTC 0.5`,
+  swap: `Swaps an existing asset into another one. Example (whole): $ swap INJ BTC. Example (half): $ swap INJ BTC 0.5`,
   importCoin: `Imports a coin from the Binance Spot portfolio. Imports all or the specified amount. Example: $ importCoin BTC [amount]`,
   addWithdrawal: `Adds a withdrawal to the statistics. Example: $ addWithdrawal 100`,
   upgrade: `Upgrades the system.`,
