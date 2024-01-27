@@ -41,8 +41,11 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
     : `${f2(currentValue)} (${profitSign}${f2(profitAbs)})`;
   const tradeState = tm.getState();
   const isSold = tradeState === TradeState.SOLD;
-  const isDryRun = tm.tradeResult.dryRun;
 
+  const isDryRun = tm.tradeResult.dryRun;
+  const dryRunLabel = isDryRun && (
+    <span style={{ color: theme.palette.warning.main }}>{` (dry run)`}</span>
+  );
   return (
     <BasicCard>
       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -107,7 +110,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
         )}
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
-            Paid{isDryRun && ` (dry run)`}:
+            Paid{dryRunLabel}:
           </Typography>
           <Typography variant="inherit">
             {displayPaid} {cfg.StableCoin}
@@ -116,7 +119,7 @@ const AssetCard = ({ cfg, tm, hideBalances }: Params) => {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
             {isSold ? `Gained` : `Current`}
-            {isDryRun && ` (dry run)`}:
+            {dryRunLabel}:
           </Typography>
           <Typography variant="inherit">
             {displayCurrentValue} {cfg.StableCoin}
