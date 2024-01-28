@@ -21,6 +21,7 @@ import {
   MASK,
   prettyPrintTradeMemo,
   StableUSDCoin,
+  StoreDeleteProp,
   TradeState,
 } from "../lib";
 import { Process } from "./Process";
@@ -183,8 +184,12 @@ function setConfig(newCfg: Config): { msg: string; config: Config } {
     const dao = new ConfigDao(DefaultStore);
     let dryRunToggledOff = false;
     dao.update((curCfg) => {
-      if (curCfg.StableBalance <= 0 && newCfg.StableBalance > 0) {
-        // Check the balance is actually present on Spot balance
+      if (
+        !newCfg.DryRun &&
+        curCfg.StableBalance <= 0 &&
+        newCfg.StableBalance > 0
+      ) {
+        // If not dry run, check the balance is actually present on Spot balance
         const balance = new Binance(dao).getBalance(newCfg.StableCoin);
         if (balance < newCfg.StableBalance) {
           msg = `\nActual balance on your Binance Spot account is $${f2(
@@ -515,13 +520,19 @@ global.topc = (): string => {
   );
   const prices = new PriceProvider(plugin, CacheProxy).get(StableUSDCoin.USDT);
   for (const [coin, ci] of sortedCands) {
-    if (ci[Key.PERCENTILE] > 1) {
-      const firstPrice = prices[coin].prices[0];
-      const currentPrice = prices[coin].currentPrice;
+    const minPrice = Math.min(...prices[coin].prices);
+    const currentPrice = prices[coin].currentPrice;
+    const pricePump = currentPrice > minPrice * 1.01;
+    if (ci[Key.PERCENTILE] > 1 || pricePump) {
       Log.info(
-        `${coin}: P=${ci[Key.PERCENTILE]} | I: ${ci[Key.IMBALANCE]} ${currentPrice > firstPrice * 1.1 ? `| +++` : ``}`,
+        `${coin}: P=${ci[Key.PERCENTILE]} | I: ${ci[Key.IMBALANCE]} ${pricePump ? `| +++` : ``}`,
       );
     }
   }
   return Log.printInfos() || `No breaking out coins as of now. Try later.`;
+};
+
+global.resetCandidates = () => {
+  new CandidatesDao(DefaultStore).update(() => StoreDeleteProp);
+  return `Done.`;
 };

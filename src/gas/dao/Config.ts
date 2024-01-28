@@ -47,7 +47,7 @@ export class ConfigDao implements APIKeysProvider {
 
     // Back-ward compatibility with v3
     config.SmartExit = config.SellAtStopLimit ?? config.SmartExit;
-    config.SellAtStopLimit = undefined;
+    delete config.SellAtStopLimit;
 
     // apply existing config on top of default one
     config = Object.assign(defaultConfig, config);

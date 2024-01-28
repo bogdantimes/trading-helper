@@ -176,7 +176,7 @@ export enum Key {
   DAY_PRICE_MOVE,
   REFRESH,
   PINNED,
-  COOL_DOWN
+  COOL_DOWN,
 }
 
 export enum Bit {
