@@ -135,7 +135,16 @@ export interface IStore {
   clearCache: () => void;
 }
 
+/**
+ * DO NOT REMOVE KEYS, JUST MARK DEPRECATED
+ * OR, IF YOU DARE TO REMOVE THE KEY,
+ * MAKE SURE TO MANUALLY PROVIDE EACH ENUM VALUE FOR ALL KEYS
+ * TO ENSURE THE VALUES ARE MAINTAINED
+ */
 export enum Key {
+  /**
+   * @deprecated
+   */
   DURATION,
   MIN,
   MAX,
@@ -144,6 +153,9 @@ export enum Key {
   S2,
   SIZE,
   PERCENTILE,
+  /**
+   * @deprecated
+   */
   DURATION_MET,
   MAX_PERCENTILE,
   PRICE_MOVE,
@@ -164,6 +176,7 @@ export enum Key {
   DAY_PRICE_MOVE,
   REFRESH,
   PINNED,
+  COOL_DOWN
 }
 
 export enum Bit {
@@ -179,8 +192,6 @@ export enum ChannelState {
 }
 
 export interface CandidateInfo {
-  [Key.DURATION]: number;
-  [Key.DURATION_MET]: Bit;
   [Key.MIN]: number;
   [Key.MID]: number;
   [Key.MAX]: number;
@@ -199,6 +210,7 @@ export interface CandidateInfo {
   [Key.DAY_PRICE_MOVE]: number;
   [Key.REFRESH]: Bit;
   [Key.PINNED]: Bit;
+  [Key.COOL_DOWN]: number;
 }
 
 export interface Candidates {
