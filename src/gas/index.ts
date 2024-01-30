@@ -324,21 +324,34 @@ function edit(coin: CoinName, qty: number, paid: number): any {
   });
 }
 
-function swap(src: CoinName, tgt: CoinName, chunkSize = 1): any {
-  return catchError(() => {
-    if (!src) {
-      Log.info(`Specify a source asset, e.g. BTC`);
-    } else if (!tgt) {
-      Log.info(`Specify a target coin, e.g. ETH`);
-    }
+function swap(src: CoinName, tgt: CoinName, chunkSize = 1): string {
+  if (!src) {
+    Log.info(`Specify a source asset, e.g. BTC`);
+  } else if (!tgt) {
+    Log.info(`Specify a target coin, e.g. ETH`);
+  }
 
-    if (isFinite(+chunkSize)) {
-      TradeManager.default().swap(src, tgt, +chunkSize);
-    } else {
-      Log.info(
-        `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
-      );
-    }
+  if (isFinite(+chunkSize)) {
+    TradeManager.default().swap(src, tgt, +chunkSize);
+  } else {
+    Log.info(
+      `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
+    );
+  }
+  return Log.printInfos();
+}
+
+function swapAll(tgt: CoinName, chunkSize = 1): string {
+  return catchError(() => {
+    new TradesDao(DefaultStore).getList(TradeState.BOUGHT).forEach((tm) => {
+      try {
+        swap(tm.getCoinName(), tgt, chunkSize);
+      } catch (e) {
+        e.message = `Error when swapping ${tm.getCoinName()} to ${tgt}: ${e.message}`;
+        Log.error(e);
+        return ``;
+      }
+    });
     return Log.printInfos();
   });
 }
@@ -387,6 +400,7 @@ global.sellAll = sellAll;
 global.remove = remove;
 global.edit = edit;
 global.swap = swap;
+global.swapAll = swapAll;
 global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
@@ -468,18 +482,21 @@ global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
   const candidatesDao = new CandidatesDao(DefaultStore);
   const imbalance = plugin.getImbalance(coin, ci || candidatesDao.get(coin));
 
-  if (ci) {
-    if (imbalance) {
-      candidatesDao.update((all) => {
-        all[coin][Key.IMBALANCE] = imbalance;
-        return all;
+  if (ci && ci[Key.IMBALANCE] !== imbalance) {
+    candidatesDao.update((all) => {
+      all[coin][Key.IMBALANCE] = imbalance;
+      return all;
+    });
+  }
+
+  if (!ci) {
+    const tradesDao = new TradesDao(DefaultStore);
+    if (tradesDao.has(coin)) {
+      tradesDao.update(coin, (tm) => {
+        tm.supplyDemandImbalance = imbalance;
+        return tm;
       });
     }
-  } else {
-    new TradesDao(DefaultStore).update(coin, (tm) => {
-      tm.supplyDemandImbalance = imbalance;
-      return tm;
-    });
   }
 
   return imbalance;
