@@ -9,6 +9,7 @@ import { Statistics } from "./Statistics";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   type AppState,
+  BullRun,
   type CandidateInfo,
   type CandidatesData,
   type CoinName,
@@ -430,7 +431,7 @@ global.info = (coin: CoinName) => {
 
     Log.ifUsefulDumpAsEmail();
 
-    return `Bull-Run: ${info.bullRun ? `yes.` : `no.`}
+    return `Bull-Run: ${BullRun[info.bullRun]}
 The current market is ${
       info.strength > 0.9
         ? `strong. It's good time to buy.`
