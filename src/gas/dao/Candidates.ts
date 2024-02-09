@@ -44,7 +44,7 @@ export class CandidatesDao implements ICandidatesDao {
   update(
     mutateFn: (
       data: Record<string, CandidateInfo>,
-    ) => Record<string, CandidateInfo>,
+    ) => Record<string, CandidateInfo> | symbol,
   ): void {
     this.store.update<Record<string, CandidateInfo>>(CandidatesDataKey, (v) =>
       mutateFn(v || {}),

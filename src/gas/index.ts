@@ -9,6 +9,7 @@ import { Statistics } from "./Statistics";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
   type AppState,
+  BullRun,
   type CandidateInfo,
   type CandidatesData,
   type CoinName,
@@ -21,6 +22,7 @@ import {
   MASK,
   prettyPrintTradeMemo,
   StableUSDCoin,
+  StoreDeleteProp,
   TradeState,
 } from "../lib";
 import { Process } from "./Process";
@@ -183,8 +185,12 @@ function setConfig(newCfg: Config): { msg: string; config: Config } {
     const dao = new ConfigDao(DefaultStore);
     let dryRunToggledOff = false;
     dao.update((curCfg) => {
-      if (curCfg.StableBalance <= 0 && newCfg.StableBalance > 0) {
-        // Check the balance is actually present on Spot balance
+      if (
+        !newCfg.DryRun &&
+        curCfg.StableBalance <= 0 &&
+        newCfg.StableBalance > 0
+      ) {
+        // If not dry run, check the balance is actually present on Spot balance
         const balance = new Binance(dao).getBalance(newCfg.StableCoin);
         if (balance < newCfg.StableBalance) {
           msg = `\nActual balance on your Binance Spot account is $${f2(
@@ -319,21 +325,34 @@ function edit(coin: CoinName, qty: number, paid: number): any {
   });
 }
 
-function swap(src: CoinName, tgt: CoinName, chunkSize = 1): any {
-  return catchError(() => {
-    if (!src) {
-      Log.info(`Specify a source asset, e.g. BTC`);
-    } else if (!tgt) {
-      Log.info(`Specify a target coin, e.g. ETH`);
-    }
+function swap(src: CoinName, tgt: CoinName, chunkSize = 1): string {
+  if (!src) {
+    Log.info(`Specify a source asset, e.g. BTC`);
+  } else if (!tgt) {
+    Log.info(`Specify a target coin, e.g. ETH`);
+  }
 
-    if (isFinite(+chunkSize)) {
-      TradeManager.default().swap(src, tgt, +chunkSize);
-    } else {
-      Log.info(
-        `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
-      );
-    }
+  if (isFinite(+chunkSize)) {
+    TradeManager.default().swap(src, tgt, +chunkSize);
+  } else {
+    Log.info(
+      `The provided chunk size is not a valid number. Expected range: 0 < chunk <= 1. Default: 1`,
+    );
+  }
+  return Log.printInfos();
+}
+
+function swapAll(tgt: CoinName, chunkSize = 1): string {
+  return catchError(() => {
+    new TradesDao(DefaultStore).getList(TradeState.BOUGHT).forEach((tm) => {
+      try {
+        swap(tm.getCoinName(), tgt, chunkSize);
+      } catch (e) {
+        e.message = `Error when swapping ${tm.getCoinName()} to ${tgt}: ${e.message}`;
+        Log.error(e);
+        return ``;
+      }
+    });
     return Log.printInfos();
   });
 }
@@ -382,6 +401,7 @@ global.sellAll = sellAll;
 global.remove = remove;
 global.edit = edit;
 global.swap = swap;
+global.swapAll = swapAll;
 global.importCoin = importCoin;
 global.addWithdrawal = addWithdrawal;
 global.getState = getState;
@@ -411,7 +431,7 @@ global.info = (coin: CoinName) => {
 
     Log.ifUsefulDumpAsEmail();
 
-    return `Bull-Run: ${info.bullRun ? `yes.` : `no.`}
+    return `Bull-Run: ${BullRun[info.bullRun]}
 The current market is ${
       info.strength > 0.9
         ? `strong. It's good time to buy.`
@@ -463,18 +483,21 @@ global.getImbalance = (coin: CoinName, ci?: CandidateInfo) => {
   const candidatesDao = new CandidatesDao(DefaultStore);
   const imbalance = plugin.getImbalance(coin, ci || candidatesDao.get(coin));
 
-  if (ci) {
-    if (imbalance) {
-      candidatesDao.update((all) => {
-        all[coin][Key.IMBALANCE] = imbalance;
-        return all;
+  if (ci && ci[Key.IMBALANCE] !== imbalance) {
+    candidatesDao.update((all) => {
+      all[coin][Key.IMBALANCE] = imbalance;
+      return all;
+    });
+  }
+
+  if (!ci) {
+    const tradesDao = new TradesDao(DefaultStore);
+    if (tradesDao.has(coin)) {
+      tradesDao.update(coin, (tm) => {
+        tm.supplyDemandImbalance = imbalance;
+        return tm;
       });
     }
-  } else {
-    new TradesDao(DefaultStore).update(coin, (tm) => {
-      tm.supplyDemandImbalance = imbalance;
-      return tm;
-    });
   }
 
   return imbalance;
@@ -515,13 +538,19 @@ global.topc = (): string => {
   );
   const prices = new PriceProvider(plugin, CacheProxy).get(StableUSDCoin.USDT);
   for (const [coin, ci] of sortedCands) {
-    if (ci[Key.PERCENTILE] > 1) {
-      const firstPrice = prices[coin].prices[0];
-      const currentPrice = prices[coin].currentPrice;
+    const minPrice = Math.min(...prices[coin].prices);
+    const currentPrice = prices[coin].currentPrice;
+    const pricePump = currentPrice > minPrice * 1.01;
+    if (ci[Key.PERCENTILE] > 1 || pricePump) {
       Log.info(
-        `${coin}: P=${ci[Key.PERCENTILE]} | I: ${ci[Key.IMBALANCE]} ${currentPrice > firstPrice * 1.1 ? `| +++` : ``}`,
+        `${coin}: P=${ci[Key.PERCENTILE]} | I: ${ci[Key.IMBALANCE]} ${pricePump ? `| +++` : ``}`,
       );
     }
   }
   return Log.printInfos() || `No breaking out coins as of now. Try later.`;
+};
+
+global.resetCandidates = () => {
+  new CandidatesDao(DefaultStore).update(() => StoreDeleteProp);
+  return `Done.`;
 };

@@ -243,17 +243,24 @@ export class TradeManager {
 
   // TODO: move to SwapService of some kind
   swap(src: CoinName, tgt: CoinName, chunkSize = 1): void {
+    // necessary manager prep call at the beginning
     this.#prepare();
 
     // Step 1: Check Prices
-    const sourceSymbol = new ExchangeSymbol(src, this.#config.StableCoin);
+    const srcSymbol = new ExchangeSymbol(src, this.#config.StableCoin);
     const tgtSymbol = new ExchangeSymbol(tgt, this.#config.StableCoin);
 
-    const sourcePrice = this.#getPrices(sourceSymbol)?.currentPrice;
-    const targetPrice = this.#getPrices(tgtSymbol)?.currentPrice;
+    if (srcSymbol.toString() === tgtSymbol.toString()) {
+      return;
+    }
 
-    if (!sourcePrice || !targetPrice) {
-      throw new Error(`Price information not found for one or both coins.`);
+    const srcPrice = this.#getPrices(srcSymbol)?.currentPrice;
+    const tgtPrice = this.#getPrices(tgtSymbol)?.currentPrice;
+
+    if (!srcPrice || !tgtPrice) {
+      throw new Error(
+        `Price information not found for one or both coins: ${srcSymbol}=${srcPrice}, ${tgtSymbol}=${tgtPrice}`,
+      );
     }
 
     // Step 2: Sell Source Coin
@@ -266,10 +273,7 @@ export class TradeManager {
     this.tradesDao.update(src, (tm) => {
       const origTr = tm.tradeResult;
       const trChunk = origTr.getChunk(chunkSize);
-      const sellResult = this.exchange.marketSell(
-        sourceSymbol,
-        trChunk.quantity,
-      );
+      const sellResult = this.exchange.marketSell(srcSymbol, trChunk.quantity);
       if (!sellResult.fromExchange) {
         throw new Error(`Failed to sell ${src} into ${tgt}: ${sellResult.msg}`);
       }
@@ -318,7 +322,7 @@ export class TradeManager {
         }
         tm.tradeResult.commission += prevFee + buyResult.commission;
         tm.ttl = 0;
-        tm.currentPrice = targetPrice;
+        tm.currentPrice = tgtPrice;
         tm.setState(TradeState.BOUGHT);
         this.#processBoughtState(tm);
         Log.info(prettyPrintTradeMemo(tm));
@@ -332,7 +336,7 @@ export class TradeManager {
         );
         tm.ttl = 0;
         tm.tradeResult.commission += prevFee + buyResult.commission;
-        tm.currentPrice = targetPrice;
+        tm.currentPrice = tgtPrice;
         tm.setState(TradeState.BOUGHT);
         this.#processBoughtState(tm);
         Log.info(prettyPrintTradeMemo(tm));
@@ -701,8 +705,8 @@ export class TradeManager {
       );
     }
 
-    if (!this.#config.SmartExit) {
-      // If smart exit is disabled, we should return here
+    if (!this.#config.SmartExit || !tm.isAutoTrade()) {
+      // If smart exit is disabled, or this is a manual trade - we should exit here
       return;
     }
 

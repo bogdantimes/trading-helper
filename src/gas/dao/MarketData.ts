@@ -12,7 +12,7 @@ const key = `MarketData`;
 export class MarketDataDao implements IMarketDataDao {
   constructor(
     private readonly store: IStore,
-    private readonly historyMin = 5,
+    private readonly historyMin = 10,
     private readonly historyMax = 20,
   ) {}
 

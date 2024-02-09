@@ -146,6 +146,7 @@ export class TradeMemo {
       // when memo market sold, the other parts of system expect quantity to remain 0
       // but we can memo it in the soldQty field
       newState.tradeResult.soldQty = this.tradeResult.quantity;
+      newState.tradeResult.dryRun = this.tradeResult.dryRun;
       newState.curPrice = this.currentPrice;
       Object.assign(this, newState);
     }
