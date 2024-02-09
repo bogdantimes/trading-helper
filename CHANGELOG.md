@@ -1,3 +1,9 @@
+# v4.3.3
+
+* Trading Algorithm:
+  * Require 80% confidence for buy signals (instead of 60%).
+* Minor usability fixes.
+
 # v4.3.2
 
 * Fixed production build error
