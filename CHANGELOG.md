@@ -1,3 +1,8 @@
+# v4.3.5
+
+* Trading Algorithm:
+  * Removed old conditions that limited certain candidates.
+
 # v4.3.4
 
 * Trading Algorithm:
