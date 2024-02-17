@@ -170,6 +170,7 @@ export enum Key {
   DAY_PRICE_MOVE,
   REFRESH,
   PINNED,
+  COOL_DOWN,
 }
 
 export enum Bit {
@@ -205,6 +206,7 @@ export interface CandidateInfo {
   [Key.DAY_PRICE_MOVE]: number;
   [Key.REFRESH]: Bit;
   [Key.PINNED]: Bit;
+  [Key.COOL_DOWN]: number;
 }
 
 export interface Candidates {

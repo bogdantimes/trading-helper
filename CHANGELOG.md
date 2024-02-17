@@ -1,3 +1,8 @@
+# v4.3.4
+
+* Trading Algorithm:
+  * Increase top candidates check frequency for buy signals (30 min -> 5 min).
+
 # v4.3.3
 
 * Trading Algorithm:
