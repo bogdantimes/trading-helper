@@ -408,6 +408,10 @@ export class TradeManager {
       this.#config.BudgetSplitMin,
       this.plugin.getOptimalInvestRatio(this.candidatesDao),
     );
+    this.#updateCanInvest();
+  }
+
+  #updateCanInvest(): void {
     const trades = this.tradesDao.getList();
     // canInvest is for auto-trading, so count only auto-trades
     const invested = trades.filter(
@@ -570,6 +574,10 @@ export class TradeManager {
         }
         return this.#config;
       });
+    }
+
+    if (balanceChanged) {
+      this.#updateCanInvest();
     }
   }
 
@@ -841,7 +849,6 @@ export class TradeManager {
     if (tradeResult.fromExchange) {
       // any actions should not affect changing the state to BOUGHT in the end
       try {
-        this.#canInvest = Math.max(0, this.#canInvest - 1);
         this.#balance -= tradeResult.paid;
         // join existing trade result quantity, commission, paid price, etc. with the new one
         tm.joinWithNewTrade(tradeResult);
@@ -883,10 +890,6 @@ export class TradeManager {
     if (exit.fromExchange) {
       // any actions should not affect changing the state to SOLD in the end
       try {
-        this.#canInvest = Math.min(
-          this.#optimalInvestRatio,
-          this.#canInvest + 1,
-        );
         this.#balance += exit.gained;
         const fee = this.#processSellFee(entry, exit);
         const profit = exit.gained - entry.paid - fee;

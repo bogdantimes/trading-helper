@@ -1,3 +1,7 @@
+# v4.3.6
+
+* Relax "Bull Run" mode requirements.
+
 # v4.3.5
 
 * Trading Algorithm:
