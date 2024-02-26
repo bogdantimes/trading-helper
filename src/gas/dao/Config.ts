@@ -7,7 +7,7 @@ import {
   StoreNoOp,
 } from "../../lib";
 
-export interface APIKeysProvider {
+export interface APIConfigProvider {
   getAPIKeys: () => APIKeys;
   isDryRun: () => boolean;
 }
@@ -30,7 +30,7 @@ export const DefaultConfig: () => Config = () => ({
   MarketStrengthTargets: { min: 30, max: 60 },
 });
 
-export class ConfigDao implements APIKeysProvider {
+export class ConfigDao implements APIConfigProvider {
   private readonly store: IStore;
 
   constructor(store: IStore) {
