@@ -1,3 +1,9 @@
+# v4.3.7
+
+* Minor fixes:
+  * Service outage counter fix (for email notifications).
+  * Mark top candidates with a star (⭐) emoji.
+
 # v4.3.6
 
 * Relax "Bull Run" mode requirements.

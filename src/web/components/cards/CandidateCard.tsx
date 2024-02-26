@@ -61,6 +61,7 @@ export default function CandidateCard({
             alignItems="center"
           >
             {coin}
+            {!!ci[Key.COOL_DOWN] && `⭐`}
             {growthIconMap.get(priceMove)}
             <IconButton
               disabled={stateChanging}

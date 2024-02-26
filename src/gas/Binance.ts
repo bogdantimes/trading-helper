@@ -10,7 +10,7 @@ import {
   TradeResult,
 } from "../lib";
 import { type IExchange } from "./IExchange";
-import { type APIKeysProvider } from "./dao/Config";
+import { type APIConfigProvider } from "./dao/Config";
 
 interface FeeRec {
   commission: number;
@@ -24,7 +24,7 @@ export class Binance implements IExchange {
 
   #curServerId: number;
 
-  constructor(private readonly provider: APIKeysProvider) {
+  constructor(private readonly apiCfgProvider: APIConfigProvider) {
     this.serverIds = this.#shuffleServerIds();
     this.#curServerId = this.serverIds[0];
     this.#cloudURL = global.TradingHelperLibrary.getBinanceURL();
@@ -84,7 +84,7 @@ export class Binance implements IExchange {
   }
 
   marketBuy(symbol: ExchangeSymbol, cost: number): TradeResult {
-    if (this.provider.isDryRun()) {
+    if (this.apiCfgProvider.isDryRun()) {
       // TODO: calculate slippage
       return this.#dryRunBuy(symbol, cost);
     }
@@ -121,7 +121,7 @@ export class Binance implements IExchange {
   marketSell(symbol: ExchangeSymbol, quantity: number): TradeResult {
     const qty = this.quantityForLotStepSize(symbol, quantity);
 
-    if (this.provider.isDryRun()) {
+    if (this.apiCfgProvider.isDryRun()) {
       // TODO: calculate slippage
       return this.#dryRunSell(symbol, qty);
     }
@@ -331,7 +331,7 @@ export class Binance implements IExchange {
   }
 
   #getAPIKeysOrDie(): { key: string; secret: string } {
-    const { key, secret } = this.provider.getAPIKeys();
+    const { key, secret } = this.apiCfgProvider.getAPIKeys();
     if (!key || !secret) {
       throw new Error(`No Binance API Key or Secret configured.`);
     }

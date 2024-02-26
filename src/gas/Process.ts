@@ -11,6 +11,7 @@ export class Process {
 
     function checkOutage() {
       const outageCounter = +(CacheProxy.get(`OutageCounter`) ?? 0) + 1;
+      CacheProxy.put(`OutageCounter`, outageCounter.toString());
       if (outageCounter === 10 || outageCounter % 30 === 0) {
         const trades = new TradesDao(DefaultStore);
         if (trades.getList(TradeState.BOUGHT).length > 0) {
@@ -20,7 +21,6 @@ export class Process {
         }
         return true;
       }
-      CacheProxy.put(`OutageCounter`, outageCounter.toString());
     }
 
     try {

@@ -45,9 +45,9 @@ export class MarketInfoProvider {
     const strength = floor(mktPercentile + (btcPercentile - 0.5), 4);
     const btcVMktGap = btcPercentile - mktPercentile;
     const bullRun =
-      btcVMktGap > 1.5
+      btcVMktGap > 2
         ? BullRun.Yes
-        : btcVMktGap < 0
+        : btcVMktGap < 0.5
           ? BullRun.No
           : BullRun.Unknown;
 
