@@ -24,7 +24,8 @@ export default function CandidateCard({
 }: CandidateCardProps): JSX.Element {
   const strength = ci[Key.STRENGTH] ?? 0;
   const priceMove = ci[Key.PRICE_MOVE] ?? PriceMove.NEUTRAL;
-  const min = ci[Key.MIN];
+  const dPriceMove = ci[Key.DAY_PRICE_MOVE];
+  const perc = ci[Key.PERCENTILE];
   const max = ci[Key.MAX];
 
   const imbalance = ci[Key.IMBALANCE];
@@ -61,8 +62,8 @@ export default function CandidateCard({
             alignItems="center"
           >
             {coin}
-            {!!ci[Key.COOL_DOWN] && `⭐`}
             {growthIconMap.get(priceMove)}
+            {!!ci[Key.COOL_DOWN] && `🛎️⏳`}
             <IconButton
               disabled={stateChanging}
               sx={{ position: `absolute`, top: `6px`, right: `4px` }}
@@ -82,9 +83,9 @@ export default function CandidateCard({
               alignItems="center"
             >
               <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
-                Support:
+                20-d price:
               </Typography>
-              <Typography variant="inherit">{min}</Typography>
+              <Typography variant="inherit">{PriceMove[dPriceMove]}</Typography>
             </Box>
             <Box
               display="flex"
@@ -92,7 +93,7 @@ export default function CandidateCard({
               alignItems="center"
             >
               <Typography variant="inherit" fontWeight="bold" mr={`5px`}>
-                Resistance:
+                {perc > 1 ? `Support:` : `Resistance:`}
               </Typography>
               <Typography variant="inherit">{max}</Typography>
             </Box>
