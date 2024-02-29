@@ -20,6 +20,7 @@ import {
   type IStore,
   Key,
   MASK,
+  MIN_BUY,
   prettyPrintTradeMemo,
   StableUSDCoin,
   StoreDeleteProp,
@@ -281,15 +282,20 @@ function getState(): AppState {
   };
 }
 
-function buy(coin: CoinName, cost?: number): string {
+function buy(coin: CoinName, cost: number): string {
   return catchError(() => {
     if (!coin) {
       Log.info(`Specify a coin name, e.g. BTC`);
-    } else if (cost && !isFinite(+cost)) {
+      return Log.printInfos();
+    }
+
+    if (!isFinite(+cost) || +cost < MIN_BUY) {
       Log.info(
         `Specify the amount (available on the balance) you're willing to invest, e.g. 150`,
       );
+      return Log.printInfos();
     }
+
     TradeManager.default().buy(coin.toUpperCase(), cost);
     return Log.printInfos() || `In progress!`;
   });
