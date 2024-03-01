@@ -1,3 +1,9 @@
+# v4.3.8
+
+* Minor fixes:
+  * Improve candidates strength accuracy.
+  * Mark top candidates (🛎️⏳).
+
 # v4.3.7
 
 * Minor fixes:
