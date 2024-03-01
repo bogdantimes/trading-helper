@@ -34,7 +34,7 @@ export default function BalanceCard({
 }: BalanceProps): JSX.Element {
   const stableBalance = balances[name] ?? 0;
   const feesBudget = balances.feesBudget ?? 0;
-  const total = stableBalance + assetsValue;
+  const total = Math.max(0, stableBalance) + assetsValue;
   const feeCover = Math.max(0, Math.floor(feesBudget / (total * BNBFee * 2)));
   const feesWarn =
     !viewOnly && feeCover < MINIMUM_FEE_COVERAGE
@@ -65,7 +65,9 @@ export default function BalanceCard({
       <Typography component={`div`} variant="body2" color="text.secondary">
         <Box>
           <b>Free:</b>
-          {stableBalance === -1 && <span> Wait...</span>}
+          {stableBalance === -1 && (
+            <span style={{ float: `right` }}>Unknown</span>
+          )}
           {hide && <span style={{ float: `right` }}>${SHORT_MASK}</span>}
           {!hide && stableBalance !== -1 && (
             <CurrencyFormat
