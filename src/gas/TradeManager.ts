@@ -146,7 +146,7 @@ export class TradeManager {
    * @param cost amount of stable coins to pay for the coin
    * @param join whether to allow adding more to the existing coin in the portfolio
    */
-  buy(coin: CoinName, cost?: number, join = true): void {
+  buy(coin: CoinName, cost: number, join = true): void {
     this.#prepare();
     const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
     const price = this.#getPrices(symbol)?.currentPrice;
@@ -404,10 +404,10 @@ export class TradeManager {
 
   #prepare(): void {
     this.#initStableBalance();
-    this.#optimalInvestRatio = Math.max(
-      this.#config.BudgetSplitMin,
-      this.plugin.getOptimalInvestRatio(this.candidatesDao),
-    );
+    this.#optimalInvestRatio =
+      this.#config.BudgetSplitMin > 1
+        ? this.#config.BudgetSplitMin
+        : this.plugin.getOptimalInvestRatio(this.candidatesDao);
     this.#updateCanInvest();
   }
 

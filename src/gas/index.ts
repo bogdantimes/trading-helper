@@ -20,6 +20,7 @@ import {
   type IStore,
   Key,
   MASK,
+  MIN_BUY,
   prettyPrintTradeMemo,
   StableUSDCoin,
   StoreDeleteProp,
@@ -281,15 +282,20 @@ function getState(): AppState {
   };
 }
 
-function buy(coin: CoinName, cost?: number): string {
+function buy(coin: CoinName, cost: number): string {
   return catchError(() => {
     if (!coin) {
       Log.info(`Specify a coin name, e.g. BTC`);
-    } else if (cost && !isFinite(+cost)) {
+      return Log.printInfos();
+    }
+
+    if (!isFinite(+cost) || +cost < MIN_BUY) {
       Log.info(
         `Specify the amount (available on the balance) you're willing to invest, e.g. 150`,
       );
+      return Log.printInfos();
     }
+
     TradeManager.default().buy(coin.toUpperCase(), cost);
     return Log.printInfos() || `In progress!`;
   });
@@ -375,11 +381,7 @@ function addWithdrawal(amount: number): string {
     if (!isFinite(+amount)) throw new Error(`Amount is not a number.`);
 
     const configDao = new ConfigDao(DefaultStore);
-    const mgr = new WithdrawalsManager(
-      configDao,
-      new Binance(configDao),
-      new Statistics(DefaultStore),
-    );
+    const mgr = new WithdrawalsManager(configDao, new Statistics(DefaultStore));
     const { balance } = mgr.addWithdrawal(+amount);
     const msg = `Withdrawal of $${+amount} was added to the statistics and the balance was updated. Current balance: $${balance}.`;
     Log.alert(msg);
