@@ -1,3 +1,7 @@
+# v4.3.9
+
+* Remove external balance check in Withdrawals logic to make it work for DryRun
+
 # v4.3.8
 
 * Minor fixes:
