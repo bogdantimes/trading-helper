@@ -17,7 +17,7 @@ import {
   f0,
   f2,
   type InitialSetupParams,
-  IStore,
+  type IStore,
   Key,
   MASK,
   MIN_BUY,
