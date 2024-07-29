@@ -1,12 +1,10 @@
-name: Manual Release
+name: Release
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-    inputs:
-      release_version:
-        description: 'Release version'
-        required: true
-        default: 'v1.0.0'
 
 jobs:
   build-and-release:
@@ -25,16 +23,20 @@ jobs:
       run: npm install
     
     - name: Build
-      run: npm run prod
+      run: npm run build
     
+    - name: Get version from package.json
+      id: package_version
+      run: echo "version=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.event.inputs.release_version }}
-        release_name: Release ${{ github.event.inputs.release_version }}
+        tag_name: ${{ steps.package_version.outputs.version }}
+        release_name: Release ${{ steps.package_version.outputs.version }}
         draft: false
         prerelease: false
     
