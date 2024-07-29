@@ -1,10 +1,4 @@
-import {
-  AWS_LIMIT,
-  CachedStore,
-  DefaultStore,
-  FirebaseStore,
-  LIMIT_ERROR,
-} from "./Store";
+import { AWS_LIMIT, DefaultStore, FirebaseStore, LIMIT_ERROR } from "./Store";
 import { Statistics } from "./Statistics";
 import { Log, SECONDS_IN_MIN, TICK_INTERVAL_MIN } from "./Common";
 import {
@@ -17,7 +11,6 @@ import {
   f0,
   f2,
   type InitialSetupParams,
-  type IStore,
   Key,
   MASK,
   MIN_BUY,
@@ -139,14 +132,7 @@ function catchError<T>(fn: () => T): T {
 
 function initialSetup(params: InitialSetupParams): string {
   return catchError(() => {
-    let store: IStore = DefaultStore;
-    if (params.dbURL) {
-      const fbStore = new FirebaseStore();
-      fbStore.connect(params.dbURL);
-      Log.alert(`Connected to Firebase: ${params.dbURL}`);
-      store = new CachedStore(fbStore, CacheProxy);
-    }
-    const config = new ConfigDao(store).update((config) => {
+    const config = new ConfigDao(DefaultStore).update((config) => {
       config.KEY = params.binanceAPIKey ?? config.KEY;
       config.SECRET = params.binanceSecretKey ?? config.SECRET;
       config.ViewOnly = params.viewOnly;

@@ -1,20 +1,19 @@
-import { Config } from "../lib";
+import { type Config } from "../lib";
 import { type Statistics } from "./Statistics";
 import { type ConfigDao } from "./dao/Config";
 
 export class WithdrawalsManager {
   constructor(
     private readonly configDao: ConfigDao,
-    private readonly statistics: Statistics
-  ) {
-  }
+    private readonly statistics: Statistics,
+  ) {}
 
   addWithdrawal(amount: number): { amount: number; balance: number } {
     const addWithdrawalFn = (config: Config) => {
       // Check internal balance
       if (amount > config.StableBalance) {
         throw new Error(
-          `Withdrawal amount is greater than the current balance.`
+          `Withdrawal amount is greater than the current balance.`,
         );
       }
 
@@ -27,7 +26,7 @@ export class WithdrawalsManager {
 
     return {
       amount,
-      balance: latestConfig.StableBalance
+      balance: latestConfig.StableBalance,
     };
   }
 }

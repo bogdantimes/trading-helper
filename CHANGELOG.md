@@ -1,3 +1,8 @@
+# v4.4.0
+
+* Updated Smart Exit to panic less.
+* Removed redundant auto-stop and bull-run features after back-testing the updated Smart Exit (on the latest market).
+
 # v4.3.9
 
 * Remove external balance check in Withdrawals logic to make it work for DryRun
