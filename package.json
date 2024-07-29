@@ -1,6 +1,6 @@
 {
     "name": "trading-helper",
-    "version": "4.3.9",
+    "version": "4.4.0",
     "description": "",
     "scripts": {
         "glogin": "clasp login",
@@ -14,7 +14,7 @@
         "start": "cross-env WEBDEV=1 parcel src/web/index.html --dist-dir ./apps-script",
         "report": "parcel build src/web/index.tsx --dist-dir ./parcel-bundle-reports --reporter @parcel/reporter-bundle-analyzer",
         "build": "cross-env LOG=DEBUG npm run gbuild && cross-env VERSION=$npm_package_version parcel build src/web/index.html --no-optimize --dist-dir ./apps-script",
-        "prod": "cross-env LOG=DEBUG npm run gbuild && cross-env VERSION=$npm_package_version parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
+        "prod": "npm run gbuild && cross-env VERSION=$npm_package_version parcel build src/web/index.html --dist-dir ./apps-script --no-cache",
         "lint": "eslint --fix --ext .ts,.tsx ./src",
         "prepare": "husky install"
     },
@@ -70,5 +70,8 @@
             "react": "$react",
             "react-dom": "$react-dom"
         }
+    },
+    "optionalDependencies": {
+        "@parcel/watcher-linux-x64-glibc": "^2.4.2-alpha.0"
     }
 }

@@ -28,9 +28,6 @@ export interface Config {
   ViewOnly: boolean;
   HideBalances: boolean;
   BudgetSplitMin: number;
-  MarketStrengthTargets: { min: number; max: number };
-  TradingAutoStopped?: boolean;
-  BullRunEndTime?: number;
   /**
    * When enabled - the system simulates bying and selling, without actually doing that on the exchange.
    * It also does not check if the stable coin balance is real or not.

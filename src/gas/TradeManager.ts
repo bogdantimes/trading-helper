@@ -6,7 +6,6 @@ import {
   BNB,
   BNBFee,
   BULL_RUN_THRESHOLD_REDUCE,
-  BullRun,
   type CoinName,
   type Config,
   ExchangeSymbol,
@@ -118,7 +117,7 @@ export class TradeManager {
             ? this.#canInvest // or provide as many as can be bought for available $
             : 0,
         candidatesDao: this.candidatesDao,
-        reduceThreshold: this.#isBullRun(step) ? BULL_RUN_THRESHOLD_REDUCE : 0,
+        reduceThreshold: 0,
         I: step,
       });
     } catch (e) {
@@ -135,7 +134,7 @@ export class TradeManager {
       });
     }
 
-    this.#handleMarketChanges();
+    this.mktInfoProvider.get(this.#step); // update mkt info data
     this.#handleBuySignals(signals);
   }
 
@@ -420,73 +419,6 @@ export class TradeManager {
     this.#canInvest = Math.max(1, this.#optimalInvestRatio - invested);
   }
 
-  #handleMarketChanges() {
-    const { strength, bullRun } = this.mktInfoProvider.get(this.#step);
-    this.#checkAutoStop(strength);
-    this.#checkBullRun(bullRun);
-  }
-
-  #checkAutoStop(mktStrength: number): void {
-    const strengthAdjusted = f0(mktStrength * 100);
-    if (
-      this.#config.TradingAutoStopped &&
-      strengthAdjusted >= this.#config.MarketStrengthTargets.max
-    ) {
-      this.#config = this.configDao.update((c) => {
-        c.TradingAutoStopped = false;
-        return c;
-      });
-      Log.alert(
-        `Market Strength has reached ${this.#config.MarketStrengthTargets.max}`,
-      );
-    }
-    if (
-      !this.#config.TradingAutoStopped &&
-      strengthAdjusted < this.#config.MarketStrengthTargets.min
-    ) {
-      this.#config = this.configDao.update((c) => {
-        c.TradingAutoStopped = true;
-        return c;
-      });
-      Log.alert(
-        `Market Strength has dropped below ${this.#config.MarketStrengthTargets.min}`,
-      );
-    }
-  }
-
-  #checkBullRun(bullRun: BullRun) {
-    const bullRunActive = this.#isBullRun(this.#step);
-    if (bullRun === BullRun.Yes && !bullRunActive) {
-      const threeWeeksDays = 21;
-      this.#config = this.configDao.update((c) => {
-        const inThreeWeeks = new Date();
-        inThreeWeeks.setDate(inThreeWeeks.getDate() + threeWeeksDays); // add three weeks from now by default
-        const threeWeeksInBackTestSteps = this.#step + threeWeeksDays * 24 * 60;
-        c.BullRunEndTime = isNode ? threeWeeksInBackTestSteps : +inThreeWeeks;
-        return c;
-      });
-      Log.alert(`"Bull-run" mode auto-enabled.`);
-      Log.info(
-        `Trading Helper will become more greedy for the next ${threeWeeksDays} day(s). You can change manually in the Settings.`,
-      );
-    }
-    if (bullRun === BullRun.No && bullRunActive) {
-      this.#config = this.configDao.update((c) => {
-        c.BullRunEndTime = isNode ? this.#step : Date.now();
-        return c;
-      });
-      Log.alert(`"Bull-run" mode auto-disabled.`);
-      Log.info(
-        `The current market situation is not favorable for the bull-run mode to be enabled.`,
-      );
-    }
-  }
-
-  #isBullRun(step: number): boolean {
-    const endTime = this.#config.BullRunEndTime;
-    return !!endTime && endTime > (isNode ? step : Date.now());
-  }
-
   #initStableBalance(): void {
     const initFn = (cfg) => {
       if (cfg.StableBalance === AUTO_DETECT && cfg.KEY && cfg.SECRET) {
@@ -630,18 +562,16 @@ export class TradeManager {
   }
 
   #handleBuySignals(signals: Signal[]) {
-    if (this.#config.ViewOnly || this.#config.TradingAutoStopped) {
+    if (this.#config.ViewOnly) {
       signals
         .filter((s) => s.type === SignalType.Buy)
         .forEach(({ coin, support }) => {
           const symbol = new ExchangeSymbol(coin, this.#config.StableCoin);
           const ph = this.#getPrices(symbol);
-          // Send signal email only if trading is not auto-stopped.
-          if (!this.#config.TradingAutoStopped) {
-            Log.alert(
-              `${coin} - BUY signal. Current price: ${ph.currentPrice} | Support price: ${support}. Disable View-Only mode to buy automatically.`,
-            );
-          }
+
+          Log.alert(
+            `${coin} - BUY signal. Current price: ${ph.currentPrice} | Support price: ${support}. Disable View-Only mode to buy automatically.`,
+          );
         });
       return;
     }
@@ -732,12 +662,6 @@ export class TradeManager {
       Log.info(
         `Selling as the current price ${tm.currentPrice} is below the support price ${tm.support}`,
       );
-      tm.setState(TradeState.SELL);
-      return;
-    }
-
-    if (tm.isAutoTrade() && this.#config.TradingAutoStopped) {
-      Log.info(`Selling as trading auto-stop activated.`);
       tm.setState(TradeState.SELL);
       return;
     }
@@ -1040,10 +964,8 @@ export class TradeManager {
     tm.lowestPrice = floorToOptimalGrid(nextLowPrice, precision).result;
 
     const downMultiplier = 6;
-    const thresholdReduce = this.#isBullRun(this.#step)
-      ? BULL_RUN_THRESHOLD_REDUCE
-      : 0;
-    const threshold = tm.imbalanceThreshold(downMultiplier) - thresholdReduce;
+    const threshold =
+      tm.imbalanceThreshold(downMultiplier) - BULL_RUN_THRESHOLD_REDUCE;
     if (imbalance < threshold) {
       Log.info(
         `Selling at price going down, as the current demand ${f0(
@@ -1062,10 +984,8 @@ export class TradeManager {
     tm.highestPrice = floorToOptimalGrid(nextHighPrice, precision).result;
 
     const upMultiplier = 4;
-    const thresholdReduce = this.#isBullRun(this.#step)
-      ? BULL_RUN_THRESHOLD_REDUCE
-      : 0;
-    const threshold = tm.imbalanceThreshold(upMultiplier) - thresholdReduce;
+    const threshold =
+      tm.imbalanceThreshold(upMultiplier) - BULL_RUN_THRESHOLD_REDUCE;
     const reqThreshold = Math.min(0.6, threshold);
     if (imbalance < reqThreshold) {
       Log.info(
