@@ -70,5 +70,8 @@
             "react": "$react",
             "react-dom": "$react-dom"
         }
+    },
+    "optionalDependencies": {
+        "@parcel/watcher-linux-x64-glibc": "^2.4.2-alpha.0"
     }
 }
