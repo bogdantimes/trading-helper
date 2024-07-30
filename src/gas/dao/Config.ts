@@ -27,6 +27,7 @@ export const DefaultConfig: () => Config = () => ({
   HideBalances: false,
   SmartExit: true,
   BudgetSplitMin: 1,
+  BuySignalThreshold: 0.5,
 });
 
 export class ConfigDao implements APIConfigProvider {

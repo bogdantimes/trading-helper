@@ -117,7 +117,7 @@ export class TradeManager {
             ? this.#canInvest // or provide as many as can be bought for available $
             : 0,
         candidatesDao: this.candidatesDao,
-        reduceThreshold: 0,
+        buyThreshold: this.#config.BuySignalThreshold,
         I: step,
       });
     } catch (e) {

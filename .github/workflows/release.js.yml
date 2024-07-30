@@ -29,6 +29,16 @@ jobs:
       id: package_version
       run: echo "version=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+    - name: Extract release notes
+      id: extract_release_notes
+      run: |
+        VERSION=${{ steps.package_version.outputs.version }}
+        NOTES=$(awk -v ver="$VERSION" '/^# '{if($2==ver){flag=1;next}else{flag=0}}/^# /{if(flag){exit}}flag' CHANGELOG.md)
+        NOTES="${NOTES//'%'/'%25'}"
+        NOTES="${NOTES//$'\n'/'%0A'}"
+        NOTES="${NOTES//$'\r'/'%0D'}"
+        echo "release_notes=$NOTES" >> $GITHUB_OUTPUT
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -36,7 +46,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.package_version.outputs.version }}
-        release_name: Release ${{ steps.package_version.outputs.version }}
+        release_name: ${{ steps.package_version.outputs.version }}
+        body: ${{ steps.extract_release_notes.outputs.release_notes }}
         draft: false
         prerelease: false
     
