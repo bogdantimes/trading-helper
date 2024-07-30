@@ -39,7 +39,7 @@ export interface PluginContext {
    * provideSignals - whether the plugin caller is interested in signals.
    */
   provideSignals: number;
-  reduceThreshold: number;
+  buyThreshold: number;
   /**
    * Step number (used only for back-testing)
    */

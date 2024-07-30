@@ -1,3 +1,8 @@
+# v4.4.1
+
+* Stronger demand threshold for buy signals (up to 0.5 from 0.4).
+* Added "Demand Threshold" control in the Settings.
+
 # v4.4.0
 
 * Updated Smart Exit to panic less.

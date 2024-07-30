@@ -205,6 +205,42 @@ export function Settings(params: {
             </FormHelperText>
           </FormControl>
           <FormControl>
+            <Typography id="demand-threshold-slider" gutterBottom>
+              Demand Threshold
+            </Typography>
+            <Slider
+              sx={{ ml: 1, width: `95%` }}
+              value={cfg.BuySignalThreshold}
+              valueLabelDisplay="auto"
+              step={0.05}
+              marks={[
+                { value: 0, label: `0` },
+                { value: 0.1, label: `10%` },
+                { value: 0.2, label: `20%` },
+                { value: 0.3, label: `30%` },
+                { value: 0.4, label: `40%` },
+                { value: 0.5, label: `50%` },
+                { value: 0.6, label: `60%` },
+                { value: 0.7, label: `70%` },
+              ]}
+              min={0}
+              max={0.7}
+              onChange={(e, newValue) => {
+                setCfg({
+                  ...cfg,
+                  BuySignalThreshold: newValue as number,
+                });
+              }}
+              aria-labelledby="demand-threshold-slider"
+            />
+            <FormHelperText>
+              Sets the minimum demand required for the system to automatically
+              buy a candidate, <b>if all other condidions are met</b>. A best
+              candidate is marked with 🛎️⏳, when it's demand is being
+              monitored.
+            </FormHelperText>
+          </FormControl>
+          <FormControl>
             <FormControlLabel
               control={
                 <Switch
