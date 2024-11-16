@@ -13,8 +13,7 @@ No one, except you, have access to the WEB-application and the data. If you trus
 * Web UI (desktop/mobile).
 * Monitors the market 24/7 and shows great investment candidates.
 * Fully-autonomous trading on Binance Spot without manual interventions whatsoever:
-  * Enabled automatically once you become a Patron: [patreon.com/bogdantimes](https://patreon.com/bogdantimes).
-  * 🤙🏻 Reach out to me if you need help (see [Contact](#contact) section).
+  * 🤙🏻 Reach out to me (see [Contact](#contact) section).
 * Gmail notifications.
 * Dry Run mode.
 * Optional external database (Firebase).
@@ -57,8 +56,5 @@ Subscribe for updates:
 * [t.me/tradinghelperblog](https://t.me/tradinghelperblog)
 
 Be a friend:
-* [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://twitter.com/bogdantimes)
-* [instagram.com/bogdantimes](https://instagram.com/bogdantimes)
+* [![Twitter URL](https://img.shields.io/twitter/url/https/x.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://x.com/bogdantimes)
 
-Support the project:
-* [patreon.com/bogdantimes](https://patreon.com/bogdantimes)

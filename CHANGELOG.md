@@ -1,3 +1,7 @@
+# v4.4.2
+
+* Updated the featureDisabledInfo component to direct users to DM @bogdantimes on X.com for a free trial.
+
 # v4.4.1
 
 * Stronger demand threshold for buy signals (up to 0.5 from 0.4).

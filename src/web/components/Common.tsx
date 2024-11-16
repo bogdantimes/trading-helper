@@ -59,20 +59,17 @@ export const featureDisabledInfo = (
     <Typography variant="body1">
       <div>Your installation is working in candidates view-only mode 👀.</div>
       <Link
-        href="https://www.patreon.com/bePatron?u=52791105"
+        href="https://x.com/bogdantimes"
         target="_blank"
         rel="noopener noreferrer"
       >
-        Unlock Trading Helper+
+        DM @bogdantimes
       </Link>
-      {` `}(free trial available) with the following features:
+      {` `}to get a free trial for a month with the following features:
       <ul>
         <li>Continuous market demand scanning for more candidates</li>
         <li>"Buy" signals for fully-autonomous trading</li>
       </ul>
-    </Typography>
-    <Typography variant="caption">
-      <b>Important: use the same Google account in Patreon.</b>
     </Typography>
   </Alert>
 );
