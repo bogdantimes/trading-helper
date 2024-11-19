@@ -1,6 +1,10 @@
+# v4.4.3
+
+* Minor fixes not related to UI or trading algorythm.
+
 # v4.4.2
 
-* Updated the featureDisabledInfo component to direct users to DM @bogdantimes on X.com for a free trial.
+* Removed Patreon link.
 
 # v4.4.1
 

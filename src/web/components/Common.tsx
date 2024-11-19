@@ -59,7 +59,7 @@ export const featureDisabledInfo = (
     <Typography variant="body1">
       <div>Your installation is working in candidates view-only mode 👀.</div>
       <Link
-        href="https://x.com/bogdantimes"
+        href="https://x.com/d_g_t_l"
         target="_blank"
         rel="noopener noreferrer"
       >

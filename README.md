@@ -56,5 +56,5 @@ Subscribe for updates:
 * [t.me/tradinghelperblog](https://t.me/tradinghelperblog)
 
 Be a friend:
-* [![Twitter URL](https://img.shields.io/twitter/url/https/x.com/bogdantimes.svg?style=social&label=Follow%20%40bogdantimes)](https://x.com/bogdantimes)
+* [![Twitter URL](https://img.shields.io/twitter/url/https/x.com/d_g_t_l.svg?style=social&label=Follow%20%40bogdantimes)](https://x.com/d_g_t_l)
 
