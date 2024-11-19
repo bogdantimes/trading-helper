@@ -43,8 +43,13 @@ Running on the historical data (using Binance Spot prices and order book history
 
 ### Set up
 
-Links are in the [latest release](https://github.com/bogdantimes/trading-helper/releases/latest).
 Clone the latest public release of the Google Apps Script project to your Google account (you can follow the tutorial video).
+
+The video tutorial:
+[Trading Helper v3.0.0+ Setup on YouTube](https://youtu.be/ucue6ORV2n0) (1 min)
+
+**Links:**
+[Latest Trading Helper on Google Apps Script](https://script.google.com/home/projects/1GdE5hJKB4HlFyJmUQkqbbARl3KsRk5ypUhnXKwomJy_TMHaqZr8Knai6)
 
 ### Set up from sources
 
