@@ -1,3 +1,7 @@
+# v4.4.4
+
+* Minor UI fixes not related to UI or trading algorythm.
+
 # v4.4.3
 
 * Minor fixes not related to UI or trading algorythm.

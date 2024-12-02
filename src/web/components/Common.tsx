@@ -63,7 +63,7 @@ export const featureDisabledInfo = (
         target="_blank"
         rel="noopener noreferrer"
       >
-        DM @bogdantimes
+        DM @d_g_t_l on X
       </Link>
       {` `}to get a free trial for a month with the following features:
       <ul>
